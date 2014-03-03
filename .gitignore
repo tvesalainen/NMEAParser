@@ -1,0 +1,8 @@
+
+.svn/
+nbproject/
+test/
+build/
+dist/
+*.jasm
+doc-files/
