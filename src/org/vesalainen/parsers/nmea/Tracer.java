@@ -1481,13 +1481,13 @@ public class Tracer implements NMEAObserver, AISObserver
     @Override
     public void setPrefix(int numberOfSentences, int sentenceNumber, int sequentialMessageID, char channel)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        System.err.println("setPrefix(...)");
     }
 
     @Override
     public void setClock(Clock clock)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        System.err.println("setClock(...)");
     }
 
     @Override

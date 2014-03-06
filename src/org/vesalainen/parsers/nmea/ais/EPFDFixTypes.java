@@ -17,7 +17,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 /**
- *
+ * Electronic Position Fixing Device
  * @author Timo Vesalainen
  */
 public enum EPFDFixTypes
@@ -58,7 +58,21 @@ public enum EPFDFixTypes
     /**
      * Galileo
      */
-    Galileo("Galileo");
+    Galileo("Galileo"),
+    
+    Undefined9("Undefined9"),
+    Undefined10("Undefined10"),
+    Undefined11("Undefined11"),
+    Undefined12("Undefined12"),
+    Undefined13("Undefined13"),
+    Undefined14("Undefined14"),
+    /**
+     * Note: though values 9-15 are marked "not used" in [IALA], 
+     * the EPFD type value 15 (all field bits 1) is not uncommon in the wild; 
+     * it appears some receivers emit it as the Undefined value. 
+     * Decoders should be prepared to accept this.
+     */
+    Undefined15("Undefined15");
     private String description;
 
     EPFDFixTypes(String description)
