@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
+import org.vesalainen.parser.ParserInfo;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
@@ -173,20 +174,8 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="Type4BaseStationReport", value={"type4", "repeat", "mmsi", "year", "month", "day", "hour", "minute", "second", "accuracy", "lon", "lat", "epfd", "'[01]{10}'", "raim", "radio"})
 ,@Rule(left="CommonNavigationBlock", value={"type1-3", "repeat", "mmsi", "status", "turn", "speed", "accuracy", "lon", "lat", "course", "heading", "second", "maneuver", "'[01]{3}'", "raim", "radio"})
 })
-public abstract class AISParser
+public abstract class AISParser implements ParserInfo
 {
-    /**
-     * Parses AIS messages encoded in NMEA message <p> Example input:
-     * 53nFBv01SJ...
-     *
-     * @param is
-     * @param aisData
-     */
-    public void parse(InputStream is, AISObserver aisData)
-    {
-        AISInputStream aisInputStream = new AISInputStream(is);
-        doParse(aisInputStream, aisData);
-    }
 
     /**
      * Parses AIS messages decompressed to bits. (represented with characters
@@ -200,7 +189,7 @@ public abstract class AISParser
      */
     public void parseBits(InputStream is, AISObserver aisData)
     {
-        doParse(is, aisData);
+        parse(is, aisData);
     }
 
     public static AISParser newInstance() throws IOException
@@ -209,7 +198,7 @@ public abstract class AISParser
     }
 
     @ParseMethod(start = "messages", size = 1024, wideIndex = true)
-    protected abstract void doParse(
+    protected abstract void parse(
             InputStream is,
             @ParserContext("aisData") AISObserver aisData);
 
@@ -217,10 +206,14 @@ public abstract class AISParser
     public void recover(
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
+            @ParserContext(ParserConstants.ExpectedDescription) String expected,
+            @ParserContext(ParserConstants.LastToken) String got,
             @ParserContext(ParserConstants.THROWABLE) Throwable thr
             ) throws IOException
     {
         StringBuilder sb = new StringBuilder();
+        sb.append(reader.getInput());
+        sb.append('^');
         int cc = reader.read();
         while (cc != '\n' && cc != -1)
         {
@@ -229,6 +222,7 @@ public abstract class AISParser
             reader.clear();
         }
         aisData.rollback("skipping " + sb+" "+thr);
+        System.err.println(expected);
     }
 
     protected void aisType(int messageType, @ParserContext("aisData") AISObserver aisData)

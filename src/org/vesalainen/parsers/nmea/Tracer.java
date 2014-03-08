@@ -1481,7 +1481,7 @@ public class Tracer implements NMEAObserver, AISObserver
     @Override
     public void setPrefix(int numberOfSentences, int sentenceNumber, int sequentialMessageID, char channel)
     {
-        System.err.println("setPrefix(...)");
+        System.err.println("setPrefix("+numberOfSentences+", "+sentenceNumber+", "+sequentialMessageID+", "+channel+")");
     }
 
     @Override

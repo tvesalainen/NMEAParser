@@ -34,6 +34,14 @@ public class AISInputStream extends InputStream
         this.in = in;
     }
 
+    public void reStart() throws IOException
+    {
+        if (bit != 0)
+        {
+            System.err.println(bit+" != 0");
+        }
+        bit = 0;
+    }
     @Override
     public int read() throws IOException
     {

@@ -42,6 +42,8 @@ public class DatagramInputStream extends InputStream
             socket.receive(packet);
             offset = 0;
             length = packet.getLength();
+            String line = new String(buffer, 0, length);
+            System.err.print(line);
         }
         return buffer[offset++];
     }

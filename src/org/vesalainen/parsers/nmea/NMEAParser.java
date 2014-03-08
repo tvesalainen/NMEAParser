@@ -203,10 +203,10 @@ public abstract class NMEAParser implements ParserInfo
             int sequentialMessageID,
             char channel,
             @ParserContext("aisContext") AISContext aisContext
-            )
+            ) throws IOException
     {
         AISObserver aisData = aisContext.getAisData();
-        SwitchingInputStream aisInputStream = aisContext.getAisInputStream();
+        SwitchingInputStream aisInputStream = aisContext.getSwitchingInputStream();
         aisData.setPrefix(
             numberOfSentences,
             sentenceNumber,
@@ -216,6 +216,7 @@ public abstract class NMEAParser implements ParserInfo
         if (sentenceNumber == 1)
         {
             aisInputStream.setNumberOfSentences(numberOfSentences);
+            aisContext.reStart();
         }
         aisInputStream.getSideSemaphore().release();
         try
@@ -1025,6 +1026,8 @@ public abstract class NMEAParser implements ParserInfo
             ) throws IOException
     {
         StringBuilder sb = new StringBuilder();
+        sb.append(reader.getInput());
+        sb.append('^');
         int cc = reader.read();
         while (cc != '\n' && cc != -1)
         {

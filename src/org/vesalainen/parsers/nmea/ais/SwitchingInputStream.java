@@ -49,7 +49,7 @@ public class SwitchingInputStream extends InputStream
         return sideSemaphore;
     }
 
-    public void setNumberOfSentences(int count)
+    public void setNumberOfSentences(int count) throws IOException
     {
         this.count = count;
     }

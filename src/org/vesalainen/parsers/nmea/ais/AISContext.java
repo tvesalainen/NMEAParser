@@ -26,12 +26,14 @@ import java.io.InputStream;
 public class AISContext implements Runnable
 {
     private Thread thread;
-    private SwitchingInputStream aisInputStream;
+    private SwitchingInputStream switchingInputStream;
     private AISObserver aisData;
+    private AISParser aisParser;
+    private AISInputStream aisInputStream;
 
     public AISContext(InputStream is, AISObserver aisData)
     {
-        aisInputStream = new SwitchingInputStream(is);
+        switchingInputStream = new SwitchingInputStream(is);
         this.aisData = aisData;
     }
     
@@ -44,9 +46,9 @@ public class AISContext implements Runnable
         }
     }
     
-    public SwitchingInputStream getAisInputStream()
+    public SwitchingInputStream getSwitchingInputStream()
     {
-        return aisInputStream;
+        return switchingInputStream;
     }
 
     public AISObserver getAisData()
@@ -54,12 +56,20 @@ public class AISContext implements Runnable
         return aisData;
     }
 
+    public void reStart() throws IOException
+    {
+        if (aisInputStream != null)
+        {
+            aisInputStream.reStart();
+        }
+    }
     @Override
     public void run()
     {
         try
         {
-            AISParser aisParser = AISParser.newInstance();
+            aisParser = AISParser.newInstance();
+            aisInputStream = new AISInputStream(switchingInputStream);
             aisParser.parse(aisInputStream, aisData);
         }
         catch (IOException ex)
