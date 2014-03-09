@@ -246,8 +246,13 @@ public abstract class AISGrammarGenerator
                             "1-3".equals(constant) || 
                             "4".equals(constant) || 
                             "5".equals(constant) || 
+                            "9".equals(constant) || 
+                            "11".equals(constant) || 
                             "18".equals(constant) || 
-                            "19".equals(constant)
+                            "19".equals(constant) ||
+                            "20".equals(constant) ||
+                            "21".equals(constant) ||
+                            "24".equals(constant)
                             )
                             )
                     {
