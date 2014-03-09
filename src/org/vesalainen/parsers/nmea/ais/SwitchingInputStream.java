@@ -67,12 +67,18 @@ public class SwitchingInputStream extends InputStream
             int cc = is.read();
             if (cc == ',')
             {
-                mainSemaphore.release();
-                count--;
-                if (count == 0)
+                try
                 {
-                    sleeping = true;
-                    return '\n';
+                    count--;
+                    if (count == 0)
+                    {
+                        sleeping = true;
+                        return '\n';
+                    }
+                }
+                finally
+                {
+                    mainSemaphore.release();
                 }
                 // continue sentence
                 sideSemaphore.acquire();
