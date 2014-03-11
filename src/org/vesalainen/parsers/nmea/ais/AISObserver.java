@@ -24,6 +24,24 @@ import org.vesalainen.parsers.nmea.Transactional;
  */
 public interface AISObserver extends Transactional
 {   
+    /**
+     * 
+     * @param numberOfSentences
+     * @param sentenceNumber
+     * @param sequentialMessageID
+     * @param channel 
+     */
+    void setPrefix(int numberOfSentences, int sentenceNumber, int sequentialMessageID, char channel);
+    /**
+     * Set own message status. if message is !AISVDM ownMessage = false. 
+     * if message is !AISVDO ownMessage = true.
+     * @param ownMessage 
+     */
+    void setOwnMessage(boolean ownMessage);
+    /**
+     * Set the type of message
+     * @param messageTypes 
+     */
     void setMessageType(MessageTypes messageTypes);
     
     /**
@@ -878,7 +896,22 @@ public interface AISObserver extends Transactional
      * @param delta -50-+50hPa: units of 0.1hPa averaged over last 3 hours.
      */
     void setAirPressureChange(float delta);
-
-    public void setPrefix(int numberOfSentences, int sentenceNumber, int sequentialMessageID, char channel);
+    /**
+     * Name in sixbit chars
+     * @param input 
+     */
+    void setName(String input);
+    /**
+     * If present, the Name Extension consists of packed six-bit ASCII 
+     * characters followed by 0-6 bits of padding to an 8-bit boundary. 
+     * The [IALA] description says "This parameter should be omitted when no 
+     * more than 20 characters for the name of the A-to-N are needed in total. 
+     * Only the required number of characters should be transmitted, 
+     * i.e. no @-character should be used." A decoder can deduce the bit 
+     * length of the name extension field by subtracting 272 from the total 
+     * message bit length.
+     * @param input 
+     */
+    void setNameExtension(String input);
 
 }

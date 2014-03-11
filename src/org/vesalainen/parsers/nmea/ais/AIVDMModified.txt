@@ -3385,7 +3385,7 @@ messages are required to be padded to an 8-bit byte boundary by
 Also see the pragmatic note on message content attached to type 12; it
 applies to type 14 messages as well.
 
-=== Type 15: Interrogation ===
+=== Type 15: Interrogation 1 ===
 
 Message type 15 is used by a base station to query one or two other AIS
 transceivers for status messages of specified types. "Source MMSI" is
@@ -3395,6 +3395,38 @@ This message is probably not interesting unless you are doing traffic
 analysis of information flow in an AIS station network.  The "slot offset" 
 members are a request for the response to interrogation to occupy
 a particular time division in the TDMA packet layer.
+
+[frame="topbot",options="header"]
+|==============================================================================
+|Field   |Len |Description         |Member    |T|Units
+|0-5     |  6 |Message Type        |type      |u|Constant: 15
+|6-7     |  2 |Repeat Indicator    |repeat    |u|As in Common Navigation Block
+|8-37    | 30 |Source MMSI         |mmsi      |u|9 decimal digits
+|38-39   |  2 |Spare               |          |x|Not used
+|40-69   | 30 |Interrogated MMSI   |mmsi1     |u|9 decimal digits
+|70-75   |  6 |First message type  |type1_1   |u|Unsigned integer
+|76-87   | 12 |First slot offset   |offset1_1 |u|Unsigned integer
+|==============================================================================
+
+=== Type 15: Interrogation 2 ===
+
+[frame="topbot",options="header"]
+|==============================================================================
+|Field   |Len |Description         |Member    |T|Units
+|0-5     |  6 |Message Type        |type      |u|Constant: 15
+|6-7     |  2 |Repeat Indicator    |repeat    |u|As in Common Navigation Block
+|8-37    | 30 |Source MMSI         |mmsi      |u|9 decimal digits
+|38-39   |  2 |Spare               |          |x|Not used
+|40-69   | 30 |Interrogated MMSI   |mmsi1     |u|9 decimal digits
+|70-75   |  6 |First message type  |type1_1   |u|Unsigned integer
+|76-87   | 12 |First slot offset   |offset1_1 |u|Unsigned integer
+|88-89   |  2 |Spare               |          |x|Not used
+|90-95   |  6 |Second message type |type1_2   |u|Unsigned integer
+|96-107  | 12 |Second slot offset  |offset1_2 |u|Unsigned integer
+|108-109 |  2 |Spare               |          |x|Not used
+|==============================================================================
+
+=== Type 15: Interrogation 3 ===
 
 [frame="topbot",options="header"]
 |==============================================================================
@@ -3890,7 +3922,7 @@ a quiet time command, it will continue to schedule nominal
 transmission time periods, but is not to transmit message 18 or 24
 during the quiet period.
 
-=== Type 24: Static Data Report  ===
+=== Type 24: Static Data Report A ===
 
 Equivalent of a Type 5 message for ships using Class B equipment.  Also
 used to associate an MMSI with a name on either class A or class B equipment.
@@ -3910,9 +3942,48 @@ is thanks to Kurt Schwehr.
 |0-5     |  6 | Message Type          | type           |u|Constant: 24
 |6-7     |  2 | Repeat Indicator      | repeat         |u|As in CNB
 |8-37    | 30 | MMSI                  | mmsi           |u|9 digits
-|38-39   |  2 | Part Number           | partno         |u|0-1
+|38-39   |  2 | Part Number           | partno         |u|Constant: 0
 |40-159  |120 | Vessel Name           | shipname       |t|(Part A) 20 sixbit chars
 |160-167 |  8 | Spare                 |                |x|(Part A) Not used
+|===============================================================================
+
+If the Part Number field is 0, the rest of the message is interpreted
+as a Part A; if it is 1, the rest of the message is interpreted
+as a Part B; values 2 and 3 are not allowed.
+
+The "Vendor ID" field is the name of the AIS equipment vendor.
+
+Interpretation of the 30 bits 132-162 in Part B is variable. If the
+MMSI at 8-37 is that of an auxiliary craft, the entry is taken to
+refer to a small attached auxiliary vessel and these 30 bits are read
+as the MMSI of the mother ship.  Otherwise the 30 bits describe vessel
+dimensions as in Message Type 5.
+
+According to <<MMSI>>, an MMSI is associated with an auxiliary craft
+when it is of the form 98MIDXXXX where the digits 3, 4 and 5 represent
+the MID and X is any figure from 0 to 9.
+
+=== Type 24: Static Data Report B ===
+
+Equivalent of a Type 5 message for ships using Class B equipment.  Also
+used to associate an MMSI with a name on either class A or class B equipment.
+
+A"Type 24" may be in part A or part B format; either is 168 bits.
+Parts A and B are expected to be broadcast in adjacent pairs.  The
+interpretation of some fields in Type B format changes depending on
+the range of the Type B MMSI field. 160 bits for part A, 168 bits for
+part B.
+
+<<IALA>> does not describe this message type; format information
+is thanks to Kurt Schwehr.
+
+[frame="topbot",options="header"]
+|==============================================================================
+|Field   |Len |Description            | Member         |T|Units
+|0-5     |  6 | Message Type          | type           |u|Constant: 24
+|6-7     |  2 | Repeat Indicator      | repeat         |u|As in CNB
+|8-37    | 30 | MMSI                  | mmsi           |u|9 digits
+|38-39   |  2 | Part Number           | partno         |u|Constant: 1
 |40-47   |  8 | Ship Type             | shiptype       |e|(Part B) See "Ship Types"
 |48-89   | 42 | Vendor ID             | vendorid       |t|(Part B) 7 six-bit chars
 |90-131  | 42 | Call Sign             | callsign       |t|(Part B) As in Message Type 5

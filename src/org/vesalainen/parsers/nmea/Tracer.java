@@ -1502,4 +1502,22 @@ public class Tracer implements NMEAObserver, AISObserver
         System.err.println("setDestinationWaypointLocation("+latitude+", "+longitude+")");
     }
 
+    @Override
+    public void setOwnMessage(boolean ownMessage)
+    {
+        System.err.println("setOwnMessage("+ownMessage+")");
+    }
+
+    @Override
+    public void setName(String input)
+    {
+        System.err.println("setName("+input+")");
+    }
+
+    @Override
+    public void setNameExtension(String input)
+    {
+        System.err.println("setNameExtension("+input+")");
+    }
+
 }

@@ -37,13 +37,14 @@ public class AISContext implements Runnable
         this.aisData = aisData;
     }
     
-    public void ensureStarted()
+    public void ensureStarted(boolean ownMessage)
     {
         if (thread == null)
         {
             thread = new Thread(this, "AIS Parser");
             thread.start();
         }
+        aisData.setOwnMessage(ownMessage);
     }
     
     public SwitchingInputStream getSwitchingInputStream()

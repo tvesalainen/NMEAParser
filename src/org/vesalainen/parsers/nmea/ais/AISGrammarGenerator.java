@@ -21,9 +21,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.ExecutableElement;
 import org.vesalainen.bcc.model.El;
@@ -57,7 +59,7 @@ public abstract class AISGrammarGenerator
 
     public static Grammar appendGrammar(Grammar grammar) throws FileNotFoundException
     {
-        InputStream is = new FileInputStream("src\\org\\vesalainen\\parsers\\nmea\\ais\\AIVDM.txt");
+        InputStream is = new FileInputStream("src\\org\\vesalainen\\parsers\\nmea\\ais\\AIVDMModified.txt");
         AISGrammarGenerator gen = AISGrammarGenerator.newInstance();
         grammar.addRule("messages", "(message '0*\n')+");
         for (SubareaType sat : SubareaType.values())
@@ -72,6 +74,7 @@ public abstract class AISGrammarGenerator
     }
     protected String lastTitle;
     private Set<String> references = new HashSet<>();
+    private Map<String,String> terminals = new HashMap<>();
 
     public AISGrammarGenerator()
     {
@@ -179,7 +182,7 @@ public abstract class AISGrammarGenerator
         if (check(header))
         {
             String rule = camel(title);
-            System.err.println("// "+rule);
+            //System.err.println("// "+rule);
             StringBuilder rhs = new StringBuilder();
             boolean hasArray = false;
             boolean msgRule = false;
@@ -242,19 +245,15 @@ public abstract class AISGrammarGenerator
                     }
                     String constant = getConstant(units);
                     if ("type".equals(member) && 
-                            !(
-                            "1-3".equals(constant) || 
-                            "4".equals(constant) || 
-                            "5".equals(constant) || 
-                            "9".equals(constant) || 
-                            "11".equals(constant) || 
-                            "18".equals(constant) || 
-                            "19".equals(constant) ||
+                            (
+                            "16".equals(constant) ||
                             "20".equals(constant) ||
-                            "21".equals(constant) ||
-                            "24".equals(constant)
-                            )
-                            )
+                            "22".equals(constant) ||
+                            "23".equals(constant) ||
+                            "25".equals(constant) ||
+                            "26".equals(constant) ||
+                            "27".equals(constant)
+                            ))
                     {
                         return;
                     }
@@ -275,6 +274,57 @@ public abstract class AISGrammarGenerator
                         {
                             nt = member+constant;
                         }
+                        switch (nt)
+                        {
+                            case "lon":
+                            case "lat":
+                            case "pressure":
+                            case "alt":
+                            case "regional":
+                            case "radio":
+                            case "name":
+                            case "destination":
+                            case "cspeed":
+                            case "radius":
+                            case "course":
+                            case "status":
+                            case "visibility":
+                            case "pressuretend":
+                            case "day":
+                            case "minute":
+                            case "speed":
+                            case "heading":
+                            case "airtemp":
+                            case "weather":
+                            case "duration":
+                            case "cdepth2":
+                            case "cdepth3":
+                            case "preciptype":
+                            case "airdraught":
+                            case "description":
+                            case "waterlevel":
+                            case "text":
+                            case "increment1":
+                            case "increment2":
+                            case "txrx":
+                                if (len[0] == len[1])
+                                {
+                                    nt = nt+"_"+len[0];
+                                    reducer = reducer+"_"+len[0];
+                                }
+                                else
+                                {
+                                    nt = nt+"_"+len[0]+"_"+len[1];
+                                    reducer = reducer+"_"+len[0]+"_"+len[1];
+                                }
+                                break;
+                        }
+                        String expr = terminals.get(nt);
+                        if (expr != null && !expr.equals(expression))
+                        {
+                            throw new IllegalArgumentException(nt+" is ambiquous "+expr+" <> "+expression);
+                        }
+                        terminals.put(nt, expression);
                         grammar.addTerminal(
                                 getReducer(reducer, javaType, AISObserver.class), 
                                 nt, 
@@ -311,7 +361,7 @@ public abstract class AISGrammarGenerator
             if (!generatedMethods.contains(name))
             {
                 generatedMethods.add(name);
-                System.err.println("protected void "+name+"("+p[0].getSimpleName()+" arg, @ParserContext(\"aisData\") AISData aisData){}");
+                System.err.println("protected void "+name+"("+p[0].getSimpleName()+" arg, @ParserContext(\"aisData\") AISObserver aisData){}");
             }
             return null;
         }
@@ -361,7 +411,14 @@ public abstract class AISGrammarGenerator
             }
             else
             {
-                return "[01]{"+len[0]+","+len[1]+"}";
+                if (len[0] > 0)
+                {
+                    return "[01]{"+len[0]+","+len[1]+"}";
+                }
+                else
+                {
+                    return "[01]{1,"+len[1]+"}";
+                }
             }
         }
     }
@@ -489,7 +546,6 @@ public abstract class AISGrammarGenerator
     {
         try
         {
-            //AISGrammarGenerator g = (AISGrammarGenerator) GenClassFactory.getGenInstance(AISGrammarGenerator.class);
             Grammar grammar = new AISGrammar();
             LALRKParserGenerator lrk = grammar.createParserGenerator("messages", false);
             lrk.printAnnotations(System.err);

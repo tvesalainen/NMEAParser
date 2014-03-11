@@ -1061,4 +1061,19 @@ public class AbstractAISObserver implements AISObserver
     {
     }
 
+    @Override
+    public void setOwnMessage(boolean ownMessage)
+    {
+    }
+
+    @Override
+    public void setName(String input)
+    {
+    }
+
+    @Override
+    public void setNameExtension(String input)
+    {
+    }
+
 }
