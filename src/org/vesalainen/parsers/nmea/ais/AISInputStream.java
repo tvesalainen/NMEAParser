@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
+ * AISInputStream converts ais content to binary input.
  * @author Timo Vesalainen
  */
 public class AISInputStream extends InputStream
@@ -34,14 +35,6 @@ public class AISInputStream extends InputStream
         this.in = in;
     }
 
-    public void reStart() throws IOException
-    {
-        if (bit != 0)
-        {
-            System.err.println(bit+" != 0");
-        }
-        bit = 0;
-    }
     @Override
     public int read() throws IOException
     {

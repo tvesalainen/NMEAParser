@@ -37,6 +37,7 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.ais.AISContext;
+import org.vesalainen.parsers.nmea.ais.AISContext.AISThread;
 import org.vesalainen.parsers.nmea.ais.AISParser;
 import org.vesalainen.parsers.nmea.ais.SwitchingInputStream;
 import org.vesalainen.parsers.nmea.ais.VesselMonitor;
@@ -170,13 +171,15 @@ public abstract class NMEAParser implements ParserInfo
     @Rule("'!AIVDM'")
     protected void aivdm(@ParserContext("aisContext") AISContext aisContext)
     {
-        aisContext.ensureStarted(false);
+        AISObserver aisData = aisContext.getAisData();
+        aisData.setOwnMessage(false);
     }
 
     @Rule("'!AIVDO'")
     protected void aivdo(@ParserContext("aisContext") AISContext aisContext)
     {
-        aisContext.ensureStarted(true);
+        AISObserver aisData = aisContext.getAisData();
+        aisData.setOwnMessage(true);
     }
 
     @Rule
@@ -213,27 +216,18 @@ public abstract class NMEAParser implements ParserInfo
             ) throws IOException
     {
         AISObserver aisData = aisContext.getAisData();
-        SwitchingInputStream aisInputStream = aisContext.getSwitchingInputStream();
         aisData.setPrefix(
             numberOfSentences,
             sentenceNumber,
             sequentialMessageID,
             channel
                 );
+        AISThread thread = aisContext.getThread(0);
         if (sentenceNumber == 1)
         {
-            aisInputStream.setNumberOfSentences(numberOfSentences);
-            aisContext.reStart();
+            thread.reStart(numberOfSentences);
         }
-        aisInputStream.getSideSemaphore().release();
-        try
-        {
-            aisInputStream.getMainSemaphore().acquire();
-        }
-        catch (InterruptedException ex)
-        {
-            throw new IllegalArgumentException(ex);
-        }
+        thread.goOn();
     }
 
     @Rule("integer")
@@ -1053,7 +1047,7 @@ public abstract class NMEAParser implements ParserInfo
         CheckedInputStream checkedInputStream = new CheckedInputStream(is, checksum);
         AISContext aisContext = new AISContext(checkedInputStream, aisData);
         parse(checkedInputStream, checksum, clock, data, aisContext);
-        aisContext.stop();
+        aisContext.stopThreads();
     }
 
     @ParseMethod(start = "statements", size = 1024, charSet="ASCII", wideIndex=true)
