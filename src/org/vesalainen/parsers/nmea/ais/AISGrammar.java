@@ -28,7 +28,7 @@ public class AISGrammar extends Grammar
 
     public AISGrammar() throws IOException
     {
-        super(5, 50);
+        super(5, 50, 1);
         AISGrammarGenerator.appendGrammar(this);
     }
     

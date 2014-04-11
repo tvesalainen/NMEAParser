@@ -47,7 +47,7 @@ import org.vesalainen.regex.Regex;
  * @author Timo Vesalainen
  */
 @GenClassname("org.vesalainen.parsers.nmea.ais.AISGrammarGeneratorImpl")
-@GrammarDef
+@GrammarDef(traceLevel=0)
 @Rules({
     @Rule(left="structures", value="structure*"),
     @Rule(left="structure", value="text"),
@@ -75,6 +75,7 @@ public abstract class AISGrammarGenerator
     protected String lastTitle;
     private Set<String> references = new HashSet<>();
     private Map<String,String> terminals = new HashMap<>();
+    private Set<String> types = new HashSet<>();
 
     public AISGrammarGenerator()
     {
@@ -185,7 +186,8 @@ public abstract class AISGrammarGenerator
             //System.err.println("// "+rule);
             StringBuilder rhs = new StringBuilder();
             boolean hasArray = false;
-            boolean msgRule = false;
+            String msgRule = null;
+            String constant = null;
             while (iterator.hasNext())
             {
                 List<String> line = iterator.next();
@@ -243,9 +245,16 @@ public abstract class AISGrammarGenerator
                     {
                         units = "";
                     }
-                    String constant = getConstant(units);
-                    if ("type".equals(member) && 
-                            (
+                    String reducer = "ais"+camel(member);
+                    if (t.length() > 1)
+                    {
+                        reducer = reducer+"_"+t;
+                    }
+                    constant = getConstant(units);
+                    String expression = createExpression(len, t, units, constant);
+                    if ("type".equals(member))
+                    {
+                        if (
                             "16".equals(constant) ||
                             "20".equals(constant) ||
                             "22".equals(constant) ||
@@ -253,91 +262,103 @@ public abstract class AISGrammarGenerator
                             "25".equals(constant) ||
                             "26".equals(constant) ||
                             "27".equals(constant)
-                            ))
-                    {
-                        return;
-                    }
-                    String expression = createExpression(len, t, units, constant);
-                    if (member.isEmpty())
-                    {
-                        rhs.append(" `"+expression+"´");
+                            )
+                        {
+                            return;
+                        }
+                        if (constant != null && !types.contains(constant))
+                        {
+                            types.add(constant);
+                            grammar.addRule("message", constant);
+                            grammar.addRule(constant+"Content", constant+"Content+");
+                            terminals.put(constant, expression);
+                            grammar.addTerminal(
+                                    getReducer(reducer, javaType, AISObserver.class), 
+                                    constant, 
+                                    expression, 
+                                    description, 
+                                    0, 
+                                    radix);
+                        }
                     }
                     else
                     {
-                        String reducer = "ais"+camel(member);
-                        if (t.length() > 1)
+                        if (member.isEmpty())
                         {
-                            reducer = reducer+"_"+t;
+                            rhs.append(" `"+expression+"´");
                         }
-                        String nt = member;
-                        if (constant != null)
+                        else
                         {
-                            nt = member+constant;
+                            String nt = member;
+                            if (constant != null)
+                            {
+                                nt = member+constant;
+                            }
+                            switch (nt)
+                            {
+                                case "lon":
+                                case "lat":
+                                case "pressure":
+                                case "alt":
+                                case "regional":
+                                case "radio":
+                                case "name":
+                                case "destination":
+                                case "cspeed":
+                                case "radius":
+                                case "course":
+                                case "status":
+                                case "visibility":
+                                case "pressuretend":
+                                case "day":
+                                case "minute":
+                                case "speed":
+                                case "heading":
+                                case "airtemp":
+                                case "weather":
+                                case "duration":
+                                case "cdepth2":
+                                case "cdepth3":
+                                case "preciptype":
+                                case "airdraught":
+                                case "description":
+                                case "waterlevel":
+                                case "text":
+                                case "increment1":
+                                case "increment2":
+                                case "txrx":
+                                    if (len[0] == len[1])
+                                    {
+                                        nt = nt+"_"+len[0];
+                                        reducer = reducer+"_"+len[0];
+                                    }
+                                    else
+                                    {
+                                        nt = nt+"_"+len[0]+"_"+len[1];
+                                        reducer = reducer+"_"+len[0]+"_"+len[1];
+                                    }
+                                    break;
+                            }
+                            String expr = terminals.get(nt);
+                            if (expr != null && !expr.equals(expression))
+                            {
+                                throw new IllegalArgumentException(nt+" is ambiquous "+expr+" <> "+expression);
+                            }
+                            terminals.put(nt, expression);
+                            grammar.addTerminal(
+                                    getReducer(reducer, javaType, AISObserver.class), 
+                                    nt, 
+                                    expression, 
+                                    description, 
+                                    0, 
+                                    radix);
+                            rhs.append(" "+nt);
                         }
-                        switch (nt)
-                        {
-                            case "lon":
-                            case "lat":
-                            case "pressure":
-                            case "alt":
-                            case "regional":
-                            case "radio":
-                            case "name":
-                            case "destination":
-                            case "cspeed":
-                            case "radius":
-                            case "course":
-                            case "status":
-                            case "visibility":
-                            case "pressuretend":
-                            case "day":
-                            case "minute":
-                            case "speed":
-                            case "heading":
-                            case "airtemp":
-                            case "weather":
-                            case "duration":
-                            case "cdepth2":
-                            case "cdepth3":
-                            case "preciptype":
-                            case "airdraught":
-                            case "description":
-                            case "waterlevel":
-                            case "text":
-                            case "increment1":
-                            case "increment2":
-                            case "txrx":
-                                if (len[0] == len[1])
-                                {
-                                    nt = nt+"_"+len[0];
-                                    reducer = reducer+"_"+len[0];
-                                }
-                                else
-                                {
-                                    nt = nt+"_"+len[0]+"_"+len[1];
-                                    reducer = reducer+"_"+len[0]+"_"+len[1];
-                                }
-                                break;
-                        }
-                        String expr = terminals.get(nt);
-                        if (expr != null && !expr.equals(expression))
-                        {
-                            throw new IllegalArgumentException(nt+" is ambiquous "+expr+" <> "+expression);
-                        }
-                        terminals.put(nt, expression);
-                        grammar.addTerminal(
-                                getReducer(reducer, javaType, AISObserver.class), 
-                                nt, 
-                                expression, 
-                                description, 
-                                0, 
-                                radix);
-                        rhs.append(" "+nt);
                     }
                 }
                 if ("type".equals(member))
                 {
-                    msgRule = true;
+                    msgRule = constant+"Content";
                 }
             }
             if (hasArray)
@@ -345,9 +366,9 @@ public abstract class AISGrammarGenerator
                 rhs.append(")+");
             }
             grammar.addRule(rule, rhs.toString());
-            if (msgRule)
+            if (msgRule != null)
             {
-                grammar.addRule("message", rule);
+                grammar.addRule(msgRule, rule);
             }
         }
     }
