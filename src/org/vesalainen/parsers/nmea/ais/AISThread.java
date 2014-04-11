@@ -23,7 +23,7 @@ import java.io.InputStream;
 /**
  * @author Timo Vesalainen
  */
-public class AISContext implements Runnable
+public class AISThread implements Runnable
 {
     private Thread thread;
     private SwitchingInputStream switchingInputStream;
@@ -31,7 +31,7 @@ public class AISContext implements Runnable
     private AISParser aisParser;
     private AISInputStream aisInputStream;
 
-    public AISContext(InputStream is, AISObserver aisData)
+    public AISThread(InputStream is, AISObserver aisData)
     {
         switchingInputStream = new SwitchingInputStream(is);
         this.aisData = aisData;
@@ -47,22 +47,14 @@ public class AISContext implements Runnable
         aisData.setOwnMessage(ownMessage);
     }
     
-    public SwitchingInputStream getSwitchingInputStream()
-    {
-        return switchingInputStream;
-    }
-
     public AISObserver getAisData()
     {
         return aisData;
     }
 
-    public void reStart() throws IOException
+    public void reStart(int numberOfSentences) throws IOException
     {
-        if (aisInputStream != null)
-        {
-            aisInputStream.reStart();
-        }
+        switchingInputStream.setNumberOfSentences(numberOfSentences);
     }
     @Override
     public void run()
@@ -84,6 +76,19 @@ public class AISContext implements Runnable
         if (thread != null)
         {
             thread.interrupt();
+        }
+    }
+
+    public void goOn()
+    {
+        switchingInputStream.getSideSemaphore().release();
+        try
+        {
+            switchingInputStream.getMainSemaphore().acquire();
+        }
+        catch (InterruptedException ex)
+        {
+            throw new IllegalArgumentException(ex);
         }
     }
     
