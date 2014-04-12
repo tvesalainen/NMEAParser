@@ -19,18 +19,20 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.concurrent.Semaphore;
 
 /**
  * @author Timo Vesalainen
  */
 public class AISContext
 {
-    private SwitchingInputStream switchingInputStream;
-    private AISObserver aisData;
-    private AISParser aisParser;
-    private AISInputStream aisInputStream;
-    private InputStream in;
-    private AISThread[] threads = new AISThread[0b111111];
+    private final AISObserver aisData;
+    private final AISParser aisParser;
+    private final InputStream in;
+    private final AISThread[] threads = new AISThread[0b111111];
+    private final Semaphore mainSemaphore = new Semaphore(0);
 
     public AISContext(InputStream in, AISObserver aisData) throws IOException
     {
@@ -62,13 +64,15 @@ public class AISContext
     }
     public class AISThread implements Runnable
     {
+        private SwitchingInputStream switchingInputStream;
+        private AISInputStream aisInputStream;
         private Thread thread;
         private int message;
 
         public AISThread(int message)
         {
             this.message = message;
-            switchingInputStream = new SwitchingInputStream(in);
+            switchingInputStream = new SwitchingInputStream(in, mainSemaphore);
             aisInputStream = new AISInputStream(switchingInputStream);
             thread = new Thread(this, "AIS Thread "+message);
         }
@@ -85,7 +89,29 @@ public class AISContext
         @Override
         public void run()
         {
-            aisParser.parse(aisInputStream, aisData);
+            switch (message)
+            {
+                case 0:
+                    aisParser.parse(aisInputStream, aisData);
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                    aisParser.parse123Messages(aisInputStream, aisData);
+                    break;
+                default:
+                    String methodName = "parse"+message+"Messages";
+                    try
+                    {
+                        Method parser = AISParser.class.getMethod(methodName, AISInputStream.class, AISObserver.class);
+                        parser.invoke(aisInputStream, aisData);
+                    }
+                    catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
+                    {
+                        throw new IllegalArgumentException(methodName+" not implemented");
+                    }
+                    break;
+            }
         }
 
         public void stop()
@@ -98,15 +124,21 @@ public class AISContext
 
         public void goOn()
         {
-            switchingInputStream.getSideSemaphore().release();
+            switchingInputStream.getSemaphore().release();
             try
             {
-                switchingInputStream.getMainSemaphore().acquire();
+                mainSemaphore.acquire();
             }
             catch (InterruptedException ex)
             {
                 throw new IllegalArgumentException(ex);
             }
         }
+
+        public SwitchingInputStream getSwitchingInputStream()
+        {
+            return switchingInputStream;
+        }
+        
     }
 }

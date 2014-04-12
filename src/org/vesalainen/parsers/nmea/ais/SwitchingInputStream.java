@@ -32,19 +32,14 @@ public class SwitchingInputStream extends InputStream
     private int count;
     private InputStream is;
 
-    public SwitchingInputStream(InputStream is)
+    public SwitchingInputStream(InputStream is, Semaphore mainSemaphore)
     {
         this.is = is;
-        mainSemaphore = new Semaphore(0);
+        this.mainSemaphore = mainSemaphore;
         sideSemaphore = new Semaphore(0);
     }
 
-    public Semaphore getMainSemaphore()
-    {
-        return mainSemaphore;
-    }
-
-    public Semaphore getSideSemaphore()
+    public Semaphore getSemaphore()
     {
         return sideSemaphore;
     }
@@ -52,6 +47,11 @@ public class SwitchingInputStream extends InputStream
     public void setNumberOfSentences(int count) throws IOException
     {
         this.count = count;
+    }
+
+    public void setSleeping(boolean sleeping)
+    {
+        this.sleeping = sleeping;
     }
 
     @Override

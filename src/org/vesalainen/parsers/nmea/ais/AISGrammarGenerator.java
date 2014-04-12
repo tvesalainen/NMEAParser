@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.lang.model.element.ExecutableElement;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.grammar.GRule;
@@ -61,7 +62,7 @@ public abstract class AISGrammarGenerator
     {
         InputStream is = new FileInputStream("src\\org\\vesalainen\\parsers\\nmea\\ais\\AIVDMModified.txt");
         AISGrammarGenerator gen = AISGrammarGenerator.newInstance();
-        grammar.addRule("messages", "(message '0*\n')+");
+        grammar.addRule("messages", "message+");
         for (SubareaType sat : SubareaType.values())
         {
             if (!sat.toString().startsWith("Reserved"))
@@ -70,12 +71,20 @@ public abstract class AISGrammarGenerator
             }
         }
         gen.parse(is, grammar);
+        for (String t : gen.types)
+        {
+            t = t+"Messages";
+            System.err.println("    @ParseMethod(start = \""+t+"\", size = 1024, wideIndex = true)");
+            System.err.println("    protected abstract void parse"+t+"(");
+            System.err.println("            InputStream is,");
+            System.err.println("            @ParserContext(\"aisData\") AISObserver aisData);");
+        }
         return grammar;
     }
     protected String lastTitle;
     private Set<String> references = new HashSet<>();
     private Map<String,String> terminals = new HashMap<>();
-    private Set<String> types = new HashSet<>();
+    private Set<String> types = new TreeSet<>();
 
     public AISGrammarGenerator()
     {
@@ -255,13 +264,8 @@ public abstract class AISGrammarGenerator
                     if ("type".equals(member))
                     {
                         if (
-                            "16".equals(constant) ||
-                            "20".equals(constant) ||
-                            "22".equals(constant) ||
-                            "23".equals(constant) ||
                             "25".equals(constant) ||
-                            "26".equals(constant) ||
-                            "27".equals(constant)
+                            "26".equals(constant)
                             )
                         {
                             return;
@@ -270,7 +274,7 @@ public abstract class AISGrammarGenerator
                         {
                             types.add(constant);
                             grammar.addRule("message", constant);
-                            grammar.addRule(constant+"Content", constant+"Content+");
+                            grammar.addRule(constant+"Messages", "("+constant+"Content '0*\n')+");
                             terminals.put(constant, expression);
                             grammar.addTerminal(
                                     getReducer(reducer, javaType, AISObserver.class), 
@@ -568,8 +572,9 @@ public abstract class AISGrammarGenerator
         try
         {
             Grammar grammar = new AISGrammar();
-            LALRKParserGenerator lrk = grammar.createParserGenerator("messages", false);
-            lrk.printAnnotations(System.err);
+            grammar.printAnnotations(System.err);
+            //LALRKParserGenerator lrk = grammar.createParserGenerator("messages", false);
+            //lrk.printAnnotations(System.err);
         }
         catch (Exception ex)
         {
