@@ -28,10 +28,10 @@ import static org.junit.Assert.*;
  *
  * @author Timo Vesalainen
  */
-public class AISInputStreamTest
+public class TestAISInputStream
 {
     
-    public AISInputStreamTest()
+    public TestAISInputStream()
     {
     }
     
@@ -62,11 +62,11 @@ public class AISInputStreamTest
     public void testRead() throws Exception
     {
         System.out.println("read");
-        ByteArrayInputStream in = new ByteArrayInputStream("14eG;o@034o8sd<L9i:a;WF>062D".getBytes());
+        ByteArrayInputStream in = new ByteArrayInputStream("14eG;o@034o8sd<L9i:a;WF>062D\n".getBytes());
         AISInputStream ain = new AISInputStream(in);
         StringBuilder result = new StringBuilder();
         int cc = ain.read();
-        while (cc != -1)
+        while (cc != '\n')
         {
             result.append((char)cc);
             cc = ain.read();
