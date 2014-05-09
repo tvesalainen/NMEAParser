@@ -37,9 +37,7 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.ais.AISContext;
-import org.vesalainen.parsers.nmea.ais.AISContext.AISThread;
 import org.vesalainen.parsers.nmea.ais.AISParser;
-import org.vesalainen.parsers.nmea.ais.SwitchingInputStream;
 import org.vesalainen.parsers.nmea.ais.VesselMonitor;
 
 /**
@@ -85,6 +83,7 @@ import org.vesalainen.parsers.nmea.ais.VesselMonitor;
     @Rule(left = "nmeaSentence", value = "'RPM' c rpmSource c rpmSourceNumber c rpm c propellerPitch c status"),
     @Rule(left = "nmeaSentence", value = "'RSA' c starboardRudderSensor c status c portRudderSensor c status2"),
     @Rule(left = "nmeaSentence", value = "'RTE' c totalNumberOfMessages c messageNumber c messageMode c waypoints"),
+    @Rule(left = "nmeaSentence", value = "'TXT' c totalNumberOfMessages c messageNumber c targetName c message"),
     @Rule(left = "nmeaSentence", value = "'VHW' c waterHeading c waterHeading c waterSpeed c waterSpeed"),
     @Rule(left = "nmeaSentence", value = "'VWR' c windDirection c windSpeed c windSpeed c windSpeed"),
     @Rule(left = "nmeaSentence", value = "'WCV' c velocityToWaypoint c waypoint"),
@@ -183,6 +182,22 @@ public abstract class NMEAParser implements ParserInfo
     }
 
     @Rule
+    protected void targetName()
+    {
+    }
+    @Rule("string")
+    protected void targetName(String name)
+    {
+    }
+    @Rule
+    protected void message()
+    {
+    }
+    @Rule("string")
+    protected void message(String message)
+    {
+    }
+    @Rule
     protected int sequentialMessageID()
     {
         return 0;
@@ -222,12 +237,15 @@ public abstract class NMEAParser implements ParserInfo
             sequentialMessageID,
             channel
                 );
-        AISThread thread = aisContext.getThread(0);
         if (sentenceNumber == 1)
         {
-            thread.reStart(numberOfSentences);
+            aisContext.setNumberOfMessages(numberOfSentences);
+            aisContext.switchTo(0);
         }
-        thread.goOn();
+        else
+        {
+            aisContext.switchTo(aisContext.getLast());
+        }
     }
 
     @Rule("integer")
