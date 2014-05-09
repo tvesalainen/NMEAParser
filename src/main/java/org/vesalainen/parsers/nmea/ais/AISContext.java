@@ -21,23 +21,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.concurrent.Semaphore;
+import org.vesalainen.util.concurrent.UnparallelWorkflow;
 
 /**
  * @author Timo Vesalainen
  */
-public class AISContext
+public class AISContext extends UnparallelWorkflow<Integer>
 {
     private final AISObserver aisData;
     private final AISParser aisParser;
     private final InputStream in;
-    private final AISThread[] threads = new AISThread[0b111111];
-    private final Semaphore mainSemaphore = new Semaphore(0);
+    private final SwitchingInputStream switchingInputStream;
+    private final AISInputStream aisInputStream;
+    private int last;
 
     public AISContext(InputStream in, AISObserver aisData) throws IOException
     {
+        super(-1);
         this.aisData = aisData;
         this.in = in;
+        switchingInputStream = new SwitchingInputStream(in, this);
+        aisInputStream = new AISInputStream(switchingInputStream);
         aisParser = AISParser.newInstance();
     }
     
@@ -46,53 +50,55 @@ public class AISContext
         return aisData;
     }
 
-    public AISThread getThread(int message)
+    public void setNumberOfMessages(int numberOfMessages)
     {
-        AISThread thr = threads[message];
-        if (thr == null)
-        {
-            thr = new AISThread(message);
-            threads[message] = thr;
-            thr.start();
-        }
-        return thr;
+        switchingInputStream.setNumberOfSentences(numberOfMessages);
+    }
+
+    @Override
+    public void switchTo(Integer to)
+    {
+        super.switchTo(to);
+    }
+
+    public int getLast()
+    {
+        return last;
+    }
+
+    public void setLast(int last)
+    {
+        this.last = last;
     }
 
     public void stopThreads()
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    protected Runnable create(Integer key)
+    {
+        return new AISThread(key, this);
+    }
     public class AISThread implements Runnable
     {
-        private SwitchingInputStream switchingInputStream;
-        private AISInputStream aisInputStream;
-        private Thread thread;
-        private int message;
+        private final int message;
+        private final AISContext context;
 
-        public AISThread(int message)
+        public AISThread(int message, AISContext context)
         {
             this.message = message;
-            switchingInputStream = new SwitchingInputStream(in, mainSemaphore);
-            aisInputStream = new AISInputStream(switchingInputStream);
-            thread = new Thread(this, "AIS Thread "+message);
+            this.context = context;
         }
         
-        public void start()
-        {
-            thread.start();
-        }
-        public void reStart(int numberOfSentences) throws IOException
-        {
-            switchingInputStream.setNumberOfSentences(numberOfSentences);
-        }
-
         @Override
         public void run()
         {
             switch (message)
             {
                 case 0:
-                    aisParser.parse(aisInputStream, aisData);
+                    aisParser.parse(aisInputStream, aisData, context);
                     break;
                 case 1:
                 case 2:
@@ -103,8 +109,8 @@ public class AISContext
                     String methodName = "parse"+message+"Messages";
                     try
                     {
-                        Method parser = AISParser.class.getMethod(methodName, AISInputStream.class, AISObserver.class);
-                        parser.invoke(aisInputStream, aisData);
+                        Method parser = aisParser.getClass().getMethod(methodName, InputStream.class, AISObserver.class);
+                        parser.invoke(aisParser, aisInputStream, aisData);
                     }
                     catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
                     {
@@ -114,31 +120,5 @@ public class AISContext
             }
         }
 
-        public void stop()
-        {
-            if (thread != null)
-            {
-                thread.interrupt();
-            }
-        }
-
-        public void goOn()
-        {
-            switchingInputStream.getSemaphore().release();
-            try
-            {
-                mainSemaphore.acquire();
-            }
-            catch (InterruptedException ex)
-            {
-                throw new IllegalArgumentException(ex);
-            }
-        }
-
-        public SwitchingInputStream getSwitchingInputStream()
-        {
-            return switchingInputStream;
-        }
-        
     }
 }

@@ -415,4 +415,8 @@ public interface NMEAObserver extends Transactional
      */
     void setVelocityToWaypoint(float velocityToWaypoint, char unit);
 
+    void setTargetName(String name);
+
+    void setMessage(String message);
+
 }

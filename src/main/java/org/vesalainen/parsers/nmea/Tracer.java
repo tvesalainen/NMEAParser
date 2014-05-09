@@ -1520,4 +1520,16 @@ public class Tracer implements NMEAObserver, AISObserver
         System.err.println("setNameExtension("+input+")");
     }
 
+    @Override
+    public void setTargetName(String name)
+    {
+        System.err.println("setTargetName("+name+")");
+    }
+
+    @Override
+    public void setMessage(String message)
+    {
+        System.err.println("setMessage("+message+")");
+    }
+
 }

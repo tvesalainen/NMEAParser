@@ -32,7 +32,7 @@ public class AisContentDumper
         StringBufferInputStream sbis = new StringBufferInputStream(content);
         AISInputStream ais = new AISInputStream(sbis);
         int cc = ais.read();
-        int count = 1;
+        int count = 0;
         while (cc != -1)
         {
             System.err.println(count+": "+(char)cc);
@@ -47,7 +47,7 @@ public class AisContentDumper
     {
         try
         {
-            dump("H39T18P4pdG:222222222222220\n");
+            dump("H3KMVtTT>F348TB?:kjki01P0400\n");
         }
         catch (Exception ex)
         {

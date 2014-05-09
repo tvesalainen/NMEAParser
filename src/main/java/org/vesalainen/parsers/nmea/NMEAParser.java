@@ -186,16 +186,18 @@ public abstract class NMEAParser implements ParserInfo
     {
     }
     @Rule("string")
-    protected void targetName(String name)
+    protected void targetName(String name, @ParserContext("data") NMEAObserver data)
     {
+        data.setTargetName(name);
     }
     @Rule
     protected void message()
     {
     }
     @Rule("string")
-    protected void message(String message)
+    protected void message(String message, @ParserContext("data") NMEAObserver data)
     {
+        data.setMessage(message);
     }
     @Rule
     protected int sequentialMessageID()
@@ -991,7 +993,7 @@ public abstract class NMEAParser implements ParserInfo
     @Terminal(expression = "[0-9A-Fa-f]")
     protected abstract char hexAlpha(char x);
 
-    @Terminal(expression = "[a-zA-Z0-9 \\.\\-]+")
+    @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)]+")
     protected abstract String string(String s);
 
     @Terminal(expression = "[\\+\\-]?[0-9]+")

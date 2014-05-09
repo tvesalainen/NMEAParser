@@ -30,9 +30,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import javax.lang.model.element.ExecutableElement;
 import org.vesalainen.bcc.model.El;
-import org.vesalainen.grammar.GRule;
 import org.vesalainen.grammar.Grammar;
-import org.vesalainen.lpg.LALRKParserGenerator;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
@@ -60,7 +58,7 @@ public abstract class AISGrammarGenerator
 
     public static Grammar appendGrammar(Grammar grammar) throws FileNotFoundException
     {
-        InputStream is = new FileInputStream("src\\org\\vesalainen\\parsers\\nmea\\ais\\AIVDMModified.txt");
+        InputStream is = new FileInputStream("src\\main\\resources\\org\\vesalainen\\parsers\\nmea\\ais\\AIVDMModified.txt");
         AISGrammarGenerator gen = AISGrammarGenerator.newInstance();
         grammar.addRule("messages", "message+");
         for (SubareaType sat : SubareaType.values())
@@ -277,7 +275,7 @@ public abstract class AISGrammarGenerator
                             grammar.addRule(constant+"Messages", "("+constant+"Content '0*\n')+");
                             terminals.put(constant, expression);
                             grammar.addTerminal(
-                                    getReducer(reducer, javaType, AISObserver.class), 
+                                    getReducer(reducer, javaType, AISObserver.class, AISContext.class), 
                                     constant, 
                                     expression, 
                                     description, 

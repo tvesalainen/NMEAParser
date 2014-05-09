@@ -26,69 +26,44 @@ import java.util.concurrent.Semaphore;
  */
 public class SwitchingInputStream extends InputStream
 {
-    private Semaphore mainSemaphore;
-    private Semaphore sideSemaphore;
     private boolean sleeping = true;
+    private final InputStream is;
+    private final AISContext context;
     private int count;
-    private InputStream is;
 
-    public SwitchingInputStream(InputStream is, Semaphore mainSemaphore)
+    public SwitchingInputStream(InputStream is, AISContext context)
     {
         this.is = is;
-        this.mainSemaphore = mainSemaphore;
-        sideSemaphore = new Semaphore(0);
+        this.context = context;
     }
 
-    public Semaphore getSemaphore()
-    {
-        return sideSemaphore;
-    }
-
-    public void setNumberOfSentences(int count) throws IOException
+    public void setNumberOfSentences(int count)
     {
         this.count = count;
-    }
-
-    public void setSleeping(boolean sleeping)
-    {
-        this.sleeping = sleeping;
     }
 
     @Override
     public int read() throws IOException
     {
-        try
+        int cc = is.read();
+        if (cc == ',')
         {
-            if (sleeping)
+            try
             {
-                sleeping = false;
-                sideSemaphore.acquire();
+                count--;
+                if (count == 0)
+                {
+                    sleeping = true;
+                    return '\n';
+                }
             }
-            int cc = is.read();
-            if (cc == ',')
+            finally
             {
-                try
-                {
-                    count--;
-                    if (count == 0)
-                    {
-                        sleeping = true;
-                        return '\n';
-                    }
-                }
-                finally
-                {
-                    mainSemaphore.release();
-                }
-                // continue sentence
-                sideSemaphore.acquire();
-                cc = is.read();
+                context.switchTo(-1);
             }
-            return cc;
+            // continue sentence
+            cc = is.read();
         }
-        catch (InterruptedException ex)
-        {
-            throw new IOException(ex);
-        }
+        return cc;
     }
 }

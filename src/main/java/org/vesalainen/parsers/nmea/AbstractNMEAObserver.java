@@ -518,4 +518,14 @@ public class AbstractNMEAObserver implements NMEAObserver
         
     }
 
+    @Override
+    public void setTargetName(String name)
+    {
+    }
+
+    @Override
+    public void setMessage(String message)
+    {
+    }
+
 }

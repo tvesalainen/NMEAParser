@@ -63,15 +63,15 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="fwdir", expression="[01]{9}", doc="Forecast Wind Direction", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisFwdir(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="to_starboard", expression="[01]{6}", doc="Dimension to Starboard", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisToStarboard(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="description_6_966", expression="[01]{6,966}", doc="Description", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisDescription_6_966(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="7", expression="000111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="6", expression="000110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="5", expression="000101", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="4", expression="000100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="7", expression="000111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="6", expression="000110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="5", expression="000101", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="4", expression="000100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="heavyoil", expression="[01]{2}", doc="Heavy Fuel Oil Bunkered", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisHeavyoil(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="type2_1", expression="[01]{6}", doc="First message type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType21(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="xband_state", expression="[01]{2}", doc="Radar (X-band)", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisXbandState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="9", expression="001001", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="8", expression="001000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="9", expression="001001", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="8", expression="001000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="cnorth2", expression="[01]{8}", doc="Current Vector component North (u) #2", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisCnorth2_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="retransmit", expression="[01]{1}", doc="Retransmit flag", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisRetransmit(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="nextport", expression="[01]{30}", doc="Next Port Of Call", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisNextport(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -279,12 +279,12 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="weather_9", expression="[01]{9}", doc="Present Weather", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisWeather_9(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="weather_4", expression="[01]{4}", doc="Present Weather", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisWeather_4(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="vhfchan", expression="[01]{12}", doc="VHF Working Channel", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisVhfchan(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="22", expression="010110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="23", expression="010111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="22", expression="010110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="23", expression="010111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="heading_9", expression="[01]{9}", doc="True Heading (HDG)", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisHeading_9(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="24", expression="011000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="24", expression="011000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="quiet", expression="[01]{4}", doc="Quiet Time", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisQuiet(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="27", expression="011011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="27", expression="011011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="airgap", expression="[01]{13}", doc="Air Gap", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisAirgap_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="heading_7", expression="[01]{7}", doc="Heading of the ship", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisHeading_7(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="gyro_state", expression="[01]{2}", doc="Gyro compass", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisGyroState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -296,18 +296,18 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="lrit_state", expression="[01]{2}", doc="LRIT", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisLritState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="chart_state", expression="[01]{2}", doc="Paper Nautical Chart", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisChartState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="imdcat", expression="[01]{24}", doc="IMD Category", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisImdcat(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="19", expression="010011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="17", expression="010001", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="19", expression="010011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="17", expression="010001", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="data", expression="[01]{736}", doc="Payload", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisData(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="18", expression="010010", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="15", expression="001111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="16", expression="010000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="14", expression="001110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="18", expression="010010", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="15", expression="001111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="16", expression="010000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="14", expression="001110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="virtual_aid", expression="[01]{1}", doc="Virtual-aid flag", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisVirtualAid(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="11", expression="001011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="12", expression="001100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="21", expression="010101", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="20", expression="010100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="11", expression="001011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="12", expression="001100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="21", expression="010101", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
+,@Terminal(left="20", expression="010100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="wwperiod", expression="[01]{5}", doc="Period of Wind Waves", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisWwperiod(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="wgust", expression="[01]{7}", doc="Gust Speed", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisWgust(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="notice", expression="[01]{7}", doc="Notice Description", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisNotice(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -319,7 +319,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="fwspeed", expression="[01]{7}", doc="Forecast Wind Speed", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisFwspeed(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="tday", expression="[01]{5}", doc="To day (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisTday(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="to_bow", expression="[01]{9}", doc="Dimension to Bow", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisToBow(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="10", expression="001010", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="10", expression="001010", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="fday", expression="[01]{5}", doc="From day (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisFday(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="icestate", expression="[01]{5}", doc="Ice Situation", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisIcestate(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="swelldir2", expression="[01]{6}", doc="Second Swell Direction", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisSwelldir2(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -388,7 +388,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="vendorid", expression="[01]{42}", doc="Vendor ID", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisVendorid(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="lhour", expression="[01]{5}", doc="ETA hour (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisLhour(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="bearing", expression="[01]{10}", doc="Bearing", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisBearing(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="1-3", expression="000001|000010|000011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="1-3", expression="000001|000010|000011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisType(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="mgustdir", expression="[01]{7}", doc="Maximum Gust Direction", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisMgustdir(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="position", expression="[01]{3}", doc="Mooring Position", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisPosition(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="to_hour", expression="[01]{5}", doc="To UTC Hour", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisToHour(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -684,21 +684,6 @@ protected void aisLon_I4_18(int arg, @ParserContext("aisData") AISObserver aisDa
 protected void aisLat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData){}
 
-    /**
-     * Parses AIS messages decompressed to bits. (represented with characters
-     * '0' & '1')
-     *
-     * <p> Example input:
-     * 00010100001111011001011001001011111000000000000110001...
-     *
-     * @param is
-     * @param aisData
-     */
-    public void parseBits(InputStream is, AISObserver aisData)
-    {
-        parse(is, aisData);
-    }
-
     public static AISParser newInstance() throws IOException
     {
         return (AISParser) GenClassFactory.getGenInstance(AISParser.class);
@@ -707,7 +692,8 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
     @ParseMethod(start = "messages", size = 1024, wideIndex = true)
     protected abstract void parse(
             InputStream is,
-            @ParserContext("aisData") AISObserver aisData);
+            @ParserContext("aisData") AISObserver aisData,
+            @ParserContext("aisContext") AISContext aisContext);
 
     @ParseMethod(start = "1-3Messages", size = 1024, wideIndex = true)
     protected abstract void parse123Messages(
@@ -827,7 +813,8 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
             }
             aisData.rollback("skipping " + sb+" "+thr);
         }
-        System.err.println(expected);
+        System.err.println("Expected "+expected);
+        System.err.println("Got      "+got);
     }
 
     protected void aisType(
@@ -837,10 +824,8 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
     )
     {
         aisData.setMessageType(MessageTypes.values()[messageType]);
-        AISContext.AISThread thread0 = aisContext.getThread(0);
-        thread0.getSwitchingInputStream().setSleeping(true);
-        AISContext.AISThread thread = aisContext.getThread(messageType);
-        thread.getSwitchingInputStream().getSemaphore().release();
+        aisContext.setLast(messageType);
+        aisContext.switchTo(messageType);
     }
 
     protected void aisRepeat(int repeatIndicator, @ParserContext("aisData") AISObserver aisData)
