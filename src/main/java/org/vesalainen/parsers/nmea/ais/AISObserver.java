@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
+import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.Transactional;
 
 /**
@@ -180,14 +181,14 @@ public interface AISObserver extends Transactional
     void setIMONumber(int imo);
     /**
      * Call Sign
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setCallSign(String fromSixBitCharacters);
+    void setCallSign(InputReader input);
     /**
      * Vessel Name
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setVesselName(String fromSixBitCharacters);
+    void setVesselName(InputReader input);
     /**
      * Dimension to Bow
      * @param dimension meters 
@@ -215,9 +216,9 @@ public interface AISObserver extends Transactional
     void setDraught(float meters);
     /**
      * Destination
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setDestination(String fromSixBitCharacters);
+    void setDestination(InputReader input);
     /**
      * Data terminal ready
      * @param b 
@@ -259,9 +260,9 @@ public interface AISObserver extends Transactional
     void setFID(int fid);
     /**
      * Last Port Of Call. 
-     * @param locode UN locode
+     * @param locode UN locode Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setLastPort(String locode);
+    void setLastPort(InputReader input);
 
     /**
      * ETA Month (UTC). 
@@ -285,9 +286,9 @@ public interface AISObserver extends Transactional
     void setLastPortMinute(int minute);
     /**
      * Next Port Of Call. 
-     * @param locode UN locode
+     * @param locode UN locode Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setNextPort(String locode);
+    void setNextPort(InputReader input);
     /**
      * ETA Month (UTC). 
      * @param month 1-12
@@ -310,14 +311,14 @@ public interface AISObserver extends Transactional
     void setNextPortMinute(int minute);
     /**
      * Main Dangerous Good
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setMainDangerousGood(String fromSixBitCharacters);
+    void setMainDangerousGood(InputReader input);
     /**
      * IMD Category
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setIMDCategory(String fromSixBitCharacters);
+    void setIMDCategory(InputReader input);
     /**
      * UN Number
      * @param unid 
@@ -375,9 +376,9 @@ public interface AISObserver extends Transactional
     void setLinkage(int id);
     /**
      * Name of Port & Berth
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setPortname(String fromSixBitCharacters);
+    void setPortname(InputReader input);
     /**
      * Notice Description
      * @param areaNoticeDescription 
@@ -445,9 +446,9 @@ public interface AISObserver extends Transactional
     void setDistance(int distance);
     /**
      * Text
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setText(String fromSixBitCharacters);
+    void setText(InputReader input);
     /**
      * Berth length
      * @param meters In 1m steps, 1-510m, 511 = >= 511m 0 = N/A (default).
@@ -465,9 +466,9 @@ public interface AISObserver extends Transactional
     void setServicesAvailability(boolean available );
     /**
      * Name of Berth
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setBerthName(String fromSixBitCharacters);
+    void setBerthName(InputReader input);
     /**
      * Mooring Position
      * @param mooringPosition 
@@ -620,9 +621,9 @@ public interface AISObserver extends Transactional
     void setRouteType(RouteTypeCodes routeTypeCodes);
     /**
      * Description
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setDescription(String fromSixBitCharacters);
+    void setDescription(InputReader input);
     /**
      * MMSI number 1
      * @param mmsi 
@@ -795,19 +796,19 @@ public interface AISObserver extends Transactional
     void setSeaState(BeaufortScale beaufortScale);
     /**
      * Reason For Closing
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setReasonForClosing(String fromSixBitCharacters);
+    void setReasonForClosing(InputReader input);
     /**
      * Location Of Closing From
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setClosingFrom(String fromSixBitCharacters);
+    void setClosingFrom(InputReader input);
     /**
      * Location of Closing To
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setClosingTo(String fromSixBitCharacters);
+    void setClosingTo(InputReader input);
     /**
      * Unit of extension
      * @param unit
@@ -851,9 +852,9 @@ public interface AISObserver extends Transactional
     void setId(long id);
     /**
      * Name of Signal Station
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setStation(String fromSixBitCharacters);
+    void setStation(InputReader input);
     /**
      * Signal In Service
      * @param marineTrafficSignals 
@@ -871,9 +872,9 @@ public interface AISObserver extends Transactional
     void setVariant(int variant);
     /**
      * Location
-     * @param fromSixBitCharacters 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setLocation(String fromSixBitCharacters);
+    void setLocation(InputReader input);
     /**
      * Present Weather
      * @param wmoCode45501 
@@ -898,9 +899,9 @@ public interface AISObserver extends Transactional
     void setAirPressureChange(float delta);
     /**
      * Name in sixbit chars
-     * @param input 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setName(String input);
+    void setName(InputReader input);
     /**
      * If present, the Name Extension consists of packed six-bit ASCII 
      * characters followed by 0-6 bits of padding to an 8-bit boundary. 
@@ -910,8 +911,11 @@ public interface AISObserver extends Transactional
      * i.e. no @-character should be used." A decoder can deduce the bit 
      * length of the name extension field by subtracting 272 from the total 
      * message bit length.
-     * @param input 
+     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
      */
-    void setNameExtension(String input);
+    void setNameExtension(InputReader input);
 
+    void setVendorId(InputReader input);
+
+    void setNavaidType(NavaidTypes navaidTypes);
 }

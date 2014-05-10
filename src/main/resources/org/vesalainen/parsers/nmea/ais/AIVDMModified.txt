@@ -3629,13 +3629,70 @@ gathered automatically from sensors.
 |308-311  |  4 |Spare                  |             |x|Unused, should be zero
 |==============================================================================
 
-=== Type 20 Data Link Management Message ===
+=== Type 20 Data Link Management Message 1 ===
 
 This message is used to pre-allocate TDMA slots within an AIS base
 station network.  It contains no navigational information, and is
 unlikely to be of interest unless you are implementing or studying
 an AIS base station network. Length varies from 72-160 depending on
 the number of slot reservations (1 to 4) in the message.
+
+[frame="topbot",options="header"]
+|===============================================================================
+|Field    |Len |Description       |Member      |T|Units
+|0-5      | 6  |Message Type      |type        |u|Constant: 20
+|6-7      | 2  |Repeat Indicator  |repeat      |u|As in CNB
+|8-37     |30  |MMSI              |mmsi        |u|9 decimal digits
+|38-39    | 2  |Spare             |            |x|Not used
+|40-51    |12  |Offset number 1   |offset1     |u|Reserved offset number
+|52-55    | 4  |Reserved slots    |number1     |u|Consecutive slots
+|56-58    | 3  |Time-out          |timeout1    |u|Allocation timeout in minutes
+|59-69    |11  |Increment         |increment1  |u|Repeat increment
+|===============================================================================
+
+=== Type 20 Data Link Management Message 2 ===
+
+[frame="topbot",options="header"]
+|===============================================================================
+|Field    |Len |Description       |Member      |T|Units
+|0-5      | 6  |Message Type      |type        |u|Constant: 20
+|6-7      | 2  |Repeat Indicator  |repeat      |u|As in CNB
+|8-37     |30  |MMSI              |mmsi        |u|9 decimal digits
+|38-39    | 2  |Spare             |            |x|Not used
+|40-51    |12  |Offset number 1   |offset1     |u|Reserved offset number
+|52-55    | 4  |Reserved slots    |number1     |u|Consecutive slots
+|56-58    | 3  |Time-out          |timeout1    |u|Allocation timeout in minutes
+|59-69    |11  |Increment         |increment1  |u|Repeat increment
+|70-81    |12  |Offset number 2   |offset2     |u|Reserved offset number
+|82-85    | 4  |Reserved slots    |number2     |u|Consecutive slots
+|86-88    | 3  |Time-out          |timeout2    |u|Allocation timeout in minutes
+|89-99    |11  |Increment         |increment2  |u|Repeat increment
+|===============================================================================
+
+=== Type 20 Data Link Management Message 3 ===
+
+[frame="topbot",options="header"]
+|===============================================================================
+|Field    |Len |Description       |Member      |T|Units
+|0-5      | 6  |Message Type      |type        |u|Constant: 20
+|6-7      | 2  |Repeat Indicator  |repeat      |u|As in CNB
+|8-37     |30  |MMSI              |mmsi        |u|9 decimal digits
+|38-39    | 2  |Spare             |            |x|Not used
+|40-51    |12  |Offset number 1   |offset1     |u|Reserved offset number
+|52-55    | 4  |Reserved slots    |number1     |u|Consecutive slots
+|56-58    | 3  |Time-out          |timeout1    |u|Allocation timeout in minutes
+|59-69    |11  |Increment         |increment1  |u|Repeat increment
+|70-81    |12  |Offset number 2   |offset2     |u|Reserved offset number
+|82-85    | 4  |Reserved slots    |number2     |u|Consecutive slots
+|86-88    | 3  |Time-out          |timeout2    |u|Allocation timeout in minutes
+|89-99    |11  |Increment         |increment2  |u|Repeat increment
+|100-111  |12  |Offset number 3   |offset3     |u|Reserved offset number
+|112-115  | 4  |Reserved slots    |number3     |u|Consecutive slots
+|116-118  | 3  |Time-out          |timeout3    |u|Allocation timeout in minutes
+|119-129  |11  |Increment         |increment3  |u|Repeat increment
+|===============================================================================
+
+=== Type 20 Data Link Management Message 4 ===
 
 [frame="topbot",options="header"]
 |===============================================================================
@@ -3664,7 +3721,7 @@ the number of slot reservations (1 to 4) in the message.
 
 See <<IALA>> for details on the meaning of these fields.
 
-=== Type 21: Aid-to-Navigation Report ===
+=== Type 21: Aid-to-Navigation Report 1 ===
 
 Identification and location message to be emitted by aids to
 navigation such as buoys and lighthouses.
@@ -3696,7 +3753,34 @@ and 360 bits.
 |269-269  | 1  |Virtual-aid flag       |virtual_aid |b|See Below
 |270-270  | 1  |Assigned-mode flag     |assigned    |b|See <<IALA>> for details
 |271-271  | 1  |Spare                  |            |x|Not used
-|272-360  |88  |Name Extension         |            |t|See Below
+|==============================================================================
+
+=== Type 21: Aid-to-Navigation Report 2 ===
+
+[frame="topbot",options="header"]
+|==============================================================================
+|Field    |Len |Description            |Member      |T|Units
+|0-5      | 6  |Message Type           |type        |u|Constant: 21
+|6-7      | 2  |Repeat Indicator       |repeat      |u|As in CNB
+|8-37     |30  |MMSI                   |mmsi        |u|9 digits
+|38-42    | 5  |Aid type               |aid_type    |e|See "Navaid Types"
+|43-162  1|120 |Name                   |name        |t|Name in sixbit chars
+|163-163  | 1  |Position Accuracy      |accuracy    |b|As in CNB
+|164-191  |28  |Longitude              |lon         |I4|Minutes/10000 (as in CNB)
+|192-218  |27  |Latitude               |lat         |I4|Minutes/10000 (as in CNB)
+|219-227  | 9  |Dimension to Bow       |to_bow      |u|Meters
+|228-236  | 9  |Dimension to Stern     |to_stern    |u|Meters
+|237-242  | 6  |Dimension to Port      |to_port     |u|Meters
+|243-248  | 6  |Dimension to Starboard |to_starboard|u|Meters
+|249-252  | 4  |Type of EPFD           |epfd        |e|As in Message Type 4
+|253-258  | 6  |UTC Second             |second      |u|As in Message Type 5
+|259-259  | 1  |Off-Position Indicator |off_position|b|See Below
+|260-267  | 8  |Regional reserved      |regional    |u|Uninterpreted
+|268-268  | 1  |RAIM flag              |raim        |b|As in CNB
+|269-269  | 1  |Virtual-aid flag       |virtual_aid |b|See Below
+|270-270  | 1  |Assigned-mode flag     |assigned    |b|See <<IALA>> for details
+|271-271  | 1  |Spare                  |            |x|Not used
+|272-360  |1-88|Name Extension         |name_ext    |t|See Below
 |==============================================================================
 
 According to <<IALA>>, the aid type field has values 1-15 for fixed
@@ -3944,7 +4028,7 @@ is thanks to Kurt Schwehr.
 |8-37    | 30 | MMSI                  | mmsi           |u|9 digits
 |38-39   |  2 | Part Number           | partno         |u|Constant: 0
 |40-159  |120 | Vessel Name           | shipname       |t|(Part A) 20 sixbit chars
-|160-167 |  8 | Spare                 |                |x|(Part A) Not used
+|160-167 |1-8 | Spare                 |                |x|(Part A) Not used
 |===============================================================================
 
 If the Part Number field is 0, the rest of the message is interpreted
@@ -3991,8 +4075,7 @@ is thanks to Kurt Schwehr.
 |141-149 |  9 | Dimension to Stern    | to_stern       |u|(Part B) Meters
 |150-155 |  6 | Dimension to Port     | to_port        |u|(Part B) Meters
 |156-161 |  6 | Dimension to Starboard| to_starboard   |u|(Part B) Meters
-|132-161 | 30 | Mothership MMSI       | mothership_mmsi|u|(Part B) See below
-|162-167 |  6 | Spare                 |                |x|(Part B) Not used
+|132-161 | 1-36 | Mothership MMSI       | mothership_mmsi|u|(Part B) See below
 |===============================================================================
 
 If the Part Number field is 0, the rest of the message is interpreted

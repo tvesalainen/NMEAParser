@@ -19,6 +19,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.vesalainen.parser.util.InputReader;
 
 /**
  * @author Timo Vesalainen
@@ -140,14 +141,16 @@ public class VesselMonitor extends AbstractAISObserver
         target.setRAIM(raim);
     }
 
+    @Override
     public void setRadioStatus(int radio)
     {
         target.setRadioStatus(radio);
     }
 
-    public void setCallSign(String fromSixBitCharacters)
+    @Override
+    public void setCallSign(InputReader input)
     {
-        target.setCallSign(fromSixBitCharacters);
+        target.setCallSign(input);
     }
 
 }

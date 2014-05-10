@@ -17,6 +17,8 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
+import org.vesalainen.parser.util.InputReader;
+
 /**
  * @author Timo Vesalainen
  */
@@ -199,13 +201,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setCallSign(String fromSixBitCharacters)
+    public void setCallSign(InputReader fromSixBitCharacters)
     {
         
     }
 
     @Override
-    public void setVesselName(String fromSixBitCharacters)
+    public void setVesselName(InputReader fromSixBitCharacters)
     {
         
     }
@@ -241,7 +243,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDestination(String fromSixBitCharacters)
+    public void setDestination(InputReader fromSixBitCharacters)
     {
         
     }
@@ -289,7 +291,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setLastPort(String locode)
+    public void setLastPort(InputReader locode)
     {
         
     }
@@ -319,7 +321,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setNextPort(String locode)
+    public void setNextPort(InputReader locode)
     {
         
     }
@@ -349,13 +351,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMainDangerousGood(String fromSixBitCharacters)
+    public void setMainDangerousGood(InputReader fromSixBitCharacters)
     {
         
     }
 
     @Override
-    public void setIMDCategory(String fromSixBitCharacters)
+    public void setIMDCategory(InputReader fromSixBitCharacters)
     {
         
     }
@@ -427,7 +429,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setPortname(String fromSixBitCharacters)
+    public void setPortname(InputReader fromSixBitCharacters)
     {
         
     }
@@ -511,7 +513,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setText(String fromSixBitCharacters)
+    public void setText(InputReader fromSixBitCharacters)
     {
         
     }
@@ -535,7 +537,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setBerthName(String fromSixBitCharacters)
+    public void setBerthName(InputReader fromSixBitCharacters)
     {
         
     }
@@ -721,7 +723,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDescription(String fromSixBitCharacters)
+    public void setDescription(InputReader fromSixBitCharacters)
     {
         
     }
@@ -931,19 +933,19 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setReasonForClosing(String fromSixBitCharacters)
+    public void setReasonForClosing(InputReader fromSixBitCharacters)
     {
         
     }
 
     @Override
-    public void setClosingFrom(String fromSixBitCharacters)
+    public void setClosingFrom(InputReader fromSixBitCharacters)
     {
         
     }
 
     @Override
-    public void setClosingTo(String fromSixBitCharacters)
+    public void setClosingTo(InputReader fromSixBitCharacters)
     {
         
     }
@@ -997,7 +999,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setStation(String fromSixBitCharacters)
+    public void setStation(InputReader fromSixBitCharacters)
     {
         
     }
@@ -1021,7 +1023,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setLocation(String fromSixBitCharacters)
+    public void setLocation(InputReader fromSixBitCharacters)
     {
         
     }
@@ -1067,12 +1069,22 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setName(String input)
+    public void setName(InputReader input)
     {
     }
 
     @Override
-    public void setNameExtension(String input)
+    public void setNameExtension(InputReader input)
+    {
+    }
+
+    @Override
+    public void setVendorId(InputReader input)
+    {
+    }
+
+    @Override
+    public void setNavaidType(NavaidTypes navaidTypes)
     {
     }
 

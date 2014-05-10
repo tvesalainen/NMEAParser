@@ -18,6 +18,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.util.List;
+import org.vesalainen.parser.util.InputReader;
 
 /**
  * @author Timo Vesalainen
@@ -68,7 +69,7 @@ public interface NMEAObserver extends Transactional
      * @param toWaypoint
      * @param fromWaypoint 
      */
-    void setWaypointToWaypoint(String toWaypoint, String fromWaypoint);
+    void setWaypointToWaypoint(InputReader toWaypoint, InputReader fromWaypoint);
     /**
      * RMB, WPL
      * @param latitude
@@ -158,7 +159,7 @@ public interface NMEAObserver extends Transactional
      * AAM, APA, APB, BWC, BWR, R00, WCV, WPL
      * @param waypoint 
      */
-    void setWaypoint(String waypoint);
+    void setWaypoint(InputReader waypoint);
     /**
      * ALM, RTE
      * @param totalNumberOfMessages 
@@ -266,7 +267,7 @@ public interface NMEAObserver extends Transactional
      * RMM
      * @param horizontalDatum 
      */
-    void setHorizontalDatum(String horizontalDatum);
+    void setHorizontalDatum(InputReader horizontalDatum);
     /**
      * RTE
      * @param messageMode 
@@ -414,9 +415,15 @@ public interface NMEAObserver extends Transactional
      * @param unit 
      */
     void setVelocityToWaypoint(float velocityToWaypoint, char unit);
-
-    void setTargetName(String name);
-
-    void setMessage(String message);
+    /**
+     * TXT
+     * @param name Target name
+     */
+    void setTargetName(InputReader name);
+    /**
+     * TXT
+     * @param message 
+     */
+    void setMessage(InputReader message);
 
 }

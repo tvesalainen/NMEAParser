@@ -186,7 +186,7 @@ public abstract class NMEAParser implements ParserInfo
     {
     }
     @Rule("string")
-    protected void targetName(String name, @ParserContext("data") NMEAObserver data)
+    protected void targetName(InputReader name, @ParserContext("data") NMEAObserver data)
     {
         data.setTargetName(name);
     }
@@ -195,7 +195,7 @@ public abstract class NMEAParser implements ParserInfo
     {
     }
     @Rule("string")
-    protected void message(String message, @ParserContext("data") NMEAObserver data)
+    protected void message(InputReader message, @ParserContext("data") NMEAObserver data)
     {
         data.setMessage(message);
     }
@@ -453,23 +453,23 @@ public abstract class NMEAParser implements ParserInfo
     }
 
     @Rule("string")
-    protected List<String> stringList(String str)
+    protected List<String> stringList(InputReader str)
     {
         List<String> list = new ArrayList<>();
-        list.add(str);
+        list.add(str.getString());
         return list;
     }
 
     @Rule("stringList c string")
-    protected List<String> stringList(List<String> list, String str)
+    protected List<String> stringList(List<String> list, InputReader str)
     {
-        list.add(str);
+        list.add(str.getString());
         return list;
     }
 
     @Rule("string")
     protected void horizontalDatum(
-            String horizontalDatum,
+            InputReader horizontalDatum,
             @ParserContext("data") NMEAObserver data)
     {
         data.setHorizontalDatum(horizontalDatum);
@@ -667,7 +667,7 @@ public abstract class NMEAParser implements ParserInfo
 
     @Rule("string")
     protected void waypoint(
-            String waypoint,
+            InputReader waypoint,
             @ParserContext("data") NMEAObserver data)
     {
         data.setWaypoint(waypoint);
@@ -841,8 +841,8 @@ public abstract class NMEAParser implements ParserInfo
 
     @Rule("string c string")
     protected void waypointToWaypoint(
-            String toWaypoint,
-            String fromWaypoint,
+            InputReader toWaypoint,
+            InputReader fromWaypoint,
             @ParserContext("data") NMEAObserver data)
     {
         data.setWaypointToWaypoint(toWaypoint, fromWaypoint);
@@ -994,7 +994,7 @@ public abstract class NMEAParser implements ParserInfo
     protected abstract char hexAlpha(char x);
 
     @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)]+")
-    protected abstract String string(String s);
+    protected abstract InputReader string(InputReader s);
 
     @Terminal(expression = "[\\+\\-]?[0-9]+")
     protected abstract int integer(int i);

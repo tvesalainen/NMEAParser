@@ -47,7 +47,7 @@ public class AisContentDumper
     {
         try
         {
-            dump("H3KMVtTT>F348TB?:kjki01P0400\n");
+            dump("D028j=2<Tffp\n");
         }
         catch (Exception ex)
         {

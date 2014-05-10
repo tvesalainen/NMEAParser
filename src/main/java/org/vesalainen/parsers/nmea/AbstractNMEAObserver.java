@@ -18,6 +18,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.util.List;
+import org.vesalainen.parser.util.InputReader;
 
 /**
  * @author Timo Vesalainen
@@ -123,7 +124,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaypointToWaypoint(String toWaypoint, String fromWaypoint)
+    public void setWaypointToWaypoint(InputReader toWaypoint, InputReader fromWaypoint)
     {
         
     }
@@ -225,7 +226,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaypoint(String waypoint)
+    public void setWaypoint(InputReader waypoint)
     {
         
     }
@@ -351,7 +352,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setHorizontalDatum(String horizontalDatum)
+    public void setHorizontalDatum(InputReader horizontalDatum)
     {
         
     }
@@ -519,12 +520,12 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setTargetName(String name)
+    public void setTargetName(InputReader name)
     {
     }
 
     @Override
-    public void setMessage(String message)
+    public void setMessage(InputReader message)
     {
     }
 

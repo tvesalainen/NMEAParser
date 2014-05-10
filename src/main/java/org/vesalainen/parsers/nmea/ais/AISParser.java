@@ -36,7 +36,7 @@ import org.vesalainen.parser.util.InputReader;
  * @author Timo Vesalainen
  */
 @GenClassname("org.vesalainen.parsers.nmea.ais.AISParserImpl")
-@GrammarDef //(grammarClass=AISGrammar.class)
+@GrammarDef(traceLevel=0)
 @Terminals({
 @Terminal(left="increment2_10", expression="[01]{10}", doc="Increment B", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisIncrement2_10(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="tminute", expression="[01]{6}", doc="To minute (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisTminute(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -241,7 +241,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="scale", expression="[01]{2}", doc="Scale factor", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisScale(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="description_6_930", expression="[01]{6,930}", doc="Description", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisDescription_6_930(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="rtype", expression="[01]{5}", doc="Route Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisRtype(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="mothership_mmsi", expression="[01]{30}", doc="Mothership MMSI", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisMothershipMmsi(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="mothership_mmsi", expression="[01]{1,36}", doc="Mothership MMSI", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisMothershipMmsi(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="berth_lon", expression="[01]{25}", doc="Longitude", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisBerthLon_I3(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=-2)
 ,@Terminal(left="id", expression="[01]{42}", doc="Target identifier", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisId(long,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="direction1", expression="[01]{9}", doc="Current Direction #1", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisDirection1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -447,6 +447,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="north", expression="[01]{8}", doc="N dimension", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisNorth(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="fwgust", expression="[01]{7}", doc="Forecast Wind Gust", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisFwgust(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="salinity", expression="[01]{9}", doc="Salinity", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisSalinity_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="name_ext", expression="[01]{1,88}", doc="Name Extension", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisNameExt(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="closefrom", expression="[01]{120}", doc="Location Of Closing From", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisClosefrom(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="stevedore", expression="[01]{2}", doc="Stevedore", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisStevedore(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="availability", expression="[01]{1}", doc="Services Availability", reducer="org.vesalainen.parsers.nmea.ais.AISParser aisAvailability(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -466,7 +467,9 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="IMO289RouteInformationAddressed", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid28", "linkage", "sender", "rtype", "month", "day_5", "hour", "minute_6", "duration_18", "waycount", "(lon_28 lat_27)+"})
 ,@Rule(left="24Content", value={"Type24StaticDataReportA"})
 ,@Rule(left="5Messages", value={"(5Content '0*\n')+"})
+,@Rule(left="Type20DataLinkManagementMessage4", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11", "offset3", "number3", "timeout3", "increment3", "offset4", "number4", "timeout4", "increment4"})
 ,@Rule(left="10Messages", value={"(10Content '0*\n')+"})
+,@Rule(left="Type21AidToNavigationReport1", value={"repeat", "mmsi", "aid_type", "name_120", "accuracy", "lon_28", "lat_27", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "second", "off_position", "regional_8", "raim", "virtual_aid", "assigned", "'[01]{1}'"})
 ,@Rule(left="Polygon", value={"shape4", "scale", "(bearing distance)+"})
 ,@Rule(left="IMO289MarineTrafficSignal", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid19", "linkage", "station", "lon_25", "lat_24", "status_2", "signal", "hour", "minute_6", "nextsignal", "'[01]{102}'"})
 ,@Rule(left="Type15Interrogation1", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1"})
@@ -485,7 +488,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="AssociatedText", value={"shape5", "text_84"})
 ,@Rule(left="IMO289BerthingDataAddressed", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid20", "linkage", "berth_length", "berth_depth", "position", "month", "day_5", "hour", "minute_6", "availability", "agent", "fuel", "chandler", "stevedore", "electrical", "water", "customs", "cartage", "crane", "lift", "medical", "navrepair", "provisions", "shiprepair", "surveyor", "steam", "tugs", "solidwaste", "liquidwaste", "hazardouswaste", "ballast", "additional", "regional1", "regional2", "future1", "future2", "berth_name", "berth_lon", "berth_lat"})
 ,@Rule(left="messages", value={"message+"})
-,@Rule(left="Type20DataLinkManagementMessage", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11", "offset3", "number3", "timeout3", "increment3", "offset4", "number4", "timeout4", "increment4"})
 ,@Rule(left="Type19ExtendedClassBCSPositionReport", value={"repeat", "mmsi", "reserved", "speed_10", "accuracy", "lon_28", "lat_27", "course_12", "heading_9", "second", "regional_4", "shipname", "shiptype", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "raim", "dte", "assigned", "'[01]{4}'"})
 ,@Rule(left="IMO236DangerousCargoIndication", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid12", "lastport", "lmonth", "lday", "lhour", "lminute", "nextport", "nmonth", "nday", "nhour", "nminute", "dangerous", "imdcat", "unid", "amount", "unit", "'[01]{3}'"})
 ,@Rule(left="message", value={"4"})
@@ -507,6 +509,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="22Content", value={"Type22ChannelManagement"})
 ,@Rule(left="Type15Interrogation2", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1", "'[01]{2}'", "type1_2", "offset1_2", "'[01]{2}'"})
 ,@Rule(left="27Content", value={"Type27LongRangeAISBroadcastMessage"})
+,@Rule(left="Type24StaticDataReportA", value={"repeat", "mmsi", "partno0", "shipname", "'[01]{1,8}'"})
 ,@Rule(left="1-3Messages", value={"(1-3Content '0*\n')+"})
 ,@Rule(left="Type27LongRangeAISBroadcastMessage", value={"repeat", "mmsi", "accuracy", "raim", "status_4", "lon_18", "lat_17", "speed_6", "course_9", "gnss", "'[01]{1}'"})
 ,@Rule(left="23Messages", value={"(23Content '0*\n')+"})
@@ -517,7 +520,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="17Content", value={"Type17DGNSSBroadcastBinaryMessage"})
 ,@Rule(left="FairwayClosed", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid13", "reason", "closefrom", "closeto", "radius_10", "extunit", "fday", "fmonth", "fhour", "fminute", "tday", "tmonth", "thour", "tminute", "'[01]{4}'"})
 ,@Rule(left="CurrentFlow2DReportPayload", value={"cspeed1", "cdir1", "cdepth1", "cspeed2", "cdir2", "cdepth2_9", "cspeed3", "cdir3", "cdepth3_9", "sensortype", "'[01]{4}'"})
-,@Rule(left="21Content", value={"Type21AidToNavigationReport"})
 ,@Rule(left="4Messages", value={"(4Content '0*\n')+"})
 ,@Rule(left="Type4BaseStationReport", value={"repeat", "mmsi", "year", "month", "day_5", "hour", "minute_6", "second", "accuracy", "lon_28", "lat_27", "epfd", "'[01]{10}'", "raim", "radio_19"})
 ,@Rule(left="6Content", value={"IMO236NumberOfPersonsOnBoard"})
@@ -556,12 +558,16 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="SiteLocationPayload", value={"lon_28", "lat_27", "alt_11", "owner", "timeout", "'[01]{12}'"})
 ,@Rule(left="message", value={"27"})
 ,@Rule(left="message", value={"23"})
-,@Rule(left="20Content", value={"Type20DataLinkManagementMessage"})
+,@Rule(left="Type20DataLinkManagementMessage3", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11", "offset3", "number3", "timeout3", "increment3"})
 ,@Rule(left="message", value={"24"})
 ,@Rule(left="message", value={"21"})
 ,@Rule(left="message", value={"22"})
 ,@Rule(left="1-3Content", value={"CommonNavigationBlock"})
 ,@Rule(left="message", value={"20"})
+,@Rule(left="20Content", value={"Type20DataLinkManagementMessage2"})
+,@Rule(left="20Content", value={"Type20DataLinkManagementMessage1"})
+,@Rule(left="20Content", value={"Type20DataLinkManagementMessage4"})
+,@Rule(left="20Content", value={"Type20DataLinkManagementMessage3"})
 ,@Rule(left="Type9StandardSARAircraftPositionReport", value={"repeat", "mmsi", "alt_12", "speed_10", "accuracy", "lon_28", "lat_27", "course_12", "second", "regional_8", "dte", "'[01]{3}'", "assigned", "raim", "radio_19"})
 ,@Rule(left="CommonNavigationBlock", value={"repeat", "mmsi", "status_4", "turn", "speed_10", "accuracy", "lon_28", "lat_27", "course_12", "heading_9", "second", "maneuver", "'[01]{3}'", "raim", "radio_19"})
 ,@Rule(left="7Content", value={"Type7BinaryAcknowledge"})
@@ -577,22 +583,26 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="CurrentFlow3DPayload", value={"cnorth1", "ceast1", "cup1", "cdepth1", "cnorth2", "ceast2", "cup2", "cdepth2_9", "sensortype", "'[01]{16}'"})
 ,@Rule(left="message", value={"10"})
 ,@Rule(left="message", value={"11"})
-,@Rule(left="Type24StaticDataReportB", value={"repeat", "mmsi", "partno1", "shiptype", "vendorid", "callsign", "to_bow", "to_stern", "to_port", "to_starboard", "mothership_mmsi", "'[01]{6}'"})
 ,@Rule(left="WindReportPayload", value={"wspeed", "wgust", "wdir", "wgustdir", "sensortype", "fwspeed", "fwgust", "fwdir", "day_5", "hour", "minute_6", "duration_8", "'[01]{3}'"})
+,@Rule(left="21Content", value={"Type21AidToNavigationReport2"})
 ,@Rule(left="8Content", value={"IMO289MarineTrafficSignal"})
+,@Rule(left="21Content", value={"Type21AidToNavigationReport1"})
 ,@Rule(left="shape", value={"Rectangle"})
+,@Rule(left="Type20DataLinkManagementMessage2", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11"})
 ,@Rule(left="8Content", value={"MeteorologicalAndHydrologicalDataIMO289"})
 ,@Rule(left="shape", value={"AssociatedText"})
 ,@Rule(left="6Messages", value={"(6Content '0*\n')+"})
 ,@Rule(left="Type18StandardClassBCSPositionReport", value={"repeat", "mmsi", "reserved", "speed_10", "accuracy", "lon_28", "lat_27", "course_12", "heading_9", "second", "regional_2", "cs", "display", "dsc", "band", "msg22", "assigned", "raim", "radio_20"})
 ,@Rule(left="6Content", value={"EnvironmentalMessageHeader"})
 ,@Rule(left="14Messages", value={"(14Content '0*\n')+"})
-,@Rule(left="Type21AidToNavigationReport", value={"repeat", "mmsi", "aid_type", "name_120", "accuracy", "lon_28", "lat_27", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "second", "off_position", "regional_8", "raim", "virtual_aid", "assigned", "'[01]{1}'", "'[01]{88}'"})
+,@Rule(left="Type24StaticDataReportB", value={"repeat", "mmsi", "partno1", "shiptype", "vendorid", "callsign", "to_bow", "to_stern", "to_port", "to_starboard", "mothership_mmsi"})
 ,@Rule(left="8Content", value={"IMO289RouteInformationBroadcast"})
 ,@Rule(left="7Messages", value={"(7Content '0*\n')+"})
 ,@Rule(left="WeatherObservationReportFromShipNonWMOVariant", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid21", "wmo0", "location", "lon_25", "lat_24", "day_5", "hour", "minute_6", "weather_4", "vislimit", "visibility_7", "humidity", "wspeed", "wdir", "pressure_9", "pressuretend_4", "airtemp_11", "watertemp", "waveperiod", "waveheight", "wavedir", "swellheight", "swelldir", "swellperiod", "'[01]{3}'"})
 ,@Rule(left="8Messages", value={"(8Content '0*\n')+"})
 ,@Rule(left="8Content", value={"WeatherObservationReportFromShipNonWMOVariant"})
+,@Rule(left="Type21AidToNavigationReport2", value={"repeat", "mmsi", "aid_type", "name_120", "accuracy", "lon_28", "lat_27", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "second", "off_position", "regional_8", "raim", "virtual_aid", "assigned", "'[01]{1}'", "name_ext"})
+,@Rule(left="Type20DataLinkManagementMessage1", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11"})
 ,@Rule(left="WeatherObservationReportFromShipWMOVariant", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid21", "wmo1", "lon_16", "lat_15", "month", "day_6", "hour", "minute_3", "course_7", "speed_5", "heading_7", "pressure_11", "pdelta", "ptend", "twinddir", "twindspeed", "rwinddir", "rwindspeed", "mgustspeed", "mgustdir", "airtemp_10", "humidity", "surftemp", "visibility_6", "weather_9", "pweather1", "pweather2", "totalcloud", "lowclouda", "lowcloudt", "midcloudt", "highcloudt", "cloudbase", "wwperiod", "wwheight", "swelldir1", "swperiod1", "swheight1", "swelldir2", "swperiod2", "swheight2", "icedeposit", "icerate", "icecause", "seaice", "icetype", "icestate", "icedevel", "icebearing"})
 ,@Rule(left="6Content", value={"AreaNoticeAddressedMessageHeader"})
 ,@Rule(left="18Content", value={"Type18StandardClassBCSPositionReport"})
@@ -615,7 +625,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="HorizontalCurrentReportPayload", value={"bearing1", "distance1", "speed1", "direction1", "depth1", "bearing1", "distance1", "speed1", "direction1", "depth1", "'[01]{1}'"})
 ,@Rule(left="Rectangle", value={"shape1", "scale", "lon_25", "lat_24", "precision", "east", "north", "orientation", "'[01]{5}'"})
 ,@Rule(left="8Content", value={"VTSGeneratedSyntheticTargets"})
-,@Rule(left="Type24StaticDataReportA", value={"repeat", "mmsi", "partno0", "shipname", "'[01]{8}'"})
 ,@Rule(left="IMO289ClearanceTimeToEnterPort", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid18", "linkage", "month", "day_5", "hour", "minute_6", "portname", "destination_30", "lon_25", "lat_24", "'[01]{43}'"})
 ,@Rule(left="18Messages", value={"(18Content '0*\n')+"})
 })
@@ -1118,12 +1127,12 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisCallsign(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setCallSign(fromSixBitCharacters(reader));
+        aisData.setCallSign(reader);
     }
 
     protected void aisShipname(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setVesselName(fromSixBitCharacters(reader));
+        aisData.setVesselName(reader);
     }
 
     protected void aisShiptype(int shiptype, @ParserContext("aisData") AISObserver aisData)
@@ -1159,7 +1168,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisDestination(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDestination(fromSixBitCharacters(reader));
+        aisData.setDestination(reader);
     }
 
     protected void aisDte(int dte, @ParserContext("aisData") AISObserver aisData)
@@ -1194,7 +1203,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisLastport(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setLastPort(fromSixBitCharacters(reader));
+        aisData.setLastPort(reader);
     }
 
     protected void aisLmonth(int month, @ParserContext("aisData") AISObserver aisData)
@@ -1231,7 +1240,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisNextport(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setNextPort(fromSixBitCharacters(reader));
+        aisData.setNextPort(reader);
     }
 
     protected void aisNmonth(int month, @ParserContext("aisData") AISObserver aisData)
@@ -1268,12 +1277,12 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisDangerous(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMainDangerousGood(fromSixBitCharacters(reader));
+        aisData.setMainDangerousGood(reader);
     }
 
     protected void aisImdcat(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setIMDCategory(fromSixBitCharacters(reader));
+        aisData.setIMDCategory(reader);
     }
 
     protected void aisUnid(int unid, @ParserContext("aisData") AISObserver aisData)
@@ -1355,7 +1364,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisPortname(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setPortname(fromSixBitCharacters(reader));
+        aisData.setPortname(reader);
     }
 
     protected void aisNotice(int notice, @ParserContext("aisData") AISObserver aisData)
@@ -1428,7 +1437,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisText(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setText(fromSixBitCharacters(reader));
+        aisData.setText(reader);
     }
 
     protected void aisBerthLength(int meters, @ParserContext("aisData") AISObserver aisData)
@@ -1584,7 +1593,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisBerthName(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setBerthName(fromSixBitCharacters(reader));
+        aisData.setBerthName(reader);
     }
 
     protected void aisBerthLon_I3(int lon, @ParserContext("aisData") AISObserver aisData)
@@ -1622,7 +1631,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisDescription(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDescription(fromSixBitCharacters(reader));
+        aisData.setDescription(reader);
     }
 
     protected void aisMmsi1(int mmsi, @ParserContext("aisData") AISObserver aisData)
@@ -1836,17 +1845,17 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisReason(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setReasonForClosing(fromSixBitCharacters(reader));
+        aisData.setReasonForClosing(reader);
     }
 
     protected void aisClosefrom(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setClosingFrom(fromSixBitCharacters(reader));
+        aisData.setClosingFrom(reader);
     }
 
     protected void aisCloseto(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setClosingTo(fromSixBitCharacters(reader));
+        aisData.setClosingTo(reader);
     }
 
     protected void aisExtunit(int unit, @ParserContext("aisData") AISObserver aisData)
@@ -1954,7 +1963,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisStation(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setStation(fromSixBitCharacters(reader));
+        aisData.setStation(reader);
     }
 
     protected void aisSignal(int signal, @ParserContext("aisData") AISObserver aisData)
@@ -1974,7 +1983,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void aisLocation(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setLocation(fromSixBitCharacters(reader));
+        aisData.setLocation(reader);
     }
 
     protected void aisWeather(int code, @ParserContext("aisData") AISObserver aisData)
@@ -2166,11 +2175,11 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
     }
     protected void aisName(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setName(arg.getInput());
+        aisData.setName(arg);
     }
     protected void aisNameExt(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setNameExtension(arg.getInput());
+        aisData.setNameExtension(arg);
     }
     protected void aisSensortype(int arg, @ParserContext("aisData") AISObserver aisData)
     {
@@ -2604,6 +2613,7 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 // Type21AidToNavigationReport
     protected void aisAidType(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setNavaidType(NavaidTypes.values()[arg]);
     }
 
     protected void aisOffPosition(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -2704,10 +2714,12 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
 // Type24StaticDataReport
     protected void aisPartno(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        System.err.println("aisPartno("+arg+")");
     }
 
     protected void aisVendorid(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setVendorId(arg);
     }
 
     protected void aisMothershipMmsi(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -2721,40 +2733,5 @@ protected void aisSpeed_6(int arg, @ParserContext("aisData") AISObserver aisData
     protected void aisGnss(int arg, @ParserContext("aisData") AISObserver aisData)
     {
     }
-// ###################################################################################
 
-    private String fromSixBitCharacters(InputReader reader)
-    {
-        StringBuilder sb = new StringBuilder();
-        char[] array = reader.getArray();
-        int start = reader.getStart();
-        int length = reader.getLength();
-        assert length % 6 == 0;
-        int bit = 0;
-        int cc = 0;
-        for (int ii = 0; ii < length; ii++)
-        {
-            bit++;
-            cc <<= 1;
-            cc += array[(start + ii) % array.length] - '0';
-            if (bit == 6)
-            {
-                if (cc == 0)    // terminating '@'
-                {
-                    break;
-                }
-                if (cc < 32)
-                {
-                    sb.append((char) (cc + '@'));
-                }
-                else
-                {
-                    sb.append((char) cc);
-                }
-                bit = 0;
-                cc = 0;
-            }
-        }
-        return sb.toString().trim();
-    }
 }
