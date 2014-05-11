@@ -6,6 +6,7 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.io.IOException;
 import org.vesalainen.parser.GenClassFactory;
 
 /**
@@ -28,7 +29,7 @@ public class UDPTest
             Tracer tracer = new Tracer();
             parser.parse(dis, tracer, tracer);
         }
-        catch (Exception ex)
+        catch (NoSuchMethodException | IOException | NoSuchFieldException | ClassNotFoundException | InstantiationException | IllegalAccessException ex)
         {
             ex.printStackTrace();
         }

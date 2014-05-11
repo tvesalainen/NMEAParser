@@ -186,18 +186,24 @@ public abstract class NMEAParser implements ParserInfo
     {
     }
     @Rule("string")
-    protected void targetName(InputReader name, @ParserContext("data") NMEAObserver data)
+    protected void targetName(
+            int name, 
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
     {
-        data.setTargetName(name);
+        data.setTargetName(input, name);
     }
     @Rule
     protected void message()
     {
     }
     @Rule("string")
-    protected void message(InputReader message, @ParserContext("data") NMEAObserver data)
+    protected void message(
+            int message, 
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
     {
-        data.setMessage(message);
+        data.setMessage(input, message);
     }
     @Rule
     protected int sequentialMessageID()
@@ -446,33 +452,35 @@ public abstract class NMEAParser implements ParserInfo
 
     @Rule("stringList")
     protected void waypoints(
-            List<String> list,
-            @ParserContext("data") NMEAObserver data)
+            List<Integer> list,
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
     {
-        data.setWaypoints(list);
+        data.setWaypoints(input, list);
     }
 
     @Rule("string")
-    protected List<String> stringList(InputReader str)
+    protected List<Integer> stringList(int fieldRef)
     {
-        List<String> list = new ArrayList<>();
-        list.add(str.getString());
+        List<Integer> list = new ArrayList<>();
+        list.add(fieldRef);
         return list;
     }
 
     @Rule("stringList c string")
-    protected List<String> stringList(List<String> list, InputReader str)
+    protected List<Integer> stringList(List<Integer> list, int fieldRef)
     {
-        list.add(str.getString());
+        list.add(fieldRef);
         return list;
     }
 
     @Rule("string")
     protected void horizontalDatum(
-            InputReader horizontalDatum,
-            @ParserContext("data") NMEAObserver data)
+            int horizontalDatum,
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
     {
-        data.setHorizontalDatum(horizontalDatum);
+        data.setHorizontalDatum(input, horizontalDatum);
     }
 
     @Rule("c letter")
@@ -667,10 +675,11 @@ public abstract class NMEAParser implements ParserInfo
 
     @Rule("string")
     protected void waypoint(
-            InputReader waypoint,
-            @ParserContext("data") NMEAObserver data)
+            int waypoint,
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
     {
-        data.setWaypoint(waypoint);
+        data.setWaypoint(input, waypoint);
     }
 
     @Rule("decimal")
@@ -841,11 +850,12 @@ public abstract class NMEAParser implements ParserInfo
 
     @Rule("string c string")
     protected void waypointToWaypoint(
-            InputReader toWaypoint,
-            InputReader fromWaypoint,
-            @ParserContext("data") NMEAObserver data)
+            int toWaypoint,
+            int fromWaypoint,
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
     {
-        data.setWaypointToWaypoint(toWaypoint, fromWaypoint);
+        data.setWaypointToWaypoint(input, toWaypoint, fromWaypoint);
     }
 
     @Rule("decimal c letter c letter")
@@ -994,7 +1004,10 @@ public abstract class NMEAParser implements ParserInfo
     protected abstract char hexAlpha(char x);
 
     @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)]+")
-    protected abstract InputReader string(InputReader s);
+    protected int string(InputReader input)
+    {
+        return input.getFieldRef();
+    }
 
     @Terminal(expression = "[\\+\\-]?[0-9]+")
     protected abstract int integer(int i);

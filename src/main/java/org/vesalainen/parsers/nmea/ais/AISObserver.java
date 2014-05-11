@@ -20,7 +20,21 @@ import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.Transactional;
 
 /**
- *
+ * AISObserver is observer class for AIS data. AISParser calls methods of this 
+ * interface.
+ * 
+ * <p>User of AISParser is probably only interested in a small subset of the data.
+ * For this reason creation of Strings is avoided because of performance and GC
+ * overhead. Use InputReader getString(fieldRef) to create strings. Use fieldRefs
+ * before commit.
+ * 
+ * <p>It is mostly easier to derive your class from AbstractAISObserver class.
+ * AbstractAISObserver has empty methods for all AISObserver methods.
+ * 
+ * <p>Observer methods are called as soon they are found in input. Parsing might
+ * cause syntax error or NMEA sentence checksum might fail. In that case rollback
+ * is called. Critical application should store the values and use them only after
+ * commit. 
  * @author Timo Vesalainen
  */
 public interface AISObserver extends Transactional
@@ -181,14 +195,16 @@ public interface AISObserver extends Transactional
     void setIMONumber(int imo);
     /**
      * Call Sign
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setCallSign(InputReader input);
+    void setCallSign(InputReader reader, int fieldRef);
     /**
      * Vessel Name
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setVesselName(InputReader input);
+    void setVesselName(InputReader reader, int fieldRef);
     /**
      * Dimension to Bow
      * @param dimension meters 
@@ -216,12 +232,13 @@ public interface AISObserver extends Transactional
     void setDraught(float meters);
     /**
      * Destination
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setDestination(InputReader input);
+    void setDestination(InputReader reader, int fieldRef);
     /**
-     * Data terminal ready
-     * @param b 
+     * Data terminal ready 
+     * @param ready
      */
     void setDTE(boolean ready);
     /**
@@ -260,9 +277,10 @@ public interface AISObserver extends Transactional
     void setFID(int fid);
     /**
      * Last Port Of Call. 
-     * @param locode UN locode Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setLastPort(InputReader input);
+    void setLastPort(InputReader reader, int fieldRef);
 
     /**
      * ETA Month (UTC). 
@@ -286,9 +304,10 @@ public interface AISObserver extends Transactional
     void setLastPortMinute(int minute);
     /**
      * Next Port Of Call. 
-     * @param locode UN locode Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setNextPort(InputReader input);
+    void setNextPort(InputReader reader, int fieldRef);
     /**
      * ETA Month (UTC). 
      * @param month 1-12
@@ -311,14 +330,16 @@ public interface AISObserver extends Transactional
     void setNextPortMinute(int minute);
     /**
      * Main Dangerous Good
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setMainDangerousGood(InputReader input);
+    void setMainDangerousGood(InputReader reader, int fieldRef);
     /**
      * IMD Category
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setIMDCategory(InputReader input);
+    void setIMDCategory(InputReader reader, int fieldRef);
     /**
      * UN Number
      * @param unid 
@@ -376,9 +397,10 @@ public interface AISObserver extends Transactional
     void setLinkage(int id);
     /**
      * Name of Port & Berth
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setPortname(InputReader input);
+    void setPortname(InputReader reader, int fieldRef);
     /**
      * Notice Description
      * @param areaNoticeDescription 
@@ -446,9 +468,10 @@ public interface AISObserver extends Transactional
     void setDistance(int distance);
     /**
      * Text
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setText(InputReader input);
+    void setText(InputReader reader, int fieldRef);
     /**
      * Berth length
      * @param meters In 1m steps, 1-510m, 511 = >= 511m 0 = N/A (default).
@@ -466,9 +489,10 @@ public interface AISObserver extends Transactional
     void setServicesAvailability(boolean available );
     /**
      * Name of Berth
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setBerthName(InputReader input);
+    void setBerthName(InputReader reader, int fieldRef);
     /**
      * Mooring Position
      * @param mooringPosition 
@@ -621,9 +645,10 @@ public interface AISObserver extends Transactional
     void setRouteType(RouteTypeCodes routeTypeCodes);
     /**
      * Description
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setDescription(InputReader input);
+    void setDescription(InputReader reader, int fieldRef);
     /**
      * MMSI number 1
      * @param mmsi 
@@ -796,19 +821,22 @@ public interface AISObserver extends Transactional
     void setSeaState(BeaufortScale beaufortScale);
     /**
      * Reason For Closing
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setReasonForClosing(InputReader input);
+    void setReasonForClosing(InputReader reader, int fieldRef);
     /**
      * Location Of Closing From
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setClosingFrom(InputReader input);
+    void setClosingFrom(InputReader reader, int fieldRef);
     /**
      * Location of Closing To
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setClosingTo(InputReader input);
+    void setClosingTo(InputReader reader, int fieldRef);
     /**
      * Unit of extension
      * @param unit
@@ -852,9 +880,10 @@ public interface AISObserver extends Transactional
     void setId(long id);
     /**
      * Name of Signal Station
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setStation(InputReader input);
+    void setStation(InputReader reader, int fieldRef);
     /**
      * Signal In Service
      * @param marineTrafficSignals 
@@ -872,9 +901,10 @@ public interface AISObserver extends Transactional
     void setVariant(int variant);
     /**
      * Location
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setLocation(InputReader input);
+    void setLocation(InputReader reader, int fieldRef);
     /**
      * Present Weather
      * @param wmoCode45501 
@@ -899,9 +929,10 @@ public interface AISObserver extends Transactional
     void setAirPressureChange(float delta);
     /**
      * Name in sixbit chars
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setName(InputReader input);
+    void setName(InputReader reader, int fieldRef);
     /**
      * If present, the Name Extension consists of packed six-bit ASCII 
      * characters followed by 0-6 bits of padding to an 8-bit boundary. 
@@ -911,11 +942,17 @@ public interface AISObserver extends Transactional
      * i.e. no @-character should be used." A decoder can deduce the bit 
      * length of the name extension field by subtracting 272 from the total 
      * message bit length.
-     * @param input InputReader Use AisUtil.fromSixBitCharacters(input.getString()) to get input string.
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
      */
-    void setNameExtension(InputReader input);
+    void setNameExtension(InputReader reader, int fieldRef);
 
-    void setVendorId(InputReader input);
+    /**
+     *
+     * @param reader
+     * @param fieldRef Use reader.getString(fieldRef) to get the actual string.
+     */
+    void setVendorId(InputReader reader, int fieldRef);
 
     void setNavaidType(NavaidTypes navaidTypes);
 }

@@ -201,13 +201,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setCallSign(InputReader fromSixBitCharacters)
+    public void setCallSign(InputReader reader, int fieldRef)
     {
         
     }
 
     @Override
-    public void setVesselName(InputReader fromSixBitCharacters)
+    public void setVesselName(InputReader reader, int fieldRef)
     {
         
     }
@@ -243,7 +243,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDestination(InputReader fromSixBitCharacters)
+    public void setDestination(InputReader reader, int fieldRef)
     {
         
     }
@@ -291,7 +291,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setLastPort(InputReader locode)
+    public void setLastPort(InputReader reader, int fieldRef)
     {
         
     }
@@ -321,7 +321,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setNextPort(InputReader locode)
+    public void setNextPort(InputReader reader, int fieldRef)
     {
         
     }
@@ -351,13 +351,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMainDangerousGood(InputReader fromSixBitCharacters)
+    public void setMainDangerousGood(InputReader reader, int fieldRef)
     {
         
     }
 
     @Override
-    public void setIMDCategory(InputReader fromSixBitCharacters)
+    public void setIMDCategory(InputReader reader, int fieldRef)
     {
         
     }
@@ -429,7 +429,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setPortname(InputReader fromSixBitCharacters)
+    public void setPortname(InputReader reader, int fieldRef)
     {
         
     }
@@ -513,7 +513,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setText(InputReader fromSixBitCharacters)
+    public void setText(InputReader reader, int fieldRef)
     {
         
     }
@@ -537,7 +537,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setBerthName(InputReader fromSixBitCharacters)
+    public void setBerthName(InputReader reader, int fieldRef)
     {
         
     }
@@ -723,7 +723,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDescription(InputReader fromSixBitCharacters)
+    public void setDescription(InputReader reader, int fieldRef)
     {
         
     }
@@ -933,19 +933,19 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setReasonForClosing(InputReader fromSixBitCharacters)
+    public void setReasonForClosing(InputReader reader, int fieldRef)
     {
         
     }
 
     @Override
-    public void setClosingFrom(InputReader fromSixBitCharacters)
+    public void setClosingFrom(InputReader reader, int fieldRef)
     {
         
     }
 
     @Override
-    public void setClosingTo(InputReader fromSixBitCharacters)
+    public void setClosingTo(InputReader reader, int fieldRef)
     {
         
     }
@@ -999,7 +999,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setStation(InputReader fromSixBitCharacters)
+    public void setStation(InputReader reader, int fieldRef)
     {
         
     }
@@ -1023,7 +1023,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setLocation(InputReader fromSixBitCharacters)
+    public void setLocation(InputReader reader, int fieldRef)
     {
         
     }
@@ -1069,17 +1069,17 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setName(InputReader input)
+    public void setName(InputReader reader, int fieldRef)
     {
     }
 
     @Override
-    public void setNameExtension(InputReader input)
+    public void setNameExtension(InputReader reader, int fieldRef)
     {
     }
 
     @Override
-    public void setVendorId(InputReader input)
+    public void setVendorId(InputReader reader, int fieldRef)
     {
     }
 

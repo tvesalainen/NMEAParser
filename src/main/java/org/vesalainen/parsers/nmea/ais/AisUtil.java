@@ -25,12 +25,10 @@ import org.vesalainen.parser.util.InputReader;
  */
 public class AisUtil
 {
-    public static String makeString(InputReader reader)
+    public static String makeString(CharSequence seq)
     {
         StringBuilder sb = new StringBuilder();
-        char[] array = reader.getArray();
-        int start = reader.getStart();
-        int length = reader.getLength();
+        int length = seq.length();
         assert length % 6 == 0;
         int bit = 0;
         int cc = 0;
@@ -38,7 +36,7 @@ public class AisUtil
         {
             bit++;
             cc <<= 1;
-            cc += array[(start + ii) % array.length] - '0';
+            cc += seq.charAt(ii) - '0';
             if (bit == 6)
             {
                 if (cc == 0)    // terminating '@'

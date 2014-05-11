@@ -17,6 +17,7 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
@@ -45,7 +46,6 @@ import org.vesalainen.parsers.nmea.ais.WMOCode45501;
  */
 public class Tracer implements NMEAObserver, AISObserver
 {
-
     @Override
     public void talkerId(char c1, char c2)
     {
@@ -89,9 +89,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setWaypointToWaypoint(InputReader toWaypoint, InputReader fromWaypoint)
+    public void setWaypointToWaypoint(InputReader reader, int toWaypoint, int fromWaypoint)
     {
-        System.err.println("setWaypointToWaypoint("+toWaypoint.getString()+", "+fromWaypoint.getString()+")");
+        System.err.println("setWaypointToWaypoint("+reader.getString(toWaypoint)+", "+reader.getString(fromWaypoint)+")");
     }
 
     @Override
@@ -185,9 +185,9 @@ public class Tracer implements NMEAObserver, AISObserver
 }
 
     @Override
-    public void setWaypoint(InputReader waypoint)
+    public void setWaypoint(InputReader reader, int waypoint)
     {
-        System.err.println("setWaypoint("+waypoint.getString()+")");
+        System.err.println("setWaypoint("+reader.getString(waypoint)+")");
     }
 
     @Override
@@ -311,9 +311,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setHorizontalDatum(InputReader horizontalDatum)
+    public void setHorizontalDatum(InputReader reader, int horizontalDatum)
     {
-        System.err.println("setHorizontalDatum("+horizontalDatum.getString()+")");
+        System.err.println("setHorizontalDatum("+reader.getString(horizontalDatum)+")");
     }
 
     @Override
@@ -323,9 +323,14 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setWaypoints(List<String> list)
+    public void setWaypoints(InputReader reader, List<Integer> list)
     {
-        System.err.println("setWaypointList("+list+")");
+        List<String> sl = new ArrayList<>();
+        for (int fieldRef : list)
+        {
+            sl.add(reader.getString(fieldRef));
+        }
+        System.err.println("setWaypointList("+sl+")");
     }
 
     @Override
@@ -629,15 +634,15 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setCallSign(InputReader input)
+    public void setCallSign(InputReader reader, int fieldRef)
     {
-        System.err.println("setCallSign("+AisUtil.makeString(input)+")");
+        System.err.println("setCallSign("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
-    public void setVesselName(InputReader input)
+    public void setVesselName(InputReader reader, int fieldRef)
     {
-        System.err.println("setVesselName("+AisUtil.makeString(input)+")");
+        System.err.println("setVesselName("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -671,9 +676,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setDestination(InputReader input)
+    public void setDestination(InputReader reader, int fieldRef)
     {
-        System.err.println("setDestination("+AisUtil.makeString(input)+")");
+        System.err.println("setDestination("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -719,9 +724,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setLastPort(InputReader locode)
+    public void setLastPort(InputReader reader, int fieldRef)
     {
-        System.err.println("setLastPort("+AisUtil.makeString(locode)+")");
+        System.err.println("setLastPort("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -749,9 +754,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setNextPort(InputReader locode)
+    public void setNextPort(InputReader reader, int fieldRef)
     {
-        System.err.println("setNextPort("+AisUtil.makeString(locode)+")");
+        System.err.println("setNextPort("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -779,15 +784,15 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setMainDangerousGood(InputReader input)
+    public void setMainDangerousGood(InputReader reader, int fieldRef)
     {
-        System.err.println("setMainDangerousGood("+AisUtil.makeString(input)+")");
+        System.err.println("setMainDangerousGood("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
-    public void setIMDCategory(InputReader input)
+    public void setIMDCategory(InputReader reader, int fieldRef)
     {
-        System.err.println("setIMDCategory("+AisUtil.makeString(input)+")");
+        System.err.println("setIMDCategory("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -857,9 +862,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setPortname(InputReader input)
+    public void setPortname(InputReader reader, int fieldRef)
     {
-        System.err.println("setPortname("+AisUtil.makeString(input)+")");
+        System.err.println("setPortname("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -941,9 +946,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setText(InputReader input)
+    public void setText(InputReader reader, int fieldRef)
     {
-        System.err.println("setText("+AisUtil.makeString(input)+")");
+        System.err.println("setText("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -965,9 +970,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setBerthName(InputReader input)
+    public void setBerthName(InputReader reader, int fieldRef)
     {
-        System.err.println("setBerthName("+AisUtil.makeString(input)+")");
+        System.err.println("setBerthName("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -1151,9 +1156,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setDescription(InputReader input)
+    public void setDescription(InputReader reader, int fieldRef)
     {
-        System.err.println("setDescription("+AisUtil.makeString(input)+")");
+        System.err.println("setDescription("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -1361,21 +1366,21 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setReasonForClosing(InputReader input)
+    public void setReasonForClosing(InputReader reader, int fieldRef)
     {
-        System.err.println("setReasonForClosing("+AisUtil.makeString(input)+")");
+        System.err.println("setReasonForClosing("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
-    public void setClosingFrom(InputReader input)
+    public void setClosingFrom(InputReader reader, int fieldRef)
     {
-        System.err.println("setClosingFrom("+AisUtil.makeString(input)+")");
+        System.err.println("setClosingFrom("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
-    public void setClosingTo(InputReader input)
+    public void setClosingTo(InputReader reader, int fieldRef)
     {
-        System.err.println("setClosingTo("+AisUtil.makeString(input)+")");
+        System.err.println("setClosingTo("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -1428,9 +1433,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setStation(InputReader input)
+    public void setStation(InputReader reader, int fieldRef)
     {
-        System.err.println("setStation("+AisUtil.makeString(input)+")");
+        System.err.println("setStation("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -1452,9 +1457,9 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setLocation(InputReader input)
+    public void setLocation(InputReader reader, int fieldRef)
     {
-        System.err.println("setLocation("+AisUtil.makeString(input)+")");
+        System.err.println("setLocation("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
@@ -1512,33 +1517,33 @@ public class Tracer implements NMEAObserver, AISObserver
     }
 
     @Override
-    public void setName(InputReader input)
+    public void setName(InputReader reader, int fieldRef)
     {
-        System.err.println("setName("+AisUtil.makeString(input)+")");
+        System.err.println("setName("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
-    public void setNameExtension(InputReader input)
+    public void setNameExtension(InputReader reader, int fieldRef)
     {
-        System.err.println("setNameExtension("+AisUtil.makeString(input)+")");
+        System.err.println("setNameExtension("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override
-    public void setTargetName(InputReader name)
+    public void setTargetName(InputReader reader, int name)
     {
-        System.err.println("setTargetName("+name.getString()+")");
+        System.err.println("setTargetName("+reader.getString(name)+")");
     }
 
     @Override
-    public void setMessage(InputReader message)
+    public void setMessage(InputReader reader, int message)
     {
-        System.err.println("setMessage("+message.getString()+")");
+        System.err.println("setMessage("+reader.getString(message)+")");
     }
 
     @Override
-    public void setVendorId(InputReader input)
+    public void setVendorId(InputReader reader, int fieldRef)
     {
-        System.err.println("setVendorId("+AisUtil.makeString(input)+")");
+        System.err.println("setVendorId("+AisUtil.makeString(reader.getCharSequence(fieldRef))+")");
     }
 
     @Override

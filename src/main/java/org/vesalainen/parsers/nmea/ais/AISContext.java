@@ -114,7 +114,7 @@ public class AISContext extends UnparallelWorkflow<Integer>
                     }
                     catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
                     {
-                        throw new IllegalArgumentException(methodName+" not implemented");
+                        throw new IllegalArgumentException(methodName+" not implemented", ex);
                     }
                     break;
             }

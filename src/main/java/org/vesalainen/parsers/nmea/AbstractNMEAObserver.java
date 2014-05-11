@@ -124,7 +124,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaypointToWaypoint(InputReader toWaypoint, InputReader fromWaypoint)
+    public void setWaypointToWaypoint(InputReader input, int toWaypoint, int fromWaypoint)
     {
         
     }
@@ -226,7 +226,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaypoint(InputReader waypoint)
+    public void setWaypoint(InputReader input, int waypoint)
     {
         
     }
@@ -352,7 +352,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setHorizontalDatum(InputReader horizontalDatum)
+    public void setHorizontalDatum(InputReader reader, int horizontalDatum)
     {
         
     }
@@ -364,7 +364,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaypoints(List<String> list)
+    public void setWaypoints(InputReader input, List<Integer> list)
     {
         
     }
@@ -520,12 +520,12 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setTargetName(InputReader name)
+    public void setTargetName(InputReader input, int name)
     {
     }
 
     @Override
-    public void setMessage(InputReader message)
+    public void setMessage(InputReader input, int message)
     {
     }
 

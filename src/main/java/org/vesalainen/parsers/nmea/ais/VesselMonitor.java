@@ -136,6 +136,7 @@ public class VesselMonitor extends AbstractAISObserver
         target.setSecond(second);
     }
 
+    @Override
     public void setRAIM(boolean raim)
     {
         target.setRAIM(raim);
@@ -148,9 +149,9 @@ public class VesselMonitor extends AbstractAISObserver
     }
 
     @Override
-    public void setCallSign(InputReader input)
+    public void setCallSign(InputReader reader, int fieldRef)
     {
-        target.setCallSign(input);
+        target.setCallSign(reader, fieldRef);
     }
 
 }

@@ -21,6 +21,21 @@ import java.util.List;
 import org.vesalainen.parser.util.InputReader;
 
 /**
+ * NMEAObserver is observer class for NMEA data. NMEAParser calls methods of this 
+ * interface.
+ * 
+ * <p>User of NMEAParser is probably only interested in a small subset of the data.
+ * For this reason creation of Strings is avoided because of performance and GC
+ * overhead. Use InputReader getString(fieldRef) to create strings. Use fieldRefs
+ * before commit.
+ * 
+ * <p>It is mostly easier to derive your class from AbstractNMEAObserver class.
+ * AbstractNMEAObserver has empty methods for all NMEAObserver methods.
+ * 
+ * <p>Observer methods are called as soon they are found in input. Parsing might
+ * cause syntax error or NMEA sentence checksum might fail. In that case rollback
+ * is called. Critical application should store the values and use them only after
+ * commit. 
  * @author Timo Vesalainen
  */
 public interface NMEAObserver extends Transactional
@@ -69,7 +84,7 @@ public interface NMEAObserver extends Transactional
      * @param toWaypoint
      * @param fromWaypoint 
      */
-    void setWaypointToWaypoint(InputReader toWaypoint, InputReader fromWaypoint);
+    void setWaypointToWaypoint(InputReader input, int toWaypoint, int fromWaypoint);
     /**
      * RMB, WPL
      * @param latitude
@@ -159,7 +174,7 @@ public interface NMEAObserver extends Transactional
      * AAM, APA, APB, BWC, BWR, R00, WCV, WPL
      * @param waypoint 
      */
-    void setWaypoint(InputReader waypoint);
+    void setWaypoint(InputReader input, int waypoint);
     /**
      * ALM, RTE
      * @param totalNumberOfMessages 
@@ -265,9 +280,10 @@ public interface NMEAObserver extends Transactional
     void setFAAModeIndicator(char faaModeIndicator);
     /**
      * RMM
+     * @param input
      * @param horizontalDatum 
      */
-    void setHorizontalDatum(InputReader horizontalDatum);
+    void setHorizontalDatum(InputReader input, int horizontalDatum);
     /**
      * RTE
      * @param messageMode 
@@ -275,9 +291,10 @@ public interface NMEAObserver extends Transactional
     void setMessageMode(char messageMode);
     /**
      * R00, RTE
+     * @param input
      * @param list 
      */
-    void setWaypoints(List<String> list);
+    void setWaypoints(InputReader input, List<Integer> list);
     /**
      * BWC, BWR WNC
      * @param distanceToWaypoint
@@ -417,13 +434,15 @@ public interface NMEAObserver extends Transactional
     void setVelocityToWaypoint(float velocityToWaypoint, char unit);
     /**
      * TXT
+     * @param input
      * @param name Target name
      */
-    void setTargetName(InputReader name);
+    void setTargetName(InputReader input, int name);
     /**
      * TXT
+     * @param input
      * @param message 
      */
-    void setMessage(InputReader message);
+    void setMessage(InputReader input, int message);
 
 }
