@@ -28,6 +28,7 @@ import org.vesalainen.parsers.nmea.ais.CargoUnitCodes;
 import org.vesalainen.parsers.nmea.ais.CodesForShipType;
 import org.vesalainen.parsers.nmea.ais.EPFDFixTypes;
 import org.vesalainen.parsers.nmea.ais.ExtensionUnit;
+import org.vesalainen.parsers.nmea.ais.MMSIMIDs;
 import org.vesalainen.parsers.nmea.ais.ManeuverIndicator;
 import org.vesalainen.parsers.nmea.ais.MarineTrafficSignals;
 import org.vesalainen.parsers.nmea.ais.MessageTypes;
@@ -511,6 +512,7 @@ public class Tracer implements NMEAObserver, AISObserver
     public void setMMSI(int mmsi)
     {
         System.err.println("setMMSI("+mmsi+")");
+        System.err.println("country("+MMSIMIDs.getCountry(mmsi)+")");
     }
 
     @Override
