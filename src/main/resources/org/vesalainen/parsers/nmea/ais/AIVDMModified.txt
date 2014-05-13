@@ -3605,7 +3605,7 @@ gathered automatically from sensors.
 |6-7      |  2 |Repeat Indicator       |repeat       |u|As in CNN
 |8-37     | 30 |MMSI                   |mmsi         |u|9 digits
 |38-45    |  8 |Regional Reserved      |reserved     |u|
-|46-55    | 10 |Speed Over Ground      |speed        |u|As in CNB.
+|46-55    | 10 |Speed Over Ground      |speed        |U1|As in CNB.
 |56-56    |  1 |Position Accuracy      |accuracy     |b|As in CNB.
 |57-84    | 28 |Longitude              |lon          |I4|Minutes/10000 (as in CNB)
 |85-111   | 27 |Latitude               |lat          |I4|Minutes/10000 (as in CNB)
