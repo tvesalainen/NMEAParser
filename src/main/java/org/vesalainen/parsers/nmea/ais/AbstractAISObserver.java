@@ -81,7 +81,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setStatus(NavigationStatus navigationStatus)
+    public void setNavigationStatus(NavigationStatus navigationStatus)
     {
         
     }

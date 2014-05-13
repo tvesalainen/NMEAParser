@@ -59,28 +59,29 @@ public interface NMEAObserver extends Transactional
     void setLocation(double latitude, double longitude);
     /**
      * RMA, RMC
-     * @param speedOverGround 
+     * @param knots 
      */
-    void setSpeedOverGround(float speedOverGround);
+    void setSpeedOverGround(float knots);
     /**
      * RMA, RMC
-     * @param trackMadeGood 
+     * @param knots 
      */
-    void setTrackMadeGood(float trackMadeGood);
+    void setTrackMadeGood(float knots);
     /**
      * HDG, RMA, RMC
-     * @param magneticVariation 
+     * @param degrees West is minus
      */
-    void setMagneticVariation(float magneticVariation);
+    void setMagneticVariation(float degrees);
     /**
-     * RMB, APA, APB, XTR
-     * @param crossTrackError
-     * @param directionToSteer
-     * @param units 
+     * APA, APB, XTR
+     * @param crossTrackError In unit
+     * @param directionToSteer L or R
+     * @param unit N = NM, K=Km
      */
-    void setCrossTrackError(float crossTrackError, char directionToSteer, char units);
+    void setCrossTrackError(float crossTrackError, char directionToSteer, char unit);
     /**
      * BOD, BWW, RMB, WNC
+     * @param input
      * @param toWaypoint
      * @param fromWaypoint 
      */
@@ -93,24 +94,24 @@ public interface NMEAObserver extends Transactional
     void setDestinationWaypointLocation(double latitude, double longitude);
     /**
      * RMB
-     * @param rangeToDestination 
+     * @param nm 
      */
-    void setRangeToDestination(float rangeToDestination);
+    void setRangeToDestination(float nm);
     /**
      * RMB
-     * @param bearingToDestination 
+     * @param degrees True
      */
-    void setBearingToDestination(float bearingToDestination);
+    void setBearingToDestination(float degrees);
     /**
      * RMB
-     * @param destinationClosingVelocity 
+     * @param knots 
      */
-    void setDestinationClosingVelocity(float destinationClosingVelocity);
+    void setDestinationClosingVelocity(float knots);
     /**
      * GGA
      * @param gpsQualityIndicator 
      */
-    void setGpsQualityIndicator(int gpsQualityIndicator);
+    void setGpsQualityIndicator(GPSQualityIndicator gpsQualityIndicator);
     /**
      * GGA
      * @param numberOfSatellitesInView 
@@ -118,9 +119,9 @@ public interface NMEAObserver extends Transactional
     void setNumberOfSatellitesInView(int numberOfSatellitesInView);
     /**
      * GGA
-     * @param horizontalDilutionOfPrecision 
+     * @param meters 
      */
-    void setHorizontalDilutionOfPrecision(float horizontalDilutionOfPrecision);
+    void setHorizontalDilutionOfPrecision(float meters);
     /**
      * GGA
      * @param antennaAltitude
@@ -172,6 +173,7 @@ public interface NMEAObserver extends Transactional
     void setArrivalCircleRadius(float arrivalCircleRadius, char units);
     /**
      * AAM, APA, APB, BWC, BWR, R00, WCV, WPL
+     * @param input
      * @param waypoint 
      */
     void setWaypoint(InputReader input, int waypoint);
@@ -444,5 +446,18 @@ public interface NMEAObserver extends Transactional
      * @param message 
      */
     void setMessage(InputReader input, int message);
+    /**
+     * Proprietary sentences start with $P. Proprietary type is the string
+     * following that prefix. E.g. $PGRMI,... GRMI is the type.
+     * @param reader
+     * @param fieldRef FieldRef for type.
+     */
+    void setProprietaryType(InputReader reader, int fieldRef);
+    /**
+     * Proprietary data. Comma separated proprietary data fields.
+     * @param reader
+     * @param fieldRef 
+     */
+    void setProprietaryData(InputReader reader, int fieldRef);
 
 }

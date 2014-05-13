@@ -154,7 +154,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setGpsQualityIndicator(int gpsQualityIndicator)
+    public void setGpsQualityIndicator(GPSQualityIndicator gpsQualityIndicator)
     {
         
     }
@@ -526,6 +526,16 @@ public class AbstractNMEAObserver implements NMEAObserver
 
     @Override
     public void setMessage(InputReader input, int message)
+    {
+    }
+
+    @Override
+    public void setProprietaryType(InputReader reader, int fieldRef)
+    {
+    }
+
+    @Override
+    public void setProprietaryData(InputReader reader, int fieldRef)
     {
     }
 

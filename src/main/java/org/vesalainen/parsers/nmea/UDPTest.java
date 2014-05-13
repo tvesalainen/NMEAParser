@@ -7,7 +7,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
-import org.vesalainen.parser.GenClassFactory;
+import org.vesalainen.parsers.nmea.ais.AISTracer;
 
 /**
  *
@@ -23,11 +23,11 @@ public class UDPTest
     {
         try
         {
-//            NMEAParser parser = (NMEAParser) GenClassFactory.createDynamicInstance(NMEAParser.class);//NMEAParser.newInstance();
             NMEAParser parser = NMEAParser.newInstance();
             DatagramInputStream dis = new DatagramInputStream(10110);
-            Tracer tracer = new Tracer();
-            parser.parse(dis, tracer, tracer);
+            NMEATracer nmeaTracer = new NMEATracer();
+            AISTracer aisTracer = new AISTracer();
+            parser.parse(dis, nmeaTracer, aisTracer);
         }
         catch (NoSuchMethodException | IOException | NoSuchFieldException | ClassNotFoundException | InstantiationException | IllegalAccessException ex)
         {

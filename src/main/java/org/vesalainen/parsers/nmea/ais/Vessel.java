@@ -41,7 +41,7 @@ public class Vessel extends AbstractAISObserver
     }
 
     @Override
-    public void setStatus(NavigationStatus navigationStatus)
+    public void setNavigationStatus(NavigationStatus navigationStatus)
     {
         this.navigationStatus = navigationStatus;
     }

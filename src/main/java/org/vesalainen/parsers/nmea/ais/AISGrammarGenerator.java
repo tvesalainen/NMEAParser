@@ -252,7 +252,11 @@ public abstract class AISGrammarGenerator
                     {
                         units = "";
                     }
-                    String reducer = "ais"+camel(member);
+                    String reducer = camel(member);
+                    if (reducer.length() > 1)
+                    {
+                        reducer = reducer.substring(0, 1).toLowerCase()+reducer.substring(1);
+                    }
                     if (t.length() > 1)
                     {
                         reducer = reducer+"_"+t;
@@ -296,7 +300,7 @@ public abstract class AISGrammarGenerator
                             {
                                 nt = member+constant;
                             }
-                            switch (nt)
+                            switch (member)
                             {
                                 case "lon":
                                 case "lat":
@@ -329,6 +333,10 @@ public abstract class AISGrammarGenerator
                                 case "increment1":
                                 case "increment2":
                                 case "txrx":
+                                    if (t.length() > 1)
+                                    {
+                                        nt = nt+"_"+t;
+                                    }
                                     if (len[0] == len[1])
                                     {
                                         nt = nt+"_"+len[0];

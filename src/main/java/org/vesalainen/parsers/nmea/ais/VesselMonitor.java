@@ -76,9 +76,9 @@ public class VesselMonitor extends AbstractAISObserver
         lastCommit = reason;
     }
 
-    public void setStatus(NavigationStatus navigationStatus)
+    public void setNavigationStatus(NavigationStatus navigationStatus)
     {
-        target.setStatus(navigationStatus);
+        target.setNavigationStatus(navigationStatus);
     }
 
     public void setTurn(float degreesPerMinute)

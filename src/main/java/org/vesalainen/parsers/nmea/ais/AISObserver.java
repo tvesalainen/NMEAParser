@@ -91,7 +91,7 @@ public interface AISObserver extends Transactional
      * Navigation Status
      * @param navigationStatus 
      */
-    void setStatus(NavigationStatus navigationStatus);
+    void setNavigationStatus(NavigationStatus navigationStatus);
     /**
      * Rate of Turn (ROT)
      * @param degreesPerMinute degrees / minute
@@ -955,4 +955,5 @@ public interface AISObserver extends Transactional
     void setVendorId(InputReader reader, int fieldRef);
 
     void setNavaidType(NavaidTypes navaidTypes);
+
 }

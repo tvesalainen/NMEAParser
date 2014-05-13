@@ -53,6 +53,7 @@ import org.vesalainen.parsers.nmea.ais.VesselMonitor;
     @Rule(left = "statements", value = "statement*"),
     @Rule(left = "statement", value = "nmeaStatement"),
     @Rule(left = "nmeaStatement", value = "'\\$' talkerId nmeaSentence '[\\,]*\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType ('[\\,]' proprietaryData)* '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "aivdm aisPrefix '[0-5]+\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "aivdo aisPrefix '[0-5]+\\*' checksum '\r\n'"),
     @Rule(left = "nmeaSentence", value = "'AAM' c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
@@ -181,6 +182,26 @@ public abstract class NMEAParser implements ParserInfo
         aisData.setOwnMessage(true);
     }
 
+    @Rule("string")
+    protected void proprietaryType(
+            int fieldRef,
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader reader)
+    {
+        data.setProprietaryType(reader, fieldRef);
+    }
+    @Rule
+    protected void proprietaryData()
+    {
+    }
+    @Rule("string")
+    protected void proprietaryData(
+            int fieldRef,
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader reader)
+    {
+        data.setProprietaryData(reader, fieldRef);
+    }
     @Rule
     protected void targetName()
     {
@@ -785,7 +806,7 @@ public abstract class NMEAParser implements ParserInfo
             int gpsQualityIndicator,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setGpsQualityIndicator(gpsQualityIndicator);
+        data.setGpsQualityIndicator(GPSQualityIndicator.values()[gpsQualityIndicator]);
     }
 
     @Rule("decimal")
@@ -929,7 +950,7 @@ public abstract class NMEAParser implements ParserInfo
         data.setDestinationWaypointLocation(ns * latitude, ew * longitude);
     }
 
-    @Rule("letter letter")
+    @Rule("letterNotP letter")
     protected void talkerId(char c1, char c2, @ParserContext("data") NMEAObserver data)
     {
         data.talkerId(c1, c2);
@@ -999,6 +1020,9 @@ public abstract class NMEAParser implements ParserInfo
 
     @Terminal(expression = "[a-zA-Z]")
     protected abstract char letter(char c);
+
+    @Terminal(expression = "[a-zA-OQ-Z]")
+    protected abstract char letterNotP(char c);
 
     @Terminal(expression = "[0-9A-Fa-f]")
     protected abstract char hexAlpha(char x);
