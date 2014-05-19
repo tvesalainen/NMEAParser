@@ -112,9 +112,13 @@ public class AISContext extends UnparallelWorkflow<Integer>
                         Method parser = aisParser.getClass().getMethod(methodName, InputStream.class, AISObserver.class);
                         parser.invoke(aisParser, aisInputStream, aisData);
                     }
-                    catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
+                    catch (NoSuchMethodException  ex)
                     {
                         throw new IllegalArgumentException(methodName+" not implemented", ex);
+                    }
+                    catch (SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
+                    {
+                        throw new IllegalArgumentException(ex);
                     }
                     break;
             }

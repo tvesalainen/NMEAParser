@@ -34,6 +34,7 @@ import org.vesalainen.parser.util.InputReader;
 
 /**
  * @author Timo Vesalainen
+ * @see <a href="http://gpsd.berlios.de/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
  */
 @GenClassname("org.vesalainen.parsers.nmea.ais.AISParserImpl")
 @GrammarDef(traceLevel=0)
@@ -635,7 +636,6 @@ import org.vesalainen.parser.util.InputReader;
 })
 public abstract class AISParser implements ParserInfo
 {
-protected void duration_18(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void radius_12(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_84(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void description_6_930(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
@@ -652,8 +652,6 @@ protected void weather_4(int arg, @ParserContext("aisData") AISObserver aisData)
 protected void visibility_U1_7(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void pressuretend_4(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void airtemp_U1_11(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void lon_I3_16(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void lat_I3_15(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void pressure_U1_11(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void airtemp_U1_10(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void visibility_U2_6(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -668,8 +666,6 @@ protected void waterlevel_U2_12(int arg, @ParserContext("aisData") AISObserver a
 protected void cdepth3_5(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_936(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
-protected void lon_I1_18(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void lat_I1_17(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void increment1_10(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void increment2_10(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -677,10 +673,6 @@ protected void increment1_11(int arg, @ParserContext("aisData") AISObserver aisD
 protected void increment2_11(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void txrx_4(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void lon_I4_18(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void lat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData){}
-    protected void cspeed_U1_8(int arg, @ParserContext("aisData") AISObserver aisData){}
-    protected void cspeed_U1_7(int arg, @ParserContext("aisData") AISObserver aisData){}
     public static AISParser newInstance() throws IOException
     {
         return (AISParser) GenClassFactory.getGenInstance(AISParser.class);
@@ -891,35 +883,64 @@ protected void lat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData)
 
     protected void lon_I3_25(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        lon_I3(arg, aisData);
-    }
-    protected void lon_I4_28(int arg, @ParserContext("aisData") AISObserver aisData)
-    {
-        lon_I4(arg, aisData);
-    }
-    protected void lon_I1(int arg, @ParserContext("aisData") AISObserver aisData)
-    {
-    }
-
-    protected void lon_I3(int lon, @ParserContext("aisData") AISObserver aisData)
-    {
-        if (lon != 0x6791AC0)
+        if (arg != 181000)
         {
-            if (lon <= 180 * 60 * 1000 && lon >= -180 * 60 * 1000)
+            float lon = arg;
+            lon = lon / 600000;
+            if (lon <= 180 && lon >= -180)
             {
-                float f = lon;
-                aisData.setLongitude(f / 60000F);
+                aisData.setLatitude(lon);
             }
             else
             {
-                System.err.println("longitude I3 = " + lon);
+                throw new IllegalArgumentException("lon = "+lon);
+            }
+        }
+    }
+    protected void lon_I1_18(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        if (arg != 0x1a838)
+        {
+            lon_I4_18(arg, aisData);
+        }
+    }
+
+    protected void lon_I3_16(int lon, @ParserContext("aisData") AISObserver aisData)
+    {
+        if (lon != 65536)
+        {
+            float f = lon;
+            f = (f / 100) - 180;
+            if (lon <= 180 && lon >= -180)
+            {
+                aisData.setLongitude(f);
+            }
+            else
+            {
+                throw new IllegalArgumentException("longitude I3 = " + lon);
             }
         }
     }
 
-    protected void lon_I4(int lon, @ParserContext("aisData") AISObserver aisData)
+    protected void lon_I4_18(int lon, @ParserContext("aisData") AISObserver aisData)
     {
-        if (lon != 0x6791AC0)
+        if (lon != 181000)
+        {
+            if (lon <= 180 * 60 * 10 && lon >= -180 * 60 * 10)
+            {
+                float f = lon;
+                aisData.setLongitude(f / 600F);
+            }
+            else
+            {
+                throw new IllegalArgumentException("longitude I4 = " + lon);
+            }
+        }
+    }
+
+    protected void lon_I4_28(int lon, @ParserContext("aisData") AISObserver aisData)
+    {
+        if (lon != 108600000)
         {
             if (lon <= 180 * 60 * 10000 && lon >= -180 * 60 * 10000)
             {
@@ -928,42 +949,71 @@ protected void lat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData)
             }
             else
             {
-                System.err.println("longitude I4 = " + lon);
+                throw new IllegalArgumentException("longitude I4 = " + lon);
             }
         }
     }
 
     protected void lat_I3_24(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        lat_I3(arg, aisData);
-    }
-    protected void lat_I4_27(int arg, @ParserContext("aisData") AISObserver aisData)
-    {
-        lat_I4(arg, aisData);
-    }
-    protected void lat_I1(int arg, @ParserContext("aisData") AISObserver aisData)
-    {
-    }
-
-    protected void lat_I3(int lat, @ParserContext("aisData") AISObserver aisData)
-    {
-        if (lat != 0x3412140)
+        if (arg != 91000)
         {
-            if (lat <= 90 * 60 * 1000 && lat >= -90 * 60 * 1000)
+            float lat = arg;
+            lat = lat / 600000;
+            if (lat <= 90 && lat >= -90)
             {
-                float f = lat;
-                aisData.setLatitude(f / 60000L);
+                aisData.setLatitude(lat);
             }
             else
             {
-                System.err.println("latitude I3 = " + lat);
+                throw new IllegalArgumentException("lat = "+lat);
+            }
+        }
+    }
+    protected void lat_I1_17(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        if (arg != 0xd548)
+        {
+            lat_I4_17(arg, aisData);
+        }
+    }
+
+    protected void lat_I3_15(int lat, @ParserContext("aisData") AISObserver aisData)
+    {
+        if (lat != 32767)
+        {
+            float f = lat;
+            f = f / 100 - 90;
+            if (f <= 90 && lat >= -90)
+            {
+                aisData.setLatitude(f);
+            }
+            else
+            {
+                throw new IllegalArgumentException("latitude I3 = " + lat);
             }
         }
     }
 
-    protected void lat_I4(int lat, @ParserContext("aisData") AISObserver aisData)
+    protected void lat_I4_17(int lat, @ParserContext("aisData") AISObserver aisData)
     {
-        if (lat != 0x3412140)
+        if (lat != 91000)
+        {
+            if (lat <= 90 * 60 * 10 && lat >= -90 * 60 * 10)
+            {
+                float f = lat;
+                aisData.setLatitude(f / 600F);
+            }
+            else
+            {
+                throw new IllegalArgumentException("latitude I4 = " + lat);
+            }
+        }
+    }
+
+    protected void lat_I4_27(int lat, @ParserContext("aisData") AISObserver aisData)
+    {
+        if (lat != 54600000)
         {
             if (lat <= 90 * 60 * 10000 && lat >= -90 * 60 * 10000)
             {
@@ -972,7 +1022,7 @@ protected void lat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData)
             }
             else
             {
-                System.err.println("latitude I4 = " + lat);
+                throw new IllegalArgumentException("latitude I4 = " + lat);
             }
         }
     }
@@ -1323,9 +1373,18 @@ protected void lat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData)
         }
     }
 
-    protected void cspeed_U1(int currentSpeed, @ParserContext("aisData") AISObserver aisData)
+    protected void cspeed_U1_7(int currentSpeed, @ParserContext("aisData") AISObserver aisData)
     {
         if (currentSpeed != 127)
+        {
+            float f = currentSpeed;
+            aisData.setCurrentSpeed(f / 10F);
+        }
+    }
+
+    protected void cspeed_U1_8(int currentSpeed, @ParserContext("aisData") AISObserver aisData)
+    {
+        if (currentSpeed != 255)
         {
             float f = currentSpeed;
             aisData.setCurrentSpeed(f / 10F);
@@ -1355,7 +1414,7 @@ protected void lat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData)
         aisData.setAreaNotice(AreaNoticeDescription.values()[notice]);
     }
 
-    protected void duration(int duration, @ParserContext("aisData") AISObserver aisData)
+    protected void duration_18(int duration, @ParserContext("aisData") AISObserver aisData)
     {
         if (duration != 262143)
         {
@@ -1590,7 +1649,7 @@ protected void lat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData)
 
     protected void berthLat_I3(int lat, @ParserContext("aisData") AISObserver aisData)
     {
-        if (lat != 0x3412140)
+        if (lat != 54600000)
         {
             float f = lat;
             aisData.setLatitude(f / 60000L);
@@ -1943,7 +2002,7 @@ protected void lat_I4_17(int arg, @ParserContext("aisData") AISObserver aisData)
             }
             else
             {
-                System.err.println("course U1 = " + course);
+                throw new IllegalArgumentException("course U1 = " + course);
             }
         }
     }

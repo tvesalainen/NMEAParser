@@ -28,10 +28,10 @@ import static org.junit.Assert.*;
  *
  * @author Timo Vesalainen
  */
-public class TestAISInputStream
+public class AISInputStreamTest
 {
     
-    public TestAISInputStream()
+    public AISInputStreamTest()
     {
     }
     
