@@ -19,12 +19,12 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.Semaphore;
+import org.vesalainen.parser.util.Recoverable;
 
 /**
  * @author Timo Vesalainen
  */
-public class SwitchingInputStream extends InputStream
+public class SwitchingInputStream extends InputStream implements Recoverable
 {
     private boolean sleeping = true;
     private final InputStream is;
@@ -65,5 +65,15 @@ public class SwitchingInputStream extends InputStream
             cc = is.read();
         }
         return cc;
+    }
+    @Override
+    public boolean recover()
+    {
+        if (is instanceof Recoverable)
+        {
+            Recoverable recoverable = (Recoverable) is;
+            return recoverable.recover();
+        }
+        return false;
     }
 }

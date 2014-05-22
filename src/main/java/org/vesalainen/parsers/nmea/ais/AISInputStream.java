@@ -19,12 +19,13 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.io.InputStream;
+import org.vesalainen.parser.util.Recoverable;
 
 /**
  * AISInputStream converts ais content to binary input.
  * @author Timo Vesalainen
  */
-public class AISInputStream extends InputStream
+public class AISInputStream extends InputStream implements Recoverable
 {
     private InputStream in;
     private int cc;
@@ -72,5 +73,16 @@ public class AISInputStream extends InputStream
         {
             return '1';
         }
+    }
+
+    @Override
+    public boolean recover()
+    {
+        if (in instanceof Recoverable)
+        {
+            Recoverable recoverable = (Recoverable) in;
+            return recoverable.recover();
+        }
+        return false;
     }
 }

@@ -17,7 +17,6 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.FileInputStream;
-import org.vesalainen.parsers.nmea.ais.AISObserver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -36,7 +35,9 @@ import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parser.util.Recoverable;
 import org.vesalainen.parsers.nmea.ais.AISContext;
+import org.vesalainen.parsers.nmea.ais.AISObserver;
 import org.vesalainen.parsers.nmea.ais.AISParser;
 import org.vesalainen.parsers.nmea.ais.VesselMonitor;
 
@@ -1076,7 +1077,7 @@ public abstract class NMEAParser implements ParserInfo
         }
     }
 
-    @RecoverMethod
+    //@RecoverMethod
     public void recover(
             @ParserContext("data") NMEAObserver data,
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
@@ -1101,7 +1102,7 @@ public abstract class NMEAParser implements ParserInfo
         Checksum checksum = new NMEAChecksum();
         Clock clock = new GPSClock();
         data.setClock(clock);
-        CheckedInputStream checkedInputStream = new CheckedInputStream(is, checksum);
+        CheckedInputStream checkedInputStream = new RecoverableCheckedInputStream(is, checksum);
         AISContext aisContext = new AISContext(checkedInputStream, aisData);
         parse(checkedInputStream, checksum, clock, data, aisContext);
         aisContext.stopThreads();

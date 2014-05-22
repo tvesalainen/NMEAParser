@@ -16,7 +16,6 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import org.junit.After;
@@ -25,6 +24,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.vesalainen.parser.util.Recoverable;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.NMEAParser;
 
@@ -70,7 +70,7 @@ public class SampleTest
         NMEAParser parser = NMEAParser.newInstance();
         try
         {
-            parser.parse(is, new AbstractNMEAObserver(), new AbstractAISObserver());
+            parser.parse(is, new AbstractNMEAObserver(), new AISTracer());
         }
         catch (IOException | IllegalArgumentException ex)
         {
@@ -78,7 +78,7 @@ public class SampleTest
         }
     }
 
-    public class IS extends InputStream
+    public class IS extends InputStream implements Recoverable
     {
         private final InputStream in;
         private final StringBuilder sb = new StringBuilder();
@@ -109,6 +109,13 @@ public class SampleTest
         public String toString()
         {
             return sb.toString();
+        }
+
+        @Override
+        public boolean recover()
+        {
+            fail();
+            return false;
         }
         
     }

@@ -773,7 +773,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
             InputStream is,
             @ParserContext("aisData") AISObserver aisData);
 
-    @RecoverMethod
+    //@RecoverMethod
     public void recover(
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
@@ -801,6 +801,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
                 reader.clear();
             }
             aisData.rollback("skipping " + sb+" "+thr);
+            System.err.println("skipping " + sb+" "+thr);
         }
         System.err.println("Expected "+expected);
         System.err.println("Got      "+got);
