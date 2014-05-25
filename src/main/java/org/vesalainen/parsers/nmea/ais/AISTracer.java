@@ -17,10 +17,7 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parsers.nmea.Clock;
 
 /**
  * @author Timo Vesalainen
@@ -37,6 +34,12 @@ public class AISTracer implements AISObserver
     public void rollback(String reason)
     {
         System.err.println("rollback("+reason+")");
+    }
+
+    @Override
+    public void setError(String error)
+    {
+        System.err.println("setError("+error+")");
     }
 
     @Override

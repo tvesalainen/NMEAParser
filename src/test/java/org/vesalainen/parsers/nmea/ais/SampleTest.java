@@ -24,7 +24,6 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.vesalainen.parser.util.Recoverable;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.NMEAParser;
 
@@ -70,7 +69,9 @@ public class SampleTest
         NMEAParser parser = NMEAParser.newInstance();
         try
         {
-            parser.parse(is, new AbstractNMEAObserver(), new AISTracer());
+            AD ad = new AD();
+            parser.parse(is, new AbstractNMEAObserver(), ad);
+            assertEquals(0, ad.getRollbacks());
         }
         catch (IOException | IllegalArgumentException ex)
         {
@@ -78,7 +79,23 @@ public class SampleTest
         }
     }
 
-    public class IS extends InputStream implements Recoverable
+    public class AD extends AISTracer
+    {
+        private int rollbacks;
+        @Override
+        public void rollback(String reason)
+        {
+            super.rollback(reason);
+            rollbacks++;
+        }
+
+        public int getRollbacks()
+        {
+            return rollbacks;
+        }
+        
+    }
+    public class IS extends InputStream
     {
         private final InputStream in;
         private final StringBuilder sb = new StringBuilder();
@@ -111,12 +128,5 @@ public class SampleTest
             return sb.toString();
         }
 
-        @Override
-        public boolean recover()
-        {
-            fail();
-            return false;
-        }
-        
     }
 }

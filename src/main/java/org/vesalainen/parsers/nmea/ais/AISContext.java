@@ -55,12 +55,6 @@ public class AISContext extends UnparallelWorkflow<Integer>
         switchingInputStream.setNumberOfSentences(numberOfMessages);
     }
 
-    @Override
-    public void switchTo(Integer to)
-    {
-        super.switchTo(to);
-    }
-
     public int getLast()
     {
         return last;
@@ -69,11 +63,6 @@ public class AISContext extends UnparallelWorkflow<Integer>
     public void setLast(int last)
     {
         this.last = last;
-    }
-
-    public void stopThreads()
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

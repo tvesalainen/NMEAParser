@@ -258,7 +258,7 @@ public abstract class NMEAParser implements ParserInfo
             int sequentialMessageID,
             char channel,
             @ParserContext("aisContext") AISContext aisContext
-            ) throws IOException
+            ) throws IOException, InterruptedException
     {
         AISObserver aisData = aisContext.getAisData();
         aisData.setPrefix(
@@ -1077,7 +1077,7 @@ public abstract class NMEAParser implements ParserInfo
         }
     }
 
-    //@RecoverMethod
+    @RecoverMethod
     public void recover(
             @ParserContext("data") NMEAObserver data,
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,

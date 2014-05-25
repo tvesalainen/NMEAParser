@@ -3524,7 +3524,7 @@ depending on payload size.
 |40-57   | 18 |Longitude           |lon        |I1|Signed: minutes/10
 |58-74   | 17 |Latitude            |lat        |I1|Signed: minutes/10
 |75-79   |  5 |Spare               |           |x|Not used - reserved
-|80-815  |736 |Payload             |data       |d|DGNSS correction data
+|80-815  |1-736 |Payload             |data       |d|DGNSS correction data
 |==============================================================================
 
 Nore that latitude and longitude are in units of a tenth of a minute;

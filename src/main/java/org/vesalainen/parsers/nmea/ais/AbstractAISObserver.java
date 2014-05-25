@@ -1088,4 +1088,9 @@ public class AbstractAISObserver implements AISObserver
     {
     }
 
+    @Override
+    public void setError(String string)
+    {
+    }
+
 }

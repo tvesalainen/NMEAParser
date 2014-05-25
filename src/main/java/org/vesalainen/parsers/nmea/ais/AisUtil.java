@@ -29,7 +29,7 @@ public class AisUtil
     {
         StringBuilder sb = new StringBuilder();
         int length = seq.length();
-        assert length % 6 == 0;
+        length = 6*(length / 6);    // force to 6 bit
         int bit = 0;
         int cc = 0;
         for (int ii = 0; ii < length; ii++)

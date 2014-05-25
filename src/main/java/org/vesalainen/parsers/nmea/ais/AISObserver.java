@@ -956,4 +956,6 @@ public interface AISObserver extends Transactional
 
     void setNavaidType(NavaidTypes navaidTypes);
 
+    public void setError(String string);
+
 }

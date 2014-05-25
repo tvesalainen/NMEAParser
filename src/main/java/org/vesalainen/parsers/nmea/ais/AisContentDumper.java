@@ -47,7 +47,7 @@ public class AisContentDumper
     {
         try
         {
-            dump("D028j=2<Tffp\n");
+            dump("13n@oD0PB@0IRqvQj@W;EppH088t19uvPT\n");
         }
         catch (Exception ex)
         {
