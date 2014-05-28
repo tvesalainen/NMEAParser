@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.util.navi.Average;
 
 /**
  *
@@ -71,7 +72,13 @@ public class SampleTest
         {
             AD ad = new AD();
             parser.parse(is, new AbstractNMEAObserver(), ad);
-            assertEquals(0, ad.getRollbacks());
+            int rows = ad.getRollbacks()+ad.getCommits();
+            System.err.println("rows="+rows);
+            System.err.println("Latitude "+ad.getAverageLatitude().getMin()+" - "+ad.getAverageLatitude().getMax());
+            System.err.println("Longitude "+ad.getAverageLongitude().getMin()+" - "+ad.getAverageLongitude().getMax());
+            Average expCourse = new Average(-180, 180, rows, 123456789);
+            assertEquals(expCourse.getAverage(), ad.getAverageCourse().getAverage(), 0.0001);
+            assertTrue(ad.getRollbacks()/ad.getCommits() < 0.001);
         }
         catch (IOException | IllegalArgumentException ex)
         {
@@ -81,12 +88,65 @@ public class SampleTest
 
     public class AD extends AISTracer
     {
+        private int commits;
         private int rollbacks;
+        private Average averageLongitude = new Average();
+        private Average averageLatitude = new Average();
+        private Average averageCourse = new Average();
+
+        @Override
+        public void setCourse(float course)
+        {
+            super.setCourse(course);
+            averageCourse.add(course);
+        }
+
+        @Override
+        public void setLatitude(float latitude)
+        {
+            super.setLatitude(latitude);
+            averageLatitude.add(latitude);
+        }
+
+        @Override
+        public void setLongitude(double longitude)
+        {
+            super.setLongitude(longitude);
+            averageLongitude.add(longitude);
+        }
+
+        public Average getAverageLatitude()
+        {
+            return averageLatitude;
+        }
+
+        public Average getAverageCourse()
+        {
+            return averageCourse;
+        }
+
+        public Average getAverageLongitude()
+        {
+            return averageLongitude;
+        }
+
+        @Override
+        public void commit(String reason)
+        {
+            super.commit(reason);
+            commits++;
+        }
+        
         @Override
         public void rollback(String reason)
         {
             super.rollback(reason);
             rollbacks++;
+        }
+
+        public int getCommits()
+        {
+            return commits;
         }
 
         public int getRollbacks()
