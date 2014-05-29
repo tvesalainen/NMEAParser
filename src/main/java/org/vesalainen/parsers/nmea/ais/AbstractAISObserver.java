@@ -105,7 +105,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setLongitude(double degrees)
+    public void setLongitude(float degrees)
     {
         
     }

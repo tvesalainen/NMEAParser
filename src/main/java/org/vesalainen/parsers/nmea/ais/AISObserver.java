@@ -113,7 +113,7 @@ public interface AISObserver extends Transactional
      * Values up to plus or minus 180 degrees, East = positive, West = negative. 
      * @param degrees longitude in degrees
      */
-    void setLongitude(double degrees);
+    void setLongitude(float degrees);
     /**
      * Values up to plus or minus 90 degrees, North = positive, South = negative.
      * @param degrees latitude in degrees

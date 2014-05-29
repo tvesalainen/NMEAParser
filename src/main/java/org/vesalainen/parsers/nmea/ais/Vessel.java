@@ -59,9 +59,9 @@ public class Vessel extends AbstractAISObserver
     }
 
     @Override
-    public void setLongitude(double longitude)
+    public void setLongitude(float degrees)
     {
-        this.longitude = longitude;
+        this.longitude = degrees;
     }
 
     @Override

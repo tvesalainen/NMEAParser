@@ -110,9 +110,9 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setLongitude(double longitude)
+    public void setLongitude(float degrees)
     {
-        System.err.println("setLongitude("+longitude+")");
+        System.err.println("setLongitude("+degrees+")");
     }
 
     @Override

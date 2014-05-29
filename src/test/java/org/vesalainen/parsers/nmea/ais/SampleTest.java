@@ -26,7 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.util.navi.Average;
+import org.vesalainen.util.navi.SimpleStats;
 
 /**
  *
@@ -74,10 +74,10 @@ public class SampleTest
             parser.parse(is, new AbstractNMEAObserver(), ad);
             int rows = ad.getRollbacks()+ad.getCommits();
             System.err.println("rows="+rows);
-            System.err.println("Latitude "+ad.getAverageLatitude().getMin()+" - "+ad.getAverageLatitude().getMax());
-            System.err.println("Longitude "+ad.getAverageLongitude().getMin()+" - "+ad.getAverageLongitude().getMax());
-            Average expCourse = new Average(-180, 180, rows, 123456789);
-            assertEquals(expCourse.getAverage(), ad.getAverageCourse().getAverage(), 0.0001);
+            System.err.println("Latitude "+ad.getLatitudeStats().getMin()+" - "+ad.getLatitudeStats().getMax());
+            System.err.println("Longitude "+ad.getLongitudeStats().getMin()+" - "+ad.getLongitudeStats().getMax());
+            SimpleStats expCourse = new SimpleStats(-180, 180, rows, 123456789);
+            assertEquals(expCourse.getAverage(), ad.getCourseStats().getAverage(), 0.0001);
             assertTrue(ad.getRollbacks()/ad.getCommits() < 0.001);
         }
         catch (IOException | IllegalArgumentException ex)
@@ -90,44 +90,44 @@ public class SampleTest
     {
         private int commits;
         private int rollbacks;
-        private Average averageLongitude = new Average();
-        private Average averageLatitude = new Average();
-        private Average averageCourse = new Average();
+        private final SimpleStats longitudeStats = new SimpleStats();
+        private final SimpleStats latitudeStats = new SimpleStats();
+        private final SimpleStats courseStats = new SimpleStats();
 
         @Override
         public void setCourse(float course)
         {
             super.setCourse(course);
-            averageCourse.add(course);
+            courseStats.add(course);
         }
 
         @Override
         public void setLatitude(float latitude)
         {
             super.setLatitude(latitude);
-            averageLatitude.add(latitude);
+            latitudeStats.add(latitude);
         }
 
         @Override
-        public void setLongitude(double longitude)
+        public void setLongitude(float degrees)
         {
-            super.setLongitude(longitude);
-            averageLongitude.add(longitude);
+            super.setLongitude(degrees);
+            longitudeStats.add(degrees);
         }
 
-        public Average getAverageLatitude()
+        public SimpleStats getLatitudeStats()
         {
-            return averageLatitude;
+            return latitudeStats;
         }
 
-        public Average getAverageCourse()
+        public SimpleStats getCourseStats()
         {
-            return averageCourse;
+            return courseStats;
         }
 
-        public Average getAverageLongitude()
+        public SimpleStats getLongitudeStats()
         {
-            return averageLongitude;
+            return longitudeStats;
         }
 
         @Override

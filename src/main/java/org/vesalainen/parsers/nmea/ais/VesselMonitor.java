@@ -91,7 +91,7 @@ public class VesselMonitor extends AbstractAISObserver
         target.setSpeed(knots);
     }
 
-    public void setLongitude(double degrees)
+    public void setLongitude(float degrees)
     {
         target.setLongitude(degrees);
     }
