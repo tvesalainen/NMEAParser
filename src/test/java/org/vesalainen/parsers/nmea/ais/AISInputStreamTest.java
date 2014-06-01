@@ -17,12 +17,13 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -56,14 +57,14 @@ public class AISInputStreamTest
     }
 
     /**
-     * Test of read method, of class AISInputStream.
+     * Test of read method, of class AISReader.
      */
     @Test
     public void testRead() throws Exception
     {
         System.out.println("read");
-        ByteArrayInputStream in = new ByteArrayInputStream("14eG;o@034o8sd<L9i:a;WF>062D\n".getBytes());
-        AISInputStream ain = new AISInputStream(in);
+        StringReader in = new StringReader("14eG;o@034o8sd<L9i:a;WF>062D\n");
+        AISReader ain = new AISReader(in);
         StringBuilder result = new StringBuilder();
         int cc = ain.read();
         while (cc != '\n')

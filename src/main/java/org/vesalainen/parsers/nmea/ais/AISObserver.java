@@ -17,6 +17,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.parsers.nmea.Transactional;
 
 /**
@@ -96,7 +97,7 @@ public interface AISObserver extends Transactional
      * Rate of Turn (ROT)
      * @param degreesPerMinute degrees / minute
      */
-    void setTurn(float degreesPerMinute);
+    void setRateOfTurn(float degreesPerMinute);
     /**
      * Speed Over Ground (SOG). 
      * @param knots speed in knots. value 102.2 indicates 102.2 knots or higher.
@@ -956,6 +957,8 @@ public interface AISObserver extends Transactional
 
     void setNavaidType(NavaidTypes navaidTypes);
 
-    public void setError(String string);
+    void setError(String string);
+
+    void setClock(Clock clock);
 
 }

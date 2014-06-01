@@ -19,6 +19,7 @@ package org.vesalainen.parsers.nmea;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.CheckedInputStream;
@@ -39,6 +40,7 @@ import org.vesalainen.parser.util.Recoverable;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
 import org.vesalainen.parsers.nmea.ais.AISParser;
+import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
 import org.vesalainen.parsers.nmea.ais.VesselMonitor;
 
 /**
@@ -1096,30 +1098,76 @@ public abstract class NMEAParser implements ParserInfo
         data.rollback("skipping " + sb);
         reader.clear();
     }
-
+    /**
+     * Parse NMEA
+     * @param is
+     * @param data NMEAObserver can be null
+     * @param aisData AISObserver can be null
+     * @throws IOException 
+     */
+    public void parse(String is, NMEAObserver data, AISObserver aisData) throws IOException
+    {
+        Checksum checksum = new NMEAChecksum();
+        CheckedReader checkedReader = new CheckedReader(is, checksum);
+        parseIt(checkedReader, data, aisData);
+    }
+    /**
+     * Parse NMEA
+     * @param is
+     * @param data NMEAObserver can be null
+     * @param aisData AISObserver can be null
+     * @throws IOException 
+     */
     public void parse(InputStream is, NMEAObserver data, AISObserver aisData) throws IOException
     {
         Checksum checksum = new NMEAChecksum();
+        CheckedReader checkedReader = new CheckedReader(is, checksum);
+        parseIt(checkedReader, data, aisData);
+    }
+    /**
+     * Parse NMEA
+     * @param is
+     * @param data NMEAObserver can be null
+     * @param aisData AISObserver can be null
+     * @throws IOException 
+     */
+    public void parse(Reader is, NMEAObserver data, AISObserver aisData) throws IOException
+    {
+        Checksum checksum = new NMEAChecksum();
+        CheckedReader checkedReader = new CheckedReader(is, checksum);
+        parseIt(checkedReader, data, aisData);
+    }
+
+    private void parseIt(CheckedReader checkedReader, NMEAObserver data, AISObserver aisData) throws IOException
+    {
+        if (data == null)
+        {
+            data = new AbstractNMEAObserver();
+        }
+        if (aisData == null)
+        {
+            aisData = new AbstractAISObserver();
+        }
         Clock clock = new GPSClock();
         data.setClock(clock);
-        CheckedInputStream checkedInputStream = new RecoverableCheckedInputStream(is, checksum);
-        AISContext aisContext = new AISContext(checkedInputStream, aisData);
-        parse(checkedInputStream, checksum, clock, data, aisContext);
+        aisData.setClock(clock);
+        AISContext aisContext = new AISContext(checkedReader, aisData);
+        parse(checkedReader, checkedReader.getCheckSum(), clock, data, aisContext);
         aisContext.stopThreads();
     }
 
-    @ParseMethod(start = "statements", size = 1024, charSet="ASCII", wideIndex=true)
+    @ParseMethod(start = "statements", size = 1024, wideIndex=true)
     protected abstract void parse(
-            InputStream is,
+            Reader in,
             @ParserContext("checksum") Checksum checksum,
             @ParserContext("clock") Clock clock,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;
 
-    public static NMEAParser newInstance() throws NoSuchMethodException, IOException, NoSuchFieldException, ClassNotFoundException, InstantiationException, IllegalAccessException
+    public static NMEAParser newInstance()
     {
-        return (NMEAParser) GenClassFactory.getGenInstance(NMEAParser.class);
+        return (NMEAParser) GenClassFactory.loadGenInstance(NMEAParser.class);
     }
 
     /**

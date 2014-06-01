@@ -29,7 +29,7 @@ public class UDPTest
             AISTracer aisTracer = new AISTracer();
             parser.parse(dis, nmeaTracer, aisTracer);
         }
-        catch (NoSuchMethodException | IOException | NoSuchFieldException | ClassNotFoundException | InstantiationException | IllegalAccessException ex)
+        catch (IOException ex)
         {
             ex.printStackTrace();
         }

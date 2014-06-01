@@ -74,7 +74,7 @@ public abstract class AISGrammarGenerator
             t = t+"Messages";
             System.err.println("    @ParseMethod(start = \""+t+"\", size = 1024, wideIndex = true)");
             System.err.println("    protected abstract void parse"+t+"(");
-            System.err.println("            InputStream is,");
+            System.err.println("            Reader in,");
             System.err.println("            @ParserContext(\"aisData\") AISObserver aisData);");
         }
         return grammar;

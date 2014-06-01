@@ -19,6 +19,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.vesalainen.util.concurrent.UnparallelWorkflow;
@@ -30,18 +31,18 @@ public class AISContext extends UnparallelWorkflow<Integer>
 {
     private final AISObserver aisData;
     private final AISParser aisParser;
-    private final InputStream in;
-    private final SwitchingInputStream switchingInputStream;
-    private final AISInputStream aisInputStream;
+    private final Reader in;
+    private final SwitchingReader switchingInputStream;
+    private final AISReader aisReader;
     private int last;
 
-    public AISContext(InputStream in, AISObserver aisData) throws IOException
+    public AISContext(Reader in, AISObserver aisData) throws IOException
     {
         super(-1);
         this.aisData = aisData;
         this.in = in;
-        switchingInputStream = new SwitchingInputStream(in, this);
-        aisInputStream = new AISInputStream(switchingInputStream);
+        switchingInputStream = new SwitchingReader(in, this);
+        aisReader = new AISReader(switchingInputStream);
         aisParser = AISParser.newInstance();
     }
     
@@ -87,19 +88,19 @@ public class AISContext extends UnparallelWorkflow<Integer>
             switch (message)
             {
                 case 0:
-                    aisParser.parse(aisInputStream, aisData, context);
+                    aisParser.parse(aisReader, aisData, context);
                     break;
                 case 1:
                 case 2:
                 case 3:
-                    aisParser.parse123Messages(aisInputStream, aisData);
+                    aisParser.parse123Messages(aisReader, aisData);
                     break;
                 default:
                     String methodName = "parse"+message+"Messages";
                     try
                     {
                         Method parser = aisParser.getClass().getMethod(methodName, InputStream.class, AISObserver.class);
-                        parser.invoke(aisParser, aisInputStream, aisData);
+                        parser.invoke(aisParser, aisReader, aisData);
                     }
                     catch (NoSuchMethodException  ex)
                     {

@@ -47,7 +47,7 @@ public class Vessel extends AbstractAISObserver
     }
 
     @Override
-    public void setTurn(float degreesPerMinute)
+    public void setRateOfTurn(float degreesPerMinute)
     {
         this.degreesPerMinute = degreesPerMinute;
     }

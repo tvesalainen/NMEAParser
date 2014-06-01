@@ -1,0 +1,843 @@
+201
+Albania (Republic of)
+AL
+202
+Andorra (Principality of)
+AD
+203
+Austria
+AT
+204
+Azores
+
+205
+Belgium
+BE
+206
+Belarus (Republic of)
+BY
+207
+Bulgaria (Republic of)
+BG
+208
+Vatican City State
+
+209
+Cyprus (Republic of)
+CY
+210
+Cyprus (Republic of)
+CY
+211
+Germany (Federal Republic of)
+DE
+212
+Cyprus (Republic of)
+CY
+213
+Georgia
+GE
+214
+Moldova (Republic of)
+
+215
+Malta
+MT
+216
+Armenia (Republic of)
+AM
+218
+Germany (Federal Republic of)
+DE
+219
+Denmark
+DK
+220
+Denmark
+DK
+224
+Spain
+ES
+225
+Spain
+ES
+226
+France
+FR
+227
+France
+FR
+228
+France
+FR
+230
+Finland
+FI
+231
+Faroe Islands
+
+232
+United Kingdom of Great Britain and Northern Ireland
+
+233
+United Kingdom of Great Britain and Northern Ireland
+
+234
+United Kingdom of Great Britain and Northern Ireland
+
+235
+United Kingdom of Great Britain and Northern Ireland
+
+236
+Gibraltar
+GI
+237
+Greece
+GR
+238
+Croatia (Republic of)
+HR
+239
+Greece
+GR
+240
+Greece
+GR
+241
+Greece
+GR
+242
+Morocco (Kingdom of)
+MA
+243
+Hungary (Republic of)
+HU
+244
+Netherlands (Kingdom of the)
+
+245
+Netherlands (Kingdom of the)
+
+246
+Netherlands (Kingdom of the)
+
+247
+Italy
+IT
+248
+Malta
+MT
+249
+Malta
+MT
+250
+Ireland
+IE
+251
+Iceland
+IS
+252
+Liechtenstein (Principality of)
+LI
+253
+Luxembourg
+LU
+254
+Monaco (Principality of)
+MC
+255
+Madeira
+
+256
+Malta
+MT
+257
+Norway
+NO
+258
+Norway
+NO
+259
+Norway
+NO
+261
+Poland (Republic of)
+PL
+262
+Montenegro
+ME
+263
+Portugal
+PT
+264
+Romania
+RO
+265
+Sweden
+SE
+266
+Sweden
+SE
+267
+Slovak Republic
+
+268
+San Marino (Republic of)
+SM
+269
+Switzerland (Confederation of)
+CH
+270
+Czech Republic
+
+271
+Turkey
+TR
+272
+Ukraine
+UA
+273
+Russian Federation
+
+274
+The Former Yugoslav Republic of Macedonia
+
+275
+Latvia (Republic of)
+LV
+276
+Estonia (Republic of)
+EE
+277
+Lithuania (Republic of)
+LT
+278
+Slovenia (Republic of)
+SI
+279
+Serbia (Republic of)
+RS
+301
+Anguilla
+AI
+303
+Alaska (State of)
+
+304
+Antigua and Barbuda
+AG
+305
+Antigua and Barbuda
+AG
+306
+Netherlands Antilles
+
+307
+Aruba
+AW
+308
+Bahamas (Commonwealth of the)
+
+309
+Bahamas (Commonwealth of the)
+
+310
+Bermuda
+BM
+311
+Bahamas (Commonwealth of the)
+
+312
+Belize
+BZ
+314
+Barbados
+BB
+316
+Canada
+CA
+319
+Cayman Islands
+
+321
+Costa Rica
+CR
+323
+Cuba
+CU
+325
+Dominica (Commonwealth of)
+DM
+327
+Dominican Republic
+DM
+329
+Guadeloupe (French Department of)
+GP
+330
+Grenada
+GD
+331
+Greenland
+GL
+332
+Guatemala (Republic of)
+GT
+334
+Honduras (Republic of)
+HN
+336
+Haiti (Republic of)
+HT
+338
+United States of America
+
+339
+Jamaica
+JM
+341
+Saint Kitts and Nevis (Federation of)
+KN
+343
+Saint Lucia
+LC
+345
+Mexico
+MX
+347
+Martinique (French Department of)
+MQ
+348
+Montserrat
+MS
+350
+Nicaragua
+NI
+351
+Panama (Republic of)
+PA
+352
+Panama (Republic of)
+PA
+353
+Panama (Republic of)
+PA
+354
+Panama (Republic of)
+PA
+355
+-
+
+356
+-
+
+357
+-
+
+358
+Puerto Rico
+PR
+359
+El Salvador (Republic of)
+SV
+361
+Saint Pierre and Miquelon (Territorial Collectivity of)
+PM
+362
+Trinidad and Tobago
+TT
+364
+Turks and Caicos Islands
+
+366
+United States of America
+
+367
+United States of America
+
+368
+United States of America
+
+369
+United States of America
+
+370
+Panama (Republic of)
+PA
+371
+Panama (Republic of)
+PA
+372
+Panama (Republic of)
+PA
+375
+Saint Vincent and the Grenadines
+VC
+376
+Saint Vincent and the Grenadines
+VC
+377
+Saint Vincent and the Grenadines
+VC
+378
+British Virgin Islands
+
+379
+United States Virgin Islands
+
+401
+Afghanistan
+
+403
+Saudi Arabia (Kingdom of)
+SA
+405
+Bangladesh (People's Republic of)
+BD
+408
+Bahrain (Kingdom of)
+BH
+410
+Bhutan (Kingdom of)
+BT
+412
+China (People's Republic of)
+CN
+413
+China (People's Republic of)
+CN
+416
+Taiwan (Province of China)
+TW
+417
+Sri Lanka (Democratic Socialist Republic of)
+LK
+419
+India (Republic of)
+IN
+422
+Iran (Islamic Republic of)
+
+423
+Azerbaijani Republic
+AZ
+425
+Iraq (Republic of)
+IQ
+428
+Israel (State of)
+IL
+431
+Japan
+JP
+432
+Japan
+JP
+434
+Turkmenistan
+TM
+436
+Kazakhstan (Republic of)
+KZ
+437
+Uzbekistan (Republic of)
+UZ
+438
+Jordan (Hashemite Kingdom of)
+JO
+440
+Korea (Republic of)
+
+441
+Korea (Republic of)
+
+443
+Palestine (In accordance with Resolution 99 Rev. Antalya, 2006)
+
+445
+Democratic People's Republic of Korea
+
+447
+Kuwait (State of)
+KW
+450
+Lebanon
+LB
+451
+Kyrgyz Republic
+
+453
+Macao (Special Administrative Region of China)
+MO
+455
+Maldives (Republic of)
+MV
+457
+Mongolia
+MN
+459
+Nepal (Federal Democratic Republic of)
+NP
+461
+Oman (Sultanate of)
+OM
+463
+Pakistan (Islamic Republic of)
+PK
+466
+Qatar (State of)
+QA
+468
+Syrian Arab Republic
+
+470
+United Arab Emirates
+
+473
+Yemen (Republic of)
+YE
+475
+Yemen (Republic of)
+YE
+477
+Hong Kong (Special Administrative Region of China)
+HK
+478
+Bosnia and Herzegovina
+BA
+501
+Adelie Land
+
+503
+Australia
+AU
+506
+Myanmar (Union of)
+MM
+508
+Brunei Darussalam
+BN
+510
+Micronesia (Federated States of)
+
+511
+Palau (Republic of)
+PW
+512
+New Zealand
+NZ
+514
+Cambodia (Kingdom of)
+KH
+515
+Cambodia (Kingdom of)
+KH
+516
+Christmas Island (Indian Ocean)
+CX
+518
+Cook Islands
+
+520
+Fiji (Republic of)
+FJ
+523
+Cocos (Keeling) Islands
+
+525
+Indonesia (Republic of)
+ID
+529
+Kiribati (Republic of)
+KI
+531
+Lao People's Democratic Republic
+
+533
+Malaysia
+MY
+536
+Northern Mariana Islands (Commonwealth of the)
+
+538
+Marshall Islands (Republic of the)
+
+540
+New Caledonia
+NC
+542
+Niue
+NU
+544
+Nauru (Republic of)
+NR
+546
+French Polynesia
+PF
+548
+Philippines (Republic of the)
+
+553
+Papua New Guinea
+PG
+555
+Pitcairn Island
+PN
+557
+Solomon Islands
+
+559
+American Samoa
+AS
+561
+Samoa (Independent State of)
+WS
+563
+Singapore (Republic of)
+SG
+564
+Singapore (Republic of)
+SG
+565
+Singapore (Republic of)
+SG
+567
+Thailand
+TH
+570
+Tonga (Kingdom of)
+TO
+572
+Tuvalu
+TV
+574
+Viet Nam (Socialist Republic of)
+VN
+576
+Vanuatu (Republic of)
+VU
+578
+Wallis and Futuna Islands
+WF
+601
+South Africa (Republic of)
+ZA
+603
+Angola (Republic of)
+AO
+605
+Algeria (People's Democratic Republic of)
+DZ
+607
+Saint Paul and Amsterdam Islands
+
+608
+Ascension Island
+
+609
+Burundi (Republic of)
+BI
+610
+Benin (Republic of)
+BJ
+611
+Botswana (Republic of)
+BW
+612
+Central African Republic
+
+613
+Cameroon (Republic of)
+CM
+615
+Congo (Republic of the)
+CG
+616
+Comoros (Union of the)
+KM
+617
+Cape Verde (Republic of)
+
+618
+Crozet Archipelago
+
+619
+Côte d'Ivoire (Republic of)
+CI
+621
+Djibouti (Republic of)
+DJ
+622
+Egypt (Arab Republic of)
+EG
+624
+Ethiopia (Federal Democratic Republic of)
+ET
+625
+Eritrea
+ER
+626
+Gabonese Republic
+GA
+627
+Ghana
+GH
+629
+Gambia (Republic of the)
+
+630
+Guinea-Bissau (Republic of)
+GW
+631
+Equatorial Guinea (Republic of)
+GQ
+632
+Guinea (Republic of)
+GN
+633
+Burkina Faso
+BF
+634
+Kenya (Republic of)
+KE
+635
+Kerguelen Islands
+
+636
+Liberia (Republic of)
+LR
+637
+Liberia (Republic of)
+LR
+642
+Socialist People's Libyan Arab Jamahiriya
+
+644
+Lesotho (Kingdom of)
+LS
+645
+Mauritius (Republic of)
+MU
+647
+Madagascar (Republic of)
+MG
+649
+Mali (Republic of)
+ML
+650
+Mozambique (Republic of)
+MZ
+654
+Mauritania (Islamic Republic of)
+MR
+655
+Malawi
+MW
+656
+Niger (Republic of the)
+
+657
+Nigeria (Federal Republic of)
+NG
+659
+Namibia (Republic of)
+NA
+660
+Reunion (French Department of)
+
+661
+Rwanda (Republic of)
+RW
+662
+Sudan (Republic of the)
+
+663
+Senegal (Republic of)
+SN
+664
+Seychelles (Republic of)
+SC
+665
+Saint Helena
+
+666
+Somali Democratic Republic
+
+667
+Sierra Leone
+SL
+668
+Sao Tome and Principe (Democratic Republic of)
+ST
+669
+Swaziland (Kingdom of)
+SZ
+670
+Chad (Republic of)
+TD
+671
+Togolese Republic
+TG
+672
+Tunisia
+TN
+674
+Tanzania (United Republic of)
+
+675
+Uganda (Republic of)
+UG
+676
+Democratic Republic of the Congo
+
+677
+Tanzania (United Republic of)
+
+678
+Zambia (Republic of)
+ZM
+679
+Zimbabwe (Republic of)
+ZW
+701
+Argentine Republic
+
+710
+Brazil (Federative Republic of)
+BR
+720
+Bolivia (Plurinational State of)
+
+725
+Chile
+CL
+730
+Colombia (Republic of)
+CO
+735
+Ecuador
+EC
+740
+Falkland Islands (Malvinas)
+
+745
+Guiana (French Department of)
+
+750
+Guyana
+GY
+755
+Paraguay (Republic of)
+PY
+760
+Peru
+PE
+765
+Suriname (Republic of)
+SR
+770
+Uruguay (Eastern Republic of)
+UY
+775
+Venezuela (Bolivarian Republic of)
+

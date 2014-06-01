@@ -18,6 +18,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parsers.nmea.Clock;
 
 /**
  * @author Timo Vesalainen
@@ -87,7 +88,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setTurn(float degreesPerMinute)
+    public void setRateOfTurn(float degreesPerMinute)
     {
         
     }
@@ -1090,6 +1091,11 @@ public class AbstractAISObserver implements AISObserver
 
     @Override
     public void setError(String string)
+    {
+    }
+
+    @Override
+    public void setClock(Clock clock)
     {
     }
 

@@ -81,9 +81,9 @@ public class VesselMonitor extends AbstractAISObserver
         target.setNavigationStatus(navigationStatus);
     }
 
-    public void setTurn(float degreesPerMinute)
+    public void setRateOfTurn(float degreesPerMinute)
     {
-        target.setTurn(degreesPerMinute);
+        target.setRateOfTurn(degreesPerMinute);
     }
 
     public void setSpeed(float knots)

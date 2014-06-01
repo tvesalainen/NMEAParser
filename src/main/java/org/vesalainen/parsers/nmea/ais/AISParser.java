@@ -18,6 +18,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserInfo;
@@ -680,97 +681,97 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     @ParseMethod(start = "messages", size = 1024, wideIndex = true)
     protected abstract void parse(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
 
     @ParseMethod(start = "1-3Messages", size = 1024, wideIndex = true)
     protected abstract void parse123Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "10Messages", size = 1024, wideIndex = true)
     protected abstract void parse10Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "11Messages", size = 1024, wideIndex = true)
     protected abstract void parse11Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "12Messages", size = 1024, wideIndex = true)
     protected abstract void parse12Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "14Messages", size = 1024, wideIndex = true)
     protected abstract void parse14Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "15Messages", size = 1024, wideIndex = true)
     protected abstract void parse15Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "16Messages", size = 1024, wideIndex = true)
     protected abstract void parse16Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "17Messages", size = 1024, wideIndex = true)
     protected abstract void parse17Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "18Messages", size = 1024, wideIndex = true)
     protected abstract void parse18Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "19Messages", size = 1024, wideIndex = true)
     protected abstract void parse19Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "20Messages", size = 1024, wideIndex = true)
     protected abstract void parse20Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "21Messages", size = 1024, wideIndex = true)
     protected abstract void parse21Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "22Messages", size = 1024, wideIndex = true)
     protected abstract void parse22Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "23Messages", size = 1024, wideIndex = true)
     protected abstract void parse23Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "24Messages", size = 1024, wideIndex = true)
     protected abstract void parse24Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "27Messages", size = 1024, wideIndex = true)
     protected abstract void parse27Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "4Messages", size = 1024, wideIndex = true)
     protected abstract void parse4Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "5Messages", size = 1024, wideIndex = true)
     protected abstract void parse5Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "6Messages", size = 1024, wideIndex = true)
     protected abstract void parse6Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "7Messages", size = 1024, wideIndex = true)
     protected abstract void parse7Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "8Messages", size = 1024, wideIndex = true)
     protected abstract void parse8Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
     @ParseMethod(start = "9Messages", size = 1024, wideIndex = true)
     protected abstract void parse9Messages(
-            InputStream is,
+            Reader in,
             @ParserContext("aisData") AISObserver aisData);
 
     @RecoverMethod
@@ -859,20 +860,20 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
         switch (turn)
         {
             case 0:
-                aisData.setTurn(0);
+                aisData.setRateOfTurn(0);
                 break;
             case 127:
-                aisData.setTurn(10);
+                aisData.setRateOfTurn(10);
                 break;
             case -127:
-                aisData.setTurn(-10);
+                aisData.setRateOfTurn(-10);
                 break;
             case -128:
                 break;
             default:
                 float f = turn;
                 f = f / 4.733F;
-                aisData.setTurn(Math.signum(f) * f * f);
+                aisData.setRateOfTurn(Math.signum(f) * f * f);
                 break;
         }
     }

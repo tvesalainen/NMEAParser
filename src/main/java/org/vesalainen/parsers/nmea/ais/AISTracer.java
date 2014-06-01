@@ -17,7 +17,9 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
+import org.vesalainen.parsers.mmsi.MMSIMIDs;
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.util.AppendablePrinter;
 
 /**
@@ -105,7 +107,7 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setTurn(float degreesPerMinute)
+    public void setRateOfTurn(float degreesPerMinute)
     {
         printer.println("setTurn("+degreesPerMinute+")");
     }
@@ -1105,6 +1107,12 @@ public class AISTracer implements AISObserver
     public void setNavaidType(NavaidTypes navaidType)
     {
         printer.println("setNavaidType("+navaidType+")");
+    }
+
+    @Override
+    public void setClock(Clock clock)
+    {
+        printer.println("setClock()");
     }
 
 }

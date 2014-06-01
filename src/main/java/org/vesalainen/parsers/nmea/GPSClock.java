@@ -27,8 +27,8 @@ import java.util.TimeZone;
  */
 public class GPSClock implements Clock
 {
-    private Calendar wc = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
-    private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
+    private final Calendar wc = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
+    private final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
     private long offset;
     private boolean committed;
     @Override
