@@ -55,6 +55,20 @@ public class MMSIParserTest
     {
     }
 
+    @Test
+    public void testParseSarAircraft()
+    {
+        System.out.println("parse");
+        int mmsi = 111232506;
+        MMSIParser instance = MMSIParser.getInstance();
+        MMSIType expResult = MMSIType.SarAircraft;
+        MMSIEntry result = instance.parse(mmsi);
+        assertEquals(expResult, result.getType());
+        MIDEntry mid = result.getMid();
+        assertEquals("United Kingdom", mid.getCountry());
+        assertEquals("111232506", result.toString());
+    }
+
     /**
      * Test of parse method, of class MMSIParser.
      */
@@ -98,6 +112,90 @@ public class MMSIParserTest
         MIDEntry mid = result.getMid();
         assertEquals("Finland", mid.getCountry());
         assertEquals("002301232", result.toString());
+    }
+
+    @Test
+    public void testParseVHF()
+    {
+        System.out.println("parse");
+        int mmsi = 842517724;
+        MMSIParser instance = MMSIParser.getInstance();
+        MMSIType expResult = MMSIType.HandheldVHF;
+        MMSIEntry result = instance.parse(mmsi);
+        assertEquals(expResult, result.getType());
+        MIDEntry mid = result.getMid();
+        assertNull(mid);
+        assertEquals("842517724", result.toString());
+    }
+
+    @Test
+    public void testParseNavAid()
+    {
+        System.out.println("parse");
+        int mmsi = 994136301;
+        MMSIParser instance = MMSIParser.getInstance();
+        MMSIType expResult = MMSIType.NavigationalAid;
+        MMSIEntry result = instance.parse(mmsi);
+        assertEquals(expResult, result.getType());
+        MIDEntry mid = result.getMid();
+        assertEquals("China", mid.getCountry());
+        assertEquals("994136301", result.toString());
+    }
+
+    @Test
+    public void testParseSAR()
+    {
+        System.out.println("parse");
+        int mmsi = 970123456;
+        MMSIParser instance = MMSIParser.getInstance();
+        MMSIType expResult = MMSIType.SearchAndRescueTransponder;
+        MMSIEntry result = instance.parse(mmsi);
+        assertEquals(expResult, result.getType());
+        MIDEntry mid = result.getMid();
+        assertNull(mid);
+        assertEquals("970123456", result.toString());
+    }
+
+    @Test
+    public void testParseMOB()
+    {
+        System.out.println("parse");
+        int mmsi = 972123456;
+        MMSIParser instance = MMSIParser.getInstance();
+        MMSIType expResult = MMSIType.MobDevice;
+        MMSIEntry result = instance.parse(mmsi);
+        assertEquals(expResult, result.getType());
+        MIDEntry mid = result.getMid();
+        assertNull(mid);
+        assertEquals("972123456", result.toString());
+    }
+
+    @Test
+    public void testParseEPIRB()
+    {
+        System.out.println("parse");
+        int mmsi = 974123456;
+        MMSIParser instance = MMSIParser.getInstance();
+        MMSIType expResult = MMSIType.EPIRB;
+        MMSIEntry result = instance.parse(mmsi);
+        assertEquals(expResult, result.getType());
+        MIDEntry mid = result.getMid();
+        assertNull(mid);
+        assertEquals("974123456", result.toString());
+    }
+
+    @Test
+    public void testParseLifeRaft()
+    {
+        System.out.println("parse");
+        int mmsi = 982306301;
+        MMSIParser instance = MMSIParser.getInstance();
+        MMSIType expResult = MMSIType.CraftAssociatedWithParentShip;
+        MMSIEntry result = instance.parse(mmsi);
+        assertEquals(expResult, result.getType());
+        MIDEntry mid = result.getMid();
+        assertEquals("Finland", mid.getCountry());
+        assertEquals("982306301", result.toString());
     }
 
 }

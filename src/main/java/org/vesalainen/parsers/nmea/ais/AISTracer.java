@@ -95,7 +95,7 @@ public class AISTracer implements AISObserver
     @Override
     public void setMMSI(int mmsi)
     {
-        printer.format("setMMSI(%09d)", mmsi);
+        printer.format("setMMSI(%09d)\n", mmsi);
     }
 
     @Override
@@ -287,7 +287,7 @@ public class AISTracer implements AISObserver
     @Override
     public void setDestinationMMSI(int mmsi)
     {
-        printer.format("setDestinationMMSI(%09d)", mmsi);
+        printer.format("setDestinationMMSI(%09d)\n", mmsi);
     }
 
     @Override
@@ -749,25 +749,25 @@ public class AISTracer implements AISObserver
     @Override
     public void setMMSI1(int mmsi)
     {
-        printer.format("setMMSI1(%09d)", mmsi);
+        printer.format("setMMSI1(%09d)\n", mmsi);
     }
 
     @Override
     public void setMMSI2(int mmsi)
     {
-        printer.format("setMMSI2(%09d)", mmsi);
+        printer.format("setMMSI2(%09d)\n", mmsi);
     }
 
     @Override
     public void setMMSI3(int mmsi)
     {
-        printer.format("setMMSI3(%09d)", mmsi);
+        printer.format("setMMSI3(%09d)\n", mmsi);
     }
 
     @Override
     public void setMMSI4(int mmsi)
     {
-        printer.format("setMMSI4(%09d)", mmsi);
+        printer.format("setMMSI4(%09d)\n", mmsi);
     }
 
     @Override
