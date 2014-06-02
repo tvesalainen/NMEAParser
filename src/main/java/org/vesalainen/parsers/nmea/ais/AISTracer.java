@@ -17,7 +17,6 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
-import org.vesalainen.parsers.mmsi.MMSIMIDs;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.util.AppendablePrinter;
@@ -96,8 +95,7 @@ public class AISTracer implements AISObserver
     @Override
     public void setMMSI(int mmsi)
     {
-        printer.println("setMMSI("+mmsi+")");
-        printer.println("country("+MMSIMIDs.getCountry(mmsi)+")");
+        printer.format("setMMSI(%09d)", mmsi);
     }
 
     @Override
@@ -289,7 +287,7 @@ public class AISTracer implements AISObserver
     @Override
     public void setDestinationMMSI(int mmsi)
     {
-        printer.println("setDestinationMMSI("+mmsi+")");
+        printer.format("setDestinationMMSI(%09d)", mmsi);
     }
 
     @Override
@@ -751,25 +749,25 @@ public class AISTracer implements AISObserver
     @Override
     public void setMMSI1(int mmsi)
     {
-        printer.println("setMMSI1("+mmsi+")");
+        printer.format("setMMSI1(%09d)", mmsi);
     }
 
     @Override
     public void setMMSI2(int mmsi)
     {
-        printer.println("setMMSI2("+mmsi+")");
+        printer.format("setMMSI2(%09d)", mmsi);
     }
 
     @Override
     public void setMMSI3(int mmsi)
     {
-        printer.println("setMMSI3("+mmsi+")");
+        printer.format("setMMSI3(%09d)", mmsi);
     }
 
     @Override
     public void setMMSI4(int mmsi)
     {
-        printer.println("setMMSI4("+mmsi+")");
+        printer.format("setMMSI4(%09d)", mmsi);
     }
 
     @Override

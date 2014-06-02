@@ -27,7 +27,7 @@ import java.io.Reader;
  */
 class AsciiReader extends Reader
 {
-    private InputStream is;
+    private final InputStream is;
 
     public AsciiReader(InputStream is)
     {

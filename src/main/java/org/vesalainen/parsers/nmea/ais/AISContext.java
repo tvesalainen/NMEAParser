@@ -33,7 +33,6 @@ public class AISContext extends UnparallelWorkflow<Integer>
     private final AISParser aisParser;
     private final Reader in;
     private final SwitchingReader switchingInputStream;
-    private final AISReader aisReader;
     private int last;
 
     public AISContext(Reader in, AISObserver aisData) throws IOException
@@ -42,7 +41,6 @@ public class AISContext extends UnparallelWorkflow<Integer>
         this.aisData = aisData;
         this.in = in;
         switchingInputStream = new SwitchingReader(in, this);
-        aisReader = new AISReader(switchingInputStream);
         aisParser = AISParser.newInstance();
     }
     
@@ -75,11 +73,13 @@ public class AISContext extends UnparallelWorkflow<Integer>
     {
         private final int message;
         private final AISContext context;
+        private final AISReader aisReader;
 
         public AISThread(int message, AISContext context)
         {
             this.message = message;
             this.context = context;
+            aisReader = new AISReader(switchingInputStream);
         }
         
         @Override
@@ -99,7 +99,7 @@ public class AISContext extends UnparallelWorkflow<Integer>
                     String methodName = "parse"+message+"Messages";
                     try
                     {
-                        Method parser = aisParser.getClass().getMethod(methodName, InputStream.class, AISObserver.class);
+                        Method parser = aisParser.getClass().getMethod(methodName, Reader.class, AISObserver.class);
                         parser.invoke(aisParser, aisReader, aisData);
                     }
                     catch (NoSuchMethodException  ex)
