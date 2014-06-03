@@ -9,7 +9,7 @@ Austria
 AT
 204
 Azores
-
+PT
 205
 Belgium
 BE
@@ -21,7 +21,7 @@ Bulgaria
 BG
 208
 Vatican City State
-
+IT
 209
 Cyprus
 CY
@@ -78,16 +78,16 @@ Faroe Islands
 
 232
 United Kingdom
-
+GB
 233
 United Kingdom
-
+GB
 234
 United Kingdom
-
+GB
 235
 United Kingdom
-
+GB
 236
 Gibraltar
 GI
@@ -114,13 +114,13 @@ Hungary
 HU
 244
 Netherlands
-
+NL
 245
 Netherlands
-
+NL
 246
 Netherlands
-
+NL
 247
 Italy
 IT
@@ -147,7 +147,7 @@ Monaco
 MC
 255
 Madeira
-
+PT
 256
 Malta
 MT
@@ -198,7 +198,7 @@ Ukraine
 UA
 273
 Russian Federation
-
+RU
 274
 The Former Yugoslav Republic of Macedonia
 
@@ -222,7 +222,7 @@ Anguilla
 AI
 303
 Alaska
-
+US
 304
 Antigua and Barbuda
 AG
@@ -291,7 +291,7 @@ Haiti
 HT
 338
 United States of America
-
+US
 339
 Jamaica
 JM
@@ -351,16 +351,16 @@ Turks and Caicos Islands
 
 366
 United States of America
-
+US
 367
 United States of America
-
+US
 368
 United States of America
-
+US
 369
 United States of America
-
+US
 370
 Panama
 PA
