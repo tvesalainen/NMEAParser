@@ -283,7 +283,7 @@ public class MessageTest
         @Override
         public void setDestination(InputReader reader, int fieldRef)
         {
-            this.destination = AisUtil.makeString(reader.getString());
+            this.destination = AisUtil.makeString(reader.getCharSequence());
         }
 
         @Override
@@ -295,13 +295,13 @@ public class MessageTest
         @Override
         public void setVesselName(InputReader reader, int fieldRef)
         {
-            this.vesselName = AisUtil.makeString(reader.getString());
+            this.vesselName = AisUtil.makeString(reader.getCharSequence());
         }
 
         @Override
         public void setCallSign(InputReader reader, int fieldRef)
         {
-            this.callSign = AisUtil.makeString(reader.getString());
+            this.callSign = AisUtil.makeString(reader.getCharSequence());
         }
 
         @Override
