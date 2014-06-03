@@ -48,10 +48,28 @@ public class AisContentHelper
         }
     }
     
-    public int getInt(int begin, int end)
+    public String getString(int begin, int end)
+    {
+        String sub = content.substring(begin, end);
+        return AisUtil.makeString(sub);
+    }
+    public int getUInt(int begin, int end)
     {
         String sub = content.substring(begin, end);
         return Integer.parseInt(sub, 2);
+    }
+    public int getInt(int begin, int end)
+    {
+        int result = getUInt(begin, end);
+        int l = end - begin;
+        if (result < (1<<(l-1)))
+        {
+            return result;
+        }
+        else
+        {
+            return result + (-1<<l);
+        }
     }
     public static void dump(String nmea) throws IOException
     {

@@ -71,6 +71,7 @@ class CheckedReader extends Reader implements Recoverable
     @Override
     public int read(char[] chars, int off, int len) throws IOException
     {
+        // Because of thread switching, we cannot use bulk reading
         int rc = read();
         if (rc == -1)
         {

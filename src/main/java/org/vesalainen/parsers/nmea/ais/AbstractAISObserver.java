@@ -1099,4 +1099,9 @@ public class AbstractAISObserver implements AISObserver
     {
     }
 
+    @Override
+    public void setAisVersion(int arg)
+    {
+    }
+
 }

@@ -87,9 +87,16 @@ public class AISReader extends Reader implements Recoverable
     }
 
     @Override
-    public int read(char[] chars, int i, int i1) throws IOException
+    public int read(char[] chars, int off, int len) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported.");
+        // Because of thread switching, we cannot use bulk reading
+        int rc = read();
+        if (rc == -1)
+        {
+            return -1;
+        }
+        chars[off] = (char) rc;
+        return 1;
     }
 
     @Override

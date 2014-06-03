@@ -1113,4 +1113,10 @@ public class AISTracer implements AISObserver
         printer.println("setClock()");
     }
 
+    @Override
+    public void setAisVersion(int arg)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }

@@ -960,5 +960,10 @@ public interface AISObserver extends Transactional
     void setError(String string);
 
     void setClock(Clock clock);
+    /**
+     * 0=[ITU1371], 1-3 = future editions
+     * @param arg 
+     */
+    void setAisVersion(int arg);
 
 }

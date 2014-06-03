@@ -90,7 +90,7 @@ public class AisContentHelperTest
     }
 
     /**
-     * Test of getInt method, of class AisContentHelper.
+     * Test of getUInt method, of class AisContentHelper.
      */
     @Test
     public void testGetInt()
@@ -100,7 +100,7 @@ public class AisContentHelperTest
         int end = 6;
         AisContentHelper instance = new AisContentHelper("!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23");
         int expResult = 1;
-        int result = instance.getInt(begin, end);
+        int result = instance.getUInt(begin, end);
         assertEquals(expResult, result);
     }
 
