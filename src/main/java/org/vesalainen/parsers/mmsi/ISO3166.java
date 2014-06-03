@@ -24,10 +24,16 @@ import java.io.LineNumberReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- *
+ * A storage for ISO3166 data. Data is populated from resource 
+ * org/vesalainen/parsers/mmsi/ISO3166.txt
+ * 
  * @author Timo Vesalainen
  */
 public final class ISO3166
@@ -81,18 +87,55 @@ public final class ISO3166
         alpha3Map.put(alpha3Code, entry);
         numericMap.put(numeric, entry);
     }
+    /**
+     * Returns all entries
+     * @return 
+     */
     public static Collection<ISO3166Entry> getAllEntries()
     {
         return alpha2Map.values();
     }
+    /**
+     * Return entries that match pattern
+     * @param pattern Regular expression pattern
+     * @return 
+     */
+    public static Collection<ISO3166Entry> getEntries(Pattern pattern)
+    {
+        Set<ISO3166Entry> set = new HashSet<>();
+        for (ISO3166Entry e : alpha2Map.values())
+        {
+            Matcher matcher = pattern.matcher(e.getEnglishShortName());
+            if (matcher.matches())
+            {
+                set.add(e);
+            }
+        }
+        return set;
+    }
+    /**
+     * Returns entry for 2 letter code
+     * @param alpha2
+     * @return 
+     */
     public static ISO3166Entry getForAlpha2(String alpha2)
     {
         return alpha2Map.get(alpha2);
     }
+    /**
+     * Returns entry for 3 letter code
+     * @param alpha3
+     * @return 
+     */
     public static ISO3166Entry getForAlpha3(String alpha3)
     {
         return alpha3Map.get(alpha3);
     }
+    /**
+     * Returns entry for numeric code
+     * @param numeric
+     * @return 
+     */
     public static ISO3166Entry getForNumeric(int numeric)
     {
         return numericMap.get(numeric);

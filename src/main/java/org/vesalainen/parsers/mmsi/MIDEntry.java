@@ -18,7 +18,7 @@
 package org.vesalainen.parsers.mmsi;
 
 /**
- *
+ * MMSI MID entry
  * @author Timo Vesalainen
  */
 public final class MIDEntry
@@ -33,22 +33,34 @@ public final class MIDEntry
         this.country = country;
         this.iso3166Entry = iso3166Entry;
     }
-
+    /**
+     * Returns Continent
+     * @return 
+     */
     public Continent getContinent()
     {
         return Continent.values()[mid/100];
     }
-    
+    /**
+     * Returns MID
+     * @return 
+     */
     public int getMid()
     {
         return mid;
     }
-
+    /**
+     * Returns country name
+     * @return 
+     */
     public String getCountry()
     {
         return country;
     }
-
+    /**
+     * Returns ISO3166Entry or null if no ISO3166Entry is associated
+     * @return 
+     */
     public ISO3166Entry getIso3166Entry()
     {
         return iso3166Entry;

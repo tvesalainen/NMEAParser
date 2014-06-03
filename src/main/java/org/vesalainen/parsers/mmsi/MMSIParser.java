@@ -35,17 +35,31 @@ import org.vesalainen.parser.annotation.Terminal;
 @GrammarDef()
 public abstract class MMSIParser
 {
+    /**
+     * Returns MMSIParser instance
+     * @return 
+     */
     public static final MMSIParser getInstance()
     {
         return (MMSIParser) GenClassFactory.loadGenInstance(MMSIParser.class);
     }
+    /**
+     * Parses MMSI number
+     * @param mmsi
+     * @return 
+     */
     public MMSIEntry parse(int mmsi)
     {
         String mmsiString = String.format("%09d", mmsi);
         return parse(mmsiString);
     }
+    /**
+     * Parses MMSI number
+     * @param mmsi
+     * @return 
+     */
     @ParseMethod(start = "mmsi")
-    protected abstract MMSIEntry parse(String mmsi);
+    public abstract MMSIEntry parse(String mmsi);
     
     @Rules({
     @Rule("shipStation"),

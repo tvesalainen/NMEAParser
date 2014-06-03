@@ -20,7 +20,7 @@ package org.vesalainen.parsers.mmsi;
 import java.util.Objects;
 
 /**
- *
+ * A class containing parsed attributes of MMSI number
  * @author Timo Vesalainen
  */
 public class MMSIEntry
@@ -32,26 +32,26 @@ public class MMSIEntry
     private int y;
     private int z;
 
-    public MMSIEntry(MMSIType type, MIDEntry mid)
+    MMSIEntry(MMSIType type, MIDEntry mid)
     {
         this.type = type;
         this.mid = mid;
     }
 
-    public MMSIEntry(MMSIType type, int x)
+    MMSIEntry(MMSIType type, int x)
     {
         this.type = type;
         this.x = x;
     }
 
-    public MMSIEntry(MMSIType type, MIDEntry mid, int x)
+    MMSIEntry(MMSIType type, MIDEntry mid, int x)
     {
         this.type = type;
         this.mid = mid;
         this.x = x;
     }
 
-    public MMSIEntry(MMSIType type, MIDEntry mid, int a, int x)
+    MMSIEntry(MMSIType type, MIDEntry mid, int a, int x)
     {
         this.type = type;
         this.mid = mid;
@@ -59,38 +59,58 @@ public class MMSIEntry
         this.x = x;
     }
 
-    public MMSIEntry(MMSIType type, int y, int z)
+    MMSIEntry(MMSIType type, int y, int z)
     {
         this.type = type;
         this.y = y;
         this.z = z;
     }
-
+    /**
+     * Returns type of MMSI
+     * @return 
+     */
     public MMSIType getType()
     {
         return type;
     }
-
+    /**
+     * Returns MID or null
+     * @return 
+     */
     public MIDEntry getMid()
     {
         return mid;
     }
-
+    /**
+     * Returns a digit. The "a" digit may be used to designate the type of 
+     * AtoN: 1 for physical, 6 for virtual. The "a" digit can also simply be 
+     * used like the other "x" digits if the distinction is not desired.
+     * @return 
+     */
     public int getA()
     {
         return a;
     }
-
+    /**
+     * Returns digits that make MMSI unique in MID
+     * @return 
+     */
     public int getX()
     {
         return x;
     }
-
+    /**
+     * Returns a numeric ID assigned to a manufacturer
+     * @return 
+     */
     public int getY()
     {
         return y;
     }
-
+    /**
+     * Returns a sequence number chosen by that manufacturer
+     * @return 
+     */
     public int getZ()
     {
         return z;
@@ -147,9 +167,11 @@ public class MMSIEntry
         }
         return true;
     }
-
-    @Override
-    public String toString()
+    /**
+     * Returns MMSI as a string
+     * @return 
+     */
+    public String getString()
     {
         switch (type)
         {
@@ -176,6 +198,12 @@ public class MMSIEntry
             default:
                 throw new IllegalArgumentException("unknown mmsi");
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return "MMSIEntry{" + getString() + '}';
     }
 
 }

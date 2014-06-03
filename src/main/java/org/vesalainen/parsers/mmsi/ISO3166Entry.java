@@ -39,27 +39,44 @@ public final class ISO3166Entry
         this.alpha3Code = alpha3Code;
         this.numeric = numeric;
     }
-
+    /**
+     * Return country name in English
+     * @return 
+     */
     public String getEnglishShortName()
     {
         return englishShortName;
     }
-
+    /**
+     * Return country name in French
+     * @return 
+     */
     public String getFrenchShortName()
     {
         return frenchShortName;
     }
-
+    /**
+     * Returns a two-letter code that represents a country name, recommended as 
+     * the general purpose code
+     * @return 
+     */
     public String getAlpha2Code()
     {
         return alpha2Code;
     }
-
+    /**
+     * Returns a three-letter code that represents a country name, which is 
+     * usually more closely related to the country name
+     * @return 
+     */
     public String getAlpha3Code()
     {
         return alpha3Code;
     }
-
+    /**
+     * Returns a numeric code
+     * @return 
+     */
     public int getNumeric()
     {
         return numeric;

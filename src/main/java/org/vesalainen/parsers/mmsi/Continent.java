@@ -18,7 +18,7 @@
 package org.vesalainen.parsers.mmsi;
 
 /**
- *
+ * Continent enumerates continates as in MMSI MID
  * @author Timo Vesalainen
  */
 public enum Continent

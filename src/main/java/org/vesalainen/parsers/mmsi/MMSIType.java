@@ -23,15 +23,45 @@ package org.vesalainen.parsers.mmsi;
  */
 public enum MMSIType
 {
+    /**
+     * The 9-digit code constituting a ship station identity
+     */
     ShipStation,
+    /**
+     * Group ship station call identities for calling simultaneously more than one ship
+     */
     GroupShipStation,
+    /**
+     * Coast station identity
+     */
     CoastStation,
+    /**
+     * SAR aircraft
+     */
     SarAircraft,
+    /**
+     * Handheld VHF transceiver with DSC and GNSS
+     */
     HandheldVHF,
+    /**
+     * Search and Rescue Transponder
+     */
     SearchAndRescueTransponder, // S.A.R.T, ...
+    /**
+     * Man overboard DSC and/or AIS device
+     */
     MobDevice,
+    /**
+     * 406 MHz EPIRBs fitted with an AIS transmitter
+     */
     EPIRB,
+    /**
+     * Craft associated with a parent ship
+     */
     CraftAssociatedWithParentShip,  // life-rafts,...
+    /**
+     * Navigational aid
+     */
     NavigationalAid
     
 }

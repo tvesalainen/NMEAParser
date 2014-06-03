@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
+ * A storage for MMSI MID's
  * @author Timo Vesalainen
  */
 public final class MID
@@ -74,10 +74,19 @@ public final class MID
         MIDEntry entry = new MIDEntry(mid, country, iso3166Entry);
         map.put(mid, entry);
     }
+    /**
+     * Returns all entries
+     * @return 
+     */
     public static final Collection<MIDEntry> getAllEntries()
     {
         return map.values();
     }
+    /**
+     * Returns entry for MID code
+     * @param mid
+     * @return 
+     */
     public static final MIDEntry get(int mid)
     {
         return map.get(mid);
