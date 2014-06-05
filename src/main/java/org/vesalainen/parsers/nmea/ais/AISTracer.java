@@ -1116,7 +1116,7 @@ public class AISTracer implements AISObserver
     @Override
     public void setAisVersion(int arg)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        printer.println("setAisVersion("+arg+")");
     }
 
 }

@@ -1814,7 +1814,7 @@ broadcast of this message of 12 minutes.
 |8-37    | 30 |Source MMSI        |mmsi        |u|9 decimal digits
 |38-39   |  2 |Spare              |            |x|Not used
 |40-49   | 10 |DAC                |dac         |u|DAC = 001
-|50-55   |  6 |FID                |fid         |u|FID = 16
+|50-55   |  6 |FID                |fid         |u|FID = 11
 |56-79   | 24 |Latitude           |lat         |I3|Unit = minutes * 0.001,
                                                   91000 = N/A (default),
                                                   E positive, W negative.

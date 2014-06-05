@@ -21,11 +21,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parsers.mmsi.MMSIEntry;
+import org.vesalainen.parsers.mmsi.MMSIParser;
+import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
@@ -35,10 +38,13 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 public class MessageTest
 {
     private final NMEAParser parser;
+    private final MMSIParser mmsiParser;
+    private double Epsilon = 0.00001;
 
     public MessageTest()
     {
         parser = NMEAParser.newInstance();
+        mmsiParser = MMSIParser.getInstance();
     }
 
     @BeforeClass
@@ -82,6 +88,8 @@ public class MessageTest
                 AisContentHelper ach = new AisContentHelper(nmea);
                 assertEquals(MessageTypes.values()[ach.getUInt(0, 6)], tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
+                assertEquals(MMSIType.ShipStation, mmsiEntry.getType());
                 assertEquals(NavigationStatus.values()[ach.getUInt(38, 42)], tc.navigationStatus);
                 int roti = ach.getInt(42, 50);
                 float rot;
@@ -100,17 +108,18 @@ public class MessageTest
                         rot = (float) ((float) Math.signum(roti)*Math.pow((double)Math.abs(roti)/4.733, 2));
                         break;
                 }
-                assertEquals(rot, tc.rateOfTurn, 0.00001);
-                assertEquals((float)ach.getUInt(50, 60)/10, tc.speed, 0.0001);
-                assertEquals((float)ach.getInt(61, 89)/600000.0 , tc.longitude, 0.0001);
-                assertEquals((float)ach.getInt(89, 116)/600000.0 , tc.latitude, 0.0001);
-                assertEquals((float)ach.getUInt(116, 128)/10, tc.cog, 0.0001);
+                assertEquals(rot, tc.rateOfTurn, Epsilon);
+                assertEquals((float)ach.getUInt(50, 60)/10, tc.speed, Epsilon);
+                assertEquals((float)ach.getInt(61, 89)/600000.0 , tc.longitude, Epsilon);
+                assertEquals((float)ach.getInt(89, 116)/600000.0 , tc.latitude, Epsilon);
+                assertEquals((float)ach.getUInt(116, 128)/10, tc.cog, Epsilon);
                 int hdg = ach.getUInt(128, 137);
                 if (hdg == 511)
                 {
                     hdg = -1;
                 }
                 assertEquals(hdg, tc.heading);
+                assertNull(tc.error);
             }
         }
         catch (IOException ex)
@@ -136,9 +145,12 @@ public class MessageTest
                 AisContentHelper ach = new AisContentHelper(nmea);
                 assertEquals(MessageTypes.BaseStationReport, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
-                assertEquals((float)ach.getInt(79, 107)/600000.0 , tc.longitude, 0.0001);
-                assertEquals((float)ach.getInt(107, 134)/600000.0 , tc.latitude, 0.0001);
+                MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
+                assertEquals(MMSIType.CoastStation, mmsiEntry.getType());
+                assertEquals((float)ach.getInt(79, 107)/600000.0 , tc.longitude, Epsilon);
+                assertEquals((float)ach.getInt(107, 134)/600000.0 , tc.latitude, Epsilon);
                 assertEquals(EPFDFixTypes.values()[ach.getUInt(134, 138)], tc.epfd);
+                assertNull(tc.error);
             }
         }
         catch (IOException ex)
@@ -152,9 +164,12 @@ public class MessageTest
         try
         {
             String[] nmeas = new String[] {
-                "!AIVDM,2,1,9,B,53nFBv01SJ<thHp6220H4heHTf2222222222221?50:454o<`9QSlUDp,0*09\r\n!AIVDM,2,2,9,B,888888888888880,2*2E\r\n",
-                "!AIVDM,2,1,6,B,56:fS:D0000000000008v0<QD4r0`T4v3400000t0`D147?ps1P00000,0*3D\r\n!AIVDM,2,2,6,B,000000000000008,2*29\r\n",
-                "!AIVDM,2,1,8,A,53Q6SR02=21U`@H?800l4E9<f1HTLt000000001?BhL<@4q30Glm841E,0*7C\r\n!AIVDM,2,2,8,A,1DThUDQh0000000,2*4D\r\n"
+                "!AIVDM,2,1,9,B,53nFBv01SJ<thHp6220H4heHTf2222222222221?50:454o<`9QSlUDp,0*09\r\n"+
+                    "!AIVDM,2,2,9,B,888888888888880,2*2E\r\n",
+                "!AIVDM,2,1,6,B,56:fS:D0000000000008v0<QD4r0`T4v3400000t0`D147?ps1P00000,0*3D\r\n"+
+                    "!AIVDM,2,2,6,B,000000000000008,2*29\r\n",
+                "!AIVDM,2,1,8,A,53Q6SR02=21U`@H?800l4E9<f1HTLt000000001?BhL<@4q30Glm841E,0*7C\r\n"+
+                    "!AIVDM,2,2,8,A,1DThUDQh0000000,2*4D\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -164,6 +179,8 @@ public class MessageTest
                 AisContentHelper ach = new AisContentHelper(nmea);
                 assertEquals(MessageTypes.StaticAndVoyageRelatedData, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
+                assertEquals(MMSIType.ShipStation, mmsiEntry.getType());
                 assertEquals(ach.getUInt(38, 40), tc.aisVersion);
                 assertEquals(ach.getUInt(40, 70), tc.imoNumber);
                 assertEquals(ach.getString(70, 112), tc.callSign);
@@ -183,8 +200,118 @@ public class MessageTest
                 }
                 assertEquals(hour, tc.hour);
                 assertEquals(ach.getUInt(288, 294), tc.minute);
-                assertEquals((float)ach.getUInt(294, 302)/10, tc.draught, 0.00001);
+                assertEquals((float)ach.getUInt(294, 302)/10, tc.draught, Epsilon);
                 assertEquals(ach.getString(302, 422), tc.destination);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type6()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,A,6h2E:p66B2SR04<0@00000000000,0*4C\r\n",
+                "!AIVDM,1,1,,A,601uEO@oWh>0048100,4*79\r\n",
+                "!AIVDM,1,1,,A,602E3U0rFKsn<P<j07,4*5A\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.BinaryAddressedMessage, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type8DAC1FID11()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,A,802R5Ph0BkEachFWA2GaOwwwwwwwwwwwwkBwwwwwwwwwwwwwwwwwwwwwwwu,2*57\r\n",
+                "!AIVDM,1,1,,A,8@2<HVh0BkOrj0W0I3UfUk=<abEqowejwwwwwwwwwwwwwwwwwwwwwwwwwt0,2*58\r\n",
+                "!AIVDM,2,1,0,A,802R5Ph0BkHgL@PCQ:GaOwwwwwwwwwww2k8wwwwwwwwwwwwwwwwwwwww,0*3A\r\n"+
+                "!AIVDM,2,2,0,A,wwt,2*60\r\n",
+                "!AIVDM,1,1,,A,802R5Ph0Bk@Ch@Fln:Ga10k`M7wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwt,2*2F\r\n",
+                "!AIVDM,1,1,,A,802R5Ph0Bk;N6PGM7RGaOwwwwwwwwwwwwk;0AA1Q0@12igwwwwwwwwwwwwu,2*45\r\n"    
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals(ach.getUInt(40, 50), tc.dac);
+                assertEquals(ach.getUInt(50, 56), tc.fid);
+                assertEquals(1, tc.dac);
+                assertEquals(11, tc.fid);
+                assertEquals((float)ach.getInt(56, 80)/60000.0 , tc.latitude, Epsilon);
+                assertEquals((float)ach.getInt(80, 105)/60000.0 , tc.longitude, Epsilon);
+                assertEquals(ach.getUInt(105, 110), tc.day);
+                int hour = ach.getUInt(110, 115);
+                if (hour == 24)
+                {
+                    hour = -1;
+                }
+                assertEquals(hour, tc.hour);
+                assertEquals(ach.getUInt(115, 121), tc.minute);
+                int wspeed = ach.getUInt(121, 128);
+                if (wspeed == 127)
+                {
+                    wspeed=-1;
+                }
+                assertEquals(wspeed, tc.wspeed);
+                int wgust = ach.getUInt(128, 135);
+                if (wgust == 127)
+                {
+                    wgust=-1;
+                }
+                assertEquals(wgust, tc.wgust);
+                int wdir = ach.getUInt(135, 144);
+                if (wdir >= 360)
+                {
+                    wdir=-1;
+                }
+                assertEquals(wdir, tc.wdir);
+                int wgustdir = ach.getUInt(144, 153);
+                if (wgustdir >= 360)
+                {
+                    wgustdir=-1;
+                }
+                assertEquals(wgustdir, tc.wgustdir);
+                float temperature = ach.getUInt(153, 164);
+                if (temperature == -1024)
+                {
+                    temperature=-1;
+                }
+                else
+                {
+                    temperature = temperature/10-60;
+                }
+                assertEquals(temperature, tc.temperature, Epsilon);
+                int humidity = ach.getUInt(164, 171);
+                if (humidity == 127)
+                {
+                    humidity=-1;
+                }
+                assertEquals(humidity, tc.humidity);
+                assertNull(tc.error);
             }
         }
         catch (IOException ex)
@@ -225,6 +352,69 @@ public class MessageTest
         private int hour=-1;
         private int day=-1;
         private int month=-1;
+        private int fid=-1;
+        private int dac=-1;
+        private String error;
+        private int wspeed=-1;
+        private int wgust=-1;
+        private int wdir=-1;
+        private int wgustdir=-1;
+        private float temperature=Float.NaN;
+        private int humidity=-1;
+
+        @Override
+        public void setRelativeHumidity(int humidity)
+        {
+            this.humidity = humidity;
+        }
+
+        @Override
+        public void setAirTemperature(float degrees)
+        {
+            this.temperature = degrees;
+        }
+
+        @Override
+        public void setWindGustDirection(int degrees)
+        {
+            this.wdir = degrees;
+        }
+
+        @Override
+        public void setWindDirection(int degrees)
+        {
+            this.wgustdir = degrees;
+        }
+
+        @Override
+        public void setGustSpeed(int knots)
+        {
+            this.wgust = knots;
+        }
+
+        @Override
+        public void setAverageWindSpeed(int knots)
+        {
+            this.wspeed = knots;
+        }
+
+        @Override
+        public void setError(String string)
+        {
+            this.error = string;
+        }
+
+        @Override
+        public void setFID(int fid)
+        {
+            this.fid = fid;
+        }
+
+        @Override
+        public void setDAC(int dac)
+        {
+            this.dac = dac;
+        }
 
         @Override
         public void setMinute(int minute)
@@ -283,7 +473,7 @@ public class MessageTest
         @Override
         public void setDestination(InputReader reader, int fieldRef)
         {
-            this.destination = AisUtil.makeString(reader.getCharSequence());
+            this.destination = AisUtil.makeString(reader);
         }
 
         @Override
@@ -295,13 +485,13 @@ public class MessageTest
         @Override
         public void setVesselName(InputReader reader, int fieldRef)
         {
-            this.vesselName = AisUtil.makeString(reader.getCharSequence());
+            this.vesselName = AisUtil.makeString(reader);
         }
 
         @Override
         public void setCallSign(InputReader reader, int fieldRef)
         {
-            this.callSign = AisUtil.makeString(reader.getCharSequence());
+            this.callSign = AisUtil.makeString(reader);
         }
 
         @Override

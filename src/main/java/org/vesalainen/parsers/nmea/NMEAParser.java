@@ -1152,8 +1152,14 @@ public abstract class NMEAParser implements ParserInfo
         data.setClock(clock);
         aisData.setClock(clock);
         AISContext aisContext = new AISContext(checkedReader, aisData);
-        parse(checkedReader, checkedReader.getCheckSum(), clock, data, aisContext);
-        aisContext.stopThreads();
+        try
+        {
+            parse(checkedReader, checkedReader.getCheckSum(), clock, data, aisContext);
+        }
+        finally
+        {
+            aisContext.stopThreads();
+        }
     }
 
     @ParseMethod(start = "statements", size = 1024, wideIndex=true)

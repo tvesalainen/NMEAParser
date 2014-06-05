@@ -68,6 +68,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="fid15", expression="001111", doc="FID", reducer="org.vesalainen.parsers.nmea.ais.AISParser fid(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="fid12", expression="001100", doc="FID", reducer="org.vesalainen.parsers.nmea.ais.AISParser fid(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="fid13", expression="001101", doc="FID", reducer="org.vesalainen.parsers.nmea.ais.AISParser fid(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="fid11", expression="001011", doc="FID", reducer="org.vesalainen.parsers.nmea.ais.AISParser fid(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="persons", expression="[01]{13}", doc="# persons on board", reducer="org.vesalainen.parsers.nmea.ais.AISParser persons(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="fid20", expression="010100", doc="FID", reducer="org.vesalainen.parsers.nmea.ais.AISParser fid(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="text_84", expression="[01]{84}", doc="Text", reducer="org.vesalainen.parsers.nmea.ais.AISParser text_84(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -615,7 +616,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="Type20DataLinkManagementMessage1", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11"})
 ,@Rule(left="7Messages", value={"(7Content '[01]{0,5}\n')+"})
 ,@Rule(left="10Messages", value={"(10Content '[01]{0,5}\n')+"})
-,@Rule(left="MeteorologicalAndHydrologicalDataIMO236", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid16", "lat_I3_24", "lon_I3_25", "day_5", "hour", "minute_6", "wspeed", "wgust", "wdir", "wgustdir", "temperature", "humidity", "dewpoint", "pressure_9", "pressuretend_2", "visibility_U1_8", "waterlevel_U1_9", "leveltrend", "cspeed_U1_8", "cdir", "cspeed2", "cdir2", "cdepth2_U1_5", "cspeed3", "cdir3", "cdepth3_U1_5", "waveheight", "waveperiod", "wavedir", "swellheight", "swellperiod", "swelldir", "seastate", "watertemp", "preciptype_3", "salinity", "ice", "'[01]{6}'"})
 ,@Rule(left="MeteorologicalAndHydrologicalDataIMO289", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid31", "lon_I3_25", "lat_I3_24", "accuracy", "day_5", "hour", "minute_6", "wspeed", "wgust", "wdir", "wgustdir", "airtemp_U1_11", "humidity", "dewpoint", "pressure_9", "pressuretend_2", "visgreater", "visibility_U1_8", "waterlevel_U2_12", "leveltrend", "cspeed_U1_8", "cdir", "cspeed2", "cdir2", "cdepth2_U1_5", "cspeed3", "cdir3", "cdepth3_5", "waveheight", "waveperiod", "wavedir", "swellheight", "swellperiod", "swelldir", "seastate", "watertemp", "precipitation", "salinity", "ice", "'[01]{10}'"})
 ,@Rule(left="Type7BinaryAcknowledge", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "'[01]{2}'", "mmsi2", "'[01]{2}'", "mmsi3", "'[01]{2}'", "mmsi4", "'[01]{2}'"})
 ,@Rule(left="1-3Content", value={"CommonNavigationBlock"})
@@ -630,6 +630,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="17Messages", value={"(17Content '[01]{0,5}\n')+"})
 ,@Rule(left="Type15Interrogation2", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1", "'[01]{2}'", "type1_2", "offset1_2", "'[01]{2}'"})
 ,@Rule(left="8Content", value={"IMO289ExtendedShipStaticAndVoyageRelatedData"})
+,@Rule(left="MeteorologicalAndHydrologicalDataIMO236", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid11", "lat_I3_24", "lon_I3_25", "day_5", "hour", "minute_6", "wspeed", "wgust", "wdir", "wgustdir", "temperature", "humidity", "dewpoint", "pressure_9", "pressuretend_2", "visibility_U1_8", "waterlevel_U1_9", "leveltrend", "cspeed_U1_8", "cdir", "cspeed2", "cdir2", "cdepth2_U1_5", "cspeed3", "cdir3", "cdepth3_U1_5", "waveheight", "waveperiod", "wavedir", "swellheight", "swellperiod", "swelldir", "seastate", "watertemp", "preciptype_3", "salinity", "ice", "'[01]{6}'"})
 ,@Rule(left="IMO289MarineTrafficSignal", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid19", "linkage", "station", "lon_I3_25", "lat_I3_24", "status_2", "signal", "hour", "minute_6", "nextsignal", "'[01]{102}'"})
 ,@Rule(left="WeatherObservationReportFromShipWMOVariant", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid21", "wmo1", "lon_I3_16", "lat_I3_15", "month", "day_6", "hour", "minute_3", "course_7", "speed_U1_5", "heading_7", "pressure_U1_11", "pdelta", "ptend", "twinddir", "twindspeed", "rwinddir", "rwindspeed", "mgustspeed", "mgustdir", "airtemp_U1_10", "humidity", "surftemp", "visibility_U2_6", "weather_9", "pweather1", "pweather2", "totalcloud", "lowclouda", "lowcloudt", "midcloudt", "highcloudt", "cloudbase", "wwperiod", "wwheight", "swelldir1", "swperiod1", "swheight1", "swelldir2", "swperiod2", "swheight2", "icedeposit", "icerate", "icecause", "seaice", "icetype", "icestate", "icedevel", "icebearing"})
 ,@Rule(left="27Content", value={"Type27LongRangeAISBroadcastMessage"})
@@ -894,10 +895,10 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
         if (arg != 181000)
         {
             float lon = arg;
-            lon = lon / 600000;
+            lon = lon / 60000;
             if (lon <= 180 && lon >= -180)
             {
-                aisData.setLatitude(lon);
+                aisData.setLongitude(lon);
             }
             else
             {
@@ -967,7 +968,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
         if (arg != 91000)
         {
             float lat = arg;
-            lat = lat / 600000;
+            lat = lat / 60000;
             if (lat <= 90 && lat >= -90)
             {
                 aisData.setLatitude(lat);
@@ -1755,7 +1756,10 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void humidity(int humidity, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setRelativeHumidity(humidity);
+        if (humidity != 127)
+        {
+            aisData.setRelativeHumidity(humidity);
+        }
     }
 
     protected void dewpoint(int degrees, @ParserContext("aisData") AISObserver aisData)
@@ -1879,7 +1883,14 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void seastate(int state, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setSeaState(BeaufortScale.values()[state]);
+        if (state < BeaufortScale.values().length)
+        {
+            aisData.setSeaState(BeaufortScale.values()[state]);
+        }
+        else
+        {
+            aisData.setError("seastate="+state);
+        }
     }
 
     protected void watertemp_U1(int temp, @ParserContext("aisData") AISObserver aisData)
