@@ -26,64 +26,76 @@ public enum BeaufortScale
     /**
      * Calm
      */
-    Calm("Calm"),
+    Calm("Calm", "Flat."),
     /**
      * Light air
      */
-    LightAir("Light air"),
+    LightAir("Light air", "Ripples without crests."),
     /**
      * Light breeze
      */
-    LightBreeze("Light breeze"),
+    LightBreeze("Light breeze", "Small wavelets. Crests of glassy appearance, not breaking."),
     /**
      * Gentle breeze
      */
-    GentleBreeze("Gentle breeze"),
+    GentleBreeze("Gentle breeze", "Large wavelets. Crests begin to break; scattered whitecaps."),
     /**
      * Moderate breeze
      */
-    ModerateBreeze("Moderate breeze"),
+    ModerateBreeze("Moderate breeze", "Small waves."),
     /**
      * Fresh breeze
      */
-    FreshBreeze("Fresh breeze"),
+    FreshBreeze("Fresh breeze", "Moderate (1.2 m) longer waves. Some foam and spray."),
     /**
      * Strong breeze
      */
-    StrongBreeze("Strong breeze"),
+    StrongBreeze("Strong breeze", "Large waves with foam crests and some spray."),
     /**
      * High wind
      */
-    HighWind("High wind"),
+    HighWind("High wind", "Sea heaps up and foam begins to streak."),
     /**
      * Gale
      */
-    Gale("Gale"),
+    Gale("Gale", "Moderately high waves with breaking crests forming spindrift. Streaks of foam."),
     /**
      * Strong gale
      */
-    StrongGale("Strong gale"),
+    StrongGale("Strong gale", "High waves (6-7 m) with dense foam. Wave crests start to roll over. Considerable spray."),
     /**
      * Storm
      */
-    Storm("Storm"),
+    Storm("Storm", "Very high waves. The sea surface is white and there is considerable tumbling. Visibility is reduced."),
     /**
      * Violent storm
      */
-    ViolentStorm("Violent storm"),
+    ViolentStorm("Violent storm", "Exceptionally high waves."),
     /**
      * Hurricane force
      */
-    HurricaneForce("Hurricane force");
-    private String description;
+    HurricaneForce("Hurricane force", "Huge waves. Air filled with foam and spray. Sea completely white with driving spray. Visibility greatly reduced."),
+    NADefault("N/A Default", ""),
+    Reserved14("Reserved14", ""),
+    Reserved15("Reserved15", "");
+    
+    private final String description;
+    private final String seaConditions;
 
-    BeaufortScale(String description)
+    private BeaufortScale(String description, String seaConditions)
     {
         this.description = description;
+        this.seaConditions = seaConditions;
     }
 
     public String toString()
     {
         return description;
     }
+
+    public String getSeaConditions()
+    {
+        return seaConditions;
+    }
+    
 }

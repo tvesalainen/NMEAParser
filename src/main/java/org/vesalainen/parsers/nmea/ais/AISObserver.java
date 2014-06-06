@@ -714,7 +714,7 @@ public interface AISObserver extends Transactional
      * Pressure Tendency
      * @param tendency 0 = steady, 1 = decreasing, 2 = increasing, 3 - N/A (default).
      */
-    void setAirPressureTendency(int tendency);
+    void setAirPressureTendency(Tendency tendency);
     /**
      * Horiz. Visibility
      * @param nm 
@@ -729,7 +729,7 @@ public interface AISObserver extends Transactional
      * Water Level Trend
      * @param trend 0 = steady, 1 = decreasing, 2 = increasing, 3 - N/A (default).
      */
-    void setWaterLevelTrend(int trend);
+    void setWaterLevelTrend(Tendency trend);
     /**
      * Surface Current Speed
      * @param knots 0.0-25.0 knots: units 0.1 knot

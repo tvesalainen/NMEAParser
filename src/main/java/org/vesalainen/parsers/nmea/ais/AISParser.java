@@ -643,7 +643,6 @@ protected void aisState(int arg, @ParserContext("aisData") AISObserver aisData){
 protected void radius_12(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_84(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void description_6_930(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
-protected void pressuretend_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void visibility_U1_8(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void waterlevel_U1_9(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void cdepth2_U1_5(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -1764,8 +1763,11 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void dewpoint(int degrees, @ParserContext("aisData") AISObserver aisData)
     {
-        float f = degrees;
-        aisData.setDewPoint((f / 10F) - 20F);
+        if (degrees < 1023)
+        {
+            float f = degrees;
+            aisData.setDewPoint((f / 10F) - 20F);
+        }
     }
 
     protected void pressure_9(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -1786,10 +1788,9 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
         float f = pressure;
         aisData.setAirPressure((f / 10F) - 900F);   // ???? 90-1100 hPa: P = (value/10)+900 for 0-2000
     }
-
-    protected void pressuretend(int tendency, @ParserContext("aisData") AISObserver aisData)
+    protected void pressuretend_2(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setAirPressureTendency(tendency);
+        aisData.setAirPressureTendency(Tendency.values()[arg]);
     }
 
     protected void visibility_U1(int visibility, @ParserContext("aisData") AISObserver aisData)
@@ -1806,7 +1807,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void leveltrend(int trend, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setWaterLevelTrend(trend);
+        aisData.setWaterLevelTrend(Tendency.values()[trend]);
     }
 
     protected void cspeed2_U1(int speed, @ParserContext("aisData") AISObserver aisData)
@@ -1883,14 +1884,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void seastate(int state, @ParserContext("aisData") AISObserver aisData)
     {
-        if (state < BeaufortScale.values().length)
-        {
-            aisData.setSeaState(BeaufortScale.values()[state]);
-        }
-        else
-        {
-            aisData.setError("seastate="+state);
-        }
+        aisData.setSeaState(BeaufortScale.values()[state]);
     }
 
     protected void watertemp_U1(int temp, @ParserContext("aisData") AISObserver aisData)
@@ -2157,7 +2151,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void ptend(int tend, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setAirPressureTendency(tend);
+        aisData.setAirPressureTendency(Tendency.values()[tend]);
     }
 
     protected void twinddir(int arg, @ParserContext("aisData") AISObserver aisData)

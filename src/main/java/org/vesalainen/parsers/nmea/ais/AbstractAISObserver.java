@@ -802,7 +802,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setAirPressureTendency(int tendency)
+    public void setAirPressureTendency(Tendency tendency)
     {
         
     }
@@ -820,7 +820,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setWaterLevelTrend(int trend)
+    public void setWaterLevelTrend(Tendency trend)
     {
         
     }

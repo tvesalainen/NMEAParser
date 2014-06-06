@@ -819,7 +819,7 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setAirPressureTendency(int tendency)
+    public void setAirPressureTendency(Tendency tendency)
     {
         printer.println("setAirPressureTendency("+tendency+")");
     }
@@ -837,7 +837,7 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setWaterLevelTrend(int trend)
+    public void setWaterLevelTrend(Tendency trend)
     {
         printer.println("setWaterLevelTrend("+trend+")");
     }

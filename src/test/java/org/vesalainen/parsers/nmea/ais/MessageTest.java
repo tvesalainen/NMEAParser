@@ -17,8 +17,6 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -311,6 +309,58 @@ public class MessageTest
                     humidity=-1;
                 }
                 assertEquals(humidity, tc.humidity);
+                float dewpoint = ach.getUInt(171, 181);
+                if (dewpoint == 1023)
+                {
+                    dewpoint=Float.NaN;
+                }
+                else
+                {
+                    dewpoint = dewpoint/10-20;
+                }
+                assertEquals(humidity, tc.dewpoint, Epsilon);
+                int pressure = ach.getUInt(181, 190);
+                if (pressure == 403)
+                {
+                    pressure=-1;
+                }
+                else
+                {
+                    pressure+=400;
+                }
+                assertEquals(pressure, tc.pressure);
+                int pressuretend = ach.getUInt(190, 192);
+                if (pressuretend == 3)
+                {
+                    pressuretend=-1;
+                }
+                else
+                {
+                    pressuretend+=400;
+                }
+                assertEquals(pressuretend, tc.pressure);
+                assertEquals(Tendency.values()[ach.getUInt(190, 191)], tc.fid);
+                float visibility = ach.getUInt(192, 200);
+                if (visibility == 250)
+                {
+                    visibility=Float.NaN;
+                }
+                else
+                {
+                    visibility = visibility/10;
+                }
+                assertEquals(visibility, tc.visibility, Epsilon);
+                float waterlevel = ach.getUInt(200, 208);
+                if (waterlevel == 1923)
+                {
+                    waterlevel=Float.NaN;
+                }
+                else
+                {
+                    waterlevel = waterlevel/10-10;
+                }
+                assertEquals(waterlevel, tc.waterlevel, Epsilon);
+                assertEquals(Tendency.values()[ach.getUInt(209, 210)], tc.leveltrend);
                 assertNull(tc.error);
             }
         }
@@ -361,6 +411,55 @@ public class MessageTest
         private int wgustdir=-1;
         private float temperature=Float.NaN;
         private int humidity=-1;
+        private float dewpoint=Float.NaN;
+        private int pressure=-1;
+        private int pressuretend=-1;
+        private float visibility=Float.NaN;
+        private Tendency tendency;
+        private Tendency leveltrend;
+        private float waterlevel=Float.NaN;
+
+        @Override
+        public void setWaterLevelTrend(Tendency trend)
+        {
+            this.leveltrend = trend;
+        }
+
+        @Override
+        public void setWaterLevel(float meters)
+        {
+            this.waterlevel = meters;
+        }
+
+        @Override
+        public void setAirPressureTendency(Tendency tendency)
+        {
+            this.tendency = tendency;
+        }
+
+        @Override
+        public void setVisibility(float nm)
+        {
+            this.visibility = nm;
+        }
+
+        @Override
+        public void setAirPressureTendency(int tendency)
+        {
+            this.pressuretend = tendency;
+        }
+
+        @Override
+        public void setAirPressure(int pressure)
+        {
+            this.pressure = pressure;
+        }
+
+        @Override
+        public void setDewPoint(float degrees)
+        {
+            this.dewpoint = degrees;
+        }
 
         @Override
         public void setRelativeHumidity(int humidity)
