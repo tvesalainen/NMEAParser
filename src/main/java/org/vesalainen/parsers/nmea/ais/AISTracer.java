@@ -423,7 +423,7 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setCurrentDirection(int currentDirection)
+    public void setSurfaceCurrentDirection(int currentDirection)
     {
         printer.println("setCurrentDirection("+currentDirection+")");
     }
@@ -851,7 +851,7 @@ public class AISTracer implements AISObserver
     @Override
     public void setCurrentSpeed2(float knots)
     {
-        printer.println("setCurrentSpeed2("+knots+")");
+        printer.println("setSurfaceCurrentSpeed2("+knots+")");
     }
 
     @Override
@@ -869,7 +869,7 @@ public class AISTracer implements AISObserver
     @Override
     public void setCurrentSpeed3(float knots)
     {
-        printer.println("setCurrentSpeed3("+knots+")");
+        printer.println("setSurfaceCurrentSpeed3("+knots+")");
     }
 
     @Override

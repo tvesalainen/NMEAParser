@@ -643,8 +643,6 @@ protected void aisState(int arg, @ParserContext("aisData") AISObserver aisData){
 protected void radius_12(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_84(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void description_6_930(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
-protected void visibility_U1_8(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void waterlevel_U1_9(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void cdepth2_U1_5(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void cdepth3_U1_5(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void preciptype_3(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -1386,9 +1384,9 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void cdir(int currentDirection, @ParserContext("aisData") AISObserver aisData)
     {
-        if (currentDirection != 360)
+        if (currentDirection < 360)
         {
-            aisData.setCurrentDirection(currentDirection);
+            aisData.setSurfaceCurrentDirection(currentDirection);
         }
     }
 
@@ -1403,10 +1401,10 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void cspeed_U1_8(int currentSpeed, @ParserContext("aisData") AISObserver aisData)
     {
-        if (currentSpeed != 255)
+        if (currentSpeed < 255)
         {
             float f = currentSpeed;
-            aisData.setCurrentSpeed(f / 10F);
+            aisData.setSurfaceCurrentSpeed(f / 10F);
         }
     }
 
@@ -1792,14 +1790,21 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
     {
         aisData.setAirPressureTendency(Tendency.values()[arg]);
     }
-
-    protected void visibility_U1(int visibility, @ParserContext("aisData") AISObserver aisData)
+    /**
+     * 
+     * @param visibility
+     * @param aisData 
+     */
+    protected void visibility_U1_8(int visibility, @ParserContext("aisData") AISObserver aisData)
     {
-        float f = visibility;
-        aisData.setVisibility(f / 10F);
+        if (visibility < 250)
+        {
+            float f = visibility;
+            aisData.setVisibility(f / 10F);
+        }
     }
 
-    protected void waterlevel_U1(int level, @ParserContext("aisData") AISObserver aisData)
+    protected void waterlevel_U1_9(int level, @ParserContext("aisData") AISObserver aisData)
     {
         float f = level;
         aisData.setWaterLevel((f / 10F) - 10F);
@@ -1812,8 +1817,11 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void cspeed2_U1(int speed, @ParserContext("aisData") AISObserver aisData)
     {
-        float f = speed;
-        aisData.setCurrentSpeed2(f / 10F);
+        if (speed < 255)
+        {
+            float f = speed;
+            aisData.setCurrentSpeed2(f / 10F);
+        }
     }
 
     protected void cdir2(int degrees, @ParserContext("aisData") AISObserver aisData)
@@ -1832,8 +1840,11 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void cspeed3_U1(int speed, @ParserContext("aisData") AISObserver aisData)
     {
-        float f = speed;
-        aisData.setCurrentSpeed3(f / 10F);
+        if (speed < 255)
+        {
+            float f = speed;
+            aisData.setCurrentSpeed3(f / 10F);
+        }
     }
 
     protected void cdir3(int degrees, @ParserContext("aisData") AISObserver aisData)

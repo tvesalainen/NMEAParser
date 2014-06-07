@@ -406,7 +406,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setCurrentDirection(int currentDirection)
+    public void setSurfaceCurrentDirection(int currentDirection)
     {
         
     }
@@ -828,7 +828,6 @@ public class AbstractAISObserver implements AISObserver
     @Override
     public void setSurfaceCurrentSpeed(float knots)
     {
-        
     }
 
     @Override

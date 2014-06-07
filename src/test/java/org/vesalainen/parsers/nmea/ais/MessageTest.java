@@ -318,7 +318,7 @@ public class MessageTest
                 {
                     dewpoint = dewpoint/10-20;
                 }
-                assertEquals(humidity, tc.dewpoint, Epsilon);
+                assertEquals(dewpoint, tc.dewpoint, Epsilon);
                 int pressure = ach.getUInt(181, 190);
                 if (pressure == 403)
                 {
@@ -329,19 +329,9 @@ public class MessageTest
                     pressure+=400;
                 }
                 assertEquals(pressure, tc.pressure);
-                int pressuretend = ach.getUInt(190, 192);
-                if (pressuretend == 3)
-                {
-                    pressuretend=-1;
-                }
-                else
-                {
-                    pressuretend+=400;
-                }
-                assertEquals(pressuretend, tc.pressure);
-                assertEquals(Tendency.values()[ach.getUInt(190, 191)], tc.fid);
+                assertEquals(Tendency.values()[ach.getUInt(190, 192)], tc.pressuretend);
                 float visibility = ach.getUInt(192, 200);
-                if (visibility == 250)
+                if (visibility >= 250)
                 {
                     visibility=Float.NaN;
                 }
@@ -350,7 +340,7 @@ public class MessageTest
                     visibility = visibility/10;
                 }
                 assertEquals(visibility, tc.visibility, Epsilon);
-                float waterlevel = ach.getUInt(200, 208);
+                float waterlevel = ach.getUInt(200, 209);
                 if (waterlevel == 1923)
                 {
                     waterlevel=Float.NaN;
@@ -360,7 +350,87 @@ public class MessageTest
                     waterlevel = waterlevel/10-10;
                 }
                 assertEquals(waterlevel, tc.waterlevel, Epsilon);
-                assertEquals(Tendency.values()[ach.getUInt(209, 210)], tc.leveltrend);
+                assertEquals(Tendency.values()[ach.getUInt(209, 211)], tc.leveltrend);
+                float cspeed = ach.getUInt(211, 219);
+                if (cspeed >= 251)
+                {
+                    cspeed=Float.NaN;
+                }
+                else
+                {
+                    cspeed = cspeed/10;
+                }
+                assertEquals(cspeed, tc.cspeed, Epsilon);
+                int cdir = ach.getUInt(219, 228);
+                if (cdir >= 360)
+                {
+                    cdir=-1;
+                }
+                else
+                {
+                    cdir = cdir/10;
+                }
+                assertEquals(cdir, tc.cdir, Epsilon);
+                float cspeed2 = ach.getUInt(228, 236);
+                if (cspeed2 >= 251)
+                {
+                    cspeed2=Float.NaN;
+                }
+                else
+                {
+                    cspeed2 = cspeed2/10;
+                }
+                assertEquals(cspeed2, tc.cspeed2, Epsilon);
+                int cdir2 = ach.getUInt(236, 245);
+                if (cdir2 >= 360)
+                {
+                    cdir2=-1;
+                }
+                else
+                {
+                    cdir2 = cdir2/10;
+                }
+                assertEquals(cdir2, tc.cdir2, Epsilon);
+                float cdepth2 = ach.getUInt(245, 250);
+                if (cdepth2 < 31)
+                {
+                    cdepth2=Float.NaN;
+                }
+                else
+                {
+                    cdepth2 = cdepth2/10;
+                }
+                assertEquals(cdepth2, tc.cdepth2, Epsilon);
+                float cspeed3 = ach.getUInt(250, 258);
+                if (cspeed3 >= 251)
+                {
+                    cspeed3=Float.NaN;
+                }
+                else
+                {
+                    cspeed3 = cspeed3/10;
+                }
+                assertEquals(cspeed3, tc.cspeed3, Epsilon);
+                int cdir3 = ach.getUInt(258, 267);
+                if (cdir3 >= 360)
+                {
+                    cdir3=-1;
+                }
+                else
+                {
+                    cdir3 = cdir3/10;
+                }
+                assertEquals(cdir3, tc.cdir3, Epsilon);
+                float cdepth3 = ach.getUInt(267, 272);
+                if (cdepth3 < 31)
+                {
+                    cdepth3=Float.NaN;
+                }
+                else
+                {
+                    cdepth3 = cdepth3/10;
+                }
+                assertEquals(cdepth3, tc.cdepth3, Epsilon);
                 assertNull(tc.error);
             }
         }
@@ -413,11 +483,66 @@ public class MessageTest
         private int humidity=-1;
         private float dewpoint=Float.NaN;
         private int pressure=-1;
-        private int pressuretend=-1;
+        private Tendency pressuretend;
         private float visibility=Float.NaN;
-        private Tendency tendency;
         private Tendency leveltrend;
         private float waterlevel=Float.NaN;
+        private float cspeed=Float.NaN;
+        private int cdir=-1;
+        private float cdepth3=Float.NaN;
+        private int cdir3=-1;
+        private float cspeed3=Float.NaN;
+        private float cdepth2=Float.NaN;
+        private float cspeed2=Float.NaN;
+        private int cdir2=-1;
+
+        @Override
+        public void setMeasurementDepth3(float meters)
+        {
+            this.cdepth3 = meters;
+        }
+
+        @Override
+        public void setCurrentDirection3(int degrees)
+        {
+            this.cdir3 = degrees;
+        }
+
+        @Override
+        public void setCurrentSpeed3(float knots)
+        {
+            this.cspeed3 = knots;
+        }
+
+        @Override
+        public void setMeasurementDepth2(float meters)
+        {
+            this.cdepth2 = meters;
+        }
+
+        @Override
+        public void setCurrentDirection2(int degrees)
+        {
+            this.cdir2 = degrees;
+        }
+
+        @Override
+        public void setCurrentSpeed2(float knots)
+        {
+            this.cspeed2 = knots;
+        }
+
+        @Override
+        public void setSurfaceCurrentDirection(int currentDirection)
+        {
+            this.cdir = currentDirection;
+        }
+
+        @Override
+        public void setSurfaceCurrentSpeed(float knots)
+        {
+            this.cspeed = knots;
+        }
 
         @Override
         public void setWaterLevelTrend(Tendency trend)
@@ -434,19 +559,13 @@ public class MessageTest
         @Override
         public void setAirPressureTendency(Tendency tendency)
         {
-            this.tendency = tendency;
+            this.pressuretend = tendency;
         }
 
         @Override
         public void setVisibility(float nm)
         {
             this.visibility = nm;
-        }
-
-        @Override
-        public void setAirPressureTendency(int tendency)
-        {
-            this.pressuretend = tendency;
         }
 
         @Override
@@ -476,13 +595,13 @@ public class MessageTest
         @Override
         public void setWindGustDirection(int degrees)
         {
-            this.wdir = degrees;
+            this.wgustdir = degrees;
         }
 
         @Override
         public void setWindDirection(int degrees)
         {
-            this.wgustdir = degrees;
+            this.wdir = degrees;
         }
 
         @Override

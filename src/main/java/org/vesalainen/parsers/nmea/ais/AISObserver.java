@@ -380,7 +380,7 @@ public interface AISObserver extends Transactional
      * Current Direction Predicted
      * @param currentDirection degrees 0-359
      */
-    void setCurrentDirection(int currentDirection);
+    void setSurfaceCurrentDirection(int currentDirection);
     /**
      * Current Speed Predicted
      * @param knots 
