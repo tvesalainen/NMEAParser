@@ -843,7 +843,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMeasurementDepth2(float meters)
+    public void setMeasurementDepth2(int meters)
     {
         
     }
@@ -861,7 +861,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMeasurementDepth3(float meters)
+    public void setMeasurementDepth3(int meters)
     {
         
     }
@@ -1100,6 +1100,41 @@ public class AbstractAISObserver implements AISObserver
 
     @Override
     public void setAisVersion(int arg)
+    {
+    }
+
+    @Override
+    public void setWaterPressure(float decibar)
+    {
+    }
+
+    @Override
+    public void setAltitude(int meters)
+    {
+    }
+
+    @Override
+    public void setSensorAltitude(float meters)
+    {
+    }
+
+    @Override
+    public void setOffsetA(int arg)
+    {
+    }
+
+    @Override
+    public void setOffsetB(int arg)
+    {
+    }
+
+    @Override
+    public void setIncrementA(int arg)
+    {
+    }
+
+    @Override
+    public void setIncrementB(int arg)
     {
     }
 

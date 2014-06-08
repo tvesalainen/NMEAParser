@@ -30,7 +30,15 @@ import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
- *
+ * TODO Test for 
+ * Message 17
+ * Message 18
+ * Message 19
+ * Message 20
+ * Message 21
+ * Message 22
+ * Message 24
+
  * @author Timo Vesalainen
  */
 public class MessageTest
@@ -110,13 +118,14 @@ public class MessageTest
                 assertEquals((float)ach.getUInt(50, 60)/10, tc.speed, Epsilon);
                 assertEquals((float)ach.getInt(61, 89)/600000.0 , tc.longitude, Epsilon);
                 assertEquals((float)ach.getInt(89, 116)/600000.0 , tc.latitude, Epsilon);
-                assertEquals((float)ach.getUInt(116, 128)/10, tc.cog, Epsilon);
+                assertEquals((float)ach.getUInt(116, 128)/10, tc.course, Epsilon);
                 int hdg = ach.getUInt(128, 137);
                 if (hdg == 511)
                 {
                     hdg = -1;
                 }
                 assertEquals(hdg, tc.heading);
+                assertEquals(ach.getUInt(137, 143), tc.second);
                 assertNull(tc.error);
             }
         }
@@ -245,7 +254,8 @@ public class MessageTest
                 "!AIVDM,2,1,0,A,802R5Ph0BkHgL@PCQ:GaOwwwwwwwwwww2k8wwwwwwwwwwwwwwwwwwwww,0*3A\r\n"+
                 "!AIVDM,2,2,0,A,wwt,2*60\r\n",
                 "!AIVDM,1,1,,A,802R5Ph0Bk@Ch@Fln:Ga10k`M7wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwt,2*2F\r\n",
-                "!AIVDM,1,1,,A,802R5Ph0Bk;N6PGM7RGaOwwwwwwwwwwwwk;0AA1Q0@12igwwwwwwwwwwwwu,2*45\r\n"    
+                "!AIVDM,1,1,,A,802R5Ph0Bk;N6PGM7RGaOwwwwwwwwwwwwk;0AA1Q0@12igwwwwwwwwwwwwu,2*45\r\n",
+                "!AIVDM,1,1,,B,802R5Ph0BkEao@DowjGaOwwwwwwwwwwwwwwP8F0I<L1OLwwwwwwwwwwwwwt,2*19\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -267,12 +277,21 @@ public class MessageTest
                 {
                     hour = -1;
                 }
+                else
+                {
+                    assertTrue(tc.hour > 0 && tc.hour < 23);
+                }
                 assertEquals(hour, tc.hour);
                 assertEquals(ach.getUInt(115, 121), tc.minute);
+                assertTrue(tc.minute > 0 && tc.minute < 60);
                 int wspeed = ach.getUInt(121, 128);
                 if (wspeed == 127)
                 {
                     wspeed=-1;
+                }
+                else
+                {
+                    assertTrue(tc.wspeed >= 0 && tc.wspeed < 127);
                 }
                 assertEquals(wspeed, tc.wspeed);
                 int wgust = ach.getUInt(128, 135);
@@ -280,11 +299,19 @@ public class MessageTest
                 {
                     wgust=-1;
                 }
+                else
+                {
+                    assertTrue(tc.wgust >= 0 && tc.wgust < 127);
+                }
                 assertEquals(wgust, tc.wgust);
                 int wdir = ach.getUInt(135, 144);
                 if (wdir >= 360)
                 {
                     wdir=-1;
+                }
+                else
+                {
+                    assertTrue(tc.wdir >= 0 && tc.wdir < 360);
                 }
                 assertEquals(wdir, tc.wdir);
                 int wgustdir = ach.getUInt(144, 153);
@@ -292,21 +319,30 @@ public class MessageTest
                 {
                     wgustdir=-1;
                 }
+                else
+                {
+                    assertTrue(tc.wgustdir >= 0 && tc.wgustdir < 360);
+                }
                 assertEquals(wgustdir, tc.wgustdir);
                 float temperature = ach.getUInt(153, 164);
-                if (temperature == -1024)
+                if (temperature > 1200)
                 {
-                    temperature=-1;
+                    temperature=Float.NaN;
                 }
                 else
                 {
                     temperature = temperature/10-60;
+                    assertTrue(tc.temperature >= -60 && tc.temperature < 60);
                 }
                 assertEquals(temperature, tc.temperature, Epsilon);
                 int humidity = ach.getUInt(164, 171);
                 if (humidity == 127)
                 {
                     humidity=-1;
+                }
+                else
+                {
+                    assertTrue(tc.humidity >= 0 && tc.humidity <= 100);
                 }
                 assertEquals(humidity, tc.humidity);
                 float dewpoint = ach.getUInt(171, 181);
@@ -317,16 +353,18 @@ public class MessageTest
                 else
                 {
                     dewpoint = dewpoint/10-20;
+                    assertTrue(tc.dewpoint >= -20 && tc.dewpoint <= 50);
                 }
                 assertEquals(dewpoint, tc.dewpoint, Epsilon);
                 int pressure = ach.getUInt(181, 190);
-                if (pressure == 403)
+                if (pressure >= 403)
                 {
                     pressure=-1;
                 }
                 else
                 {
-                    pressure+=400;
+                    pressure+=800;
+                    assertTrue(tc.pressure >= 800 && tc.pressure <= 1200);
                 }
                 assertEquals(pressure, tc.pressure);
                 assertEquals(Tendency.values()[ach.getUInt(190, 192)], tc.pressuretend);
@@ -338,16 +376,18 @@ public class MessageTest
                 else
                 {
                     visibility = visibility/10;
+                    assertTrue(tc.visibility >= 0 && tc.visibility <= 25);
                 }
                 assertEquals(visibility, tc.visibility, Epsilon);
                 float waterlevel = ach.getUInt(200, 209);
-                if (waterlevel == 1923)
+                if (waterlevel >= 511)
                 {
                     waterlevel=Float.NaN;
                 }
                 else
                 {
                     waterlevel = waterlevel/10-10;
+                    assertTrue(tc.waterlevel >= -10 && tc.waterlevel <= 30);
                 }
                 assertEquals(waterlevel, tc.waterlevel, Epsilon);
                 assertEquals(Tendency.values()[ach.getUInt(209, 211)], tc.leveltrend);
@@ -359,6 +399,7 @@ public class MessageTest
                 else
                 {
                     cspeed = cspeed/10;
+                    assertTrue(tc.cspeed >= 0 && tc.cspeed <= 25);
                 }
                 assertEquals(cspeed, tc.cspeed, Epsilon);
                 int cdir = ach.getUInt(219, 228);
@@ -368,9 +409,9 @@ public class MessageTest
                 }
                 else
                 {
-                    cdir = cdir/10;
+                    assertTrue(tc.cdir >= 0 && tc.cdir < 360);
                 }
-                assertEquals(cdir, tc.cdir, Epsilon);
+                assertEquals(cdir, tc.cdir);
                 float cspeed2 = ach.getUInt(228, 236);
                 if (cspeed2 >= 251)
                 {
@@ -379,6 +420,7 @@ public class MessageTest
                 else
                 {
                     cspeed2 = cspeed2/10;
+                    assertTrue(tc.cspeed2 >= 0 && tc.cspeed2 <= 25);
                 }
                 assertEquals(cspeed2, tc.cspeed2, Epsilon);
                 int cdir2 = ach.getUInt(236, 245);
@@ -388,19 +430,19 @@ public class MessageTest
                 }
                 else
                 {
-                    cdir2 = cdir2/10;
+                    assertTrue(tc.cdir2 >= 0 && tc.cdir2 < 360);
                 }
-                assertEquals(cdir2, tc.cdir2, Epsilon);
-                float cdepth2 = ach.getUInt(245, 250);
-                if (cdepth2 < 31)
+                assertEquals(cdir2, tc.cdir2);
+                int cdepth2 = ach.getUInt(245, 250);
+                if (cdepth2 >= 31)
                 {
-                    cdepth2=Float.NaN;
+                    cdepth2=-1;
                 }
                 else
                 {
-                    cdepth2 = cdepth2/10;
+                    assertTrue(tc.cdepth2 >= 0 && tc.cdepth2 < 30);
                 }
-                assertEquals(cdepth2, tc.cdepth2, Epsilon);
+                assertEquals(cdepth2, tc.cdepth2);
                 float cspeed3 = ach.getUInt(250, 258);
                 if (cspeed3 >= 251)
                 {
@@ -409,6 +451,7 @@ public class MessageTest
                 else
                 {
                     cspeed3 = cspeed3/10;
+                    assertTrue(tc.cspeed3 >= 0 && tc.cspeed3 <= 25);
                 }
                 assertEquals(cspeed3, tc.cspeed3, Epsilon);
                 int cdir3 = ach.getUInt(258, 267);
@@ -418,19 +461,246 @@ public class MessageTest
                 }
                 else
                 {
-                    cdir3 = cdir3/10;
+                    assertTrue(tc.cdir3 >= 0 && tc.cdir3 < 360);
                 }
-                assertEquals(cdir3, tc.cdir3, Epsilon);
-                float cdepth3 = ach.getUInt(267, 272);
-                if (cdepth3 < 31)
+                assertEquals(cdir3, tc.cdir3);
+                int cdepth3 = ach.getUInt(267, 272);
+                if (cdepth3 >= 31)
                 {
-                    cdepth3=Float.NaN;
+                    cdepth3=-1;
                 }
                 else
                 {
-                    cdepth3 = cdepth3/10;
+                    assertTrue(tc.cdepth3 >= 0 && tc.cdepth3 < 30);
                 }
-                assertEquals(cdepth3, tc.cdepth3, Epsilon);
+                assertEquals(cdepth3, tc.cdepth3);
+                float waveheight = ach.getUInt(272, 280);
+                if (waveheight >= 251)
+                {
+                    waveheight=Float.NaN;
+                }
+                else
+                {
+                    waveheight = waveheight/10;
+                    assertTrue(tc.waveheight >= 0 && tc.waveheight < 25);
+                }
+                assertEquals(waveheight, tc.waveheight, Epsilon);
+                int waveperiod = ach.getUInt(280, 286);
+                if (waveperiod >= 61)
+                {
+                    waveperiod=-1;
+                }
+                else
+                {
+                    assertTrue(tc.waveperiod >= 0 && tc.waveperiod <= 60);
+                }
+                assertEquals(waveperiod, tc.waveperiod);
+                int wavedir = ach.getUInt(286, 295);
+                if (wavedir >= 360)
+                {
+                    wavedir=-1;
+                }
+                else
+                {
+                    assertTrue(tc.wavedir >= 0 && tc.wavedir < 360);
+                }
+                assertEquals(wavedir, tc.wavedir);
+                float swellheight = ach.getUInt(295, 303);
+                if (swellheight >= 251)
+                {
+                    swellheight=Float.NaN;
+                }
+                else
+                {
+                    swellheight = swellheight/10;
+                    assertTrue(tc.swellheight >= 0 && tc.swellheight < 25);
+                }
+                assertEquals(swellheight, tc.swellheight, Epsilon);
+                int swellperiod = ach.getUInt(303, 309);
+                if (swellperiod >= 61)
+                {
+                    swellperiod=-1;
+                }
+                else
+                {
+                    assertTrue(tc.swellperiod >= 0 && tc.swellperiod <= 60);
+                }
+                assertEquals(swellperiod, tc.swellperiod);
+                int swelldir = ach.getUInt(309, 318);
+                if (swelldir >= 360)
+                {
+                    swelldir=-1;
+                }
+                else
+                {
+                    assertTrue(tc.swelldir >= 0 && tc.swelldir < 360);
+                }
+                assertEquals(swelldir, tc.swelldir);
+                assertEquals(BeaufortScale.values()[ach.getUInt(318, 322)], tc.seastate);
+                float watertemp = ach.getUInt(322, 332);
+                if (watertemp >= 601)
+                {
+                    watertemp=Float.NaN;
+                }
+                else
+                {
+                    watertemp = watertemp/10-10;
+                    assertTrue(tc.watertemp >= -10 && tc.watertemp <= 50);
+                }
+                assertEquals(watertemp, tc.watertemp, Epsilon);
+                assertEquals(PrecipitationTypes.values()[ach.getUInt(332, 335)], tc.preciptype);
+                float salinity = ach.getUInt(335, 344);
+                if (salinity >= 500)
+                {
+                    salinity=Float.NaN;
+                }
+                else
+                {
+                    salinity = salinity/10;
+                    assertTrue(tc.salinity >= 0 && tc.salinity <= 50);
+                }
+                assertEquals(salinity, tc.salinity, Epsilon);
+                assertEquals(ach.getUInt(344, 346), tc.ice);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type9()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,B,91b55vRAirOn<94M097lV@@20<6=,0*5D\r\n",
+                "!AIVDM,1,1,,B,91b55vRAivOnAWTM05?CNUP20<6F,0*67\r\n",
+                "!AIVDM,1,1,,A,91b55vRAQwOnDE<M05ICOp0208CM,0*6A\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.StandardSARAircraftPositionReport, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
+                assertEquals(MMSIType.SarAircraft, mmsiEntry.getType());
+                int alt = ach.getInt(38, 50);
+                if (alt > 4095)
+                {
+                    alt = -1;
+                }
+                else
+                {
+                    assertTrue(alt >= 0 && alt <= 4094);
+                }
+                assertEquals(alt, tc.alt);
+                assertEquals((float)ach.getUInt(50, 60), tc.speed, Epsilon);
+                assertEquals((float)ach.getInt(61, 89)/600000.0 , tc.longitude, Epsilon);
+                assertEquals((float)ach.getInt(89, 116)/600000.0 , tc.latitude, Epsilon);
+                assertEquals((float)ach.getUInt(116, 128)/10, tc.course, Epsilon);
+                assertEquals(ach.getUInt(128, 134), tc.second);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type10()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,A,:81:Jf1D02J0,0*0E\r\n",
+                "!AIVDM,1,1,,B,:02Au11EB6G0,0*6F\r\n",
+                "!AIVDM,1,1,,B,:81:Jf0qKjvP,0*46\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.UTCAndDateInquiry, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals(ach.getUInt(40, 70), tc.dest_mmsi);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type11()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,B,;5E8IL1uho;NQ1d4sJEW<Ci00000,0*58\r\n",
+                "!AIVDM,1,1,,A,;03t=31uho;NS`e;KLBDS0o00000,0*02\r\n",
+                "!AIVDM,1,1,,A,;028j:Quho;N>OvPkdFl:VG00d2v,0*58\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.UTCAndDateResponse, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals(ach.getUInt(38, 52), tc.year);
+                assertEquals(ach.getUInt(52, 56), tc.month);
+                assertEquals(ach.getUInt(56, 61), tc.day);
+                int hour = ach.getUInt(61, 66);
+                if (hour == 24)
+                {
+                    hour = -1;
+                }
+                assertEquals(hour, tc.hour);
+                assertEquals(ach.getUInt(66, 72), tc.minute);
+                assertEquals(ach.getUInt(72, 78), tc.second);
+                assertEquals((float)ach.getInt(79, 107)/600000.0 , tc.longitude, Epsilon);
+                assertEquals((float)ach.getInt(107, 134)/600000.0 , tc.latitude, Epsilon);
+                assertEquals(EPFDFixTypes.values()[ach.getUInt(134, 138)], tc.epfd);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type16()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,B,@6STUk004lQ206bCKNOBAb6SJ@5s,0*74\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.AssignmentModeCommand, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals(ach.getUInt(40, 70), tc.mmsi1);
+                assertEquals(ach.getUInt(70, 82), tc.offset1);
+                assertEquals(ach.getUInt(82, 92), tc.increment1);
+                assertEquals(ach.getUInt(92, 122), tc.mmsi2);
+                assertEquals(ach.getUInt(122, 134), tc.offset2);
+                assertEquals(ach.getUInt(134, 144), tc.increment2);
                 assertNull(tc.error);
             }
         }
@@ -447,7 +717,7 @@ public class MessageTest
         private int seq;
         private int second;
         private int heading=-1;
-        private float cog = Float.NaN;
+        private float course = Float.NaN;
         private float latitude = Float.NaN;
         private float longitude = Float.NaN;
         private float speed = Float.NaN;
@@ -489,15 +759,169 @@ public class MessageTest
         private float waterlevel=Float.NaN;
         private float cspeed=Float.NaN;
         private int cdir=-1;
-        private float cdepth3=Float.NaN;
+        private int cdepth3=-1;
         private int cdir3=-1;
         private float cspeed3=Float.NaN;
-        private float cdepth2=Float.NaN;
+        private int cdepth2=-1;
         private float cspeed2=Float.NaN;
         private int cdir2=-1;
+        private int swelldir=-1;
+        private int swellperiod=-1;
+        private float swellheight=Float.NaN;
+        private int wavedir=-1;
+        private int waveperiod=-1;
+        private float waveheight=Float.NaN;
+        private BeaufortScale seastate;
+        private float watertemp=Float.NaN;
+        private PrecipitationTypes preciptype;
+        private float salinity=Float.NaN;
+        private int ice=-1;
+        private int alt=-1;
+        private int dest_mmsi=-1;
+        private int year=-1;
+        private int mmsi1=-1;
+        private int mmsi2=-1;
+        private int mmsi3=-1;
+        private int mmsi4=-1;
+        private int increment2=-1;
+        private int increment1=-1;
+        private int offset2=-1;
+        private int offset1=-1;
 
         @Override
-        public void setMeasurementDepth3(float meters)
+        public void setIncrementB(int arg)
+        {
+            this.increment2 = arg;
+        }
+
+        @Override
+        public void setIncrementA(int arg)
+        {
+            this.increment1 = arg;
+        }
+
+        @Override
+        public void setOffsetB(int arg)
+        {
+            this.offset2 = arg;
+        }
+
+        @Override
+        public void setOffsetA(int arg)
+        {
+            this.offset1 = arg;
+        }
+
+        @Override
+        public void setMMSI4(int mmsi)
+        {
+            this.mmsi4 = mmsi;
+        }
+
+        @Override
+        public void setMMSI3(int mmsi)
+        {
+            this.mmsi3 = mmsi;
+        }
+
+        @Override
+        public void setMMSI2(int mmsi)
+        {
+            this.mmsi2 = mmsi;
+        }
+
+        @Override
+        public void setMMSI1(int mmsi)
+        {
+            this.mmsi1 = mmsi;
+        }
+
+        @Override
+        public void setYear(int year)
+        {
+            this.year = year;
+        }
+
+        @Override
+        public void setDestinationMMSI(int mmsi)
+        {
+            this.dest_mmsi = mmsi;
+        }
+
+        @Override
+        public void setAltitude(int meters)
+        {
+            this.alt = meters;
+        }
+
+        @Override
+        public void setIce(int ice)
+        {
+            this.ice = ice;
+        }
+
+        @Override
+        public void setSalinity(float f)
+        {
+            this.salinity = f;
+        }
+
+        @Override
+        public void setPrecipitation(PrecipitationTypes precipitationTypes)
+        {
+            this.preciptype = precipitationTypes;
+        }
+
+        @Override
+        public void setWaterTemperature(float degrees)
+        {
+            this.watertemp = degrees;
+        }
+
+        @Override
+        public void setSeaState(BeaufortScale beaufortScale)
+        {
+            this.seastate = beaufortScale;
+        }
+
+        @Override
+        public void setSwellDirection(int degrees)
+        {
+            this.swelldir = degrees;
+        }
+
+        @Override
+        public void setSwellPeriod(int seconds)
+        {
+            this.swellperiod = seconds;
+        }
+
+        @Override
+        public void setSwellHeight(float meters)
+        {
+            this.swellheight = meters;
+        }
+
+        @Override
+        public void setWaveDirection(int degrees)
+        {
+            this.wavedir = degrees;
+        }
+
+        @Override
+        public void setWavePeriod(int seconds)
+        {
+            this.waveperiod = seconds;
+        }
+
+        @Override
+        public void setWaveHeight(float meters)
+        {
+            this.waveheight = meters;
+        }
+
+        @Override
+        public void setMeasurementDepth3(int meters)
         {
             this.cdepth3 = meters;
         }
@@ -515,7 +939,7 @@ public class MessageTest
         }
 
         @Override
-        public void setMeasurementDepth2(float meters)
+        public void setMeasurementDepth2(int meters)
         {
             this.cdepth2 = meters;
         }
@@ -769,7 +1193,7 @@ public class MessageTest
         @Override
         public void setCourse(float cog)
         {
-            this.cog = cog;
+            this.course = cog;
         }
 
         @Override

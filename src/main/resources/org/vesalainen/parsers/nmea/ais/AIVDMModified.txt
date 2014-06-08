@@ -1865,13 +1865,13 @@ broadcast of this message of 12 minutes.
                                                   >=251 = N/A (default).
 |236-244 |  9 |Current Direction #2 |cdir2     |u|0-359: deg. fom true north,
                                                   >=360 = N/A (default)
-|245-249 |  5 |Measurement Depth #2 |cdepth2   |U1|0-30m down: units 0.1m,
+|245-249 |  5 |Measurement Depth #2 |cdepth2   |u|0-30m down: units 1m,
                                                    31 = N/A (default).
 |250-257 |  8 |Current Speed #3     |cspeed3   |U1|0.0-25.0: units of 0.1 knot,
                                                    >=251 = N/A (default).
 |258-266 |  9 |Current Direction #3 |cdir3     |u|0-359: degrees fom true north,
                                                   >=360 = N/A (default).
-|267-271 |  5 |Measurement Depth #3 |cdepth3   |U1|0-30m down: units 0.1m,
+|267-271 |  5 |Measurement Depth #3 |cdepth3   |u|0-30m down: units 1m,
                                                   31 = N/A (default).
 |272-279 |  8 |Wave height          |waveheight|U1|0-25m: units of 0.1m,
                                                   >=251 = N/A (default).
@@ -3203,14 +3203,14 @@ decimeters), and (c) end padding changes from 6 to 10 bits.
                                                    255 N/A (default).
 |240-248 |  9 |Current Direction #2 |cdir2     |u|0-359: true bearing,
                                                  360 = N/A (default).
-|249-253 |  5 |Measurement Depth #2 |cdepth2   |U1|0-30m down: units 0.1m,
+|249-253 |  5 |Measurement Depth #2 |cdepth2   |u|0-30m down: units 1m,
                                                  31 = N/A (default).
 |254-261 |  8 |Current Speed #3     |cspeed3   |U1|0.0-25.0 knots: units 0.1 knot,
                                                  251 = speed >= 25.1 knots,
                                                  255 N/A (default).
 |262-270 |  9 |Current Direction #3 |cdir3     |u|0-359: true bearing,
                                                  360 = N/A (default).
-|271-275 |  5 |Measurement Depth #3 |cdepth3   |u|0-30m down: units 0.1m,
+|271-275 |  5 |Measurement Depth #3 |cdepth3   |u|0-30m down: units 1m,
                                                  31 = N/A (default).
 |276-283 |  8 |Wave Height          |waveheight|U1|Height 0-25m: units 0.1m,
                                                   251 = height >= 25.1m,

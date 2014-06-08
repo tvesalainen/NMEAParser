@@ -861,7 +861,7 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setMeasurementDepth2(float meters)
+    public void setMeasurementDepth2(int meters)
     {
         printer.println("setMeasurementDepth2("+meters+")");
     }
@@ -879,7 +879,7 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setMeasurementDepth3(float meters)
+    public void setMeasurementDepth3(int meters)
     {
         printer.println("setMeasurementDepth3("+meters+")");
     }
@@ -1117,6 +1117,48 @@ public class AISTracer implements AISObserver
     public void setAisVersion(int arg)
     {
         printer.println("setAisVersion("+arg+")");
+    }
+
+    @Override
+    public void setWaterPressure(float decibar)
+    {
+        printer.println("setWaterPressure("+decibar+")");
+    }
+
+    @Override
+    public void setAltitude(int meters)
+    {
+        printer.println("setAltitude("+meters+"m)");
+    }
+
+    @Override
+    public void setSensorAltitude(float meters)
+    {
+        printer.println("setSensorAltitude("+meters+"m)");
+    }
+
+    @Override
+    public void setOffsetA(int arg)
+    {
+        printer.println("setOffsetA("+arg+"m)");
+    }
+
+    @Override
+    public void setOffsetB(int arg)
+    {
+        printer.println("setOffsetB("+arg+"m)");
+    }
+
+    @Override
+    public void setIncrementA(int arg)
+    {
+        printer.println("setIncrementA("+arg+"m)");
+    }
+
+    @Override
+    public void setIncrementB(int arg)
+    {
+        printer.println("setIncrementB("+arg+"m)");
     }
 
 }

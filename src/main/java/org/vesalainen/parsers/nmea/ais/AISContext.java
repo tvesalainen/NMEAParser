@@ -18,7 +18,6 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -67,6 +66,7 @@ public class AISContext extends UnparallelWorkflow<Integer>
     @Override
     protected Runnable create(Integer key)
     {
+        System.err.println("Message "+key);
         return new AISThread(key, this);
     }
     public class AISThread implements Runnable

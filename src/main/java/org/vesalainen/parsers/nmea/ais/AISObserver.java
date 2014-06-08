@@ -749,7 +749,7 @@ public interface AISObserver extends Transactional
      * Measurement Depth #2
      * @param meters 0-30m down: units 0.1m, 31 = N/A (default).
      */
-    void setMeasurementDepth2(float meters);
+    void setMeasurementDepth2(int meters);
     /**
      * Current Speed #3
      * @param knots 0.0-25.0 in units of 0.1 knot, >=251 = N/A (default).
@@ -764,7 +764,7 @@ public interface AISObserver extends Transactional
      * Measurement Depth #3
      * @param meters 0-30m down: units 0.1m, 31 = N/A (default).
      */
-    void setMeasurementDepth3(float meters);
+    void setMeasurementDepth3(int meters);
     /**
      * Wave height
      * @param meters 0-25m: units of 0.1m, >=251 = N/A (default).
@@ -965,5 +965,28 @@ public interface AISObserver extends Transactional
      * @param arg 
      */
     void setAisVersion(int arg);
+    /**
+     * Water pressure: 0.0-6000.0
+     * @param decibar 
+     */
+    void setWaterPressure(float decibar);
+    /**
+     * Altitude
+     * @param meters 
+     */
+    void setAltitude(int meters);
+    /**
+     * Sensor altitude above MSL
+     * @param meters 
+     */
+    void setSensorAltitude(float meters);
+
+    public void setOffsetA(int arg);
+
+    public void setOffsetB(int arg);
+
+    public void setIncrementA(int arg);
+
+    public void setIncrementB(int arg);
 
 }
