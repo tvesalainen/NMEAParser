@@ -48,6 +48,10 @@ public class AisContentHelper
         }
     }
     
+    public boolean getBoolean(int index)
+    {
+        return content.charAt(index) == 1;
+    }
     public String getString(int begin, int end)
     {
         String sub = content.substring(begin, end);
@@ -101,4 +105,5 @@ public class AisContentHelper
         sb.append('\n');
         return sb.toString();
     }
+
 }

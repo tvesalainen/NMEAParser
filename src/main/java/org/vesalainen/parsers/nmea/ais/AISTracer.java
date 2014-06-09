@@ -1161,4 +1161,40 @@ public class AISTracer implements AISObserver
         printer.println("setIncrementB("+arg+"m)");
     }
 
+    @Override
+    public void setCSUnit(boolean cs)
+    {
+        printer.println("setCSUnit("+cs+"m)");
+    }
+
+    @Override
+    public void setDisplay(boolean hasDisplay)
+    {
+        printer.println("setDisplay("+hasDisplay+"m)");
+    }
+
+    @Override
+    public void setDSC(boolean dsc)
+    {
+        printer.println("setDSC("+dsc+"m)");
+    }
+
+    @Override
+    public void setBand(boolean flag)
+    {
+        printer.println("setBand("+flag+"m)");
+    }
+
+    @Override
+    public void setMSG22(boolean b)
+    {
+        printer.println("setMSG22("+b+"m)");
+    }
+
+    @Override
+    public void setAssignedMode(boolean b)
+    {
+        printer.println("setAssignedMode("+b+"m)");
+    }
+
 }

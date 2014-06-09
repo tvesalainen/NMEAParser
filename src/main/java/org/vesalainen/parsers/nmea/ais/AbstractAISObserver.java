@@ -1138,4 +1138,34 @@ public class AbstractAISObserver implements AISObserver
     {
     }
 
+    @Override
+    public void setCSUnit(boolean cs)
+    {
+    }
+
+    @Override
+    public void setDisplay(boolean hasDisplay)
+    {
+    }
+
+    @Override
+    public void setDSC(boolean dsc)
+    {
+    }
+
+    @Override
+    public void setBand(boolean flag)
+    {
+    }
+
+    @Override
+    public void setMSG22(boolean b)
+    {
+    }
+
+    @Override
+    public void setAssignedMode(boolean b)
+    {
+    }
+
 }

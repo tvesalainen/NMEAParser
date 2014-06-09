@@ -657,8 +657,6 @@ protected void airdraught_13(int arg, @ParserContext("aisData") AISObserver aisD
 protected void text_936(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void increment1_10(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void increment2_10(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void increment1_11(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void increment2_11(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void txrx_4(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -2716,6 +2714,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void assigned(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setAssignedMode(arg == 1);
     }
 // Type10UTCDateInquiry
 // Type12AddressedSafetyRelatedMessage
@@ -2750,7 +2749,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
         aisData.setOffsetA(arg);
     }
 
-    protected void increment1(int arg, @ParserContext("aisData") AISObserver aisData)
+    protected void increment1_10(int arg, @ParserContext("aisData") AISObserver aisData)
     {
         aisData.setIncrementA(arg);
     }
@@ -2760,7 +2759,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
         aisData.setOffsetB(arg);
     }
 
-    protected void increment2(int arg, @ParserContext("aisData") AISObserver aisData)
+    protected void increment2_10(int arg, @ParserContext("aisData") AISObserver aisData)
     {
         aisData.setIncrementB(arg);
     }
@@ -2779,22 +2778,27 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void cs(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setCSUnit(arg == 1);
     }
 
     protected void display(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setDisplay(arg == 1);
     }
 
     protected void dsc(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setDSC(arg == 1);
     }
 
     protected void band(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setBand(arg == 1);
     }
 
     protected void msg22(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setMSG22(arg == 1);
     }
 // Type19ExtendedClassBCSPositionReport
     protected void shipname(int arg, @ParserContext("aisData") AISObserver aisData)

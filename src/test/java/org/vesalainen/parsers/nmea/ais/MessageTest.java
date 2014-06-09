@@ -31,8 +31,6 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
  * TODO Test for 
- * Message 17
- * Message 18
  * Message 19
  * Message 20
  * Message 21
@@ -709,6 +707,81 @@ public class MessageTest
             fail(ex.getMessage());
         }
     }
+    @Test
+    public void type17()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,A,A@4<g>i:7Tcip2KBGm@`;gvG040h01h04EOw8@0L,0*28\r\n",
+                "!AIVDM,1,1,,A,A04757QAv0agH2JdGn``7wrs1540vocuF@?s301G,0*0A\r\n",
+                "!AIVDM,1,1,,A,A04757QAv0agH2JdGodP7Oqc4@TGw9`B70,4*2C\r\n",
+                "!AIVDM,1,1,,A,A04757QAv0agH2JdGph`6OlR3Dh6wL<>IA3v<0dA,0*5E\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.DGNSSBinaryBroadcastMessage, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals((float)ach.getInt(40, 58)/600.0 , tc.longitude, Epsilon);
+                assertEquals((float)ach.getInt(58, 75)/600.0 , tc.latitude, Epsilon);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type18()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,B,B6:fOUh0=R1oRQSC=jo9Gwb61P06,0*6F\r\n",
+                "!AIVDM,1,1,,A,B43JHF0000V@sC6H3t803wbT3P06,0*27\r\n",
+                "!AIVDM,1,1,,B,B43NbT0008VGWDVHNs0000N021Mk,0*6A\r\n",
+                "!AIVDM,1,1,,B,B3P<0@P00GtiTD`MfuKAKwbUoP06,0*54\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.StandardClassBCSPositionReport, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals((float)ach.getUInt(46, 56)/10, tc.speed, Epsilon);
+                assertEquals((float)ach.getInt(57, 85)/600000.0 , tc.longitude, Epsilon);
+                assertEquals((float)ach.getInt(85, 112)/600000.0 , tc.latitude, Epsilon);
+                assertEquals((float)ach.getUInt(112, 124)/10, tc.course, Epsilon);
+                int hdg = ach.getUInt(124, 132);
+                if (hdg == 511)
+                {
+                    hdg = -1;
+                }
+                assertEquals(hdg, tc.heading);
+                assertEquals(ach.getUInt(133, 139), tc.second);
+                assertEquals(ach.getBoolean(141), tc.cs);
+                assertEquals(ach.getBoolean(142), tc.display);
+                assertEquals(ach.getBoolean(143), tc.dsc);
+                assertEquals(ach.getBoolean(144), tc.band);
+                assertEquals(ach.getBoolean(145), tc.msg22);
+                assertEquals(ach.getBoolean(146), tc.assigned);
+                assertEquals(ach.getBoolean(147), tc.raim);
+                assertEquals(ach.getUInt(148, 168), tc.radio);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
     public class TC extends AbstractAISObserver
     {
         private boolean ownMessage;
@@ -787,6 +860,62 @@ public class MessageTest
         private int increment1=-1;
         private int offset2=-1;
         private int offset1=-1;
+        private Boolean assigned;
+        private Boolean msg22;
+        private Boolean band;
+        private Boolean dsc;
+        private Boolean display;
+        private Boolean cs;
+        private int radio=-1;
+        private Boolean raim;
+
+        @Override
+        public void setAssignedMode(boolean b)
+        {
+            this.assigned = b;
+        }
+
+        @Override
+        public void setMSG22(boolean b)
+        {
+            this.msg22 = b;
+        }
+
+        @Override
+        public void setBand(boolean flag)
+        {
+            this.band = flag;
+        }
+
+        @Override
+        public void setDSC(boolean dsc)
+        {
+            this.dsc = dsc;
+        }
+
+        @Override
+        public void setDisplay(boolean hasDisplay)
+        {
+            this.display = hasDisplay;
+        }
+
+        @Override
+        public void setCSUnit(boolean cs)
+        {
+            this.cs = cs;
+        }
+
+        @Override
+        public void setRadioStatus(int radio)
+        {
+            this.radio = radio;
+        }
+
+        @Override
+        public void setRAIM(boolean raim)
+        {
+            this.raim = raim;
+        }
 
         @Override
         public void setIncrementB(int arg)

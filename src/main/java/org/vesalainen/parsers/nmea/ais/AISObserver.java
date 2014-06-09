@@ -981,12 +981,43 @@ public interface AISObserver extends Transactional
      */
     void setSensorAltitude(float meters);
 
-    public void setOffsetA(int arg);
+    void setOffsetA(int arg);
 
-    public void setOffsetB(int arg);
+    void setOffsetB(int arg);
 
-    public void setIncrementA(int arg);
+    void setIncrementA(int arg);
 
-    public void setIncrementB(int arg);
+    void setIncrementB(int arg);
+    /**
+     * Returns false if Class B SOTDMA unit, true if Class B CS (Carrier Sense) unit
+     * @param cs 
+     */
+    void setCSUnit(boolean cs);
+    /**
+     * Returns true if has display
+     * @param hasDisplay 
+     */
+    void setDisplay(boolean hasDisplay);
+    /**
+     * Returns true if, unit is attached to a VHF voice radio with DSC capability.
+     * @param dsc 
+     */
+    void setDSC(boolean dsc);
+    /**
+     * Base stations can command units to switch frequency. If this flag is true, 
+     * the unit can use any part of the marine channel.
+     * @param flag 
+     */
+    void setBand(boolean flag);
+    /**
+     * Returns true If, unit can accept a channel assignment via Message Type 22.
+     * @param b 
+     */
+    void setMSG22(boolean b);
+    /**
+     * Returns true if device is in assigned mode.
+     * @param b 
+     */
+    void setAssignedMode(boolean b);
 
 }
