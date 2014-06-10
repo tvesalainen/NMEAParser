@@ -50,7 +50,7 @@ public class AisContentHelper
     
     public boolean getBoolean(int index)
     {
-        return content.charAt(index) == 1;
+        return content.charAt(index) == '1';
     }
     public String getString(int begin, int end)
     {

@@ -474,6 +474,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="CurrentFlow3DPayload", value={"cnorth1", "ceast1", "cup1", "cdepth1", "cnorth2", "ceast2", "cup2", "cdepth2_9", "sensortype", "'[01]{16}'"})
 ,@Rule(left="Sector", value={"shape2", "scale", "lon_I3_25", "lat_I3_24", "precision", "radius_12", "left", "right"})
 ,@Rule(left="8Content", value={"IMO289RouteInformationBroadcast"})
+,@Rule(left="Type16AssignmentModeCommandB", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "offset1", "increment1_10", "mmsi2", "offset2", "increment2_10"})
 ,@Rule(left="17Content", value={"Type17DGNSSBroadcastBinaryMessage"})
 ,@Rule(left="8Content", value={"WeatherObservationReportFromShipNonWMOVariant"})
 ,@Rule(left="Type20DataLinkManagementMessage2", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11"})
@@ -484,6 +485,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="StationIDPayload", value={"name_84", "'[01]{1}'"})
 ,@Rule(left="21Content", value={"Type21AidToNavigationReport1"})
 ,@Rule(left="6Content", value={"TidalWindowIMO289"})
+,@Rule(left="Type18StandardClassBCSPositionReport", value={"repeat", "mmsi", "reserved", "speed_U1_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "heading_9", "second", "regional_2", "cs", "display", "dsc", "band", "msg22", "assigned", "raim", "radio_20"})
 ,@Rule(left="21Content", value={"Type21AidToNavigationReport2"})
 ,@Rule(left="HorizontalCurrentReportPayload", value={"bearing1", "distance1", "speed1", "direction1", "depth1", "bearing1", "distance1", "speed1", "direction1", "depth1", "'[01]{1}'"})
 ,@Rule(left="Rectangle", value={"shape1", "scale", "lon_I3_25", "lat_I3_24", "precision", "east", "north", "orientation", "'[01]{5}'"})
@@ -529,8 +531,9 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="message", value={"4"})
 ,@Rule(left="SiteLocationPayload", value={"lon_I4_28", "lat_I4_27", "alt_11", "owner", "timeout", "'[01]{12}'"})
 ,@Rule(left="8Content", value={"VTSGeneratedSyntheticTargets"})
-,@Rule(left="Type16AssignmentModeCommand", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "offset1", "increment1_10", "mmsi2", "offset2", "increment2_10"})
 ,@Rule(left="6Content", value={"AreaNoticeAddressedMessageHeader"})
+,@Rule(left="16Content", value={"Type16AssignmentModeCommandA"})
+,@Rule(left="16Content", value={"Type16AssignmentModeCommandB"})
 ,@Rule(left="6Content", value={"IMO289RouteInformationAddressed"})
 ,@Rule(left="IMO289RouteInformationBroadcast", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid27", "linkage", "sender", "rtype", "month", "day_5", "hour", "minute_6", "duration_18", "waycount", "(lon_I4_28 lat_I4_27)+"})
 ,@Rule(left="15Messages", value={"(15Content '[01]{0,5}\n')+"})
@@ -539,7 +542,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="IMO289BerthingDataAddressed", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid20", "linkage", "berth_length", "berth_depth", "position", "month", "day_5", "hour", "minute_6", "availability", "agent", "fuel", "chandler", "stevedore", "electrical", "water", "customs", "cartage", "crane", "lift", "medical", "navrepair", "provisions", "shiprepair", "surveyor", "steam", "tugs", "solidwaste", "liquidwaste", "hazardouswaste", "ballast", "additional", "regional1", "regional2", "future1", "future2", "berth_name", "berth_lon", "berth_lat"})
 ,@Rule(left="8Content", value={"IMO236ExtendedShipStaticAndVoyageRelatedData"})
 ,@Rule(left="Type23GroupAssignmentCommand", value={"repeat", "mmsi", "'[01]{2}'", "ne_lon", "ne_lat", "sw_lon", "sw_lat", "station_type", "ship_type", "'[01]{22}'", "txrx_2", "interval", "quiet", "'[01]{6}'"})
-,@Rule(left="16Content", value={"Type16AssignmentModeCommand"})
 ,@Rule(left="15Content", value={"Type15Interrogation1"})
 ,@Rule(left="15Content", value={"Type15Interrogation2"})
 ,@Rule(left="15Content", value={"Type15Interrogation3"})
@@ -572,6 +574,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="24Messages", value={"(24Content '[01]{0,5}\n')+"})
 ,@Rule(left="Type9StandardSARAircraftPositionReport", value={"repeat", "mmsi", "alt_12", "speed_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "second", "regional_8", "dte", "'[01]{3}'", "assigned", "raim", "radio_19"})
 ,@Rule(left="Type12AddressedSafetyRelatedMessage", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "text_936"})
+,@Rule(left="Type16AssignmentModeCommandA", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "offset1", "increment1_10"})
 ,@Rule(left="EnvironmentalMessageHeader", value={"repeat", "mmsi", "seqno", "dac001", "fid26", "(sensor day_5 hour minute_6 site payload)+"})
 ,@Rule(left="21Messages", value={"(21Content '[01]{0,5}\n')+"})
 ,@Rule(left="VTSGeneratedSyntheticTargets", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid17", "(idtype id '[01]{4}' lat_I3_24 lon_I3_25 course_9 second speed_10)+"})
@@ -620,7 +623,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="1-3Content", value={"CommonNavigationBlock"})
 ,@Rule(left="WindReportPayload", value={"wspeed", "wgust", "wdir", "wgustdir", "sensortype", "fwspeed", "fwgust", "fwdir", "day_5", "hour", "minute_6", "duration_8", "'[01]{3}'"})
 ,@Rule(left="AirGapAirDraftReportPayload", value={"airdraught_U1_13", "airgap", "gaptrend", "fairgap", "day_5", "hour", "minute_6", "'[01]{28}'"})
-,@Rule(left="Type18StandardClassBCSPositionReport", value={"repeat", "mmsi", "reserved", "speed_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "heading_9", "second", "regional_2", "cs", "display", "dsc", "band", "msg22", "assigned", "raim", "radio_20"})
 ,@Rule(left="23Messages", value={"(23Content '[01]{0,5}\n')+"})
 ,@Rule(left="Type15Interrogation3", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1", "'[01]{2}'", "type1_2", "offset1_2", "'[01]{2}'", "mmsi2", "type2_1", "offset2_1", "'[01]{2}'"})
 ,@Rule(left="19Content", value={"Type19ExtendedClassBCSPositionReport"})
@@ -1022,7 +1024,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void heading_7(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        if (arg != 127)
+        if (arg < 127)
         {
             aisData.setHeading(5*arg);
         }
@@ -1070,7 +1072,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
      */
     protected void radio_19(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        radio(arg, aisData);
+        aisData.setRadioStatus(arg);
     }
     /**
      * The radio status is 20 bits rather than 19 because an extra first bit 
@@ -1080,11 +1082,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
      */
     protected void radio_20(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        radio(arg>>1, aisData);
-    }
-    protected void radio(int radio, @ParserContext("aisData") AISObserver aisData)
-    {
-        aisData.setRadioStatus(radio);
+        aisData.setRadioStatus(arg & 0b1111111111111111111);
     }
 
     protected void year(int year, @ParserContext("aisData") AISObserver aisData)

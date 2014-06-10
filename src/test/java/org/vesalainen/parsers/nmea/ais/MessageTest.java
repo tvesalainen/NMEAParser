@@ -31,7 +31,6 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
  * TODO Test for 
- * Message 19
  * Message 20
  * Message 21
  * Message 22
@@ -759,13 +758,26 @@ public class MessageTest
                 assertEquals((float)ach.getInt(57, 85)/600000.0 , tc.longitude, Epsilon);
                 assertEquals((float)ach.getInt(85, 112)/600000.0 , tc.latitude, Epsilon);
                 assertEquals((float)ach.getUInt(112, 124)/10, tc.course, Epsilon);
-                int hdg = ach.getUInt(124, 132);
+                int hdg = ach.getUInt(124, 133);
                 if (hdg == 511)
                 {
                     hdg = -1;
                 }
+                else
+                {
+                    assertTrue(hdg >= 0 && hdg < 360);
+                }
                 assertEquals(hdg, tc.heading);
-                assertEquals(ach.getUInt(133, 139), tc.second);
+                int second = ach.getUInt(133, 139);
+                if (second >= 60)
+                {
+                    second = -1;
+                }
+                else
+                {
+                    assertTrue(second >= 0 && second < 60);
+                }
+                assertEquals(second, tc.second);
                 assertEquals(ach.getBoolean(141), tc.cs);
                 assertEquals(ach.getBoolean(142), tc.display);
                 assertEquals(ach.getBoolean(143), tc.dsc);
@@ -773,7 +785,68 @@ public class MessageTest
                 assertEquals(ach.getBoolean(145), tc.msg22);
                 assertEquals(ach.getBoolean(146), tc.assigned);
                 assertEquals(ach.getBoolean(147), tc.raim);
-                assertEquals(ach.getUInt(148, 168), tc.radio);
+                assertEquals(ach.getUInt(149, 168), tc.radio);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type19()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,A,C6:Vo:00@R;51>TORgH2owc6@b30jb2M111111111110S0hS440P,0*0F\r\n",
+                "!AIVDM,1,1,,B,C6:fQe@0021vEpSBPJ0<sweRjb:ThL>>b2L6@bC1QeUhS3d:4707,0*07\r\n",
+                "!AIVDM,1,1,,B,C>q000@0026mfP5U9isO3wgPHC0hBMh0000000000000WS86VQPP,0*70\r\n",
+                "!AIVDM,1,1,,B,C6:V4mh0021mgg3CJD4gSwf2DBM0HNL?1WkU11111110S0<FRTP7,0*11\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.ExtendedClassBEquipmentPositionReport, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals((float)ach.getUInt(46, 56)/10, tc.speed, Epsilon);
+                assertEquals((float)ach.getInt(57, 85)/600000.0 , tc.longitude, Epsilon);
+                assertEquals((float)ach.getInt(85, 112)/600000.0 , tc.latitude, Epsilon);
+                assertEquals((float)ach.getUInt(112, 124)/10, tc.course, Epsilon);
+                int hdg = ach.getUInt(124, 133);
+                if (hdg == 511)
+                {
+                    hdg = -1;
+                }
+                else
+                {
+                    assertTrue(hdg >= 0 && hdg < 360);
+                }
+                assertEquals(hdg, tc.heading);
+                int second = ach.getUInt(133, 139);
+                if (second >= 60)
+                {
+                    second = -1;
+                }
+                else
+                {
+                    assertTrue(second >= 0 && second < 60);
+                }
+                assertEquals(second, tc.second);
+                assertEquals(ach.getString(143, 263), tc.vesselName);
+                assertEquals(CodesForShipType.values()[ach.getUInt(263, 271)], tc.shipType);
+                assertEquals(ach.getUInt(271, 280), tc.dimensionToBow);
+                assertEquals(ach.getUInt(280, 289), tc.dimensionToStern);
+                assertEquals(ach.getUInt(289, 295), tc.dimensionToPort);
+                assertEquals(ach.getUInt(295, 301), tc.dimensionToStarboard);
+                assertEquals(EPFDFixTypes.values()[ach.getUInt(301, 305)], tc.epfd);
+                assertEquals(ach.getBoolean(305), tc.raim);
+                assertEquals(ach.getBoolean(306), !tc.dte);
+                assertEquals(ach.getBoolean(307), tc.assigned);
                 assertNull(tc.error);
             }
         }
@@ -788,7 +861,7 @@ public class MessageTest
         private String commitReason;
         private String rollbackReason;
         private int seq;
-        private int second;
+        private int second=-1;
         private int heading=-1;
         private float course = Float.NaN;
         private float latitude = Float.NaN;
@@ -868,6 +941,13 @@ public class MessageTest
         private Boolean cs;
         private int radio=-1;
         private Boolean raim;
+        private Boolean dte;
+
+        @Override
+        public void setDTE(boolean ready)
+        {
+            this.dte = ready;
+        }
 
         @Override
         public void setAssignedMode(boolean b)

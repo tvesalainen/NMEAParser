@@ -1834,7 +1834,7 @@ broadcast of this message of 12 minutes.
                                                    >=360 = N/A (default)
 |153-163 | 11 |Air Temperature    |temperature |u|Dry bulb temp: 0.1 deg C
                                                   -60.0 to +60.0,
-                                                  -1024 = N/A (default),
+                                                  > 1200 = N/A (default),
                                                   else -60deg after scaling.
 |164-170 |  7 |Relative Humidity  |humidity    |u|0-100%, units of 1%,
                                                   127 = N/A (default).
@@ -1844,7 +1844,7 @@ broadcast of this message of 12 minutes.
 |181-189 |  9 |Air Pressure       |pressure    |u|800-1200hPa: units 1hPa,
                                                   402 = pressure >= 1201 hPa,
                                                   403 - N/A (default).
-                                                  else add 400 to value.
+                                                  else add 800 to value.
 |190-191 |  2 |Pressure Tendency  |pressuretend|e|0 = steady,
                                                   1 = decreasing,
                                                   2 = increasing,
@@ -1852,7 +1852,7 @@ broadcast of this message of 12 minutes.
 |192-199 |  8 |Horiz. Visibility  |visibility  |U1|0-25.0, units of 0.1nm
                                                   >= 250 = N/A (default)
 |200-208 |  9 |Water Level        |waterlevel  |U1|-10.0 to +30.0 in 0.1m,
-                                                  1923 = N/A (default).
+                                                  511 = N/A (default).
                                                   else -10m after scaling.
 |209-210 |  2 |Water Level Trend  |leveltrend  |e|0 = steady,
                                                   1 = decreasing,
@@ -2172,7 +2172,7 @@ length: 360 bits.
 |277-285 |   9 |Air Pressure       |pressure    |u|800-1200hPa: units 1hPa,
                                                    402 = pressure >= 1201 hPa,
                                                    403 - N/A (default),
-                                                   else add 400 to value,
+                                                   else add 800 to value,
 |286-289 |   4 |Pressure Tendency  |pressuretend|u|WMO FM13 code
 |290-300 |  11 |Air Temperature    |airtemp     |U1|Dry bulb temp: units 0.1C,
                                                    -60.0 to +60.0,
@@ -2252,7 +2252,7 @@ The standard (<<IMO289>>) does not list the WMO FM13 codes.
                                                    HDT = (value * 5) for 1-72,
                                                    average over last 10 minutes.
                                                    127 = N/A (default)
-|125-135 |  11 |Pressure at sea level  |pressure|U1|90-1100 hPa:
+|125-135 |  11 |Pressure at sea level  |pressure|U1|900-1100 hPa:
                                                    P = (value/10)+900 for 0-2000
 |136-145 |  10 |Pressure Change        |pdelta  |U1|-50-+50hPa: units of 0.1hPa,
                                                    d = (value/10)-50 for 0-100,
@@ -3467,7 +3467,7 @@ with the first queried MMSI should be zeroed.
 4. One station is interrogated for two message types, and a second for
 one message type.  Length is 160 bits.
 
-=== Type 16: Assignment Mode Command ===
+=== Type 16: Assignment Mode Command A ===
 
 Message type 16 is used by a base station with control authority to
 configure the scheduling of AIS informational messages from
@@ -3487,9 +3487,6 @@ Length may be 96 or 144 bits.
 |40-69   | 30 |Destination A MMSI  |mmsi1      |u|9 decimal digits
 |70-81   | 12 |Offset A            |offset1    |u|See <<IALA>>
 |82-91   | 10 |Increment A         |increment1 |u|See <<IALA>>
-|92-121  | 30 |Destination B MMSI  |mmsi2      |u|9 decimal digits
-|122-133 | 12 |Offset B            |offset2    |u|See <<IALA>>
-|134-143 | 10 |Increment B         |increment2 |u|See <<IALA>>
 |=============================================================================
 
 If the message is 96 bits long, it should be interpreted as an
@@ -3507,6 +3504,24 @@ detailed specification.
 Note: While the 96-bit form of Type 16 is not uncommon, the 144-bit
 form is extremely rare. As of March 2010 it has not been observed even
 in long-duration samples from AISHub.
+
+=== Type 16: Assignment Mode Command B ===
+
+
+[frame="topbot",options="header"]
+|============================================================================
+|Field   |Len |Description         |Member     |T|Units
+|0-5     |  6 |Message Type        |type       |u|Constant: 16
+|6-7     |  2 |Repeat Indicator    |repeat     |u|As in Common Navigation Block
+|8-37    | 30 |Source MMSI         |mmsi       |u|9 decimal digits
+|38-39   |  2 |Spare               |           |x|Not used
+|40-69   | 30 |Destination A MMSI  |mmsi1      |u|9 decimal digits
+|70-81   | 12 |Offset A            |offset1    |u|See <<IALA>>
+|82-91   | 10 |Increment A         |increment1 |u|See <<IALA>>
+|92-121  | 30 |Destination B MMSI  |mmsi2      |u|9 decimal digits
+|122-133 | 12 |Offset B            |offset2    |u|See <<IALA>>
+|134-143 | 10 |Increment B         |increment2 |u|See <<IALA>>
+|=============================================================================
 
 === Type 17: DGNSS Broadcast Binary Message ===
 
@@ -3555,7 +3570,7 @@ understand these fields."
 |6-7     | 2  |Repeat Indicator   |repeat   |u|As in Common Navigation Block
 |8-37    |30  |MMSI               |mmsi     |u|9 decimal digits
 |38-45   | 8  |Regional Reserved  |reserved |x|Not used
-|46-55   |10  |Speed Over Ground  |speed    |u|As in common navigation block
+|46-55   |10  |Speed Over Ground  |speed    |U1|As in common navigation block
 |56-56   | 1  |Position Accuracy  |accuracy |b|See below
 |57-84   |28  |Longitude          |lon      |I4|Minutes/10000 (as in CNB)
 |85-111  |27  |Latitude           |lat      |I4|Minutes/10000 (as in CNB)
