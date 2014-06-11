@@ -980,14 +980,6 @@ public interface AISObserver extends Transactional
      * @param meters 
      */
     void setSensorAltitude(float meters);
-
-    void setOffsetA(int arg);
-
-    void setOffsetB(int arg);
-
-    void setIncrementA(int arg);
-
-    void setIncrementB(int arg);
     /**
      * Returns false if Class B SOTDMA unit, true if Class B CS (Carrier Sense) unit
      * @param cs 
@@ -1019,5 +1011,84 @@ public interface AISObserver extends Transactional
      * @param b 
      */
     void setAssignedMode(boolean b);
-
+    /**
+     * Consecutive slots 1
+     * @param arg 
+     */
+    void setReservedSlots1(int arg);
+    /**
+     * Consecutive slots 2
+     * @param arg 
+     */
+    void setReservedSlots2(int arg);
+    /**
+     * Consecutive slots 3
+     * @param arg 
+     */
+    void setReservedSlots3(int arg);
+    /**
+     * Consecutive slots 4
+     * @param arg 
+     */
+    void setReservedSlots4(int arg);
+    /**
+     * Allocation timeout in minutes 1
+     * @param arg 
+     */
+    void setTimeout1(int arg);
+    /**
+     * Allocation timeout in minutes 2
+     * @param arg 
+     */
+    void setTimeout2(int arg);
+    /**
+     * Allocation timeout in minutes 3
+     * @param arg 
+     */
+    void setTimeout3(int arg);
+    /**
+     * Allocation timeout in minutes 4
+     * @param arg 
+     */
+    void setTimeout4(int arg);
+    /**
+     * Reserved offset number 1
+     * @param arg 
+     */
+    void setOffset1(int arg);
+    /**
+     * Reserved offset number 2
+     * @param arg 
+     */
+    void setOffset2(int arg);
+    /**
+     * Reserved offset number 3
+     * @param arg 
+     */
+    void setOffset3(int arg);
+    /**
+     * Reserved offset number 4
+     * @param arg 
+     */
+    void setOffset4(int arg);
+    /**
+     * Repeat increment 1
+     * @param arg 
+     */
+    void setIncrement1(int arg);
+    /**
+     * Repeat increment 2
+     * @param arg 
+     */
+    void setIncrement2(int arg);
+    /**
+     * Repeat increment 3
+     * @param arg 
+     */
+    void setIncrement3(int arg);
+    /**
+     * Repeat increment 4
+     * @param arg 
+     */
+    void setIncrement4(int arg);
 }

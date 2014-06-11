@@ -1138,25 +1138,25 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setOffsetA(int arg)
+    public void setOffset1(int arg)
     {
         printer.println("setOffsetA("+arg+"m)");
     }
 
     @Override
-    public void setOffsetB(int arg)
+    public void setOffset2(int arg)
     {
         printer.println("setOffsetB("+arg+"m)");
     }
 
     @Override
-    public void setIncrementA(int arg)
+    public void setIncrement1(int arg)
     {
         printer.println("setIncrementA("+arg+"m)");
     }
 
     @Override
-    public void setIncrementB(int arg)
+    public void setIncrement2(int arg)
     {
         printer.println("setIncrementB("+arg+"m)");
     }
@@ -1195,6 +1195,78 @@ public class AISTracer implements AISObserver
     public void setAssignedMode(boolean b)
     {
         printer.println("setAssignedMode("+b+"m)");
+    }
+
+    @Override
+    public void setReservedSlots1(int arg)
+    {
+        printer.println("setReservedSlots1("+arg+"m)");
+    }
+
+    @Override
+    public void setReservedSlots2(int arg)
+    {
+        printer.println("setReservedSlots2("+arg+"m)");
+    }
+
+    @Override
+    public void setReservedSlots3(int arg)
+    {
+        printer.println("setReservedSlots3("+arg+"m)");
+    }
+
+    @Override
+    public void setReservedSlots4(int arg)
+    {
+        printer.println("setReservedSlots4("+arg+"m)");
+    }
+
+    @Override
+    public void setTimeout1(int arg)
+    {
+        printer.println("setTimeout1("+arg+"m)");
+    }
+
+    @Override
+    public void setTimeout2(int arg)
+    {
+        printer.println("setTimeout2("+arg+"m)");
+    }
+
+    @Override
+    public void setTimeout3(int arg)
+    {
+        printer.println("setTimeout3("+arg+"m)");
+    }
+
+    @Override
+    public void setTimeout4(int arg)
+    {
+        printer.println("setTimeout4("+arg+"m)");
+    }
+
+    @Override
+    public void setOffset3(int arg)
+    {
+        printer.println("setOffset3("+arg+"m)");
+    }
+
+    @Override
+    public void setOffset4(int arg)
+    {
+        printer.println("setOffset4("+arg+"m)");
+    }
+
+    @Override
+    public void setIncrement3(int arg)
+    {
+        printer.println("setIncrement3("+arg+"m)");
+    }
+
+    @Override
+    public void setIncrement4(int arg)
+    {
+        printer.println("setIncrement4("+arg+"m)");
     }
 
 }

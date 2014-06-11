@@ -24,111 +24,111 @@ public enum MessageTypes
 {
     ZeroNotUsed("not used"),
     /**
-     * Position Report Class A
+     * 1. Position Report Class A
      */
     PositionReportClassA("Position Report Class A"),
     /**
-     * Position Report Class A (Assigned schedule)
+     * 2. Position Report Class A (Assigned schedule)
      */
     PositionReportClassAAssignedSchedule("Position Report Class A (Assigned schedule)"),
     /**
-     * Position Report Class A (Response to interrogation)
+     * 3. Position Report Class A (Response to interrogation)
      */
     PositionReportClassAResponseToInterrogation("Position Report Class A (Response to interrogation)"),
     /**
-     * Base Station Report
+     * 4. Base Station Report
      */
     BaseStationReport("Base Station Report"),
     /**
-     * Static and Voyage Related Data
+     * 5. Static and Voyage Related Data
      */
     StaticAndVoyageRelatedData("Static and Voyage Related Data"),
     /**
-     * Binary Addressed Message
+     * 6. Binary Addressed Message
      */
     BinaryAddressedMessage("Binary Addressed Message"),
     /**
-     * Binary Acknowledge
+     * 7. Binary Acknowledge
      */
     BinaryAcknowledge("Binary Acknowledge"),
     /**
-     * Binary Broadcast Message
+     * 8. Binary Broadcast Message
      */
     BinaryBroadcastMessage("Binary Broadcast Message"),
     /**
-     * Standard SAR Aircraft Position Report
+     * 9. Standard SAR Aircraft Position Report
      */
     StandardSARAircraftPositionReport("Standard SAR Aircraft Position Report"),
     /**
-     * UTC and Date Inquiry
+     * 10. UTC and Date Inquiry
      */
     UTCAndDateInquiry("UTC and Date Inquiry"),
     /**
-     * UTC and Date Response
+     * 11. UTC and Date Response
      */
     UTCAndDateResponse("UTC and Date Response"),
     /**
-     * Addressed Safety Related Message
+     * 12. Addressed Safety Related Message
      */
     AddressedSafetyRelatedMessage("Addressed Safety Related Message"),
     /**
-     * Safety Related Acknowledgement
+     * 13. Safety Related Acknowledgement
      */
     SafetyRelatedAcknowledgement("Safety Related Acknowledgement"),
     /**
-     * Safety Related Broadcast Message
+     * 14. Safety Related Broadcast Message
      */
     SafetyRelatedBroadcastMessage("Safety Related Broadcast Message"),
     /**
-     * Interrogation
+     * 15. Interrogation
      */
     Interrogation("Interrogation"),
     /**
-     * Assignment Mode Command
+     * 16. Assignment Mode Command
      */
     AssignmentModeCommand("Assignment Mode Command"),
     /**
-     * DGNSS Binary Broadcast Message
+     * 17. DGNSS Binary Broadcast Message
      */
     DGNSSBinaryBroadcastMessage("DGNSS Binary Broadcast Message"),
     /**
-     * Standard Class B CS Position Report
+     * 18. Standard Class B CS Position Report
      */
     StandardClassBCSPositionReport("Standard Class B CS Position Report"),
     /**
-     * Extended Class B Equipment Position Report
+     * 19. Extended Class B Equipment Position Report
      */
     ExtendedClassBEquipmentPositionReport("Extended Class B Equipment Position Report"),
     /**
-     * Data Link Management
+     * 20. Data Link Management
      */
     DataLinkManagement("Data Link Management"),
     /**
-     * Aid-to-Navigation Report
+     * 21. Aid-to-Navigation Report
      */
     AidToNavigationReport("Aid-to-Navigation Report"),
     /**
-     * Channel Management
+     * 22. Channel Management
      */
     ChannelManagement("Channel Management"),
     /**
-     * Group Assignment Command
+     * 23. Group Assignment Command
      */
     GroupAssignmentCommand("Group Assignment Command"),
     /**
-     * Static Data Report
+     * 24. Static Data Report
      */
     StaticDataReport("Static Data Report"),
     /**
-     * Single Slot Binary Message,
+     * 25. Single Slot Binary Message,
      */
     SingleSlotBinaryMessage("Single Slot Binary Message,"),
     /**
-     * Multiple Slot Binary Message With Communications State
+     * 26. Multiple Slot Binary Message With Communications State
      */
     MultipleSlotBinaryMessageWithCommunicationsState("Multiple Slot Binary Message With Communications State"),
     /**
-     * Position Report For Long-Range Applications
+     * 27. Position Report For Long-Range Applications
      */
     PositionReportForLongRangeApplications("Position Report For Long-Range Applications");
     private String description;

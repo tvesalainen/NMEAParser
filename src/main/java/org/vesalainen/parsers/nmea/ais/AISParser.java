@@ -659,8 +659,6 @@ protected void airdraught_13(int arg, @ParserContext("aisData") AISObserver aisD
 protected void text_936(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void increment1_11(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void increment2_11(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void txrx_4(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
     public static AISParser newInstance() throws IOException
@@ -2744,22 +2742,22 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 // Type16AssignmentModeCommand
     protected void offset1(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setOffsetA(arg);
+        aisData.setOffset1(arg);
     }
 
     protected void increment1_10(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setIncrementA(arg);
+        aisData.setIncrement1(arg);
     }
 
     protected void offset2(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setOffsetB(arg);
+        aisData.setOffset2(arg);
     }
 
     protected void increment2_10(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setIncrementB(arg);
+        aisData.setIncrement2(arg);
     }
     /**
      * DGNSS correction data
@@ -2798,57 +2796,73 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
     {
         aisData.setMSG22(arg == 1);
     }
-// Type19ExtendedClassBCSPositionReport
-    protected void shipname(int arg, @ParserContext("aisData") AISObserver aisData)
-    {
-    }
 // Type20DataLinkManagementMessage
     protected void number1(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setReservedSlots1(arg);
     }
 
     protected void timeout1(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setTimeout1(arg);
     }
 
     protected void number2(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setReservedSlots2(arg);
     }
 
     protected void timeout2(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setTimeout2(arg);
     }
 
     protected void offset3(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setOffset3(arg);
     }
 
     protected void number3(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setReservedSlots3(arg);
     }
 
     protected void timeout3(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setTimeout3(arg);
     }
 
+    protected void increment1_11(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setIncrement1(arg);
+    }
+    protected void increment2_11(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setIncrement2(arg);
+    }
     protected void increment3(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setIncrement3(arg);
     }
 
     protected void offset4(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setOffset4(arg);
     }
 
     protected void number4(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setReservedSlots4(arg);
     }
 
     protected void timeout4(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setTimeout4(arg);
     }
 
     protected void increment4(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setIncrement4(arg);
     }
 // Type21AidToNavigationReport
     protected void aidType(int arg, @ParserContext("aisData") AISObserver aisData)

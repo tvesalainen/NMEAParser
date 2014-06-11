@@ -47,7 +47,10 @@ public class AisContentHelper
             throw new IllegalArgumentException(ex);
         }
     }
-    
+    public int getBits()
+    {
+        return content.length();
+    }
     public boolean getBoolean(int index)
     {
         return content.charAt(index) == '1';

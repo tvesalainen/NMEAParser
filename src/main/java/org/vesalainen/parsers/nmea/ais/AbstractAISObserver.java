@@ -1119,22 +1119,22 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setOffsetA(int arg)
+    public void setOffset1(int arg)
     {
     }
 
     @Override
-    public void setOffsetB(int arg)
+    public void setOffset2(int arg)
     {
     }
 
     @Override
-    public void setIncrementA(int arg)
+    public void setIncrement1(int arg)
     {
     }
 
     @Override
-    public void setIncrementB(int arg)
+    public void setIncrement2(int arg)
     {
     }
 
@@ -1165,6 +1165,66 @@ public class AbstractAISObserver implements AISObserver
 
     @Override
     public void setAssignedMode(boolean b)
+    {
+    }
+
+    @Override
+    public void setReservedSlots1(int arg)
+    {
+    }
+
+    @Override
+    public void setReservedSlots2(int arg)
+    {
+    }
+
+    @Override
+    public void setReservedSlots3(int arg)
+    {
+    }
+
+    @Override
+    public void setReservedSlots4(int arg)
+    {
+    }
+
+    @Override
+    public void setTimeout1(int arg)
+    {
+    }
+
+    @Override
+    public void setTimeout2(int arg)
+    {
+    }
+
+    @Override
+    public void setTimeout3(int arg)
+    {
+    }
+
+    @Override
+    public void setTimeout4(int arg)
+    {
+    }
+
+    @Override
+    public void setOffset3(int arg)
+    {
+    }
+
+    @Override
+    public void setOffset4(int arg)
+    {
+    }
+
+    @Override
+    public void setIncrement3(int arg)
+    {
+    }
+
+    @Override
+    public void setIncrement4(int arg)
     {
     }
 

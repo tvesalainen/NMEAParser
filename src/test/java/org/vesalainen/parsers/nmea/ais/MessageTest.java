@@ -31,7 +31,6 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
  * TODO Test for 
- * Message 20
  * Message 21
  * Message 22
  * Message 24
@@ -855,6 +854,50 @@ public class MessageTest
             fail(ex.getMessage());
         }
     }
+    @Test
+    public void type20()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,A,D02M4IiOpNfr<`N000000000000,2*4C\r\n",
+                "!AIVDM,1,1,,A,D025bvQP4Dfr<`D01qlT0000001,2*47\r\n",
+                "!AIVDM,1,1,,B,D02200AdhBfp00C6EGe@1qG0R9I,2*0D\r\n",
+                "!AIVDM,1,1,,B,D02VqLQe@Jfp00K6EFAJ>5FUK6E,2*77\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(162, ach.getBits());
+                assertEquals(MessageTypes.DataLinkManagement, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals(ach.getUInt(40, 52), tc.offset1);
+                assertEquals(ach.getUInt(52, 56), tc.number1);
+                assertEquals(ach.getUInt(56, 59), tc.timeout1);
+                assertEquals(ach.getUInt(59, 70), tc.increment1);
+                assertEquals(ach.getUInt(70, 82), tc.offset2);
+                assertEquals(ach.getUInt(82, 86), tc.number2);
+                assertEquals(ach.getUInt(86, 89), tc.timeout2);
+                assertEquals(ach.getUInt(89, 100), tc.increment2);
+                assertEquals(ach.getUInt(100, 112), tc.offset3);
+                assertEquals(ach.getUInt(112, 116), tc.number3);
+                assertEquals(ach.getUInt(116, 119), tc.timeout3);
+                assertEquals(ach.getUInt(119, 130), tc.increment3);
+                assertEquals(ach.getUInt(130, 142), tc.offset4);
+                assertEquals(ach.getUInt(142, 146), tc.number4);
+                assertEquals(ach.getUInt(146, 149), tc.timeout4);
+                assertEquals(ach.getUInt(149, 160), tc.increment4);
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
     public class TC extends AbstractAISObserver
     {
         private boolean ownMessage;
@@ -942,6 +985,90 @@ public class MessageTest
         private int radio=-1;
         private Boolean raim;
         private Boolean dte;
+        private int increment3 = -1;
+        private int increment4 = -1;
+        private int offset3 = -1;
+        private int offset4 = -1;
+        private int timeout1 = -1;
+        private int timeout2 = -1;
+        private int timeout3 = -1;
+        private int timeout4 = -1;
+        private int number1 = -1;
+        private int number2 = -1;
+        private int number3 = -1;
+        private int number4 = -1;
+
+        @Override
+        public void setIncrement4(int arg)
+        {
+            this.increment4 = arg;
+        }
+
+        @Override
+        public void setIncrement3(int arg)
+        {
+            this.increment3 = arg;
+        }
+
+        @Override
+        public void setOffset4(int arg)
+        {
+            this.offset4 = arg;
+        }
+
+        @Override
+        public void setOffset3(int arg)
+        {
+            this.offset3 = arg;
+        }
+
+        @Override
+        public void setTimeout4(int arg)
+        {
+            this.timeout4 = arg;
+        }
+
+        @Override
+        public void setTimeout3(int arg)
+        {
+            this.timeout3 = arg;
+        }
+
+        @Override
+        public void setTimeout2(int arg)
+        {
+            this.timeout2 = arg;
+        }
+
+        @Override
+        public void setTimeout1(int arg)
+        {
+            this.timeout1 = arg;
+        }
+
+        @Override
+        public void setReservedSlots4(int arg)
+        {
+            this.number4 = arg;
+        }
+
+        @Override
+        public void setReservedSlots3(int arg)
+        {
+            this.number3 = arg;
+        }
+
+        @Override
+        public void setReservedSlots2(int arg)
+        {
+            this.number2 = arg;
+        }
+
+        @Override
+        public void setReservedSlots1(int arg)
+        {
+            this.number1 = arg;
+        }
 
         @Override
         public void setDTE(boolean ready)
@@ -998,25 +1125,25 @@ public class MessageTest
         }
 
         @Override
-        public void setIncrementB(int arg)
+        public void setIncrement2(int arg)
         {
             this.increment2 = arg;
         }
 
         @Override
-        public void setIncrementA(int arg)
+        public void setIncrement1(int arg)
         {
             this.increment1 = arg;
         }
 
         @Override
-        public void setOffsetB(int arg)
+        public void setOffset2(int arg)
         {
             this.offset2 = arg;
         }
 
         @Override
-        public void setOffsetA(int arg)
+        public void setOffset1(int arg)
         {
             this.offset1 = arg;
         }
