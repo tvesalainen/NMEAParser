@@ -31,7 +31,6 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
  * TODO Test for 
- * Message 21
  * Message 22
  * Message 24
 
@@ -898,6 +897,62 @@ public class MessageTest
             fail(ex.getMessage());
         }
     }
+    @Test
+    public void type21()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,A,E04<o5AaWdPnaGaP00000000000DPmHl:aCUp00000Qh20,4*64\r\n",
+                "!AIVDM,1,1,,A,E02E36i`60b37a6h2HrS0ph@@@@@6eow?Rekp00003v000,4*6D\r\n",
+                "!AIVDM,1,1,,A,E000`D2S0a7h22h1bV62a0P0000OwP=h;=Q`@1088;SP2P0,2*53\r\n",
+                "!AIVDM,1,1,,B,E028ishVa1Qh:2W2a4S2h@@@@@@OJm<:89QcH00003v0100,2*75\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.AidToNavigationReport, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                assertEquals(NavaidTypes.values()[ach.getUInt(38, 43)], tc.aid_type);
+                assertEquals(ach.getString(43, 163), tc.name);
+                assertEquals(ach.getBoolean(163), tc.accuracy);
+                assertEquals((float)ach.getInt(164, 192)/600000.0 , tc.longitude, Epsilon);
+                assertEquals((float)ach.getInt(192, 219)/600000.0 , tc.latitude, Epsilon);
+                assertEquals(ach.getUInt(219, 228), tc.dimensionToBow);
+                assertEquals(ach.getUInt(228, 237), tc.dimensionToStern);
+                assertEquals(ach.getUInt(237, 243), tc.dimensionToPort);
+                assertEquals(ach.getUInt(243, 249), tc.dimensionToStarboard);
+                assertEquals(EPFDFixTypes.values()[ach.getUInt(249, 253)], tc.epfd);
+                int second = ach.getUInt(253, 259);
+                if (second >= 60)
+                {
+                    second = -1;
+                }
+                else
+                {
+                    assertTrue(second >= 0 && second < 60);
+                }
+                assertEquals(second, tc.second);
+                assertEquals(ach.getBoolean(259), tc.off_position);
+                assertEquals(ach.getBoolean(268), tc.raim);
+                assertEquals(ach.getBoolean(269), tc.virtual_aid);
+                assertEquals(ach.getBoolean(270), tc.assigned);
+                int bits = ach.getBits();
+                if (bits > 272)
+                {
+                    assertEquals(ach.getString(272, bits), tc.name_ext);
+                }
+                assertNull(tc.error);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
     public class TC extends AbstractAISObserver
     {
         private boolean ownMessage;
@@ -997,6 +1052,48 @@ public class MessageTest
         private int number2 = -1;
         private int number3 = -1;
         private int number4 = -1;
+        private NavaidTypes aid_type;
+        private String name;
+        private Boolean accuracy;
+        private Boolean virtual_aid;
+        private Boolean off_position;
+        private String name_ext;
+
+        @Override
+        public void setNameExtension(InputReader reader, int fieldRef)
+        {
+            this.name_ext = AisUtil.makeString(reader.getCharSequence(fieldRef));
+        }
+
+        @Override
+        public void setVirtualAid(boolean virtual)
+        {
+            this.virtual_aid = virtual;
+        }
+
+        @Override
+        public void setOffPosition(boolean off)
+        {
+            this.off_position = off;
+        }
+
+        @Override
+        public void setPositionAccuracy(boolean accuracy)
+        {
+            this.accuracy = accuracy;
+        }
+
+        @Override
+        public void setName(InputReader reader, int fieldRef)
+        {
+            this.name = AisUtil.makeString(reader.getCharSequence(fieldRef));
+        }
+
+        @Override
+        public void setNavaidType(NavaidTypes navaidTypes)
+        {
+            this.aid_type = navaidTypes;
+        }
 
         @Override
         public void setIncrement4(int arg)

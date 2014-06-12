@@ -117,7 +117,7 @@ public class AISTracer implements AISObserver
     }
 
     @Override
-    public void setAccuracy(boolean accuracy)
+    public void setPositionAccuracy(boolean accuracy)
     {
         printer.println("setAccuracy("+accuracy+")");
     }
@@ -1267,6 +1267,18 @@ public class AISTracer implements AISObserver
     public void setIncrement4(int arg)
     {
         printer.println("setIncrement4("+arg+"m)");
+    }
+
+    @Override
+    public void setOffPosition(boolean off)
+    {
+        printer.println("setOffPosition("+off+"m)");
+    }
+
+    @Override
+    public void setVirtualAid(boolean virtual)
+    {
+        printer.println("setVirtualAid("+virtual+"m)");
     }
 
 }

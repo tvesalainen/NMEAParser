@@ -100,7 +100,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setAccuracy(boolean accuracy)
+    public void setPositionAccuracy(boolean accuracy)
     {
         
     }
@@ -1225,6 +1225,16 @@ public class AbstractAISObserver implements AISObserver
 
     @Override
     public void setIncrement4(int arg)
+    {
+    }
+
+    @Override
+    public void setOffPosition(boolean off)
+    {
+    }
+
+    @Override
+    public void setVirtualAid(boolean virtual)
     {
     }
 

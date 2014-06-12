@@ -871,7 +871,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void accuracy(int accuracy, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setAccuracy(accuracy == 1);
+        aisData.setPositionAccuracy(accuracy == 1);
     }
 
     protected void lon_I3_25(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -2872,10 +2872,12 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void offPosition(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setOffPosition(arg == 1);
     }
 
     protected void virtualAid(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setVirtualAid(arg == 1);
     }
 // Type22ChannelManagement
     protected void channelA(int arg, @ParserContext("aisData") AISObserver aisData)

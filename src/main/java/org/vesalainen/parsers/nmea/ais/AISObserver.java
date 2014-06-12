@@ -109,7 +109,7 @@ public interface AISObserver extends Transactional
      * the default, indicates an unaugmented GNSS fix with accuracy &gt; 10m.
      * @param accuracy 
      */
-    void setAccuracy(boolean accuracy);
+    void setPositionAccuracy(boolean accuracy);
     /**
      * Values up to plus or minus 180 degrees, East = positive, West = negative. 
      * @param degrees longitude in degrees
@@ -1091,4 +1091,18 @@ public interface AISObserver extends Transactional
      * @param arg 
      */
     void setIncrement4(int arg);
+    /**
+     * The Off-Position Indicator is for floating Aids-to-Navigation only: false 
+     * means on position; true means off position. 
+     * Only valid if UTC second is equal to or below 59.
+     * @param off 
+     */
+    void setOffPosition(boolean off);
+    /**
+     * The Virtual Aid flag is interpreted as follows: false = default = real 
+     * Aid to Navigation at indicated position; true = virtual Aid to Navigation 
+     * simulated by nearby AIS station.
+     * @param virtual 
+     */
+    void setVirtualAid(boolean virtual);
 }
