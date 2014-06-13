@@ -23,6 +23,7 @@ import org.vesalainen.parser.util.Recoverable;
 
 /**
  * @author Timo Vesalainen
+ * @deprecated 
  */
 public class SwitchingReader extends Reader implements Recoverable
 {

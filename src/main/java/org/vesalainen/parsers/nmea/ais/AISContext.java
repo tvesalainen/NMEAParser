@@ -31,15 +31,14 @@ public class AISContext extends UnparallelWorkflow<Integer>
     private final AISObserver aisData;
     private final AISParser aisParser;
     private final Reader in;
-    private final SwitchingReader switchingInputStream;
     private int last;
+    private int numberOfSentences;
 
     public AISContext(Reader in, AISObserver aisData) throws IOException
     {
         super(-1);
         this.aisData = aisData;
         this.in = in;
-        switchingInputStream = new SwitchingReader(in, this);
         aisParser = AISParser.newInstance();
     }
     
@@ -50,7 +49,12 @@ public class AISContext extends UnparallelWorkflow<Integer>
 
     public void setNumberOfMessages(int numberOfMessages)
     {
-        switchingInputStream.setNumberOfSentences(numberOfMessages);
+        this.numberOfSentences = numberOfMessages;
+    }
+
+    boolean isLastMessage()
+    {
+        return --numberOfSentences == 0;
     }
 
     public int getLast()
@@ -69,7 +73,7 @@ public class AISContext extends UnparallelWorkflow<Integer>
         System.err.println("Message "+key);
         return new AISThread(key, this);
     }
-    public class AISThread implements Runnable
+    class AISThread implements Runnable
     {
         private final int message;
         private final AISContext context;
@@ -79,7 +83,7 @@ public class AISContext extends UnparallelWorkflow<Integer>
         {
             this.message = message;
             this.context = context;
-            aisReader = new AISReader(switchingInputStream);
+            aisReader = new AISReader(in, context);
         }
         
         @Override
@@ -93,14 +97,14 @@ public class AISContext extends UnparallelWorkflow<Integer>
                 case 1:
                 case 2:
                 case 3:
-                    aisParser.parse123Messages(aisReader, aisData);
+                    aisParser.parse123Messages(aisReader, aisData, context);
                     break;
                 default:
                     String methodName = "parse"+message+"Messages";
                     try
                     {
-                        Method parser = aisParser.getClass().getMethod(methodName, Reader.class, AISObserver.class);
-                        parser.invoke(aisParser, aisReader, aisData);
+                        Method parser = aisParser.getClass().getMethod(methodName, Reader.class, AISObserver.class, AISContext.class);
+                        parser.invoke(aisParser, aisReader, aisData, context);
                     }
                     catch (NoSuchMethodException  ex)
                     {

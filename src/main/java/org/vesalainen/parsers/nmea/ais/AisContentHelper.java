@@ -26,26 +26,10 @@ import java.io.StringReader;
  */
 public class AisContentHelper
 {
-    private String content;
+    private final String content;
     public AisContentHelper(String nmea)
     {
-        try
-        {
-            String ais = getAisData(nmea);
-            AISReader ar = new AISReader(new StringReader(ais));
-            int cc = ar.read();
-            StringBuilder sb = new StringBuilder();
-            while (cc != -1 && cc != '\n')
-            {
-                sb.append((char)cc);
-                cc = ar.read();
-            }
-            content = sb.toString();
-        }
-        catch (IOException ex)
-        {
-            throw new IllegalArgumentException(ex);
-        }
+        content = getAisData(nmea);
     }
     public int getBits()
     {
@@ -78,19 +62,6 @@ public class AisContentHelper
             return result + (-1<<l);
         }
     }
-    public static void dump(String nmea) throws IOException
-    {
-        String ais = getAisData(nmea);
-        AISReader ar = new AISReader(new StringReader(ais));
-        int cc = ar.read();
-        int count = 0;
-        while (cc != -1 && cc != '\n')
-        {
-            System.err.println(count+": "+(char)cc);
-            cc = ar.read();
-            count++;
-        }
-    }
     /**
      * Return's ais content of nmea sentence(s) with '\\n' suffix
      * @param nmea
@@ -103,10 +74,43 @@ public class AisContentHelper
         for (String line : lines)
         {
             String[] split = line.split(",");
-            sb.append(split[5]);
+            sb.append(getAisBinary(split[5]));
+            int pad = split[6].charAt(0)-'0';
+            sb.setLength(sb.length()-pad);
         }
         sb.append('\n');
         return sb.toString();
     }
-
+    public static String getAisBinary(String str)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int ii=0;ii<str.length();ii++)
+        {
+            int cc = str.charAt(ii);
+            if ((cc >= '0' && cc <= 'W') || (cc >= '`' && cc <= 'w'))
+            {
+                cc -= '0';
+                if (cc > 40)
+                {
+                    cc -= 8;
+                }
+            }
+            else
+            {
+                throw new IllegalArgumentException(str);
+            }
+            for (int bit=5;bit>=0;bit--)
+            {
+                if ((cc & (1<<bit)) == 0)
+                {
+                    sb.append('0');
+                }
+                else
+                {
+                    sb.append('1');
+                }
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.CheckedInputStream;
 import java.util.zip.Checksum;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
@@ -36,7 +35,6 @@ import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parser.util.Recoverable;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
 import org.vesalainen.parsers.nmea.ais.AISParser;
@@ -57,8 +55,8 @@ import org.vesalainen.parsers.nmea.ais.VesselMonitor;
     @Rule(left = "statement", value = "nmeaStatement"),
     @Rule(left = "nmeaStatement", value = "'\\$' talkerId nmeaSentence '[\\,]*\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType ('[\\,]' proprietaryData)* '\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "aivdm aisPrefix '[0-5]+\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "aivdo aisPrefix '[0-5]+\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "aivdm aisPrefix '\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "aivdo aisPrefix '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaSentence", value = "'AAM' c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
     @Rule(left = "nmeaSentence", value = "'ALM' c totalNumberOfMessages c messageNumber c satellitePRNNumber c gpsWeekNumber c svHealth c eccentricity c almanacReferenceTime c inclinationAngle c rateOfRightAscension c rootOfSemiMajorAxis c argumentOfPerigee c longitudeOfAscensionNode c meanAnomaly c f0ClockParameter c f1ClockParameter"),
     @Rule(left = "nmeaSentence", value = "'APA' c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),

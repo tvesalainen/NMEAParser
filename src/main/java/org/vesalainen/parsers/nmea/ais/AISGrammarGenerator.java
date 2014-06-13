@@ -277,7 +277,7 @@ public abstract class AISGrammarGenerator
                         {
                             types.add(constant);
                             grammar.addRule("message", constant);
-                            grammar.addRule(constant+"Messages", "("+constant+"Content '[01]{0,5}\n')+");
+                            grammar.addRule(constant+"Messages", "("+constant+"Content contentEnd)+");
                             terminals.put(constant, expression);
                             grammar.addTerminal(
                                     getReducer(reducer, javaType, AISObserver.class, AISContext.class), 

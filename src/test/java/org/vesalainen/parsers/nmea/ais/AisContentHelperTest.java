@@ -58,7 +58,7 @@ public class AisContentHelperTest
     /**
      * Test of getAisData method, of class AisContentHelper.
      */
-    @Test
+    //@Test
     public void testGetAisData()
     {
         System.out.println("getAisData");
@@ -76,17 +76,6 @@ public class AisContentHelperTest
                 ;
         String result = AisContentHelper.getAisData(nmea);
         assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of dump method, of class AisContentHelper.
-     */
-    @Test
-    public void testDump() throws Exception
-    {
-        System.out.println("dump");
-        String nmea = "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23";
-        AisContentHelper.dump(nmea);
     }
 
     /**

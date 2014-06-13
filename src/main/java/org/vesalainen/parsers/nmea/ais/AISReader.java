@@ -27,52 +27,16 @@ import org.vesalainen.parser.util.Recoverable;
  */
 public class AISReader extends Reader implements Recoverable
 {
-    private Reader in;
+    private final Reader in;
     private int cc;
     private int bit;
-    
-    public AISReader(Reader in)
+    private final AISContext context;
+    private boolean nextSentence;
+
+    AISReader(Reader in, AISContext context)
     {
         this.in = in;
-    }
-
-    @Override
-    public int read() throws IOException
-    {
-        if (bit == 0)
-        {
-            cc = in.read();
-            if ((cc >= '0' && cc <= 'W') || (cc >= '`' && cc <= 'w'))
-            {
-                if (cc == -1)
-                {
-                    throw new IOException("unexpected EOF in AIS Data");
-                }
-                cc -= '0';
-                if (cc > 40)
-                {
-                    cc -= 8;
-                }
-                bit = 6;
-            }
-            else
-            {
-                if (cc != '\n')
-                {
-                    throw new IOException(cc+" unexpected");
-                }
-                return cc;
-            }
-        }
-        bit--;
-        if ((cc & (1<<bit)) == 0)
-        {
-            return '0';
-        }
-        else
-        {
-            return '1';
-        }
+        this.context = context;
     }
 
     @Override
@@ -89,14 +53,64 @@ public class AISReader extends Reader implements Recoverable
     @Override
     public int read(char[] chars, int off, int len) throws IOException
     {
-        // Because of thread switching, we cannot use bulk reading
-        int rc = read();
-        if (rc == -1)
+        if (nextSentence)
         {
-            return -1;
+            context.switchTo(-1);
+            nextSentence = false;
         }
-        chars[off] = (char) rc;
-        return 1;
+        int lim = off+len;
+        for (int ii=off;ii<lim;ii++)
+        {
+            if (bit == 0)
+            {
+                cc = in.read();
+                if ((cc >= '0' && cc <= 'W') || (cc >= '`' && cc <= 'w'))
+                {
+                    cc -= '0';
+                    if (cc > 40)
+                    {
+                        cc -= 8;
+                    }
+                    bit = 6;
+                }
+                else
+                {
+                    if (cc == ',')
+                    {
+                        nextSentence = true;
+                        int p = in.read();
+                        if (p<'0' || p>'9')
+                        {
+                            throw new IOException("expected padding, got "+(char)p);
+                        }
+                        int padding = p-'0';
+                        if (context.isLastMessage())
+                        {
+                            chars[ii-padding] = '\n';
+                            return ii-padding+1;
+                        }
+                        else
+                        {
+                            return ii-padding;
+                        }
+                    }
+                    else
+                    {
+                        throw new IOException("expected (,) got "+(char)cc);
+                    }
+                }
+            }
+            bit--;
+            if ((cc & (1<<bit)) == 0)
+            {
+                chars[ii] = '0';
+            }
+            else
+            {
+                chars[ii] = '1';
+            }
+        }
+        return lim;
     }
 
     @Override
