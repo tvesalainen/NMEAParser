@@ -29,6 +29,10 @@ public class NMEAChecksum implements Checksum
     @Override
     public void update(int b)
     {
+        doUpdate(b);
+    }
+    private void doUpdate(int b)
+    {
         if (b == '*')
         {
             on = false;
@@ -49,7 +53,7 @@ public class NMEAChecksum implements Checksum
     {
         for (int ii=0;ii<len;ii++)
         {
-            update(b[ii+off]);
+            doUpdate(b[ii+off]);
         }
     }
 

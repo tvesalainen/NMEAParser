@@ -7,6 +7,8 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
 import org.vesalainen.parsers.nmea.ais.AISTracer;
 
 /**
@@ -24,10 +26,11 @@ public class UDPTest
         try
         {
             NMEAParser parser = NMEAParser.newInstance();
-            DatagramInputStream dis = new DatagramInputStream(10110);
+            DatagramChannel dc = DatagramChannel.open();
+            dc.bind(new InetSocketAddress(10110));
             NMEATracer nmeaTracer = new NMEATracer();
             AISTracer aisTracer = new AISTracer();
-            parser.parse(dis, nmeaTracer, aisTracer);
+            parser.parse(dc, nmeaTracer, aisTracer);
         }
         catch (IOException ex)
         {

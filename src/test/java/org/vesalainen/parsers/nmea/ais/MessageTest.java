@@ -870,7 +870,7 @@ public class MessageTest
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
                 AisContentHelper ach = new AisContentHelper(nmea);
-                assertEquals(162, ach.getBits());
+                assertEquals(160, ach.getBits());
                 assertEquals(MessageTypes.DataLinkManagement, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals(ach.getUInt(40, 52), tc.offset1);

@@ -59,6 +59,7 @@ public class AISInputStreamTest
     /**
      * Test of read method, of class AISReader.
      */
+    /*
     @Test
     public void testRead() throws Exception
     {
@@ -75,5 +76,6 @@ public class AISInputStreamTest
         String expResult = "000001000100101101010111001011110111010000000000000011000100110111001000111011101100001100011100001001110001001010101001001011100111010110001110000000000110000010010100";
         assertEquals(expResult, result.toString());
     }
+    */
 
 }

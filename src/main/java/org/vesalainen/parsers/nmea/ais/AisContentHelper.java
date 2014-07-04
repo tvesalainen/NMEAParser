@@ -78,7 +78,6 @@ public class AisContentHelper
             int pad = split[6].charAt(0)-'0';
             sb.setLength(sb.length()-pad);
         }
-        sb.append('\n');
         return sb.toString();
     }
     public static String getAisBinary(String str)

@@ -21,6 +21,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -70,13 +71,12 @@ public class SampleT
     public void testSample() throws Exception
     {
         System.out.println("sample");
-        InputStream in = SampleT.class.getClassLoader().getResourceAsStream("nmea-sample");
-        IS is = new IS(in);
+        URL url = SampleT.class.getClassLoader().getResource("nmea-sample");
         NMEAParser parser = NMEAParser.newInstance();
         try
         {
             AD ad = new AD(out);
-            parser.parse(is, new AbstractNMEAObserver(), ad);
+            parser.parse(url, new AbstractNMEAObserver(), ad);
             int rows = ad.getRollbacks()+ad.getCommits();
             System.err.println("rows="+rows);
             System.err.println("Latitude "+ad.getLatitudeStats().getMin()+" - "+ad.getLatitudeStats().getMax());
