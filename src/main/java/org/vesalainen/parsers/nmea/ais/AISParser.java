@@ -666,118 +666,118 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
     {
         return (AISParser) GenClassFactory.getGenInstance(AISParser.class);
     }
-    @ParseMethod(start = "messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "messages", size=6, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
 
-    @ParseMethod(start = "1-3Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "1-3Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse123Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "4Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "4Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse4Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "5Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "5Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse5Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "6Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "6Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse6Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "7Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "7Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse7Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "8Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "8Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse8Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "9Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "9Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse9Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "10Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "10Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse10Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "11Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "11Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse11Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "12Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "12Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse12Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "14Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "14Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse14Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "15Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "15Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse15Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "16Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "16Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse16Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "17Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "17Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse17Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "18Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "18Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse18Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "19Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "19Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse19Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "20Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "20Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse20Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "21Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "21Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse21Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "22Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "22Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse22Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "23Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "23Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse23Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "24Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "24Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse24Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext);
-    @ParseMethod(start = "27Messages", size=1024, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "27Messages", size=256, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse27Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,

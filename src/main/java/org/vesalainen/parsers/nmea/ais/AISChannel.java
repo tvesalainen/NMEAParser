@@ -111,7 +111,7 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
                         }
                         else
                         {
-                            throw new IOException("expected (,) got "+(char)cc);
+                            throw new IOException("expected ',' got '"+(char)cc+"'");
                         }
                     }
                 }

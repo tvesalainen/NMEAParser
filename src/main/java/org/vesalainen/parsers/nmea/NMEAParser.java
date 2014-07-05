@@ -1126,7 +1126,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         }
         finally
         {
-            aisContext.stopThreads();
+            aisContext.waitAndStopThreads();
         }
     }
     /**
@@ -1156,7 +1156,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         }
         finally
         {
-            aisContext.stopThreads();
+            aisContext.waitAndStopThreads();
         }
     }
     /**
@@ -1186,7 +1186,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         }
         finally
         {
-            aisContext.stopThreads();
+            aisContext.waitAndStopThreads();
         }
     }
     @ParseMethod(start = "statements", size = 1024, charSet = "US-ASCII",
