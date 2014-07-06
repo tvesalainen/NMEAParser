@@ -1105,4 +1105,63 @@ public interface AISObserver extends Transactional
      * @param virtual 
      */
     void setVirtualAid(boolean virtual);
+    /**
+     * Channel number
+     * @param arg 
+     */
+    void setChannelA(int arg);
+    /**
+     * Channel number
+     */
+    void setChannelB(int arg);
+    /**
+     * Transmit/receive mode
+     * @param transmitModes 
+     */
+    void setTransmitMode(TransmitModes transmitModes);
+    /**
+     * Power
+     * @param high 
+     */
+    void setPower(boolean high);
+    /**
+     * NE Longitude
+     * @param f 
+     */
+    void setNELongitude(float f);
+    /**
+     * NE Latitude
+     * @param f 
+     */
+    void setSWLongitude(float f);
+    /**
+     * SW Longitude
+     * @param f 
+     */
+    void setNELatitude(float f);
+    /**
+     * SW Latitude
+     * @param f 
+     */
+    void setSWLatitude(float f);
+    /**
+     * false=Broadcast, true=Addressed
+     * @param addressed 
+     */
+    void setAddressed(boolean addressed);
+    /**
+     * false=Default, true=12.5kHz
+     * @param band 
+     */
+    void setChannelABand(boolean band);
+    /**
+     * false=Default, true=12.5kHz
+     * @param band 
+     */
+    void setChannelBBand(boolean band);
+    /**
+     * Size of transitional zone
+     * @param arg 
+     */
+    void setZoneSize(int arg);
 }

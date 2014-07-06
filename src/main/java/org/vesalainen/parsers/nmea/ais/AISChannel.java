@@ -88,12 +88,21 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
                             try
                             {
                                 int p = in.read();
-                                if (p<'0' || p>'9')
+                                if (p<'0' || p>'5')
                                 {
                                     throw new IOException("expected padding, got "+(char)p);
                                 }
                                 int padding = p-'0';
-                                bb.position(bb.position()-padding);
+                                if (padding <= bb.position())
+                                {
+                                    bb.position(bb.position()-padding);
+                                }
+                                else
+                                {
+                                    padding -= bb.position();
+                                    bb = dsts[ii-1];
+                                    bb.position(bb.position()-padding);
+                                }
                                 if (context.isLastMessage())
                                 {
                                     bb.put((byte)'\n');

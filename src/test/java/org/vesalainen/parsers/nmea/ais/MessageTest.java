@@ -16,7 +16,6 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import java.io.IOException;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -31,7 +30,6 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
  * TODO Test for 
- * Message 22
  * Message 24
 
  * @author Timo Vesalainen
@@ -40,7 +38,7 @@ public class MessageTest
 {
     private final NMEAParser parser;
     private final MMSIParser mmsiParser;
-    private double Epsilon = 0.00001;
+    private final double Epsilon = 0.00001;
 
     public MessageTest()
     {
@@ -124,7 +122,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -155,7 +153,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -207,7 +205,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -233,7 +231,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -559,7 +557,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -602,7 +600,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -629,7 +627,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -669,7 +667,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -699,7 +697,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -728,7 +726,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -787,7 +785,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -848,7 +846,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -892,7 +890,7 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }
@@ -948,7 +946,34 @@ public class MessageTest
                 assertNull(tc.error);
             }
         }
-        catch (IOException ex)
+        catch (Exception ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type22()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,B,F030p?j2N2P73FiiNesU3FR10000,0*32\r\n",
+                "!AIVDM,1,1,,B,F030p2j2N2P6Ubib@=4q35b1P000,0*61\r\n",
+                "!AIVDM,1,1,,A,F030owj2N2P6Ubib@=4q35b10000,0*58\r\n",
+                "!AIVDM,1,1,,B,F030pCB2N2P5iQAoR;H6SQ01P000,0*68\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.ChannelManagement, tc.messageType);
+                assertEquals(ach.getUInt(40, 52), tc.channel_a);
+                assertNull(tc.error);
+            }
+        }
+        catch (Exception ex)
         {
             fail(ex.getMessage());
         }

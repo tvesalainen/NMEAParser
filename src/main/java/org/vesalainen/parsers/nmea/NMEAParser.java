@@ -17,6 +17,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +45,7 @@ import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
 /**
  * @author Timo Vesalainen
  * @see <a href="http://catb.org/gpsd/NMEA.html">NMEA Revealed</a>
- * @see <a href="http://gpsd.berlios.de/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
+ * @see <a href="http://catb.org/gpsd/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
  * @see <a href="doc-files/NMEAParser-statements.html#BNF">BNF Syntax for NMEA</a>
  */
 @GenClassname("org.vesalainen.parsers.nmea.NMEAParserImpl")
@@ -965,6 +966,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     protected void checksum(
             char x1,
             char x2,
+            @ParserContext(ParserConstants.InputReader) InputReader input,
             @ParserContext("clock") Clock clock,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
@@ -975,14 +977,14 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         if (sum != checksum.getValue())
         {
             clock.rollback();
-            String reason = "checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
+            String reason = input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
             data.rollback(reason);
             aisData.rollback(reason);
         }
         else
         {
             clock.commit();
-            String reason = Integer.toHexString(sum);
+            String reason = input.getLineNumber()+": "+Integer.toHexString(sum);
             data.commit(reason);
             aisData.commit(reason);
         }
@@ -1101,12 +1103,13 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     }
     /**
      * Parse NMEA
-     * @param url
+     * @param <I>
+     * @param input
      * @param data NMEAObserver can be null
      * @param aisData AISObserver can be null
      * @throws IOException 
      */
-    public void parse(URL url, NMEAObserver data, AISObserver aisData) throws IOException
+    public <I> void parse(I input, NMEAObserver data, AISObserver aisData) throws IOException
     {
         if (data == null)
         {
@@ -1122,67 +1125,39 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         AISContext aisContext = new AISContext(aisData);
         try
         {
-            parse(url, clock, data, aisContext);
-        }
-        finally
-        {
-            aisContext.waitAndStopThreads();
-        }
-    }
-    /**
-     * Parse NMEA
-     * @param text
-     * @param data NMEAObserver can be null
-     * @param aisData AISObserver can be null
-     * @throws IOException 
-     */
-    public void parse(String text, NMEAObserver data, AISObserver aisData) throws IOException
-    {
-        if (data == null)
-        {
-            data = new AbstractNMEAObserver();
-        }
-        if (aisData == null)
-        {
-            aisData = new AbstractAISObserver();
-        }
-        Clock clock = new GPSClock();
-        data.setClock(clock);
-        aisData.setClock(clock);
-        AISContext aisContext = new AISContext(aisData);
-        try
-        {
-            parse(text, clock, data, aisContext);
-        }
-        finally
-        {
-            aisContext.waitAndStopThreads();
-        }
-    }
-    /**
-     * Parse NMEA
-     * @param channel
-     * @param data NMEAObserver can be null
-     * @param aisData AISObserver can be null
-     * @throws IOException 
-     */
-    public void parse(ScatteringByteChannel channel, NMEAObserver data, AISObserver aisData) throws IOException
-    {
-        if (data == null)
-        {
-            data = new AbstractNMEAObserver();
-        }
-        if (aisData == null)
-        {
-            aisData = new AbstractAISObserver();
-        }
-        Clock clock = new GPSClock();
-        data.setClock(clock);
-        aisData.setClock(clock);
-        AISContext aisContext = new AISContext(aisData);
-        try
-        {
-            parse(channel, clock, data, aisContext);
+            if (input instanceof ScatteringByteChannel)
+            {
+                ScatteringByteChannel sbc = (ScatteringByteChannel) input;
+                parse(sbc, clock, data, aisContext);
+            }
+            else
+            {
+                if (input instanceof URL)
+                {
+                    URL url = (URL) input;
+                    parse(url, clock, data, aisContext);
+                }
+                else
+                {
+                    if (input instanceof String)
+                    {
+                        String str = (String) input;
+                        parse(str, clock, data, aisContext);
+                    }
+                    else
+                    {
+                        if (input instanceof InputStream)
+                        {
+                            InputStream is = (InputStream) input;
+                            parse(is, clock, data, aisContext);
+                        }
+                        else
+                        {
+                            throw new UnsupportedOperationException(input+" not supported as input");
+                        }
+                    }
+                }
+            }
         }
         finally
         {
@@ -1214,6 +1189,16 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     )
     protected abstract void parse(
             String text,
+            @ParserContext("clock") Clock clock,
+            @ParserContext("data") NMEAObserver data,
+            @ParserContext("aisContext") AISContext aisContext
+            ) throws IOException;
+
+    @ParseMethod(start = "statements", size = 8192, charSet = "US-ASCII",
+            features={WideIndex, UseChecksum}
+    )
+    protected abstract void parse(
+            InputStream is,
             @ParserContext("clock") Clock clock,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext

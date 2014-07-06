@@ -16,7 +16,6 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
