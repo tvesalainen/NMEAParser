@@ -1140,145 +1140,217 @@ public class AISTracer implements AISObserver
     @Override
     public void setOffset1(int arg)
     {
-        printer.println("setOffsetA("+arg+"m)");
+        printer.println("setOffsetA("+arg+")");
     }
 
     @Override
     public void setOffset2(int arg)
     {
-        printer.println("setOffsetB("+arg+"m)");
+        printer.println("setOffsetB("+arg+")");
     }
 
     @Override
     public void setIncrement1(int arg)
     {
-        printer.println("setIncrementA("+arg+"m)");
+        printer.println("setIncrementA("+arg+")");
     }
 
     @Override
     public void setIncrement2(int arg)
     {
-        printer.println("setIncrementB("+arg+"m)");
+        printer.println("setIncrementB("+arg+")");
     }
 
     @Override
     public void setCSUnit(boolean cs)
     {
-        printer.println("setCSUnit("+cs+"m)");
+        printer.println("setCSUnit("+cs+")");
     }
 
     @Override
     public void setDisplay(boolean hasDisplay)
     {
-        printer.println("setDisplay("+hasDisplay+"m)");
+        printer.println("setDisplay("+hasDisplay+")");
     }
 
     @Override
     public void setDSC(boolean dsc)
     {
-        printer.println("setDSC("+dsc+"m)");
+        printer.println("setDSC("+dsc+")");
     }
 
     @Override
     public void setBand(boolean flag)
     {
-        printer.println("setBand("+flag+"m)");
+        printer.println("setBand("+flag+")");
     }
 
     @Override
     public void setMSG22(boolean b)
     {
-        printer.println("setMSG22("+b+"m)");
+        printer.println("setMSG22("+b+")");
     }
 
     @Override
     public void setAssignedMode(boolean b)
     {
-        printer.println("setAssignedMode("+b+"m)");
+        printer.println("setAssignedMode("+b+")");
     }
 
     @Override
     public void setReservedSlots1(int arg)
     {
-        printer.println("setReservedSlots1("+arg+"m)");
+        printer.println("setReservedSlots1("+arg+")");
     }
 
     @Override
     public void setReservedSlots2(int arg)
     {
-        printer.println("setReservedSlots2("+arg+"m)");
+        printer.println("setReservedSlots2("+arg+")");
     }
 
     @Override
     public void setReservedSlots3(int arg)
     {
-        printer.println("setReservedSlots3("+arg+"m)");
+        printer.println("setReservedSlots3("+arg+")");
     }
 
     @Override
     public void setReservedSlots4(int arg)
     {
-        printer.println("setReservedSlots4("+arg+"m)");
+        printer.println("setReservedSlots4("+arg+")");
     }
 
     @Override
     public void setTimeout1(int arg)
     {
-        printer.println("setTimeout1("+arg+"m)");
+        printer.println("setTimeout1("+arg+")");
     }
 
     @Override
     public void setTimeout2(int arg)
     {
-        printer.println("setTimeout2("+arg+"m)");
+        printer.println("setTimeout2("+arg+")");
     }
 
     @Override
     public void setTimeout3(int arg)
     {
-        printer.println("setTimeout3("+arg+"m)");
+        printer.println("setTimeout3("+arg+")");
     }
 
     @Override
     public void setTimeout4(int arg)
     {
-        printer.println("setTimeout4("+arg+"m)");
+        printer.println("setTimeout4("+arg+")");
     }
 
     @Override
     public void setOffset3(int arg)
     {
-        printer.println("setOffset3("+arg+"m)");
+        printer.println("setOffset3("+arg+")");
     }
 
     @Override
     public void setOffset4(int arg)
     {
-        printer.println("setOffset4("+arg+"m)");
+        printer.println("setOffset4("+arg+")");
     }
 
     @Override
     public void setIncrement3(int arg)
     {
-        printer.println("setIncrement3("+arg+"m)");
+        printer.println("setIncrement3("+arg+")");
     }
 
     @Override
     public void setIncrement4(int arg)
     {
-        printer.println("setIncrement4("+arg+"m)");
+        printer.println("setIncrement4("+arg+")");
     }
 
     @Override
     public void setOffPosition(boolean off)
     {
-        printer.println("setOffPosition("+off+"m)");
+        printer.println("setOffPosition("+off+")");
     }
 
     @Override
     public void setVirtualAid(boolean virtual)
     {
-        printer.println("setVirtualAid("+virtual+"m)");
+        printer.println("setVirtualAid("+virtual+")");
+    }
+
+    @Override
+    public void setChannelA(int arg)
+    {
+        printer.println("setChannelA("+arg+")");
+    }
+
+    @Override
+    public void setChannelB(int arg)
+    {
+        printer.println("setChannelB("+arg+")");
+    }
+
+    @Override
+    public void setTransceiverMode(TransceiverModes transmitMode)
+    {
+        printer.println("setTransmitMode("+transmitMode+")");
+    }
+
+    @Override
+    public void setPower(boolean high)
+    {
+        printer.println("setPower("+high+")");
+    }
+
+    @Override
+    public void setNELongitude(float f)
+    {
+        printer.println("setNELongitude("+f+")");
+    }
+
+    @Override
+    public void setSWLongitude(float f)
+    {
+        printer.println("setSWLongitude("+f+")");
+    }
+
+    @Override
+    public void setNELatitude(float f)
+    {
+        printer.println("setNELatitude("+f+")");
+    }
+
+    @Override
+    public void setSWLatitude(float f)
+    {
+        printer.println("setSWLatitude("+f+")");
+    }
+
+    @Override
+    public void setAddressed(boolean addressed)
+    {
+        printer.println("setAddressed("+addressed+")");
+    }
+
+    @Override
+    public void setChannelABand(boolean band)
+    {
+        printer.println("setChannelABand("+band+")");
+    }
+
+    @Override
+    public void setChannelBBand(boolean band)
+    {
+        printer.println("setChannelBBand("+band+")");
+    }
+
+    @Override
+    public void setZoneSize(int arg)
+    {
+        printer.println("setZoneSize("+arg+")");
     }
 
 }

@@ -91,7 +91,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="swperiod2", expression="[01]{5}", doc="Second Swell Period", reducer="org.vesalainen.parsers.nmea.ais.AISParser swperiod2(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="quiet", expression="[01]{4}", doc="Quiet Time", reducer="org.vesalainen.parsers.nmea.ais.AISParser quiet(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="nday", expression="[01]{5}", doc="ETA day (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser nday(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="dest2", expression="[01]{30}", doc="MMSI2", reducer="org.vesalainen.parsers.nmea.ais.AISParser dest2(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="rwinddir", expression="[01]{7}", doc="Relative Wind Direction", reducer="org.vesalainen.parsers.nmea.ais.AISParser rwinddir(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="right", expression="[01]{9}", doc="Right boundary", reducer="org.vesalainen.parsers.nmea.ais.AISParser right(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="waveperiod", expression="[01]{6}", doc="Wave period", reducer="org.vesalainen.parsers.nmea.ais.AISParser waveperiod(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -99,7 +98,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="ata_state", expression="[01]{2}", doc="Automatic Tracking Aid", reducer="org.vesalainen.parsers.nmea.ais.AISParser ataState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="pressure_9", expression="[01]{9}", doc="Air Pressure", reducer="org.vesalainen.parsers.nmea.ais.AISParser pressure_9(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="ecdisb_state", expression="[01]{2}", doc="ECDIS Back-up", reducer="org.vesalainen.parsers.nmea.ais.AISParser ecdisbState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="dest1", expression="[01]{30}", doc="MMSI1", reducer="org.vesalainen.parsers.nmea.ais.AISParser dest1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="wdir", expression="[01]{9}", doc="Wind Direction", reducer="org.vesalainen.parsers.nmea.ais.AISParser wdir(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="lat_I4_17", expression="[01]{17}", doc="Latitude", reducer="org.vesalainen.parsers.nmea.ais.AISParser lat_I4_17(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=-2)
 ,@Terminal(left="destination_120", expression="[01]{120}", doc="Destination", reducer="org.vesalainen.parsers.nmea.ais.AISParser destination_120(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -327,6 +325,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="text_968", expression="[01]{968}", doc="Text", reducer="org.vesalainen.parsers.nmea.ais.AISParser text_968(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="berth_name", expression="[01]{120}", doc="Name of Berth", reducer="org.vesalainen.parsers.nmea.ais.AISParser berthName(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="tday", expression="[01]{5}", doc="To day (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser tday(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="box_dest", expression="[01]{70}", doc="BoxOrDest", reducer="org.vesalainen.parsers.nmea.ais.AISParser boxDest(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="crane", expression="[01]{2}", doc="Crane(s)", reducer="org.vesalainen.parsers.nmea.ais.AISParser crane(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="steer_state", expression="[01]{2}", doc="Emergency steering gear", reducer="org.vesalainen.parsers.nmea.ais.AISParser steerState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="tmonth", expression="[01]{4}", doc="To month (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser tmonth(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -425,8 +424,8 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="water", expression="[01]{2}", doc="Potable water", reducer="org.vesalainen.parsers.nmea.ais.AISParser water(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="icestate", expression="[01]{5}", doc="Ice Situation", reducer="org.vesalainen.parsers.nmea.ais.AISParser icestate(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="iceclass", expression="[01]{4}", doc="Ice Class", reducer="org.vesalainen.parsers.nmea.ais.AISParser iceclass(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="addressed", expression="[01]{1}", doc="Addressed", reducer="org.vesalainen.parsers.nmea.ais.AISParser addressed(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="sw_lat", expression="[01]{17}", doc="SW Latitude", reducer="org.vesalainen.parsers.nmea.ais.AISParser swLat_I1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=-2)
-,@Terminal(left="addressed", expression="[01]{1}", doc="Addressed", reducer="org.vesalainen.parsers.nmea.ais.AISParser addressed(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="msg22", expression="[01]{1}", doc="Message 22 flag", reducer="org.vesalainen.parsers.nmea.ais.AISParser msg22(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="bnwas_state", expression="[01]{2}", doc="BNWAS", reducer="org.vesalainen.parsers.nmea.ais.AISParser bnwasState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="name_120", expression="[01]{120}", doc="Name", reducer="org.vesalainen.parsers.nmea.ais.AISParser name_120(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -574,6 +573,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="EnvironmentalMessageHeader", value={"repeat", "mmsi", "seqno", "dac001", "fid26", "(sensor day_5 hour minute_6 site payload)+"})
 ,@Rule(left="VTSGeneratedSyntheticTargets", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid17", "(idtype id '[01]{4}' lat_I3_24 lon_I3_25 course_9 second speed_10)+"})
 ,@Rule(left="18Messages", value={"(18Content '\n')+"})
+,@Rule(left="Type22ChannelManagement", value={"repeat", "mmsi", "'[01]{2}'", "channel_a", "channel_b", "txrx_4", "power", "box_dest", "addressed", "band_a", "band_b", "zonesize", "'[01]{23}'"})
 ,@Rule(left="16Messages", value={"(16Content '\n')+"})
 ,@Rule(left="IMO289ClearanceTimeToEnterPort", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid18", "linkage", "month", "day_5", "hour", "minute_6", "portname", "destination_30", "lon_I3_25", "lat_I3_24", "'[01]{43}'"})
 ,@Rule(left="Polygon", value={"shape4", "scale", "(bearing distance)+"})
@@ -588,7 +588,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="shape", value={"Rectangle"})
 ,@Rule(left="Type11UTCDateResponse", value={"repeat", "mmsi", "year", "month", "day_5", "hour", "minute_6", "second", "accuracy", "lon_I4_28", "lat_I4_27", "epfd", "'[01]{10}'", "raim", "radio_19"})
 ,@Rule(left="WeatherObservationReportFromShipNonWMOVariant", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid21", "wmo0", "location", "lon_I3_25", "lat_I3_24", "day_5", "hour", "minute_6", "weather_4", "vislimit", "visibility_U1_7", "humidity", "wspeed", "wdir", "pressure_9", "pressuretend_4", "airtemp_U1_11", "watertemp", "waveperiod", "waveheight", "wavedir", "swellheight", "swelldir", "swellperiod", "'[01]{3}'"})
-,@Rule(left="Type22ChannelManagement", value={"repeat", "mmsi", "'[01]{2}'", "channel_a", "channel_b", "txrx_4", "power", "ne_lon", "ne_lat", "sw_lon", "sw_lat", "dest1", "dest2", "addressed", "band_a", "band_b", "zonesize", "'[01]{23}'"})
 ,@Rule(left="Type21AidToNavigationReport1", value={"repeat", "mmsi", "aid_type", "name_120", "accuracy", "lon_I4_28", "lat_I4_27", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "second", "off_position", "regional_8", "raim", "virtual_aid", "assigned", "'[01]{1}'"})
 ,@Rule(left="shape", value={"CircleOrPoint"})
 ,@Rule(left="shape", value={"Polygon"})
@@ -2918,7 +2917,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void txrx(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setTransmitMode(TransmitModes.values()[arg]);
+        aisData.setTransceiverMode(TransceiverModes.values()[arg]);
     }
 
     protected void power(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -2999,10 +2998,35 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
     {
         aisData.setMMSI2(arg);
     }
-
-    protected void addressed(int arg, @ParserContext("aisData") AISObserver aisData)
+    protected void boxDest(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setAddressed(arg != 0);
+    }
+
+    protected void addressed(
+            InputReader input, 
+            @ParserContext("aisData") AISObserver aisData
+    )
+    {
+        int arg = input.parseIntRadix2();
+        boolean addressed = arg != 0;
+        int offset = input.getStart()-70;
+        if (addressed)
+        {
+            aisData.setMMSI1(input.parseInt(offset, 30, 2));
+            offset+=30;
+            aisData.setMMSI2(input.parseInt(offset, 30, 2));
+        }
+        else
+        {
+            neLon_I1(input.parseInt(offset, 18, 2), aisData);
+            offset+=18;
+            neLat_I1(input.parseInt(offset, 17, 2), aisData);
+            offset+=17;
+            swLon_I1(input.parseInt(offset, 18, 2), aisData);
+            offset+=18;
+            swLat_I1(input.parseInt(offset, 17, 2), aisData);
+        }
+        aisData.setAddressed(addressed);
     }
 
     protected void bandA(int arg, @ParserContext("aisData") AISObserver aisData)

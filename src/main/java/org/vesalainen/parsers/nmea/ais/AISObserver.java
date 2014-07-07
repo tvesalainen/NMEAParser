@@ -1118,7 +1118,7 @@ public interface AISObserver extends Transactional
      * Transmit/receive mode
      * @param transmitModes 
      */
-    void setTransmitMode(TransmitModes transmitModes);
+    void setTransceiverMode(TransceiverModes transceiverMode);
     /**
      * Power
      * @param high 

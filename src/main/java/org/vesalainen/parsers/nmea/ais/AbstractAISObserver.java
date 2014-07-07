@@ -1238,4 +1238,64 @@ public class AbstractAISObserver implements AISObserver
     {
     }
 
+    @Override
+    public void setChannelA(int arg)
+    {
+    }
+
+    @Override
+    public void setChannelB(int arg)
+    {
+    }
+
+    @Override
+    public void setTransceiverMode(TransceiverModes transmitModes)
+    {
+    }
+
+    @Override
+    public void setPower(boolean high)
+    {
+    }
+
+    @Override
+    public void setNELongitude(float f)
+    {
+    }
+
+    @Override
+    public void setSWLongitude(float f)
+    {
+    }
+
+    @Override
+    public void setNELatitude(float f)
+    {
+    }
+
+    @Override
+    public void setSWLatitude(float f)
+    {
+    }
+
+    @Override
+    public void setAddressed(boolean addressed)
+    {
+    }
+
+    @Override
+    public void setChannelABand(boolean band)
+    {
+    }
+
+    @Override
+    public void setChannelBBand(boolean band)
+    {
+    }
+
+    @Override
+    public void setZoneSize(int arg)
+    {
+    }
+
 }

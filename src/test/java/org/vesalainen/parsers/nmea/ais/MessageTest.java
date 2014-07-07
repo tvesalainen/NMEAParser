@@ -969,7 +969,14 @@ public class MessageTest
                 parser.parse(nmea, null, tc);
                 AisContentHelper ach = new AisContentHelper(nmea);
                 assertEquals(MessageTypes.ChannelManagement, tc.messageType);
-                assertEquals(ach.getUInt(40, 52), tc.channel_a);
+                assertEquals(ach.getUInt(40, 52), tc.channelA);
+                assertEquals(ach.getUInt(52, 64), tc.channelB);
+                assertEquals(TransceiverModes.values()[ach.getUInt(64, 68)], tc.transceiverMode);
+                assertEquals(ach.getBoolean(68), tc.power);
+                assertEquals((float)ach.getInt(69, 87)/600.0 , tc.neLongitude, Epsilon);
+                assertEquals((float)ach.getInt(87, 104)/600.0 , tc.neLatitude, Epsilon);
+                assertEquals((float)ach.getInt(104, 122)/600.0 , tc.neLongitude, Epsilon);
+                assertEquals((float)ach.getInt(122, 104)/600.0 , tc.neLatitude, Epsilon);
                 assertNull(tc.error);
             }
         }
@@ -1083,6 +1090,90 @@ public class MessageTest
         private Boolean virtual_aid;
         private Boolean off_position;
         private String name_ext;
+        private int channelA = -1;
+        private int channelB = -1;
+        private TransceiverModes transceiverMode;
+        private float neLongitude=Float.NaN;
+        private float swLongitude=Float.NaN;
+        private float neLatitude=Float.NaN;
+        private float swLatitude=Float.NaN;
+        private Boolean addressed;
+        private Boolean channelABand;
+        private Boolean channelBBand;
+        private int zoneSize = -1;
+        private Boolean power;
+
+        @Override
+        public void setPower(boolean high)
+        {
+            this.power = high;
+        }
+
+        @Override
+        public void setZoneSize(int arg)
+        {
+            this.zoneSize = arg;
+        }
+
+        @Override
+        public void setChannelBBand(boolean band)
+        {
+            this.channelBBand = band;
+        }
+
+        @Override
+        public void setChannelABand(boolean band)
+        {
+            this.channelABand = band;
+        }
+
+        @Override
+        public void setAddressed(boolean addressed)
+        {
+            this.addressed = addressed;
+        }
+
+        @Override
+        public void setSWLatitude(float f)
+        {
+            this.swLatitude = f;
+        }
+
+        @Override
+        public void setNELatitude(float f)
+        {
+            this.neLatitude = f;
+        }
+
+        @Override
+        public void setSWLongitude(float f)
+        {
+            this.swLongitude = f;
+        }
+
+        @Override
+        public void setNELongitude(float f)
+        {
+            this.neLongitude = f;
+        }
+
+        @Override
+        public void setTransceiverMode(TransceiverModes transmitMode)
+        {
+            this.transceiverMode = transmitMode;
+        }
+
+        @Override
+        public void setChannelB(int arg)
+        {
+            this.channelB = arg;
+        }
+
+        @Override
+        public void setChannelA(int arg)
+        {
+            this.channelA = arg;
+        }
 
         @Override
         public void setNameExtension(InputReader reader, int fieldRef)

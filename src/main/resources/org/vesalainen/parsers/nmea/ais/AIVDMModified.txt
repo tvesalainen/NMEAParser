@@ -3630,7 +3630,7 @@ gathered automatically from sensors.
                                                         511 = N/A
 |133-138  |  6 |Time Stamp             |second       |u|Second of UTC timestamp.
 |139-142  |  4 |Regional reserved      |regional     |u|Uninterpreted
-|143-262  |120 |Name                   |shipname     |s|20 6-bit characters
+|143-262  |120 |Name                   |shipname     |t|20 6-bit characters
 |263-270  |  8 |Type of ship and cargo |shiptype     |u|As in Message 5
 |271-279  |  9 |Dimension to Bow       |to_bow       |u|Meters
 |280-288  |  9 |Dimension to Stern     |to_stern     |u|Meters
@@ -3885,18 +3885,24 @@ network.
 |52-63    |12  |Channel B        |channel_b |u|Channel number
 |64-67    | 4  |Tx/Rx mode       |txrx      |u|Transmit/receive mode
 |68-68    | 1  |Power            |power     |b|Low=0, high=1
-|69-86    |18  |NE Longitude     |ne_lon    |I1|NE longitude to 0.1 minutes
-|87-103   |17  |NE Latitude      |ne_lat    |I1|NE latitude to 0.1 minutes
-|104-121  |18  |SW Longitude     |sw_lon    |I1|SW longitude to 0.1 minutes
-|122-138  |17  |SW Latitude      |sw_lat    |I1|SW latitude to 0.1 minutes
-|69-98    |30  |MMSI1            |dest1     |u|MMSI of destination 1
-|104-133  |30  |MMSI2            |dest2     |u|MMSI of destination 2
-|139-139  | 1  |Addressed        |addressed |b|0=Broadcast, 1=Addressed
+|69-138   |70  |BoxOrDest        |box_dest  |d|Box or Destination
+|139-139  | 1  |Addressed        |addressed |d|0=Broadcast, 1=addressed
 |140-140  | 1  |Channel A Band   |band_a    |b|0=Default, 1=12.5kHz
 |141-141  | 1  |Channel B Band   |band_b    |b|0=Default, 1=12.5kHz
 |142-144  | 3  |Zone size        |zonesize  |u|Size of transitional zone
 |145-167  |23  |Spare            |          |x|Reserved for future use
 |==============================================================================
+
+Box or Destination addressed = 1
+69-98    |30  |MMSI1            |dest1     |u|MMSI of destination 1
+104-133  |30  |MMSI2            |dest2     |u|MMSI of destination 2
+134-138  | 5  |Spare            |          |x|
+
+Box or Destination addressed = 0
+69-86    |18  |NE Longitude     |ne_lon    |I1|NE longitude to 0.1 minutes
+87-103   |17  |NE Latitude      |ne_lat    |I1|NE latitude to 0.1 minutes
+104-121  |18  |SW Longitude     |sw_lon    |I1|SW longitude to 0.1 minutes
+122-138  |17  |SW Latitude      |sw_lat    |I1|SW latitude to 0.1 minutes
 
 The values of the channel_a and channel_b fields are ITU frequency
 designators for channelas A and B. Normally these will be 2087 and
@@ -3946,10 +3952,10 @@ station network.
 |6-7      | 2  |Repeat Indicator |repeat       |u|As in Common Navigation Block
 |8-37     |30  |MMSI             |mmsi         |u|Unsigned Integer: 9 digits
 |38-39    | 2  |Spare            |             |x|Not used
-|40-57    |18  |NE Longitude     |ne_lon       |u|Same as broadcast type 22
-|58-74    |17  |NE Latitude      |ne_lat       |u|Same as broadcast type 22
-|75-92    |18  |SW Longitude     |sw_lon       |u|Same as broadcast type 22
-|93-109   |17  |SW Latitude      |sw_lat       |u|Same as broadcast type 22
+|40-57    |18  |NE Longitude     |ne_lon       |I1|Same as broadcast type 22
+|58-74    |17  |NE Latitude      |ne_lat       |I1|Same as broadcast type 22
+|75-92    |18  |SW Longitude     |sw_lon       |I1|Same as broadcast type 22
+|93-109   |17  |SW Latitude      |sw_lat       |I1|Same as broadcast type 22
 |110-113  | 4  |Station Type     |station_type |e|See "Station Types"
 |114-121  | 8  |Ship Type        |ship_type    |e|See "Ship Types"
 |122-143  |22  |Spare            |             |x|Not used

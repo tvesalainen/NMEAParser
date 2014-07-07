@@ -21,7 +21,7 @@ package org.vesalainen.parsers.nmea.ais;
  *
  * @author Timo Vesalainen
  */
-public enum TransmitModes
+public enum TransceiverModes
 {
     /**
      * TxA/TxB, RxA/RxB (default)
