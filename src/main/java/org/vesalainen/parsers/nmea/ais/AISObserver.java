@@ -1164,4 +1164,24 @@ public interface AISObserver extends Transactional
      * @param arg 
      */
     void setZoneSize(int arg);
+    /**
+     * Part Number
+     * @param arg 
+     */
+    void setPartNumber(int arg);
+    /**
+     * Mothership MMSI
+     * @param arg 
+     */
+    void setMotherShipMMSI(int arg);
+    /**
+     * Unit Model Code
+     * @param arg 
+     */
+    void setUnitModelCode(int arg);
+    /**
+     * Serial Number
+     * @param arg 
+     */
+    void setSerialNumber(int arg);
 }

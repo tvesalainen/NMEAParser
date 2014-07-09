@@ -1298,4 +1298,24 @@ public class AbstractAISObserver implements AISObserver
     {
     }
 
+    @Override
+    public void setPartNumber(int arg)
+    {
+    }
+
+    @Override
+    public void setMotherShipMMSI(int arg)
+    {
+    }
+
+    @Override
+    public void setUnitModelCode(int arg)
+    {
+    }
+
+    @Override
+    public void setSerialNumber(int arg)
+    {
+    }
+
 }

@@ -151,6 +151,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="extunit", expression="[01]{2}", doc="Unit of extension", reducer="org.vesalainen.parsers.nmea.ais.AISParser extunit(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="offset1_1", expression="[01]{12}", doc="First slot offset", reducer="org.vesalainen.parsers.nmea.ais.AISParser offset11(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="lastport", expression="[01]{30}", doc="Last Port Of Call", reducer="org.vesalainen.parsers.nmea.ais.AISParser lastport(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="model", expression="[01]{4}", doc="Unit Model Code", reducer="org.vesalainen.parsers.nmea.ais.AISParser model(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="id", expression="[01]{42}", doc="Target identifier", reducer="org.vesalainen.parsers.nmea.ais.AISParser id(long,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="heavyoil", expression="[01]{2}", doc="Heavy Fuel Oil Bunkered", reducer="org.vesalainen.parsers.nmea.ais.AISParser heavyoil(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="electrical", expression="[01]{2}", doc="Electrical", reducer="org.vesalainen.parsers.nmea.ais.AISParser electrical(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -294,7 +295,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="radius_10", expression="[01]{10}", doc="Radius extension", reducer="org.vesalainen.parsers.nmea.ais.AISParser radius_10(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="radius_12", expression="[01]{12}", doc="Radius", reducer="org.vesalainen.parsers.nmea.ais.AISParser radius_12(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="ne_lat", expression="[01]{17}", doc="NE Latitude", reducer="org.vesalainen.parsers.nmea.ais.AISParser neLat_I1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=-2)
-,@Terminal(left="vendorid", expression="[01]{42}", doc="Vendor ID", reducer="org.vesalainen.parsers.nmea.ais.AISParser vendorid(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="vendorid", expression="[01]{18}", doc="Vendor ID", reducer="org.vesalainen.parsers.nmea.ais.AISParser vendorid(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="ship_type", expression="[01]{8}", doc="Ship Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser shipType(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="lon_I1_18", expression="[01]{18}", doc="Longitude", reducer="org.vesalainen.parsers.nmea.ais.AISParser lon_I1_18(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=-2)
 ,@Terminal(left="lhour", expression="[01]{5}", doc="ETA hour (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser lhour(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -462,6 +463,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="fid32", expression="100000", doc="FID", reducer="org.vesalainen.parsers.nmea.ais.AISParser fid(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="wwheight", expression="[01]{6}", doc="Height of Wind Waves", reducer="org.vesalainen.parsers.nmea.ais.AISParser wwheight(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="waterlevel_U1_9", expression="[01]{9}", doc="Water Level", reducer="org.vesalainen.parsers.nmea.ais.AISParser waterlevel_U1_9(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="serial", expression="[01]{20}", doc="Serial Number", reducer="org.vesalainen.parsers.nmea.ais.AISParser serial(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="ceast1", expression="[01]{8}", doc="Current Vector component East (v) #1", reducer="org.vesalainen.parsers.nmea.ais.AISParser ceast1_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="shipname", expression="[01]{120}", doc="Vessel Name", reducer="org.vesalainen.parsers.nmea.ais.AISParser shipname(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="ceast2", expression="[01]{8}", doc="Current Vector component East (v) #2", reducer="org.vesalainen.parsers.nmea.ais.AISParser ceast2_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -537,6 +539,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="27Messages", value={"(27Content '\n')+"})
 ,@Rule(left="16Content", value={"Type16AssignmentModeCommandB"})
 ,@Rule(left="6Content", value={"IMO289RouteInformationAddressed"})
+,@Rule(left="Type24StaticDataReportB", value={"repeat", "mmsi", "partno1", "shiptype", "vendorid", "model", "serial", "callsign", "to_bow", "to_stern", "to_port", "to_starboard", "mothership_mmsi"})
 ,@Rule(left="4Messages", value={"(4Content '\n')+"})
 ,@Rule(left="IMO289RouteInformationBroadcast", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid27", "linkage", "sender", "rtype", "month", "day_5", "hour", "minute_6", "duration_18", "waycount", "(lon_I4_28 lat_I4_27)+"})
 ,@Rule(left="MeteorologicalAndHydrologicalDataIMO236", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid11", "lat_I3_24", "lon_I3_25", "day_5", "hour", "minute_6", "wspeed", "wgust", "wdir", "wgustdir", "temperature", "humidity", "dewpoint", "pressure_9", "pressuretend_2", "visibility_U1_8", "waterlevel_U1_9", "leveltrend", "cspeed_U1_8", "cdir", "cspeed2", "cdir2", "cdepth2_5", "cspeed3", "cdir3", "cdepth3_5", "waveheight", "waveperiod", "wavedir", "swellheight", "swellperiod", "swelldir", "seastate", "watertemp", "preciptype_3", "salinity", "ice", "'[01]{6}'"})
@@ -612,7 +615,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="14Content", value={"Type14SafetyRelatedBroadcastMessage"})
 ,@Rule(left="message", value={"1-3"})
 ,@Rule(left="WeatherReportPayload", value={"temperature", "sensortype", "preciptype_2", "visibility_U1_8", "dewpoint", "dewtype", "pressure_9", "pressuretend_2", "pressuretype", "salinity", "'[01]{25}'"})
-,@Rule(left="Type24StaticDataReportB", value={"repeat", "mmsi", "partno1", "shiptype", "vendorid", "callsign", "to_bow", "to_stern", "to_port", "to_starboard", "mothership_mmsi"})
 ,@Rule(left="8Content", value={"IMO289TextDescriptionBroadcast"})
 ,@Rule(left="7Messages", value={"(7Content '\n')+"})
 ,@Rule(left="Type20DataLinkManagementMessage1", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11"})
@@ -658,8 +660,6 @@ protected void airdraught_13(int arg, @ParserContext("aisData") AISObserver aisD
 protected void text_936(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void txrx_4(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
     public static AISParser newInstance() throws IOException
     {
         return (AISParser) GenClassFactory.getGenInstance(AISParser.class);
@@ -2914,8 +2914,15 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
     {
         aisData.setChannelB(arg);
     }
-
-    protected void txrx(int arg, @ParserContext("aisData") AISObserver aisData)
+    /**
+     * The txrx field encodes the same information as the 2-bit field txrx field 
+     * in message type 23; only the two low bits are used.
+     */
+    protected void txrx_4(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setTransceiverMode(TransceiverModes.values()[arg]);
+    }
+    protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData)
     {
         aisData.setTransceiverMode(TransceiverModes.values()[arg]);
     }
@@ -2927,7 +2934,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void neLon_I1(int lon, @ParserContext("aisData") AISObserver aisData)
     {
-        if (lon != 181000)
+        if (lon != 0x1a838)
         {
             if (lon <= 180 * 60 * 10 && lon >= -180 * 60 * 10)
             {
@@ -2959,7 +2966,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     protected void swLon_I1(int lon, @ParserContext("aisData") AISObserver aisData)
     {
-        if (lon != 181000)
+        if (lon != 0x1a838)
         {
             if (lon <= 180 * 60 * 10 && lon >= -180 * 60 * 10)
             {
@@ -3018,13 +3025,13 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
         }
         else
         {
-            neLon_I1(input.parseInt(offset, 18, 2), aisData);
+            neLon_I1(input.parseInt(offset, 18, -2), aisData);
             offset+=18;
-            neLat_I1(input.parseInt(offset, 17, 2), aisData);
+            neLat_I1(input.parseInt(offset, 17, -2), aisData);
             offset+=17;
-            swLon_I1(input.parseInt(offset, 18, 2), aisData);
+            swLon_I1(input.parseInt(offset, 18, -2), aisData);
             offset+=18;
-            swLat_I1(input.parseInt(offset, 17, 2), aisData);
+            swLat_I1(input.parseInt(offset, 17, -2), aisData);
         }
         aisData.setAddressed(addressed);
     }
@@ -3078,7 +3085,7 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
 // Type24StaticDataReport
     protected void partno(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        System.err.println("aisPartno("+arg+")");
+        aisData.setPartNumber(arg);
     }
 
     protected void vendorid(InputReader reader, @ParserContext("aisData") AISObserver aisData)
@@ -3086,8 +3093,19 @@ protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData){}
         aisData.setVendorId(reader, reader.getFieldRef());
     }
 
+    protected void model(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setUnitModelCode(arg);
+    }
+
+    protected void serial(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setSerialNumber(arg);
+    }
+
     protected void mothershipMmsi(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setMotherShipMMSI(arg);
     }
 // Type25SingleSlotBinaryMessage
     protected void structured(int arg, @ParserContext("aisData") AISObserver aisData)

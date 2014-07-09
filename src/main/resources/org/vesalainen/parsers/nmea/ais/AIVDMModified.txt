@@ -3896,7 +3896,6 @@ network.
 Box or Destination addressed = 1
 69-98    |30  |MMSI1            |dest1     |u|MMSI of destination 1
 104-133  |30  |MMSI2            |dest2     |u|MMSI of destination 2
-134-138  | 5  |Spare            |          |x|
 
 Box or Destination addressed = 0
 69-86    |18  |NE Longitude     |ne_lon    |I1|NE longitude to 0.1 minutes
@@ -4090,7 +4089,9 @@ is thanks to Kurt Schwehr.
 |8-37    | 30 | MMSI                  | mmsi           |u|9 digits
 |38-39   |  2 | Part Number           | partno         |u|Constant: 1
 |40-47   |  8 | Ship Type             | shiptype       |e|(Part B) See "Ship Types"
-|48-89   | 42 | Vendor ID             | vendorid       |t|(Part B) 7 six-bit chars
+|48-65   | 18 | Vendor ID             | vendorid       |t|(Part B) 7 six-bit chars
+|66-69   |  4 | Unit Model Code       | model          |u|(Part B) 7 six-bit chars
+|70-89   | 20 | Serial Number         | serial         |u|(Part B) 7 six-bit chars
 |90-131  | 42 | Call Sign             | callsign       |t|(Part B) As in Message Type 5
 |132-140 |  9 | Dimension to Bow      | to_bow         |u|(Part B) Meters
 |141-149 |  9 | Dimension to Stern    | to_stern       |u|(Part B) Meters

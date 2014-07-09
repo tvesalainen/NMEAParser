@@ -30,7 +30,6 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
  * TODO Test for 
- * Message 24
 
  * @author Timo Vesalainen
  */
@@ -184,7 +183,7 @@ public class MessageTest
                 assertEquals(ach.getUInt(38, 40), tc.aisVersion);
                 assertEquals(ach.getUInt(40, 70), tc.imoNumber);
                 assertEquals(ach.getString(70, 112), tc.callSign);
-                assertEquals(ach.getString(112, 232), tc.vesselName);
+                assertEquals(ach.getString(112, 232), tc.shipname);
                 assertEquals(CodesForShipType.values()[ach.getUInt(232, 240)], tc.shipType);
                 assertEquals(ach.getUInt(240, 249), tc.dimensionToBow);
                 assertEquals(ach.getUInt(249, 258), tc.dimensionToStern);
@@ -833,7 +832,7 @@ public class MessageTest
                     assertTrue(second >= 0 && second < 60);
                 }
                 assertEquals(second, tc.second);
-                assertEquals(ach.getString(143, 263), tc.vesselName);
+                assertEquals(ach.getString(143, 263), tc.shipname);
                 assertEquals(CodesForShipType.values()[ach.getUInt(263, 271)], tc.shipType);
                 assertEquals(ach.getUInt(271, 280), tc.dimensionToBow);
                 assertEquals(ach.getUInt(280, 289), tc.dimensionToStern);
@@ -973,10 +972,71 @@ public class MessageTest
                 assertEquals(ach.getUInt(52, 64), tc.channelB);
                 assertEquals(TransceiverModes.values()[ach.getUInt(64, 68)], tc.transceiverMode);
                 assertEquals(ach.getBoolean(68), tc.power);
-                assertEquals((float)ach.getInt(69, 87)/600.0 , tc.neLongitude, Epsilon);
-                assertEquals((float)ach.getInt(87, 104)/600.0 , tc.neLatitude, Epsilon);
-                assertEquals((float)ach.getInt(104, 122)/600.0 , tc.neLongitude, Epsilon);
-                assertEquals((float)ach.getInt(122, 104)/600.0 , tc.neLatitude, Epsilon);
+                assertEquals(ach.getBoolean(139), tc.addressed);
+                if (tc.addressed)
+                {
+                    assertEquals(ach.getUInt(69, 104), tc.mmsi1);
+                    assertEquals(ach.getUInt(104, 134), tc.mmsi2);
+                }
+                else
+                {
+                    assertEquals((float)ach.getInt(69, 87)/600.0 , tc.neLongitude, Epsilon);
+                    assertEquals((float)ach.getInt(87, 104)/600.0 , tc.neLatitude, Epsilon);
+                    assertEquals((float)ach.getInt(104, 122)/600.0 , tc.swLongitude, Epsilon);
+                    assertEquals((float)ach.getInt(122, 139)/600.0 , tc.swLatitude, Epsilon);
+                }
+                assertEquals(ach.getBoolean(140), tc.channelABand);
+                assertEquals(ach.getBoolean(141), tc.channelBBand);
+                assertEquals(ach.getUInt(142, 145), tc.zoneSize);
+                assertNull(tc.error);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type24()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,B,H>DQ@04N6DeihhlPPPPPPP000000,0*0E\r\n"+
+                "!AIVDM,1,1,,A,H7P<1>1LPU@D8U8A<0000000000,2*6C\r\n"+
+                "!AIVDM,1,1,,A,H7P<1>4UB1I0000F=Aqpoo2P2220,0*3A\r\n"+
+                "!AIVDM,1,1,,B,H0HN<8QLTdTpN22222222222223,2*1B\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                TC tc = new TC();
+                parser.parse(nmea, null, tc);
+                AisContentHelper ach = new AisContentHelper(nmea);
+                assertEquals(MessageTypes.StaticDataReport, tc.messageType);
+                assertEquals(ach.getUInt(8, 38), tc.mmsi);
+                MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
+                assertEquals(MMSIType.ShipStation, mmsiEntry.getType());
+                assertEquals(ach.getUInt(38, 40), tc.partno);
+                assertTrue( tc.partno >= 0 && tc.partno <= 1);
+                if (tc.partno == 0)
+                {
+                    assertEquals(ach.getString(40, 160), tc.shipname);
+                }
+                else
+                {
+                    assertEquals(CodesForShipType.values()[ach.getUInt(40, 48)], tc.shipType);
+                    assertEquals(ach.getString(48, 66), tc.vendorid);
+                    assertEquals(ach.getUInt(66, 70), tc.model);
+                    assertEquals(ach.getUInt(70, 90), tc.serial);
+                    assertEquals(ach.getString(90, 132), tc.callSign);
+                    assertEquals(ach.getUInt(132, 141), tc.dimensionToBow);
+                    assertEquals(ach.getUInt(141, 150), tc.dimensionToStern);
+                    assertEquals(ach.getUInt(150, 156), tc.dimensionToPort);
+                    assertEquals(ach.getUInt(156, 132), tc.dimensionToStarboard);
+                    assertEquals(ach.getUInt(132, 162), tc.mothershipMMSI);
+                }
                 assertNull(tc.error);
             }
         }
@@ -1007,7 +1067,7 @@ public class MessageTest
         private CodesForShipType shipType;
         private String destination;
         private float draught = Float.NaN;
-        private String vesselName;
+        private String shipname;
         private String callSign;
         private int imoNumber=-1;
         private int dimensionToStarboard=-1;
@@ -1102,6 +1162,41 @@ public class MessageTest
         private Boolean channelBBand;
         private int zoneSize = -1;
         private Boolean power;
+        private String vendorid;
+        private int partno = -1;
+        private int mothershipMMSI = -1;
+        private int model = -1;
+        private int serial = -1;
+
+        @Override
+        public void setSerialNumber(int arg)
+        {
+            this.serial = arg;
+        }
+
+        @Override
+        public void setUnitModelCode(int arg)
+        {
+            this.model = arg;
+        }
+
+        @Override
+        public void setMotherShipMMSI(int arg)
+        {
+            this.mothershipMMSI = arg;
+        }
+
+        @Override
+        public void setPartNumber(int arg)
+        {
+            this.partno = arg;
+        }
+
+        @Override
+        public void setVendorId(InputReader reader, int fieldRef)
+        {
+            this.vendorid = AisUtil.makeString(reader.getCharSequence(fieldRef));
+        }
 
         @Override
         public void setPower(boolean high)
@@ -1158,9 +1253,9 @@ public class MessageTest
         }
 
         @Override
-        public void setTransceiverMode(TransceiverModes transmitMode)
+        public void setTransceiverMode(TransceiverModes transceiverMode)
         {
-            this.transceiverMode = transmitMode;
+            this.transceiverMode = transceiverMode;
         }
 
         @Override
@@ -1676,7 +1771,7 @@ public class MessageTest
         @Override
         public void setVesselName(InputReader reader, int fieldRef)
         {
-            this.vesselName = AisUtil.makeString(reader);
+            this.shipname = AisUtil.makeString(reader);
         }
 
         @Override

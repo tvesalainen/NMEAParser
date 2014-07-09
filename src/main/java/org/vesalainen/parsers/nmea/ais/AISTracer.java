@@ -1353,4 +1353,28 @@ public class AISTracer implements AISObserver
         printer.println("setZoneSize("+arg+")");
     }
 
+    @Override
+    public void setPartNumber(int arg)
+    {
+        printer.println("setPartNumber("+arg+")");
+    }
+
+    @Override
+    public void setMotherShipMMSI(int arg)
+    {
+        printer.println("setMotherShipMMSI("+arg+")");
+    }
+
+    @Override
+    public void setUnitModelCode(int arg)
+    {
+        printer.println("setUnitModelCode("+arg+")");
+    }
+
+    @Override
+    public void setSerialNumber(int arg)
+    {
+        printer.println("setSerialNumber("+arg+")");
+    }
+
 }
