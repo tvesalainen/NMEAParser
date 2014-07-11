@@ -69,6 +69,7 @@ public abstract class AISGrammarGenerator
             }
         }
         gen.parse(is, grammar);
+        /*
         for (String t : gen.types)
         {
             t = t+"Messages";
@@ -77,6 +78,7 @@ public abstract class AISGrammarGenerator
             System.err.println("            Reader in,");
             System.err.println("            @ParserContext(\"aisData\") AISObserver aisData);");
         }
+        */
         return grammar;
     }
     protected String lastTitle;

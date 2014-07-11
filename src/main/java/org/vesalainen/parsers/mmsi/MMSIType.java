@@ -62,6 +62,64 @@ public enum MMSIType
     /**
      * Navigational aid
      */
-    NavigationalAid
-    
+    NavigationalAid,
+    /**
+     * Unknown type
+     */
+    Unknown;
+    /**
+     * Returns MMSI type. This fast method not fully parsing MMSI.
+     * @param mmsi
+     * @return 
+     */
+    public static MMSIType getType(int mmsi)
+    {
+        switch (mmsi / 100000000)
+        {
+            case 0:
+                if (mmsi / 10000000 == 0)
+                {
+                    return CoastStation;
+                }
+                else
+                {
+                    return GroupShipStation;
+                }
+            case 1:
+                return SarAircraft;
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                return ShipStation;
+            case 8:
+                return HandheldVHF;
+            case 9:
+                switch (mmsi / 10000000)
+                {
+                    case 99:
+                        return NavigationalAid;
+                    case 98:
+                        return CraftAssociatedWithParentShip;
+                    case 97:
+                        switch (mmsi / 1000000)
+                        {
+                            case 970:
+                                return SearchAndRescueTransponder;
+                            case 972:
+                                return MobDevice;
+                            case 974:
+                                return EPIRB;
+                            default:
+                                return Unknown;
+                                
+                        }
+                    default:
+                        return Unknown;
+                }
+        }
+        return Unknown;
+    }
 }

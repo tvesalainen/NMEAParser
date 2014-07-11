@@ -796,6 +796,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         if (input.endsWith("\n"))
         {
             aisData.rollback("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
+            System.err.println("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
             reader.clear();
         }
         else
@@ -813,6 +814,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             }
             reader.clear();
             aisData.rollback("skipping " + sb+" "+thr);
+            System.err.println("skipping " + sb+" "+thr);
         }
     }
 

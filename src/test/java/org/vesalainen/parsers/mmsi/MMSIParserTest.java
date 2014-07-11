@@ -64,6 +64,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.SarAircraft;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertEquals("United Kingdom", mid.getCountry());
         assertEquals("111232506", result.getString());
@@ -81,6 +82,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.ShipStation;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertEquals("Finland", mid.getCountry());
         assertEquals("230123250", result.getString());
@@ -95,6 +97,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.GroupShipStation;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertEquals("Finland", mid.getCountry());
         assertEquals("023012325", result.getString());
@@ -109,6 +112,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.CoastStation;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertEquals("Finland", mid.getCountry());
         assertEquals("002301232", result.getString());
@@ -123,6 +127,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.HandheldVHF;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertNull(mid);
         assertEquals("842517724", result.getString());
@@ -137,6 +142,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.NavigationalAid;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertEquals("China", mid.getCountry());
         assertEquals("994136301", result.getString());
@@ -151,6 +157,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.SearchAndRescueTransponder;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertNull(mid);
         assertEquals("970123456", result.getString());
@@ -165,6 +172,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.MobDevice;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertNull(mid);
         assertEquals("972123456", result.getString());
@@ -179,6 +187,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.EPIRB;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertNull(mid);
         assertEquals("974123456", result.getString());
@@ -193,6 +202,7 @@ public class MMSIParserTest
         MMSIType expResult = MMSIType.CraftAssociatedWithParentShip;
         MMSIEntry result = instance.parse(mmsi);
         assertEquals(expResult, result.getType());
+        assertEquals(expResult, MMSIType.getType(mmsi));
         MIDEntry mid = result.getMid();
         assertEquals("Finland", mid.getCountry());
         assertEquals("982306301", result.getString());

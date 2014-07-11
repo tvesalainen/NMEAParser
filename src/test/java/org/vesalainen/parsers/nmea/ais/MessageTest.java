@@ -1017,8 +1017,6 @@ public class MessageTest
                 AisContentHelper ach = new AisContentHelper(nmea);
                 assertEquals(MessageTypes.StaticDataReport, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
-               // MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
-//                assertEquals(MMSIType.ShipStation, mmsiEntry.getType());
                 assertEquals(ach.getUInt(38, 40), tc.partno);
                 assertTrue( tc.partno >= 0 && tc.partno <= 1);
                 if (tc.partno == 0)
@@ -1035,8 +1033,7 @@ public class MessageTest
                     assertEquals(ach.getUInt(132, 141), tc.dimensionToBow);
                     assertEquals(ach.getUInt(141, 150), tc.dimensionToStern);
                     assertEquals(ach.getUInt(150, 156), tc.dimensionToPort);
-                    assertEquals(ach.getUInt(156, 161), tc.dimensionToStarboard);
-                    assertEquals(ach.getUInt(161, 162), tc.mothershipMMSI);
+                    assertEquals(ach.getUInt(156, 162), tc.dimensionToStarboard);
                 }
                 assertNull(tc.error);
             }
