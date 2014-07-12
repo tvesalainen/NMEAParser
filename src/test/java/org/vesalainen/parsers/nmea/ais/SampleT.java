@@ -29,7 +29,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.util.navi.SimpleStats;
 
 /**
  *
@@ -74,13 +73,7 @@ public class SampleT
         NMEAParser parser = NMEAParser.newInstance();
         try
         {
-            AD ad = new AD(out);
-            parser.parse(url, new AbstractNMEAObserver(), ad);
-            int rows = ad.getRollbacks()+ad.getCommits();
-            System.err.println("rows="+rows);
-            System.err.println("Latitude "+ad.getLatitudeStats().getMin()+" - "+ad.getLatitudeStats().getMax());
-            System.err.println("Longitude "+ad.getLongitudeStats().getMin()+" - "+ad.getLongitudeStats().getMax());
-            assertTrue(ad.getRollbacks()/ad.getCommits() < 0.001);
+            parser.parse(url, new AbstractNMEAObserver(), AISTracer.getTracer(out));
         }
         catch (IOException | IllegalArgumentException ex)
         {
@@ -88,80 +81,6 @@ public class SampleT
         }
     }
 
-    public class AD extends AISTracer
-    {
-        private int commits;
-        private int rollbacks;
-        private final SimpleStats longitudeStats = new SimpleStats();
-        private final SimpleStats latitudeStats = new SimpleStats();
-        private final SimpleStats courseStats = new SimpleStats();
-
-        public AD(Appendable appendable)
-        {
-            super(appendable);
-        }
-
-        @Override
-        public void setCourse(float course)
-        {
-            super.setCourse(course);
-            courseStats.add(course);
-        }
-
-        @Override
-        public void setLatitude(float latitude)
-        {
-            super.setLatitude(latitude);
-            latitudeStats.add(latitude);
-        }
-
-        @Override
-        public void setLongitude(float degrees)
-        {
-            super.setLongitude(degrees);
-            longitudeStats.add(degrees);
-        }
-
-        public SimpleStats getLatitudeStats()
-        {
-            return latitudeStats;
-        }
-
-        public SimpleStats getCourseStats()
-        {
-            return courseStats;
-        }
-
-        public SimpleStats getLongitudeStats()
-        {
-            return longitudeStats;
-        }
-
-        @Override
-        public void commit(String reason)
-        {
-            super.commit(reason);
-            commits++;
-        }
-        
-        @Override
-        public void rollback(String reason)
-        {
-            super.rollback(reason);
-            rollbacks++;
-        }
-
-        public int getCommits()
-        {
-            return commits;
-        }
-
-        public int getRollbacks()
-        {
-            return rollbacks;
-        }
-        
-    }
     public class IS extends InputStream
     {
         private final InputStream in;

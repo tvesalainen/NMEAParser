@@ -17,6 +17,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.parsers.nmea.Transactional;
 
@@ -40,6 +41,21 @@ import org.vesalainen.parsers.nmea.Transactional;
  */
 public interface AISObserver extends Transactional
 {   
+    /**
+     * Returns the message type
+     * @return 
+     */
+    MessageTypes getMessageType();
+    /**
+     * Returns mmsi
+     * @return 
+     */
+    int getMMSI();
+    /**
+     * Return MMSI Type
+     * @return 
+     */
+    MMSIType getMMSIType();
     /**
      * 
      * @param numberOfSentences

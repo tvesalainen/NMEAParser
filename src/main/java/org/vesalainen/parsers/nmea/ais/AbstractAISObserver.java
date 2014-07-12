@@ -18,6 +18,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.Clock;
 
 /**
@@ -29,6 +30,8 @@ public class AbstractAISObserver implements AISObserver
     protected int sentenceNumber;
     protected int sequentialMessageID;
     protected char channel;
+    protected MessageTypes messageType;
+    protected int mmsi;
 
     @Override
     public void setPrefix(int numberOfSentences, int sentenceNumber, int sequentialMessageID, char channel)
@@ -40,9 +43,9 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMessageType(MessageTypes messageTypes)
+    public void setMessageType(MessageTypes messageType)
     {
-        
+        this.messageType = messageType;
     }
 
     @Override
@@ -78,7 +81,7 @@ public class AbstractAISObserver implements AISObserver
     @Override
     public void setMMSI(int mmsi)
     {
-        
+        this.mmsi = mmsi;
     }
 
     @Override
@@ -1316,6 +1319,24 @@ public class AbstractAISObserver implements AISObserver
     @Override
     public void setSerialNumber(int arg)
     {
+    }
+
+    @Override
+    public MessageTypes getMessageType()
+    {
+        return messageType;
+    }
+
+    @Override
+    public int getMMSI()
+    {
+        return mmsi;
+    }
+
+    @Override
+    public MMSIType getMMSIType()
+    {
+        return MMSIType.getType(mmsi);
     }
 
 }
