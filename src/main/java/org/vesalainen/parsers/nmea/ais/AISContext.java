@@ -37,7 +37,7 @@ public class AISContext extends SimpleWorkflow<Integer>
 
     public AISContext(AISObserver aisData) throws IOException
     {
-        super(-1);
+        super(-1, Runtime.getRuntime().availableProcessors()+1);
         this.aisData = aisData;
         aisParser = AISParser.newInstance();
     }

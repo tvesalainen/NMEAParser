@@ -50,13 +50,13 @@ public interface NMEAObserver extends Transactional
      * @param c1
      * @param c2 
      */
-    void talkerId(char c1, char c2);
+    void setTalkerId(char c1, char c2);
     /**
      * Location in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
      * @param longitude Longitude West is negative.
      */
-    void setLocation(double latitude, double longitude);
+    void setLocation(float latitude, float longitude);
     /**
      * RMA, RMC
      * @param knots 
@@ -91,7 +91,7 @@ public interface NMEAObserver extends Transactional
      * @param latitude
      * @param longitude 
      */
-    void setDestinationWaypointLocation(double latitude, double longitude);
+    void setDestinationWaypointLocation(float latitude, float longitude);
     /**
      * RMB
      * @param nm 

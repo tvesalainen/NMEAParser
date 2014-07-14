@@ -17,15 +17,12 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GenRegex;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.regex.Regex;
-import org.vesalainen.util.AppendablePrinter;
 import org.vesalainen.util.InterfaceTracer;
 
 /**
@@ -39,7 +36,7 @@ public class AISTracer extends InterfaceTracer
     protected Regex sixbit;
     
 
-    protected AISTracer()
+    public AISTracer()
     {
         super(null);
     }
@@ -49,7 +46,7 @@ public class AISTracer extends InterfaceTracer
         return InterfaceTracer.getTracer(
                 AISObserver.class, 
                 (AISTracer) GenClassFactory.loadGenInstance(AISTracer.class), 
-                null
+                new AbstractAISObserver()
         );
     }
     
@@ -58,7 +55,7 @@ public class AISTracer extends InterfaceTracer
         return InterfaceTracer.getTracer(
                 AISObserver.class, 
                 (AISTracer) GenClassFactory.loadGenInstance(AISTracer.class), 
-                null, 
+                new AbstractAISObserver(), 
                 appendable
         );
     }
@@ -67,6 +64,7 @@ public class AISTracer extends InterfaceTracer
     public synchronized Object invoke(Object proxy, Method method, Object[] args) throws Throwable
     {
         if (
+                args != null &&
                 args.length == 2 &&
                 (args[0] instanceof InputReader) &&
                 (args[1] instanceof Integer) &&
@@ -77,12 +75,12 @@ public class AISTracer extends InterfaceTracer
             printer.print("(");
             printer.print(AisUtil.makeString((CharSequence) args[0]));
             printer.println(")");
+            return null;
         }
         else
         {
-            super.invoke(proxy, method, args);
+            return super.invoke(proxy, method, args);
         }
-        return null;
     }
     
 }

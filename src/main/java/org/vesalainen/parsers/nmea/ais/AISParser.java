@@ -31,6 +31,7 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.Terminals;
 import org.vesalainen.parser.util.InputReader;
+import static org.vesalainen.parsers.mmsi.MMSIType.*;
 
 /**
  * @author Timo Vesalainen
@@ -241,7 +242,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="retransmit", expression="[01]{1}", doc="Retransmit flag", reducer="org.vesalainen.parsers.nmea.ais.AISParser retransmit(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="speed_10", expression="[01]{10}", doc="Speed Over Ground", reducer="org.vesalainen.parsers.nmea.ais.AISParser speed_10(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="direction1", expression="[01]{9}", doc="Current Direction #1", reducer="org.vesalainen.parsers.nmea.ais.AISParser direction1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="mothership_mmsi", expression="[01]{1,36}", doc="Mothership MMSI", reducer="org.vesalainen.parsers.nmea.ais.AISParser mothershipMmsi(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="nextsignal", expression="[01]{5}", doc="Expected Next Signal", reducer="org.vesalainen.parsers.nmea.ais.AISParser nextsignal(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="portname", expression="[01]{120}", doc="Name of Port & Berth", reducer="org.vesalainen.parsers.nmea.ais.AISParser portname(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="lshiptype", expression="[01]{42}", doc="Lloyd's Ship Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser lshiptype(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -415,6 +415,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Terminal(left="airtemp_U1_11", expression="[01]{11}", doc="Air Temperature", reducer="org.vesalainen.parsers.nmea.ais.AISParser airtemp_U1_11(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="lday", expression="[01]{5}", doc="ETA day (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser lday(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="data", expression="[01]{1,736}", doc="Payload", reducer="org.vesalainen.parsers.nmea.ais.AISParser data(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="mothership_dim", expression="[01]{1,36}", doc="Mothership or Dim", reducer="org.vesalainen.parsers.nmea.ais.AISParser mothershipDim(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="chart_state", expression="[01]{2}", doc="Paper Nautical Chart", reducer="org.vesalainen.parsers.nmea.ais.AISParser chartState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="name_84", expression="[01]{84}", doc="Name", reducer="org.vesalainen.parsers.nmea.ais.AISParser name_84(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="conductivity", expression="[01]{10}", doc="Conductivity", reducer="org.vesalainen.parsers.nmea.ais.AISParser conductivity_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -539,7 +540,6 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="27Messages", value={"(27Content '\n')+"})
 ,@Rule(left="16Content", value={"Type16AssignmentModeCommandB"})
 ,@Rule(left="6Content", value={"IMO289RouteInformationAddressed"})
-,@Rule(left="Type24StaticDataReportB", value={"repeat", "mmsi", "partno1", "shiptype", "vendorid", "model", "serial", "callsign", "to_bow", "to_stern", "to_port", "to_starboard", "mothership_mmsi"})
 ,@Rule(left="4Messages", value={"(4Content '\n')+"})
 ,@Rule(left="IMO289RouteInformationBroadcast", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid27", "linkage", "sender", "rtype", "month", "day_5", "hour", "minute_6", "duration_18", "waycount", "(lon_I4_28 lat_I4_27)+"})
 ,@Rule(left="MeteorologicalAndHydrologicalDataIMO236", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid11", "lat_I3_24", "lon_I3_25", "day_5", "hour", "minute_6", "wspeed", "wgust", "wdir", "wgustdir", "temperature", "humidity", "dewpoint", "pressure_9", "pressuretend_2", "visibility_U1_8", "waterlevel_U1_9", "leveltrend", "cspeed_U1_8", "cdir", "cspeed2", "cdir2", "cdepth2_5", "cspeed3", "cdir3", "cdepth3_5", "waveheight", "waveperiod", "wavedir", "swellheight", "swellperiod", "swelldir", "seastate", "watertemp", "preciptype_3", "salinity", "ice", "'[01]{6}'"})
@@ -557,6 +557,7 @@ import org.vesalainen.parser.util.InputReader;
 ,@Rule(left="Type24StaticDataReportA", value={"repeat", "mmsi", "partno0", "shipname", "'[01]{1,8}'"})
 ,@Rule(left="CircleOrPoint", value={"shape0", "scale", "lon_I3_25", "lat_I3_24", "precision", "radius_12", "'[01]{18}'"})
 ,@Rule(left="SalinityReportPayload", value={"watertemp", "conductivity", "pressure_U1_16", "salinity", "salinitytype", "sensortype", "'[01]{35}'"})
+,@Rule(left="Type24StaticDataReportB", value={"repeat", "mmsi", "partno1", "shiptype", "vendorid", "model", "serial", "callsign", "mothership_dim"})
 ,@Rule(left="shape", value={"Polyline"})
 ,@Rule(left="IMO289TextDescriptionAddressed", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid30", "linkage", "description_6_930"})
 ,@Rule(left="6Content", value={"IMO236NumberOfPersonsOnBoard"})
@@ -825,10 +826,6 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     )
     {
         aisData.setMessageType(MessageTypes.values()[messageType]);
-        if (messageType == 2 || messageType == 3)
-        {
-            messageType = 1;
-        }
         aisContext.setLast(messageType);
         aisContext.switchTo(messageType);
     }
@@ -3109,6 +3106,25 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     {
         aisData.setMotherShipMMSI(arg);
     }
+    protected void mothershipDim(InputReader arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        if (aisData.getMMSIType() == CraftAssociatedWithParentShip)
+        {
+            aisData.setMotherShipMMSI(arg.parseIntRadix2());
+        }
+        else
+        {
+            int off = arg.getStart();
+            aisData.setDimensionToBow(arg.parseInt(off, 9, 2));
+            off += 9;
+            aisData.setDimensionToStern(arg.parseInt(off, 9, 2));
+            off += 9;
+            aisData.setDimensionToPort(arg.parseInt(off, 6, 2));
+            off += 6;
+            aisData.setDimensionToStarboard(arg.parseInt(off, 6, 2));
+        }
+    }
+
 // Type25SingleSlotBinaryMessage
     protected void structured(int arg, @ParserContext("aisData") AISObserver aisData)
     {

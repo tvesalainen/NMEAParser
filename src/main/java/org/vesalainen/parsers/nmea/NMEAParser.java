@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.ScatteringByteChannel;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Checksum;
@@ -99,7 +98,7 @@ import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
     @Rule(left = "waterTemperature"),
     @Rule(left = "heading"),
     @Rule(left = "magneticSensorHeading"),
-    @Rule(left = "magneticDeviation"),
+    @Rule(left = "magneticDeviation", value="c"),
     @Rule(left = "horizontalDatum"),
     @Rule(left = "faaModeIndicator"),
     @Rule(left = "messageMode"),
@@ -936,9 +935,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
 
     @Rule("latitude c ns c longitude c ew")
     protected void location(
-            double latitude,
+            float latitude,
             int ns,
-            double longitude,
+            float longitude,
             int ew,
             @ParserContext("data") NMEAObserver data)
     {
@@ -947,9 +946,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
 
     @Rule("latitude c ns c longitude c ew")
     protected void destinationWaypointLocation(
-            double latitude,
+            float latitude,
             int ns,
-            double longitude,
+            float longitude,
             int ew,
             @ParserContext("data") NMEAObserver data)
     {
@@ -959,7 +958,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     @Rule("letterNotP letter")
     protected void talkerId(char c1, char c2, @ParserContext("data") NMEAObserver data)
     {
-        data.talkerId(c1, c2);
+        data.setTalkerId(c1, c2);
     }
 
     @Rule("hexAlpha hexAlpha")
@@ -991,22 +990,22 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     }
 
     @Terminal(expression = "[0-9]+\\.[0-9]+")
-    protected double latitude(double lat)
+    protected float latitude(float lat)
     {
-        double degrees = (double) Math.floor(lat / 100);
-        double minutes = lat - 100F * degrees;
-        double latitude = degrees + minutes / 60F;
+        float degrees = (float) Math.floor(lat / 100);
+        float minutes = lat - 100F * degrees;
+        float latitude = degrees + minutes / 60F;
         assert latitude >= 0;
         assert latitude <= 90;
         return latitude;
     }
 
     @Terminal(expression = "[0-9]+\\.[0-9]+")
-    protected double longitude(double lat)
+    protected float longitude(float lat)
     {
-        double degrees = (double) Math.floor(lat / 100);
-        double minutes = lat - 100F * degrees;
-        double longitude = degrees + minutes / 60F;
+        float degrees = (float) Math.floor(lat / 100);
+        float minutes = lat - 100F * degrees;
+        float longitude = degrees + minutes / 60F;
         assert longitude >= 0;
         assert longitude <= 180;
         return longitude;
@@ -1042,7 +1041,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     @Terminal(expression = "[\\+\\-]?[0-9]+")
     protected abstract int integer(int i);
 
-    @Terminal(expression = "[\\+\\-]?[0-9]+(\\.[0-9]+)*")
+    @Terminal(expression = "[\\+\\-]?[0-9]+(\\.[0-9]+)?")
     protected abstract float decimal(float f);
 
     @Terminal(expression = "[\\,]")

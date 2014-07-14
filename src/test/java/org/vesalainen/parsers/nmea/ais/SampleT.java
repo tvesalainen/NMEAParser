@@ -40,7 +40,7 @@ public class SampleT
     
     public SampleT() throws IOException
     {
-        out = new BufferedWriter(new FileWriter("sampledump.txt"));
+        out = new BufferedWriter(new FileWriter("aisdump.txt"));
     }
     
     @BeforeClass
@@ -69,7 +69,7 @@ public class SampleT
     public void testSample() throws Exception
     {
         System.out.println("sample");
-        URL url = SampleT.class.getClassLoader().getResource("nmea-sample");
+        URL url = SampleT.class.getClassLoader().getResource("ais-sample.nmea");
         NMEAParser parser = NMEAParser.newInstance();
         try
         {
@@ -77,6 +77,7 @@ public class SampleT
         }
         catch (IOException | IllegalArgumentException ex)
         {
+            ex.printStackTrace();
             fail(ex.getMessage());
         }
     }

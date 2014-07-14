@@ -41,14 +41,14 @@ public class AbstractNMEAObserver implements NMEAObserver
      * @param lon2 in degrees
      * @return 
      */
-    public static double distance(double lat1, double lon1, double lat2, double lon2)
+    public static float distance(float lat1, float lon1, float lat2, float lon2)
     {
         // TO DO use GC with long distance
-        double dep = departure(lat1, lat2);
-        return 60*Math.sqrt(square(lat1-lat2)+square(dep*(lon1-lon2)));
+        float dep = departure(lat1, lat2);
+        return (float) (60*Math.sqrt(square(lat1-lat2)+square(dep*(lon1-lon2))));
     }
     
-    private static double square(double d)
+    private static float square(float d)
     {
         return d*d;
     }
@@ -60,17 +60,17 @@ public class AbstractNMEAObserver implements NMEAObserver
      * @param lon2 in degrees
      * @return 
      */
-    public static double bearing(double lat1, double lon1, double lat2, double lon2)
+    public static float bearing(float lat1, float lon1, float lat2, float lon2)
     {
-        double dep = departure(lat1, lat2);
-        double aa = dep*(lon2-lon1);
-        double bb = lat2-lat1;
-        double dd = Math.atan2(aa, bb);
+        float dep = departure(lat1, lat2);
+        float aa = dep*(lon2-lon1);
+        float bb = lat2-lat1;
+        float dd = (float) Math.atan2(aa, bb);
         if (dd < 0)
         {
             dd += 2*Math.PI;
         }
-        return Math.toDegrees(dd);
+        return (float) Math.toDegrees(dd);
     }
     
     /**
@@ -79,22 +79,22 @@ public class AbstractNMEAObserver implements NMEAObserver
      * @param lat2 Latitude in degrees
      * @return 
      */
-    public static double departure(double lat1, double lat2)
+    public static float departure(float lat1, float lat2)
     {
         assert lat1 >= -90 && lat1 <= 90;
         assert lat2 >= -90 && lat2 <= 90;
-        return Math.cos(Math.toRadians((lat2+lat1)/2));
+        return (float) Math.cos(Math.toRadians((lat2+lat1)/2));
     }
 
 
     @Override
-    public void talkerId(char c1, char c2)
+    public void setTalkerId(char c1, char c2)
     {
         
     }
 
     @Override
-    public void setLocation(double latitude, double longitude)
+    public void setLocation(float latitude, float longitude)
     {
         
     }
@@ -130,7 +130,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setDestinationWaypointLocation(double latitude, double longitude)
+    public void setDestinationWaypointLocation(float latitude, float longitude)
     {
         
     }

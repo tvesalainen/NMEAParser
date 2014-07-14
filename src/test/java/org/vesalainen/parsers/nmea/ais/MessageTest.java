@@ -26,11 +26,19 @@ import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.mmsi.MMSIEntry;
 import org.vesalainen.parsers.mmsi.MMSIParser;
 import org.vesalainen.parsers.mmsi.MMSIType;
+import static org.vesalainen.parsers.mmsi.MMSIType.*;
 import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
  * TODO Test for 
-
+ * 7
+ * 8 other than dac 1 fid 11
+ * 12
+ * 14
+ * 15
+ * 23
+ * 27
+ * 
  * @author Timo Vesalainen
  */
 public class MessageTest
@@ -1030,10 +1038,17 @@ public class MessageTest
                     assertEquals(ach.getUInt(66, 70), tc.model);
                     assertEquals(ach.getUInt(70, 90), tc.serial);
                     assertEquals(ach.getString(90, 132), tc.callSign);
-                    assertEquals(ach.getUInt(132, 141), tc.dimensionToBow);
-                    assertEquals(ach.getUInt(141, 150), tc.dimensionToStern);
-                    assertEquals(ach.getUInt(150, 156), tc.dimensionToPort);
-                    assertEquals(ach.getUInt(156, 162), tc.dimensionToStarboard);
+                    if (MMSIType.getType(tc.mmsi) == CraftAssociatedWithParentShip)
+                    {
+                        assertEquals(ach.getUInt(132, 162), tc.mothershipMMSI);
+                    }
+                    else
+                    {
+                        assertEquals(ach.getUInt(132, 141), tc.dimensionToBow);
+                        assertEquals(ach.getUInt(141, 150), tc.dimensionToStern);
+                        assertEquals(ach.getUInt(150, 156), tc.dimensionToPort);
+                        assertEquals(ach.getUInt(156, 162), tc.dimensionToStarboard);
+                    }
                 }
                 assertNull(tc.error);
             }
