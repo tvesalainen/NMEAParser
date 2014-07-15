@@ -47,16 +47,19 @@ public interface NMEAObserver extends Transactional
     void setClock(Clock clock);
     /**
      * Talker Id of sending device.
-     * @param c1
-     * @param c2 
+     * @param talkerId
      */
     void setTalkerId(char c1, char c2);
     /**
-     * Location in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
+     * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
+     */
+    void setLatitude(float latitude);
+    /**
+     * Longitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param longitude Longitude West is negative.
      */
-    void setLocation(float latitude, float longitude);
+    void setLongitude(float longitude);
     /**
      * RMA, RMC
      * @param knots 
@@ -73,25 +76,31 @@ public interface NMEAObserver extends Transactional
      */
     void setMagneticVariation(float degrees);
     /**
+     * DirectionToSteer - = left + = right
      * APA, APB, XTR
-     * @param crossTrackError In unit
-     * @param directionToSteer L or R
-     * @param unit N = NM, K=Km
+     * @param nm
      */
-    void setCrossTrackError(float crossTrackError, char directionToSteer, char unit);
+    void setCrossTrackError(float nm);
     /**
      * BOD, BWW, RMB, WNC
-     * @param input
-     * @param toWaypoint
+     * @param toWaypoint 
+     */
+    void setToWaypoint(String toWaypoint);
+    /**
+     * BOD, BWW, RMB, WNC
      * @param fromWaypoint 
      */
-    void setWaypointToWaypoint(InputReader input, int toWaypoint, int fromWaypoint);
+    void setFromWaypoint(String fromWaypoint);
     /**
      * RMB, WPL
-     * @param latitude
+     * @param latitude 
+     */
+    void setDestinationWaypointLatitude(float latitude);
+    /**
+     * RMB, WPL
      * @param longitude 
      */
-    void setDestinationWaypointLocation(float latitude, float longitude);
+    void setDestinationWaypointLongitude(float longitude);
     /**
      * RMB
      * @param nm 
@@ -124,16 +133,14 @@ public interface NMEAObserver extends Transactional
     void setHorizontalDilutionOfPrecision(float meters);
     /**
      * GGA
-     * @param antennaAltitude
-     * @param unitsOfAntennaAltitude 
+     * @param meters
      */
-    void setAntennaAltitude(float antennaAltitude, char unitsOfAntennaAltitude);
+    void setAntennaAltitude(float meters);
     /**
      * GGA
-     * @param geoidalSeparation
-     * @param unitsOfGeoidalSeparation 
+     * @param meters
      */
-    void setGeoidalSeparation(float geoidalSeparation, char unitsOfGeoidalSeparation);
+    void setGeoidalSeparation(float meters);
     /**
      * GGA
      * @param ageOfDifferentialGPSData 
@@ -156,10 +163,14 @@ public interface NMEAObserver extends Transactional
     void setArrivalStatus(char arrivalStatus);
     /**
      * RMA
-     * @param timeDifferenceA
+     * @param timeDifferenceA 
+     */
+    void setTimeDifferenceA(float timeDifferenceA);
+    /**
+     * RMA
      * @param timeDifferenceB 
      */
-    void setTimeDifference(float timeDifferenceA, float timeDifferenceB);
+    void setTimeDifferenceB(float timeDifferenceB);
     /**
      * AAM, APA, APB
      * @param waypointStatus 
@@ -167,16 +178,14 @@ public interface NMEAObserver extends Transactional
     void setWaypointStatus(char waypointStatus);
     /**
      * AAM
-     * @param arrivalCircleRadius
-     * @param units 
+     * @param nm
      */
-    void setArrivalCircleRadius(float arrivalCircleRadius, char units);
+    void setArrivalCircleRadius(float nm);
     /**
      * AAM, APA, APB, BWC, BWR, R00, WCV, WPL
-     * @param input
      * @param waypoint 
      */
-    void setWaypoint(InputReader input, int waypoint);
+    void setWaypoint(String waypoint);
     /**
      * ALM, RTE
      * @param totalNumberOfMessages 
@@ -259,22 +268,34 @@ public interface NMEAObserver extends Transactional
     void setStatus2(char status);
     /**
      * APA, APB
-     * @param bearingOriginToDestination
-     * @param mOrT 
+     * @param bearingOriginToDestination 
      */
-    void setBearingOriginToDestination(float bearingOriginToDestination, char mOrT);
+    void setBearingOriginToDestinationMagnetic(float bearingOriginToDestination);
+    /**
+     * APA, APB
+     * @param bearingOriginToDestination 
+     */
+    void setBearingOriginToDestinationTrue(float bearingOriginToDestination);
     /**
      * APB
-     * @param bearingPresentPositionToDestination
-     * @param mOrT 
+     * @param bearingPresentPositionToDestination 
      */
-    void setBearingPresentPositionToDestination(float bearingPresentPositionToDestination, char mOrT);
+    void setBearingPresentPositionToDestinationMagnetic(float bearingPresentPositionToDestination);
     /**
      * APB
-     * @param headingToSteerToDestination
-     * @param mOrT 
+     * @param bearingPresentPositionToDestination 
      */
-    void setHeadingToSteerToDestination(float headingToSteerToDestination, char mOrT);
+    void setBearingPresentPositionToDestinationTrue(float bearingPresentPositionToDestination);
+    /**
+     * APB
+     * @param headingToSteerToDestination 
+     */
+    void setHeadingToSteerToDestinationMagnetic(float headingToSteerToDestination);
+    /**
+     * APB
+     * @param headingToSteerToDestination 
+     */
+    void setHeadingToSteerToDestinationTrue(float headingToSteerToDestination);
     /**
      * BWC, GLL, XTE
      * @param faaModeIndicator 
@@ -282,10 +303,9 @@ public interface NMEAObserver extends Transactional
     void setFAAModeIndicator(char faaModeIndicator);
     /**
      * RMM
-     * @param input
      * @param horizontalDatum 
      */
-    void setHorizontalDatum(InputReader input, int horizontalDatum);
+    void setHorizontalDatum(String horizontalDatum);
     /**
      * RTE
      * @param messageMode 
@@ -293,46 +313,49 @@ public interface NMEAObserver extends Transactional
     void setMessageMode(char messageMode);
     /**
      * R00, RTE
-     * @param input
      * @param list 
      */
-    void setWaypoints(InputReader input, List<Integer> list);
+    void setWaypoints(List<String> list);
     /**
      * BWC, BWR WNC
-     * @param distanceToWaypoint
-     * @param units 
+     * @param nm
      */
-    void setDistanceToWaypoint(float distanceToWaypoint, char units);
+    void setDistanceToWaypoint(float nm);
     /**
      * DBK
-     * @param depth
-     * @param unit 
+     * @param meters
      */
-    void setDepthBelowKeel(float depth, char unit);
+    void setDepthBelowKeel(float meters);
     /**
      * DBS
-     * @param depth
-     * @param unit 
+     * @param meters
      */
-    void setDepthBelowSurface(float depth, char unit);
+    void setDepthBelowSurface(float meters);
     /**
      * DBT
-     * @param depth
-     * @param unit 
+     * @param meters
      */
-    void setDepthBelowTransducer(float depth, char unit);
+    void setDepthBelowTransducer(float meters);
     /**
      * BOD, BWC, BWR, BWW
-     * @param bearing
-     * @param unit 
+     * @param degrees
      */
-    void setBearing(float bearing, char unit);
+    void setTrueBearing(float degrees);
+    /**
+     * BOD, BWC, BWR, BWW
+     * @param degrees
+     */
+    void setMagneticBearing(float degrees);
     /**
      * DBT
-     * @param depth
-     * @param offset 
+     * @param meters
      */
-    void setDepthOfWater(float depth, float offset);
+    void setDepthOfWater(float meters);
+    /**
+     * DBT
+     * @param meters
+     */
+    void setDepthOffsetOfWater(float meters);
     /**
      * HDG
      * @param magneticDeviation 
@@ -345,28 +368,34 @@ public interface NMEAObserver extends Transactional
     void setMagneticSensorHeading(float magneticSensorHeading);
     /**
      * HDM, HDT
-     * @param heading
-     * @param unit 
+     * @param degrees
      */
-    void setHeading(float heading, char unit);
+    void setTrueHeading(float degrees);
+    /**
+     * HDM, HDT
+     * @param degrees
+     */
+    void setMagneticHeading(float degrees);
     /**
      * MTW
-     * @param waterTemperature
-     * @param unit 
+     * @param celcius
      */
-    void setWaterTemperature(float waterTemperature, char unit);
+    void setWaterTemperature(float celcius);
     /**
      * MWV
      * @param windAngle Wind Angle, 0 to 360 degrees
-     * @param unit Reference, R = Relative, T = True
      */
-    void setWindAngle(float windAngle, char unit);
+    void setRelativeWindAngle(float windAngle);
+    /**
+     * MWV
+     * @param windAngle Wind Angle, 0 to 360 degrees
+     */
+    void setTrueWindAngle(float windAngle);
     /**
      * MWV, VWR
-     * @param windSpeed
-     * @param unit Wind Speed Units, K/M/N
+     * @param metersInSecond
      */
-    void setWindSpeed(float windSpeed, char unit);
+    void setWindSpeed(float metersInSecond);
     /**
      * ROT
      * Rate Of Turn, degrees per minute, "-" means bow turns to port
@@ -411,53 +440,50 @@ public interface NMEAObserver extends Transactional
     void setPortRudderSensor(float portRudderSensor);
     /**
      * VHW
-     * @param waterHeading
-     * @param unit 
+     * @param degrees
      */
-    void setWaterHeading(float waterHeading, char unit);
+    void setTrueWaterHeading(float degrees);
     /**
      * VHW
-     * @param waterSpeed
-     * @param unit 
+     * @param degrees
      */
-    void setWaterSpeed(float waterSpeed, char unit);
+    void setMagneticWaterHeading(float degrees);
+    /**
+     * VHW
+     * @param knots
+     */
+    void setWaterSpeed(float knots);
     /**
      * VWR
-     * Relative wind angle
+     * Relative wind angle - = left + = right
      * @param windDirection Wind direction magnitude in degrees
-     * @param unit Wind direction Left/Right of bow
      */
-    void setWindDirection(float windDirection, char unit);
+    void setWindDirection(float windDirection);
     /**
      * WCV
-     * @param velocityToWaypoint
-     * @param unit 
+     * @param knots
      */
-    void setVelocityToWaypoint(float velocityToWaypoint, char unit);
+    void setVelocityToWaypoint(float knots);
     /**
      * TXT
-     * @param input
      * @param name Target name
      */
-    void setTargetName(InputReader input, int name);
+    void setTargetName(String name);
     /**
      * TXT
-     * @param input
      * @param message 
      */
-    void setMessage(InputReader input, int message);
+    void setMessage(String message);
     /**
      * Proprietary sentences start with $P. Proprietary type is the string
      * following that prefix. E.g. $PGRMI,... GRMI is the type.
-     * @param reader
-     * @param fieldRef FieldRef for type.
+     * @param type
      */
-    void setProprietaryType(InputReader reader, int fieldRef);
+    void setProprietaryType(String type);
     /**
      * Proprietary data. Comma separated proprietary data fields.
-     * @param reader
-     * @param fieldRef 
+     * @param data
      */
-    void setProprietaryData(InputReader reader, int fieldRef);
+    void setProprietaryData(String data);
 
 }

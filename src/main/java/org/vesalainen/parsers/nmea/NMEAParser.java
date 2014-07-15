@@ -187,11 +187,10 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
 
     @Rule("string")
     protected void proprietaryType(
-            int fieldRef,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader reader)
+            String type,
+            @ParserContext("data") NMEAObserver data)
     {
-        data.setProprietaryType(reader, fieldRef);
+        data.setProprietaryType(type);
     }
     @Rule
     protected void proprietaryData()
@@ -199,11 +198,10 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     }
     @Rule("string")
     protected void proprietaryData(
-            int fieldRef,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader reader)
+            String pdata,
+            @ParserContext("data") NMEAObserver data)
     {
-        data.setProprietaryData(reader, fieldRef);
+        data.setProprietaryData(pdata);
     }
     @Rule
     protected void targetName()
@@ -211,11 +209,10 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     }
     @Rule("string")
     protected void targetName(
-            int name, 
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
+            String name, 
+            @ParserContext("data") NMEAObserver data)
     {
-        data.setTargetName(input, name);
+        data.setTargetName(name);
     }
     @Rule
     protected void message()
@@ -223,11 +220,10 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     }
     @Rule("string")
     protected void message(
-            int message, 
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
+            String message, 
+            @ParserContext("data") NMEAObserver data)
     {
-        data.setMessage(input, message);
+        data.setMessage(message);
     }
     @Rule
     protected int sequentialMessageID()
@@ -328,7 +324,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setVelocityToWaypoint(velocityToWaypoint, unit);
+        data.setVelocityToWaypoint(speed(velocityToWaypoint, unit));
     }
 
     @Rule("decimal c letter")
@@ -337,7 +333,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWindDirection(windDirection, unit);
+        data.setWindDirection(leftOrRight(windDirection, unit));
     }
 
     @Rule("decimal c letter")
@@ -346,7 +342,17 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWaterHeading(waterHeading, unit);
+        switch (unit)
+        {
+            case 'T':
+                data.setTrueWaterHeading(waterHeading);
+                break;
+            case 'M':
+                data.setMagneticWaterHeading(waterHeading);
+                break;
+            default:
+                throw new IllegalArgumentException(unit+" expected T/M");
+        }
     }
 
     @Rule("decimal c letter")
@@ -355,7 +361,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWaterSpeed(waterSpeed, unit);
+        data.setWaterSpeed(speed(waterSpeed, unit));
     }
 
     @Rule("decimal")
@@ -420,7 +426,17 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWindAngle(windAngle, unit);
+        switch (unit)
+        {
+            case 'T':
+                data.setTrueWindAngle(windAngle);
+                break;
+            case 'R':
+                data.setRelativeWindAngle(windAngle);
+                break;
+            default:
+                throw new IllegalArgumentException(unit+ "expected T/R");
+        }
     }
 
     @Rule("decimal c letter")
@@ -429,7 +445,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWindSpeed(windSpeed, unit);
+        data.setWindSpeed(speed(windSpeed, unit));
     }
 
     @Rule("decimal c letter")
@@ -438,7 +454,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWaterTemperature(waterTemperature, unit);
+        data.setWaterTemperature(temperature(waterTemperature, unit));
     }
 
     @Rule("decimal c letter")
@@ -447,7 +463,17 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setHeading(heading, unit);
+        switch (unit)
+        {
+            case 'T':
+                data.setTrueHeading(heading);
+                break;
+            case 'M':
+                data.setMagneticHeading(heading);
+                break;
+            default:
+                throw new IllegalArgumentException(unit+ "expected T/M");
+        }
     }
 
     @Rule("decimal")
@@ -473,40 +499,39 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             float offset,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthOfWater(depth, offset);
+        data.setDepthOfWater(depth);
+        data.setDepthOffsetOfWater(offset);
     }
 
     @Rule("stringList")
     protected void waypoints(
-            List<Integer> list,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
+            List<String> list,
+            @ParserContext("data") NMEAObserver data)
     {
-        data.setWaypoints(input, list);
+        data.setWaypoints(list);
     }
 
     @Rule("string")
-    protected List<Integer> stringList(int fieldRef)
+    protected List<String> stringList(String waypoint)
     {
-        List<Integer> list = new ArrayList<>();
-        list.add(fieldRef);
+        List<String> list = new ArrayList<>();
+        list.add(waypoint);
         return list;
     }
 
     @Rule("stringList c string")
-    protected List<Integer> stringList(List<Integer> list, int fieldRef)
+    protected List<String> stringList(List<String> list, String waypoint)
     {
-        list.add(fieldRef);
+        list.add(waypoint);
         return list;
     }
 
     @Rule("string")
     protected void horizontalDatum(
-            int horizontalDatum,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
+            String horizontalDatum,
+            @ParserContext("data") NMEAObserver data)
     {
-        data.setHorizontalDatum(input, horizontalDatum);
+        data.setHorizontalDatum(horizontalDatum);
     }
 
     @Rule("c letter")
@@ -531,7 +556,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char units,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDistanceToWaypoint(distanceToWaypoint, units);
+        data.setDistanceToWaypoint(speed(distanceToWaypoint, units));
     }
 
     @Rule("decimal c letter")
@@ -540,7 +565,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowTransducer(depth, unit);
+        data.setDepthBelowTransducer(depth(depth, unit));
     }
 
     @Rule("decimal c letter")
@@ -549,7 +574,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowSurface(depth, unit);
+        data.setDepthBelowSurface(depth(depth, unit));
     }
 
     @Rule("decimal c letter")
@@ -558,7 +583,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowKeel(depth, unit);
+        data.setDepthBelowKeel(depth(depth, unit));
     }
 
     @Rule("decimal")
@@ -687,7 +712,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char units,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setArrivalCircleRadius(arrivalCircleRadius, units);
+        data.setArrivalCircleRadius(distance(arrivalCircleRadius, units));
     }
 
     @Rule("decimal c decimal")
@@ -696,16 +721,16 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             float timeDifferenceB, // uS
             @ParserContext("data") NMEAObserver data)
     {
-        data.setTimeDifference(timeDifferenceA, timeDifferenceB);
+        data.setTimeDifferenceA(timeDifferenceA);
+        data.setTimeDifferenceB(timeDifferenceB);
     }
 
     @Rule("string")
     protected void waypoint(
-            int waypoint,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
+            String waypoint,
+            @ParserContext("data") NMEAObserver data)
     {
-        data.setWaypoint(input, waypoint);
+        data.setWaypoint(waypoint);
     }
 
     @Rule("decimal")
@@ -778,7 +803,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unitsOfGeoidalSeparation, // meters
             @ParserContext("data") NMEAObserver data)
     {
-        data.setGeoidalSeparation(geoidalSeparation, unitsOfGeoidalSeparation);
+        data.setGeoidalSeparation(altitude(geoidalSeparation, unitsOfGeoidalSeparation));
     }
 
     @Rule("decimal c letter")
@@ -787,7 +812,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unitsOfAntennaAltitude, //meters
             @ParserContext("data") NMEAObserver data)
     {
-        data.setAntennaAltitude(antennaAltitude, unitsOfAntennaAltitude);
+        data.setAntennaAltitude(altitude(antennaAltitude, unitsOfAntennaAltitude));
     }
 
     @Rule("decimal")
@@ -828,7 +853,17 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit, // M = Magnetic, T = True
             @ParserContext("data") NMEAObserver data)
     {
-        data.setBearing(bearing, unit);
+        switch (unit)
+        {
+            case 'T':
+                data.setTrueBearing(bearing);
+                break;
+            case 'M':
+                data.setMagneticBearing(bearing);
+                break;
+            default:
+                throw new IllegalArgumentException(unit+" expected T/M");
+        }
     }
 
     @Rule("decimal")
@@ -845,7 +880,17 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char mOrT, // M = Magnetic, T = True
             @ParserContext("data") NMEAObserver data)
     {
-        data.setBearingOriginToDestination(bearingOriginToDestination, mOrT);
+        switch (mOrT)
+        {
+            case 'T':
+                data.setBearingOriginToDestinationTrue(bearingOriginToDestination);
+                break;
+            case 'M':
+                data.setBearingOriginToDestinationMagnetic(bearingOriginToDestination);
+                break;
+            default:
+                throw new IllegalArgumentException(mOrT+" expected T/M");
+        }
     }
 
     @Rule("decimal c letter")
@@ -854,7 +899,17 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char mOrT, // M = Magnetic, T = True
             @ParserContext("data") NMEAObserver data)
     {
-        data.setBearingPresentPositionToDestination(bearingPresentPositionToDestination, mOrT);
+        switch (mOrT)
+        {
+            case 'T':
+                data.setBearingPresentPositionToDestinationTrue(bearingPresentPositionToDestination);
+                break;
+            case 'M':
+                data.setBearingPresentPositionToDestinationMagnetic(bearingPresentPositionToDestination);
+                break;
+            default:
+                throw new IllegalArgumentException(mOrT+" expected T/M");
+        }
     }
 
     @Rule("decimal c letter")
@@ -863,7 +918,17 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char mOrT, // M = Magnetic, T = True
             @ParserContext("data") NMEAObserver data)
     {
-        data.setHeadingToSteerToDestination(headingToSteerToDestination, mOrT);
+        switch (mOrT)
+        {
+            case 'T':
+                data.setHeadingToSteerToDestinationTrue(headingToSteerToDestination);
+                break;
+            case 'M':
+                data.setHeadingToSteerToDestinationMagnetic(headingToSteerToDestination);
+                break;
+            default:
+                throw new IllegalArgumentException(mOrT+" expected T/M");
+        }
     }
 
     @Rule("decimal")
@@ -876,12 +941,13 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
 
     @Rule("string c string")
     protected void waypointToWaypoint(
-            int toWaypoint,
-            int fromWaypoint,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader input)
+            String toWaypoint,
+            String fromWaypoint,
+            @ParserContext("data") NMEAObserver data
+    )
     {
-        data.setWaypointToWaypoint(input, toWaypoint, fromWaypoint);
+        data.setToWaypoint(toWaypoint);
+        data.setFromWaypoint(fromWaypoint);
     }
 
     @Rule("decimal c letter c letter")
@@ -891,7 +957,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setCrossTrackError(crossTrackError, directionToSteer, unit);
+        data.setCrossTrackError(leftOrRight(speed(crossTrackError, unit), directionToSteer));
     }
 
     @Rule("decimal c letter")
@@ -900,7 +966,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char directionToSteer,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setCrossTrackError(crossTrackError, directionToSteer, 'N');
+        data.setCrossTrackError(leftOrRight(crossTrackError, directionToSteer));
     }
 
     @Rule("c")
@@ -941,7 +1007,8 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             int ew,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setLocation(ns * latitude, ew * longitude);
+        data.setLatitude(ns * latitude);
+        data.setLongitude(ew * longitude);
     }
 
     @Rule("latitude c ns c longitude c ew")
@@ -952,7 +1019,8 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             int ew,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDestinationWaypointLocation(ns * latitude, ew * longitude);
+        data.setDestinationWaypointLatitude(ns * latitude);
+        data.setDestinationWaypointLongitude(ew * longitude);
     }
 
     @Rule("letterNotP letter")
@@ -1212,5 +1280,35 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     public Checksum getChecksum()
     {
         return checksum;
+    }
+
+    private float speed(float velocity, char unit)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private float leftOrRight(float dir, char unit)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private float temperature(float temp, char unit)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private float depth(float depth, char unit)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private float distance(float dist, char unit)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private float altitude(float alt, char unit)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
