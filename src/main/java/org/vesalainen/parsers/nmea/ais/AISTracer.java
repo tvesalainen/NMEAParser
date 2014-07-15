@@ -28,13 +28,8 @@ import org.vesalainen.util.InterfaceTracer;
 /**
  * @author Timo Vesalainen
  */
-@GenClassname("org.vesalainen.parsers.nmea.ais.AISTracerImpl")
 public class AISTracer extends InterfaceTracer
 {
-
-    @GenRegex("[01]+")
-    protected Regex sixbit;
-    
 
     public AISTracer()
     {
@@ -45,7 +40,6 @@ public class AISTracer extends InterfaceTracer
     {
         return InterfaceTracer.getTracer(
                 AISObserver.class, 
-                (AISTracer) GenClassFactory.loadGenInstance(AISTracer.class), 
                 new AbstractAISObserver()
         );
     }
@@ -54,33 +48,9 @@ public class AISTracer extends InterfaceTracer
     {
         return InterfaceTracer.getTracer(
                 AISObserver.class, 
-                (AISTracer) GenClassFactory.loadGenInstance(AISTracer.class), 
                 new AbstractAISObserver(), 
                 appendable
         );
-    }
-    
-    @Override
-    public synchronized Object invoke(Object proxy, Method method, Object[] args) throws Throwable
-    {
-        if (
-                args != null &&
-                args.length == 2 &&
-                (args[0] instanceof InputReader) &&
-                (args[1] instanceof Integer) &&
-                sixbit.isMatch((CharSequence) args[0])
-                )
-        {
-            printer.print(method.getName());
-            printer.print("(");
-            printer.print(AisUtil.makeString((CharSequence) args[0]));
-            printer.println(")");
-            return null;
-        }
-        else
-        {
-            return super.invoke(proxy, method, args);
-        }
     }
     
 }

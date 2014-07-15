@@ -1206,9 +1206,9 @@ public class MessageTest
         }
 
         @Override
-        public void setVendorId(InputReader reader, int fieldRef)
+        public void setVendorId(String vendorId)
         {
-            this.vendorid = AisUtil.makeString(reader.getCharSequence(fieldRef));
+            this.vendorid = vendorId;
         }
 
         @Override
@@ -1284,9 +1284,9 @@ public class MessageTest
         }
 
         @Override
-        public void setNameExtension(InputReader reader, int fieldRef)
+        public void setNameExtension(String name_ext)
         {
-            this.name_ext = AisUtil.makeString(reader.getCharSequence(fieldRef));
+            this.name_ext = name_ext;
         }
 
         @Override
@@ -1308,9 +1308,9 @@ public class MessageTest
         }
 
         @Override
-        public void setName(InputReader reader, int fieldRef)
+        public void setName(String name)
         {
-            this.name = AisUtil.makeString(reader.getCharSequence(fieldRef));
+            this.name = name;
         }
 
         @Override
@@ -1770,9 +1770,9 @@ public class MessageTest
         }
 
         @Override
-        public void setDestination(InputReader reader, int fieldRef)
+        public void setDestination(String destination)
         {
-            this.destination = AisUtil.makeString(reader);
+            this.destination = destination;
         }
 
         @Override
@@ -1782,15 +1782,15 @@ public class MessageTest
         }
 
         @Override
-        public void setVesselName(InputReader reader, int fieldRef)
+        public void setVesselName(String vesselName)
         {
-            this.shipname = AisUtil.makeString(reader);
+            this.shipname = vesselName;
         }
 
         @Override
-        public void setCallSign(InputReader reader, int fieldRef)
+        public void setCallSign(String callSign)
         {
-            this.callSign = AisUtil.makeString(reader);
+            this.callSign = callSign;
         }
 
         @Override

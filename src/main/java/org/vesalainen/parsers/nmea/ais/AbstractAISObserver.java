@@ -205,13 +205,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setCallSign(InputReader reader, int fieldRef)
+    public void setCallSign(String str)
     {
         
     }
 
     @Override
-    public void setVesselName(InputReader reader, int fieldRef)
+    public void setVesselName(String str)
     {
         
     }
@@ -247,7 +247,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDestination(InputReader reader, int fieldRef)
+    public void setDestination(String str)
     {
         
     }
@@ -295,7 +295,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setLastPort(InputReader reader, int fieldRef)
+    public void setLastPort(String str)
     {
         
     }
@@ -325,7 +325,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setNextPort(InputReader reader, int fieldRef)
+    public void setNextPort(String str)
     {
         
     }
@@ -355,13 +355,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMainDangerousGood(InputReader reader, int fieldRef)
+    public void setMainDangerousGood(String str)
     {
         
     }
 
     @Override
-    public void setIMDCategory(InputReader reader, int fieldRef)
+    public void setIMDCategory(String str)
     {
         
     }
@@ -433,7 +433,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setPortname(InputReader reader, int fieldRef)
+    public void setPortname(String str)
     {
         
     }
@@ -517,7 +517,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setText(InputReader reader, int fieldRef)
+    public void setText(String str)
     {
         
     }
@@ -541,7 +541,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setBerthName(InputReader reader, int fieldRef)
+    public void setBerthName(String str)
     {
         
     }
@@ -727,7 +727,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDescription(InputReader reader, int fieldRef)
+    public void setDescription(String str)
     {
         
     }
@@ -936,19 +936,19 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setReasonForClosing(InputReader reader, int fieldRef)
+    public void setReasonForClosing(String str)
     {
         
     }
 
     @Override
-    public void setClosingFrom(InputReader reader, int fieldRef)
+    public void setClosingFrom(String str)
     {
         
     }
 
     @Override
-    public void setClosingTo(InputReader reader, int fieldRef)
+    public void setClosingTo(String str)
     {
         
     }
@@ -1002,7 +1002,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setStation(InputReader reader, int fieldRef)
+    public void setStation(String str)
     {
         
     }
@@ -1026,7 +1026,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setLocation(InputReader reader, int fieldRef)
+    public void setLocation(String str)
     {
         
     }
@@ -1072,17 +1072,17 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setName(InputReader reader, int fieldRef)
+    public void setName(String str)
     {
     }
 
     @Override
-    public void setNameExtension(InputReader reader, int fieldRef)
+    public void setNameExtension(String str)
     {
     }
 
     @Override
-    public void setVendorId(InputReader reader, int fieldRef)
+    public void setVendorId(String str)
     {
     }
 

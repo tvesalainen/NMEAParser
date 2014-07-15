@@ -149,9 +149,9 @@ public class VesselMonitor extends AbstractAISObserver
     }
 
     @Override
-    public void setCallSign(InputReader reader, int fieldRef)
+    public void setCallSign(String classSign)
     {
-        target.setCallSign(reader, fieldRef);
+        target.setCallSign(classSign);
     }
 
 }
