@@ -40,6 +40,11 @@ import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
 import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
+import org.vesalainen.util.navi.Fathom;
+import org.vesalainen.util.navi.Feet;
+import org.vesalainen.util.navi.KilometersInHour;
+import org.vesalainen.util.navi.Knots;
+import org.vesalainen.util.navi.Velocity;
 
 /**
  * @author Timo Vesalainen
@@ -324,7 +329,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setVelocityToWaypoint(speed(velocityToWaypoint, unit));
+        data.setVelocityToWaypoint(toKnots(velocityToWaypoint, unit));
     }
 
     @Rule("decimal c letter")
@@ -361,7 +366,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWaterSpeed(speed(waterSpeed, unit));
+        data.setWaterSpeed(toKnots(waterSpeed, unit));
     }
 
     @Rule("decimal")
@@ -445,7 +450,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWindSpeed(speed(windSpeed, unit));
+        data.setWindSpeed(toKnots(windSpeed, unit));
     }
 
     @Rule("decimal c letter")
@@ -454,7 +459,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWaterTemperature(temperature(waterTemperature, unit));
+        data.setWaterTemperature(toCelcius(waterTemperature, unit));
     }
 
     @Rule("decimal c letter")
@@ -556,7 +561,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char units,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDistanceToWaypoint(speed(distanceToWaypoint, units));
+        data.setDistanceToWaypoint(toKnots(distanceToWaypoint, units));
     }
 
     @Rule("decimal c letter")
@@ -565,7 +570,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowTransducer(depth(depth, unit));
+        data.setDepthBelowTransducer(toMeters(depth, unit));
     }
 
     @Rule("decimal c letter")
@@ -574,7 +579,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowSurface(depth(depth, unit));
+        data.setDepthBelowSurface(toMeters(depth, unit));
     }
 
     @Rule("decimal c letter")
@@ -583,7 +588,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowKeel(depth(depth, unit));
+        data.setDepthBelowKeel(toMeters(depth, unit));
     }
 
     @Rule("decimal")
@@ -803,7 +808,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unitsOfGeoidalSeparation, // meters
             @ParserContext("data") NMEAObserver data)
     {
-        data.setGeoidalSeparation(altitude(geoidalSeparation, unitsOfGeoidalSeparation));
+        data.setGeoidalSeparation(toMeters(geoidalSeparation, unitsOfGeoidalSeparation));
     }
 
     @Rule("decimal c letter")
@@ -812,7 +817,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unitsOfAntennaAltitude, //meters
             @ParserContext("data") NMEAObserver data)
     {
-        data.setAntennaAltitude(altitude(antennaAltitude, unitsOfAntennaAltitude));
+        data.setAntennaAltitude(toMeters(antennaAltitude, unitsOfAntennaAltitude));
     }
 
     @Rule("decimal")
@@ -957,7 +962,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setCrossTrackError(leftOrRight(speed(crossTrackError, unit), directionToSteer));
+        data.setCrossTrackError(leftOrRight(toKnots(crossTrackError, unit), directionToSteer));
     }
 
     @Rule("decimal c letter")
@@ -1026,7 +1031,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     @Rule("letterNotP letter")
     protected void talkerId(char c1, char c2, @ParserContext("data") NMEAObserver data)
     {
-        data.setTalkerId(c1, c2);
+        data.setTalkerId(new String(new char[] {c1, c2}));
     }
 
     @Rule("hexAlpha hexAlpha")
@@ -1101,9 +1106,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     protected abstract char hexAlpha(char x);
 
     @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)]+")
-    protected int string(InputReader input)
+    protected String string(String input)
     {
-        return input.getFieldRef();
+        return input;
     }
 
     @Terminal(expression = "[\\+\\-]?[0-9]+")
@@ -1282,33 +1287,84 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         return checksum;
     }
 
-    private float speed(float velocity, char unit)
+    private float toKnots(float velocity, char unit)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (unit)
+        {
+            case 'N':
+                return velocity;
+            case 'M':
+                return (float) Velocity.toKnots(velocity);
+            case 'K':
+                return (float) KilometersInHour.toKnots(velocity);
+            default:
+                throw new IllegalArgumentException(unit+" unknown expected N/M/K");
+        }
+    }
+
+    private float toMetersPerSecond(float velocity, char unit)
+    {
+        switch (unit)
+        {
+            case 'N':
+                return (float) Knots.toMetersPerSecond(velocity);
+            case 'M':
+                return velocity;
+            case 'K':
+                return (float) KilometersInHour.toMetersPerSecond(velocity);
+            default:
+                throw new IllegalArgumentException(unit+" unknown expected N/M/K");
+        }
     }
 
     private float leftOrRight(float dir, char unit)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (unit)
+        {
+            case 'L':
+                return -dir;
+            case 'R':
+                return dir;
+            default:
+                throw new IllegalArgumentException(unit+" unknown expected L/R");
+        }
     }
 
-    private float temperature(float temp, char unit)
+    private float toCelcius(float temp, char unit)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (unit)
+        {
+            case 'C':
+                return temp;
+            default:
+                throw new IllegalArgumentException(unit+" unknown expected C");
+        }
     }
 
-    private float depth(float depth, char unit)
+    private float toMeters(float depth, char unit)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (unit)
+        {
+            case 'F':
+                return (float) Fathom.toMeters(depth);
+            case 'M':
+                return depth;
+            case 'f':
+                return (float) Feet.toMeters(depth);
+            default:
+                throw new IllegalArgumentException(unit+" unknown expected f/M/F");
+        }
     }
 
     private float distance(float dist, char unit)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (unit)
+        {
+            case 'N':
+                return dist;
+            default:
+                throw new IllegalArgumentException(unit+" unknown expected N");
+        }
     }
 
-    private float altitude(float alt, char unit)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 }

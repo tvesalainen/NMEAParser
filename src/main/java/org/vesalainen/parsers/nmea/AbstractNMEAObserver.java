@@ -18,7 +18,6 @@
 package org.vesalainen.parsers.nmea;
 
 import java.util.List;
-import org.vesalainen.parser.util.InputReader;
 
 /**
  * @author Timo Vesalainen
@@ -41,14 +40,14 @@ public class AbstractNMEAObserver implements NMEAObserver
      * @param lon2 in degrees
      * @return 
      */
-    public static float distance(float lat1, float lon1, float lat2, float lon2)
+    public static double distance(double lat1, double lon1, double lat2, double lon2)
     {
         // TO DO use GC with long distance
-        float dep = departure(lat1, lat2);
-        return (float) (60*Math.sqrt(square(lat1-lat2)+square(dep*(lon1-lon2))));
+        double dep = departure(lat1, lat2);
+        return (double) (60*Math.sqrt(square(lat1-lat2)+square(dep*(lon1-lon2))));
     }
     
-    private static float square(float d)
+    private static double square(double d)
     {
         return d*d;
     }
@@ -60,17 +59,17 @@ public class AbstractNMEAObserver implements NMEAObserver
      * @param lon2 in degrees
      * @return 
      */
-    public static float bearing(float lat1, float lon1, float lat2, float lon2)
+    public static double bearing(double lat1, double lon1, double lat2, double lon2)
     {
-        float dep = departure(lat1, lat2);
-        float aa = dep*(lon2-lon1);
-        float bb = lat2-lat1;
-        float dd = (float) Math.atan2(aa, bb);
+        double dep = departure(lat1, lat2);
+        double aa = dep*(lon2-lon1);
+        double bb = lat2-lat1;
+        double dd = (double) Math.atan2(aa, bb);
         if (dd < 0)
         {
             dd += 2*Math.PI;
         }
-        return (float) Math.toDegrees(dd);
+        return (double) Math.toDegrees(dd);
     }
     
     /**
@@ -79,22 +78,28 @@ public class AbstractNMEAObserver implements NMEAObserver
      * @param lat2 Latitude in degrees
      * @return 
      */
-    public static float departure(float lat1, float lat2)
+    public static double departure(double lat1, double lat2)
     {
         assert lat1 >= -90 && lat1 <= 90;
         assert lat2 >= -90 && lat2 <= 90;
-        return (float) Math.cos(Math.toRadians((lat2+lat1)/2));
+        return (double) Math.cos(Math.toRadians((lat2+lat1)/2));
     }
 
 
     @Override
-    public void setTalkerId(char c1, char c2)
+    public void setTalkerId(String talkerId)
     {
         
     }
 
     @Override
-    public void setLocation(float latitude, float longitude)
+    public void setLatitude(float latitude)
+    {
+        
+    }
+
+    @Override
+    public void setLongitude(float longitude)
     {
         
     }
@@ -118,19 +123,19 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setCrossTrackError(float crossTrackError, char directionToSteer, char units)
+    public void setCrossTrackError(float crossTrackError)
     {
         
     }
 
     @Override
-    public void setWaypointToWaypoint(InputReader input, int toWaypoint, int fromWaypoint)
+    public void setDestinationWaypointLatitude(float latitude)
     {
         
     }
 
     @Override
-    public void setDestinationWaypointLocation(float latitude, float longitude)
+    public void setDestinationWaypointLongitude(float longitude)
     {
         
     }
@@ -172,13 +177,13 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setAntennaAltitude(float antennaAltitude, char unitsOfAntennaAltitude)
+    public void setAntennaAltitude(float antennaAltitude)
     {
         
     }
 
     @Override
-    public void setGeoidalSeparation(float geoidalSeparation, char unitsOfGeoidalSeparation)
+    public void setGeoidalSeparation(float geoidalSeparation)
     {
         
     }
@@ -208,7 +213,13 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setTimeDifference(float timeDifferenceA, float timeDifferenceB)
+    public void setTimeDifferenceA(float timeDifferenceA)
+    {
+        
+    }
+
+    @Override
+    public void setTimeDifferenceB(float timeDifferenceB)
     {
         
     }
@@ -220,13 +231,13 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setArrivalCircleRadius(float arrivalCircleRadius, char units)
+    public void setArrivalCircleRadius(float arrivalCircleRadius)
     {
         
     }
 
     @Override
-    public void setWaypoint(InputReader input, int waypoint)
+    public void setWaypoint(String waypoint)
     {
         
     }
@@ -328,31 +339,13 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setBearingOriginToDestination(float bearingOriginToDestination, char mOrT)
-    {
-        
-    }
-
-    @Override
-    public void setBearingPresentPositionToDestination(float bearingPresentPositionToDestination, char mOrT)
-    {
-        
-    }
-
-    @Override
-    public void setHeadingToSteerToDestination(float headingToSteerToDestination, char mOrT)
-    {
-        
-    }
-
-    @Override
     public void setFAAModeIndicator(char faaModeIndicator)
     {
         
     }
 
     @Override
-    public void setHorizontalDatum(InputReader reader, int horizontalDatum)
+    public void setHorizontalDatum(String horizontalDatum)
     {
         
     }
@@ -364,43 +357,31 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaypoints(InputReader input, List<Integer> list)
+    public void setWaypoints(List<String> list)
     {
         
     }
 
     @Override
-    public void setDistanceToWaypoint(float distanceToWaypoint, char units)
+    public void setDistanceToWaypoint(float distanceToWaypoint)
     {
         
     }
 
     @Override
-    public void setDepthBelowKeel(float depth, char unit)
+    public void setDepthBelowKeel(float depth)
     {
         
     }
 
     @Override
-    public void setDepthBelowSurface(float depth, char unit)
+    public void setDepthBelowSurface(float depth)
     {
         
     }
 
     @Override
-    public void setDepthBelowTransducer(float depth, char unit)
-    {
-        
-    }
-
-    @Override
-    public void setBearing(float bearing, char unit)
-    {
-        
-    }
-
-    @Override
-    public void setDepthOfWater(float depth, float offset)
+    public void setDepthBelowTransducer(float depth)
     {
         
     }
@@ -418,25 +399,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setHeading(float heading, char unit)
-    {
-        
-    }
-
-    @Override
-    public void setWaterTemperature(float waterTemperature, char unit)
-    {
-        
-    }
-
-    @Override
-    public void setWindAngle(float windAngle, char unit)
-    {
-        
-    }
-
-    @Override
-    public void setWindSpeed(float windSpeed, char unit)
+    public void setWaterTemperature(float waterTemperature)
     {
         
     }
@@ -484,25 +447,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaterHeading(float waterHeading, char unit)
-    {
-        
-    }
-
-    @Override
-    public void setWaterSpeed(float waterSpeed, char unit)
-    {
-        
-    }
-
-    @Override
-    public void setWindDirection(float windDirection, char unit)
-    {
-        
-    }
-
-    @Override
-    public void setVelocityToWaypoint(float velocityToWaypoint, char unit)
+    public void setVelocityToWaypoint(float velocityToWaypoint)
     {
         
     }
@@ -520,22 +465,127 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setTargetName(InputReader input, int name)
+    public void setTargetName(String name)
     {
     }
 
     @Override
-    public void setMessage(InputReader input, int message)
+    public void setMessage(String message)
     {
     }
 
     @Override
-    public void setProprietaryType(InputReader reader, int fieldRef)
+    public void setProprietaryType(String type)
     {
     }
 
     @Override
-    public void setProprietaryData(InputReader reader, int fieldRef)
+    public void setProprietaryData(String data)
+    {
+    }
+
+    @Override
+    public void setToWaypoint(String toWaypoint)
+    {
+    }
+
+    @Override
+    public void setFromWaypoint(String fromWaypoint)
+    {
+    }
+
+    @Override
+    public void setBearingOriginToDestinationMagnetic(float bearingOriginToDestination)
+    {
+    }
+
+    @Override
+    public void setBearingOriginToDestinationTrue(float bearingOriginToDestination)
+    {
+    }
+
+    @Override
+    public void setBearingPresentPositionToDestinationMagnetic(float bearingPresentPositionToDestination)
+    {
+    }
+
+    @Override
+    public void setBearingPresentPositionToDestinationTrue(float bearingPresentPositionToDestination)
+    {
+    }
+
+    @Override
+    public void setHeadingToSteerToDestinationMagnetic(float headingToSteerToDestination)
+    {
+    }
+
+    @Override
+    public void setHeadingToSteerToDestinationTrue(float headingToSteerToDestination)
+    {
+    }
+
+    @Override
+    public void setTrueBearing(float degrees)
+    {
+    }
+
+    @Override
+    public void setMagneticBearing(float degrees)
+    {
+    }
+
+    @Override
+    public void setDepthOfWater(float meters)
+    {
+    }
+
+    @Override
+    public void setDepthOffsetOfWater(float meters)
+    {
+    }
+
+    @Override
+    public void setTrueHeading(float degrees)
+    {
+    }
+
+    @Override
+    public void setMagneticHeading(float degrees)
+    {
+    }
+
+    @Override
+    public void setRelativeWindAngle(float windAngle)
+    {
+    }
+
+    @Override
+    public void setTrueWindAngle(float windAngle)
+    {
+    }
+
+    @Override
+    public void setWindSpeed(float metersInSecond)
+    {
+    }
+
+    @Override
+    public void setTrueWaterHeading(float degrees)
+    {
+    }
+
+    @Override
+    public void setMagneticWaterHeading(float degrees)
+    {
+    }
+
+    @Override
+    public void setWaterSpeed(float knots)
+    {
+    }
+
+    @Override
+    public void setWindDirection(float windDirection)
     {
     }
 

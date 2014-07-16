@@ -34,7 +34,7 @@ public class NMEAContentHelper
     {
         return fields[index];
     }
-    public char getChar(int index)
+    public Character getChar(int index)
     {
         String f = fields[index];
         if (f.length() > 1)
@@ -47,7 +47,7 @@ public class NMEAContentHelper
         }
         return fields[index].charAt(0);
     }
-    public float getFloat(int index)
+    public Float getFloat(int index)
     {
         String f = fields[index];
         if (f.isEmpty())
@@ -57,7 +57,7 @@ public class NMEAContentHelper
         return Float.parseFloat(f);
     }
     
-    public float getDegree(int index)
+    public Float getDegree(int index)
     {
         String f = fields[index];
         if (f.isEmpty())

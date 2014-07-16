@@ -49,7 +49,7 @@ public interface NMEAObserver extends Transactional
      * Talker Id of sending device.
      * @param talkerId
      */
-    void setTalkerId(char c1, char c2);
+    void setTalkerId(String talkerId);
     /**
      * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.

@@ -90,27 +90,29 @@ public class NMEAParserTest
             for (String nmea : nmeas)
             {
                 System.err.println(nmea);
-                TC tc = new TC();
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
-                assertEquals("GP", tc.talkerId);
+                assertEquals("GP", ss.getProperty("talkerId"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                cal.setTimeInMillis(tc.clock.getTime());
+                Clock clock = (Clock) ss.getProperty("clock");
+                cal.setTimeInMillis(clock.getTime());
                 String hhmmss = nch.getString(1);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
                 assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
-                assertEquals(nch.getChar(2), tc.status);
-                assertEquals(nch.getDegree(3), tc.latitude, Epsilon);
-                assertEquals(nch.getDegree(5), tc.longitude, Epsilon);
-                assertEquals(nch.getFloat(7), tc.speedOverGround, Epsilon);
-                assertEquals(nch.getFloat(8), tc.trackMadeGood, Epsilon);
+                assertEquals(nch.getChar(2), ss.getProperty("status"));
+                assertEquals(nch.getDegree(3), ss.getProperty("latitude"));
+                assertEquals(nch.getDegree(5), ss.getProperty("longitude"));
+                assertEquals(nch.getFloat(7), ss.getProperty("speedOverGround"));
+                assertEquals(nch.getFloat(8), ss.getProperty("trackMadeGood"));
                 String ddmmyy = nch.getString(9);
                 assertEquals(Integer.parseInt(ddmmyy.substring(0, 2)), cal.get(Calendar.DAY_OF_MONTH));
                 assertEquals(Integer.parseInt(ddmmyy.substring(2, 4)), cal.get(Calendar.MONTH)+1);
                 assertEquals(2000+Integer.parseInt(ddmmyy.substring(4, 6)), cal.get(Calendar.YEAR));
-                assertEquals(nch.getFloat(10), tc.magneticVariation, Epsilon);
-                assertEquals(nch.getChar(12), tc.faaModeIndicator);
+                assertEquals(nch.getFloat(10), ss.getProperty("magneticVariation"));
+                assertEquals(nch.getChar(12), ss.getProperty("faaModeIndicator"));
             }
         }
         catch (Exception ex)
@@ -134,13 +136,14 @@ public class NMEAParserTest
             for (String nmea : nmeas)
             {
                 System.err.println(nmea);
-                TC tc = new TC();
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
-                assertEquals("II", tc.talkerId);
-                assertEquals(nch.getFloat(1), tc.magneticSensorHeading, Epsilon);
-                assertEquals(nch.getFloat(2), tc.magneticDeviation, Epsilon);
-                assertEquals(nch.getFloat(4), tc.magneticVariation, Epsilon);
+                assertEquals("II", ss.getProperty("talkerId"));
+                assertEquals(nch.getFloat(1), ss.getProperty("magneticSensorHeading"));
+                assertEquals(nch.getFloat(2), ss.getProperty("magneticDeviation"));
+                assertEquals(nch.getFloat(4), ss.getProperty("magneticVariation"));
             }
         }
         catch (Exception ex)
@@ -164,13 +167,14 @@ public class NMEAParserTest
             for (String nmea : nmeas)
             {
                 System.err.println(nmea);
-                TC tc = new TC();
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
-                assertEquals("II", tc.talkerId);
-                assertEquals(nch.getFloat(1), tc.magneticSensorHeading, Epsilon);
-                assertEquals(nch.getFloat(2), tc.magneticDeviation, Epsilon);
-                assertEquals(nch.getFloat(4), tc.magneticVariation, Epsilon);
+                assertEquals("II", ss.getProperty("talkerId"));
+                assertEquals(nch.getFloat(1), ss.getProperty("magneticSensorHeading"));
+                assertEquals(nch.getFloat(2), ss.getProperty("magneticDeviation"));
+                assertEquals(nch.getFloat(4), ss.getProperty("magneticVariation"));
             }
         }
         catch (Exception ex)
@@ -178,100 +182,6 @@ public class NMEAParserTest
             ex.printStackTrace();
             fail(ex.getMessage());
         }
-    }
-
-    private static class TC extends AbstractNMEAObserver
-    {
-        private String commitReason;
-        private String rollbackReason;
-        private String talkerId;
-        private float latitude = Float.NaN;
-        private float longitude = Float.NaN;
-        private char status;
-        private float speedOverGround = Float.NaN;
-        private float trackMadeGood = Float.NaN;
-        private float magneticVariation = Float.NaN;
-        private char faaModeIndicator;
-        private float magneticDeviation = Float.NaN;
-        private float magneticSensorHeading = Float.NaN;
-
-        @Override
-        public void setWindSpeed(float windSpeed, char unit)
-        {
-        }
-
-        @Override
-        public void setWindAngle(float windAngle, char unit)
-        {
-        }
-
-        @Override
-        public void setMagneticSensorHeading(float magneticSensorHeading)
-        {
-            this.magneticSensorHeading = magneticSensorHeading;
-        }
-
-        @Override
-        public void setMagneticDeviation(float magneticDeviation)
-        {
-            this.magneticDeviation = magneticDeviation;
-        }
-
-        @Override
-        public void setFAAModeIndicator(char faaModeIndicator)
-        {
-            this.faaModeIndicator = faaModeIndicator;
-        }
-
-        @Override
-        public void setMagneticVariation(float magneticVariation)
-        {
-            this.magneticVariation = magneticVariation;
-        }
-
-        @Override
-        public void setTrackMadeGood(float trackMadeGood)
-        {
-            this.trackMadeGood = trackMadeGood;
-        }
-
-        @Override
-        public void setSpeedOverGround(float speedOverGround)
-        {
-            this.speedOverGround = speedOverGround;
-        }
-
-        @Override
-        public void commit(String reason)
-        {
-            this.commitReason = reason;
-        }
-
-        @Override
-        public void rollback(String reason)
-        {
-            this.rollbackReason = reason;
-        }
-
-        @Override
-        public void setStatus(char status)
-        {
-            this.status = status;
-        }
-
-        @Override
-        public void setLocation(float latitude, float longitude)
-        {
-            this.latitude = latitude;
-            this.longitude = longitude;
-        }
-
-        @Override
-        public void setTalkerId(char c1, char c2)
-        {
-            this.talkerId = new String(new char[] {c1, c2});
-        }
-
     }
 
 }
