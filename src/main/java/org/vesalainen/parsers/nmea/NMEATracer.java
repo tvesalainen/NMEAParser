@@ -20,7 +20,7 @@ package org.vesalainen.parsers.nmea;
 import java.util.ArrayList;
 import java.util.List;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.util.AppendablePrinter;
+import org.vesalainen.io.AppendablePrinter;
 import org.vesalainen.util.InterfaceTracer;
 
 /**
