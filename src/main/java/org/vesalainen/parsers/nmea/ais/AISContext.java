@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.util.concurrent.SimpleWorkflow;
 
@@ -37,7 +38,7 @@ public class AISContext extends SimpleWorkflow<Integer>
 
     public AISContext(AISObserver aisData) throws IOException
     {
-        super(-1, Runtime.getRuntime().availableProcessors()+1);
+        super(-1, Runtime.getRuntime().availableProcessors()+1, 5, TimeUnit.MINUTES);
         this.aisData = aisData;
         aisParser = AISParser.newInstance();
     }
