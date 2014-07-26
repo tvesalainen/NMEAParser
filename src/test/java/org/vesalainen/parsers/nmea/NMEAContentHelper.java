@@ -47,7 +47,30 @@ public class NMEAContentHelper
         }
         return fields[index].charAt(0);
     }
-    public Float getFloat(int index)
+    public String getPrefix(int index)
+    {
+        String f = fields[index];
+        if (f.length() > 1)
+        {
+            throw new IllegalArgumentException(f+" not a char");
+        }
+        if (f.isEmpty())
+        {
+            return null;
+        }
+        switch (fields[index].charAt(0))
+        {
+            case 'R':
+                return "relative";
+            case 'T':
+                return "true";
+            case 'M':
+                return "magnetic";
+            default:
+                throw new IllegalArgumentException(fields[index].charAt(0)+" cannot made prefix");
+        }
+    }
+    public float getFloat(int index)
     {
         String f = fields[index];
         if (f.isEmpty())
@@ -57,7 +80,7 @@ public class NMEAContentHelper
         return Float.parseFloat(f);
     }
     
-    public Float getDegree(int index)
+    public float getDegree(int index)
     {
         String f = fields[index];
         if (f.isEmpty())
@@ -68,6 +91,25 @@ public class NMEAContentHelper
         float deg = Float.parseFloat(f.substring(0, idx));
         float min = Float.parseFloat(f.substring(idx));
         return deg+min/60F;
+    }
+
+    public Integer getInt(int index)
+    {
+        String i = fields[index];
+        if (i.isEmpty())
+        {
+            return null;
+        }
+        return Integer.parseInt(i);
+    }
+    public Integer getHex(int index)
+    {
+        String i = fields[index];
+        if (i.isEmpty())
+        {
+            return null;
+        }
+        return Integer.parseInt(i, 16);
     }
     
 }

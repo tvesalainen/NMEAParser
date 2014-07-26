@@ -87,7 +87,13 @@ public class AbstractNMEAObserver implements NMEAObserver
 
 
     @Override
-    public void setTalkerId(String talkerId)
+    public void setTalkerId1(char talkerId)
+    {
+        
+    }
+
+    @Override
+    public void setTalkerId2(char talkerId)
     {
         
     }
@@ -273,61 +279,61 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setEccentricity(float eccentricity)
+    public void setEccentricity(int eccentricity)
     {
         
     }
 
     @Override
-    public void setAlmanacReferenceTime(float almanacReferenceTime)
+    public void setAlmanacReferenceTime(int almanacReferenceTime)
     {
         
     }
 
     @Override
-    public void setInclinationAngle(float inclinationAngle)
+    public void setInclinationAngle(int inclinationAngle)
     {
         
     }
 
     @Override
-    public void setRateOfRightAscension(float rateOfRightAscension)
+    public void setRateOfRightAscension(int rateOfRightAscension)
     {
         
     }
 
     @Override
-    public void setRootOfSemiMajorAxis(float rootOfSemiMajorAxis)
+    public void setRootOfSemiMajorAxis(int rootOfSemiMajorAxis)
     {
         
     }
 
     @Override
-    public void setArgumentOfPerigee(float argumentOfPerigee)
+    public void setArgumentOfPerigee(int argumentOfPerigee)
     {
         
     }
 
     @Override
-    public void setLongitudeOfAscensionNode(float longitudeOfAscensionNode)
+    public void setLongitudeOfAscensionNode(int longitudeOfAscensionNode)
     {
         
     }
 
     @Override
-    public void setMeanAnomaly(float meanAnomaly)
+    public void setMeanAnomaly(int meanAnomaly)
     {
         
     }
 
     @Override
-    public void setF0ClockParameter(float f0ClockParameter)
+    public void setF0ClockParameter(int f0ClockParameter)
     {
         
     }
 
     @Override
-    public void setF1ClockParameter(float f1ClockParameter)
+    public void setF1ClockParameter(int f1ClockParameter)
     {
         
     }
@@ -339,7 +345,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setFAAModeIndicator(char faaModeIndicator)
+    public void setFaaModeIndicator(char faaModeIndicator)
     {
         
     }

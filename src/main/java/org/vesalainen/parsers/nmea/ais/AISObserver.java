@@ -18,7 +18,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.Clock;
-import org.vesalainen.parsers.nmea.Transactional;
+import org.vesalainen.util.Transactional;
 
 /**
  * AISObserver is observer class for AIS data. AISParser calls methods of this 
@@ -49,12 +49,12 @@ public interface AISObserver extends Transactional
      * Returns mmsi
      * @return 
      */
-    int getMMSI();
+    int getMmsi();
     /**
      * Return MMSI Type
      * @return 
      */
-    MMSIType getMMSIType();
+    MMSIType getMmsiType();
     /**
      * 
      * @param numberOfSentences
@@ -102,7 +102,7 @@ public interface AISObserver extends Transactional
      * @see <a href="http://en.wikipedia.org/wiki/Maritime_Mobile_Service_Identity">Maritime Mobile Service Identity</a>
      * @param mmsi 
      */
-    void setMMSI(int mmsi);
+    void setMmsi(int mmsi);
     /**
      * Navigation Status
      * @param navigationStatus 
@@ -162,7 +162,7 @@ public interface AISObserver extends Transactional
      * @see <a href="http://en.wikipedia.org/wiki/Receiver_Autonomous_Integrity_Monitoring">Receiver autonomous integrity monitoring</a>
      * @param raim 
      */
-    void setRAIM(boolean raim);
+    void setRaim(boolean raim);
     /**
      * Diagnostic information for the radio system.
      * @param radio 
@@ -197,7 +197,7 @@ public interface AISObserver extends Transactional
      * Type of EPFD
      * @param epfdFixTypes 
      */
-    void setEPFD(EPFDFixTypes epfdFixTypes);
+    void setEpfd(EPFDFixTypes epfdFixTypes);
     /**
      * AIS Version. 0 = ITU1371
      * @see <a href="http://www.itu.int/rec/R-REC-M.1371-4-201004-I/en">Technical characteristics for an automatic identification system using time-division multiple access in the VHF maritime mobile band</a>
@@ -208,7 +208,7 @@ public interface AISObserver extends Transactional
      * IMO ship ID number
      * @param imo 
      */
-    void setIMONumber(int imo);
+    void setImoNumber(int imo);
     /**
      * Call Sign
      * @param callSign
@@ -253,7 +253,7 @@ public interface AISObserver extends Transactional
      * Data terminal ready 
      * @param ready
      */
-    void setDTE(boolean ready);
+    void setDte(boolean ready);
     /**
      * Ship Type
      * @param codesForShipType 
@@ -282,12 +282,12 @@ public interface AISObserver extends Transactional
      * @see <a href="http://www.itu.int/online/mms/glad/cga_mids.sh">Table of Maritime Identification Digits</a>
      * @param dac 
      */
-    void setDAC(int dac);
+    void setDac(int dac);
     /**
      * Functional ID for a message subtype. 
      * @param fid 
      */
-    void setFID(int fid);
+    void setFid(int fid);
     /**
      * Last Port Of Call. 
      * @param lastPort
@@ -348,12 +348,12 @@ public interface AISObserver extends Transactional
      * IMD Category
      * @param imdCategory
      */
-    void setIMDCategory(String imdCategory);
+    void setImdCategory(String imdCategory);
     /**
      * UN Number
      * @param unid 
      */
-    void setUNNumber(int unid);
+    void setUnNumber(int unid);
     /**
      * Amount of Cargo
      * @param amount 
@@ -658,22 +658,22 @@ public interface AISObserver extends Transactional
      * MMSI number 1
      * @param mmsi 
      */
-    void setMMSI1(int mmsi);
+    void setMmsi1(int mmsi);
     /**
      * MMSI number 2
      * @param mmsi 
      */
-    void setMMSI2(int mmsi);
+    void setMmsi2(int mmsi);
     /**
      * MMSI number 3
      * @param mmsi 
      */
-    void setMMSI3(int mmsi);
+    void setMmsi3(int mmsi);
     /**
      * MMSI number 4
      * @param mmsi 
      */
-    void setMMSI4(int mmsi);
+    void setMmsi4(int mmsi);
     /**
      * Average Wind Speed
      * @param knots 10-min avg wind speed, knots
@@ -980,7 +980,7 @@ public interface AISObserver extends Transactional
      * Returns false if Class B SOTDMA unit, true if Class B CS (Carrier Sense) unit
      * @param cs 
      */
-    void setCSUnit(boolean cs);
+    void setCsUnit(boolean cs);
     /**
      * Returns true if has display
      * @param hasDisplay 
@@ -990,7 +990,7 @@ public interface AISObserver extends Transactional
      * Returns true if, unit is attached to a VHF voice radio with DSC capability.
      * @param dsc 
      */
-    void setDSC(boolean dsc);
+    void setDsc(boolean dsc);
     /**
      * Base stations can command units to switch frequency. If this flag is true, 
      * the unit can use any part of the marine channel.
@@ -1001,7 +1001,7 @@ public interface AISObserver extends Transactional
      * Returns true If, unit can accept a channel assignment via Message Type 22.
      * @param b 
      */
-    void setMSG22(boolean b);
+    void setMsg22(boolean b);
     /**
      * Returns true if device is in assigned mode.
      * @param b 
@@ -1124,22 +1124,22 @@ public interface AISObserver extends Transactional
      * NE Longitude
      * @param f 
      */
-    void setNELongitude(float f);
+    void setNeLongitude(float f);
     /**
      * NE Latitude
      * @param f 
      */
-    void setSWLongitude(float f);
+    void setSwLongitude(float f);
     /**
      * SW Longitude
      * @param f 
      */
-    void setNELatitude(float f);
+    void setNeLatitude(float f);
     /**
      * SW Latitude
      * @param f 
      */
-    void setSWLatitude(float f);
+    void setSwLatitude(float f);
     /**
      * false=Broadcast, true=Addressed
      * @param addressed 

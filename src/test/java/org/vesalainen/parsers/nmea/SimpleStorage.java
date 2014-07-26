@@ -17,6 +17,7 @@
 
 package org.vesalainen.parsers.nmea;
 
+import org.vesalainen.util.Transactional;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -49,6 +50,17 @@ public class SimpleStorage implements InvocationHandler
     public Object getProperty(String property)
     {
         return map.get(property);
+    }
+
+    public float getFloat(String property)
+    {
+        Object ob = map.get(property);
+        if (ob == null)
+        {
+            return Float.NaN;
+        }
+        Float f = (Float) ob;
+        return f.floatValue();
     }
 
     public String getCommitReason()

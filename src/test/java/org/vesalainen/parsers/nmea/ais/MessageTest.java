@@ -91,7 +91,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.values()[ach.getUInt(0, 6)], tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
@@ -149,7 +149,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.BaseStationReport, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
@@ -183,7 +183,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.StaticAndVoyageRelatedData, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
@@ -232,7 +232,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.BinaryAddressedMessage, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertNull(tc.error);
@@ -260,7 +260,7 @@ public class MessageTest
             for (String nmea : nmeas)
             {
                 System.err.println(nmea);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
                 assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
@@ -584,7 +584,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.StandardSARAircraftPositionReport, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);
@@ -627,7 +627,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.UTCAndDateInquiry, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals(ach.getUInt(40, 70), tc.dest_mmsi);
@@ -654,7 +654,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.UTCAndDateResponse, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals(ach.getUInt(38, 52), tc.year);
@@ -692,7 +692,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.AssignmentModeCommand, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals(ach.getUInt(40, 70), tc.mmsi1);
@@ -725,7 +725,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.DGNSSBinaryBroadcastMessage, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals((float)ach.getInt(40, 58)/600.0 , tc.longitude, Epsilon);
@@ -754,7 +754,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.StandardClassBCSPositionReport, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals((float)ach.getUInt(46, 56)/10, tc.speed, Epsilon);
@@ -813,7 +813,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.ExtendedClassBEquipmentPositionReport, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals((float)ach.getUInt(46, 56)/10, tc.speed, Epsilon);
@@ -874,7 +874,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(160, ach.getBits());
                 assertEquals(MessageTypes.DataLinkManagement, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
@@ -918,7 +918,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.AidToNavigationReport, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals(NavaidTypes.values()[ach.getUInt(38, 43)], tc.aid_type);
@@ -974,7 +974,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.ChannelManagement, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals(ach.getUInt(40, 52), tc.channelA);
@@ -1022,7 +1022,7 @@ public class MessageTest
                 System.err.println(nmea);
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
-                AisContentHelper ach = new AisContentHelper(nmea);
+                AISContentHelper ach = new AISContentHelper(nmea);
                 assertEquals(MessageTypes.StaticDataReport, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 assertEquals(ach.getUInt(38, 40), tc.partno);
@@ -1242,25 +1242,25 @@ public class MessageTest
         }
 
         @Override
-        public void setSWLatitude(float f)
+        public void setSwLatitude(float f)
         {
             this.swLatitude = f;
         }
 
         @Override
-        public void setNELatitude(float f)
+        public void setNeLatitude(float f)
         {
             this.neLatitude = f;
         }
 
         @Override
-        public void setSWLongitude(float f)
+        public void setSwLongitude(float f)
         {
             this.swLongitude = f;
         }
 
         @Override
-        public void setNELongitude(float f)
+        public void setNeLongitude(float f)
         {
             this.neLongitude = f;
         }
@@ -1392,7 +1392,7 @@ public class MessageTest
         }
 
         @Override
-        public void setDTE(boolean ready)
+        public void setDte(boolean ready)
         {
             this.dte = ready;
         }
@@ -1404,7 +1404,7 @@ public class MessageTest
         }
 
         @Override
-        public void setMSG22(boolean b)
+        public void setMsg22(boolean b)
         {
             this.msg22 = b;
         }
@@ -1416,7 +1416,7 @@ public class MessageTest
         }
 
         @Override
-        public void setDSC(boolean dsc)
+        public void setDsc(boolean dsc)
         {
             this.dsc = dsc;
         }
@@ -1428,7 +1428,7 @@ public class MessageTest
         }
 
         @Override
-        public void setCSUnit(boolean cs)
+        public void setCsUnit(boolean cs)
         {
             this.cs = cs;
         }
@@ -1440,7 +1440,7 @@ public class MessageTest
         }
 
         @Override
-        public void setRAIM(boolean raim)
+        public void setRaim(boolean raim)
         {
             this.raim = raim;
         }
@@ -1470,25 +1470,25 @@ public class MessageTest
         }
 
         @Override
-        public void setMMSI4(int mmsi)
+        public void setMmsi4(int mmsi)
         {
             this.mmsi4 = mmsi;
         }
 
         @Override
-        public void setMMSI3(int mmsi)
+        public void setMmsi3(int mmsi)
         {
             this.mmsi3 = mmsi;
         }
 
         @Override
-        public void setMMSI2(int mmsi)
+        public void setMmsi2(int mmsi)
         {
             this.mmsi2 = mmsi;
         }
 
         @Override
-        public void setMMSI1(int mmsi)
+        public void setMmsi1(int mmsi)
         {
             this.mmsi1 = mmsi;
         }
@@ -1704,13 +1704,13 @@ public class MessageTest
         }
 
         @Override
-        public void setFID(int fid)
+        public void setFid(int fid)
         {
             this.fid = fid;
         }
 
         @Override
-        public void setDAC(int dac)
+        public void setDac(int dac)
         {
             this.dac = dac;
         }
@@ -1794,7 +1794,7 @@ public class MessageTest
         }
 
         @Override
-        public void setIMONumber(int imo)
+        public void setImoNumber(int imo)
         {
             this.imoNumber = imo;
         }
@@ -1806,7 +1806,7 @@ public class MessageTest
         }
 
         @Override
-        public void setEPFD(EPFDFixTypes epfdFixTypes)
+        public void setEpfd(EPFDFixTypes epfdFixTypes)
         {
             this.epfd = epfdFixTypes;
         }
@@ -1884,7 +1884,7 @@ public class MessageTest
         }
 
         @Override
-        public void setMMSI(int mmsi)
+        public void setMmsi(int mmsi)
         {
             this.mmsi = mmsi;
         }

@@ -45,7 +45,7 @@ public class VesselMonitor extends AbstractAISObserver
     }
 
     @Override
-    public void setMMSI(int mmsi)
+    public void setMmsi(int mmsi)
     {
         target = map.get(mmsi);
         if (target == null)
@@ -137,9 +137,9 @@ public class VesselMonitor extends AbstractAISObserver
     }
 
     @Override
-    public void setRAIM(boolean raim)
+    public void setRaim(boolean raim)
     {
-        target.setRAIM(raim);
+        target.setRaim(raim);
     }
 
     @Override

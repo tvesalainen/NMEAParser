@@ -450,7 +450,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWindSpeed(toKnots(windSpeed, unit));
+        data.setWindSpeed(toMetersPerSecond(windSpeed, unit));
     }
 
     @Rule("decimal c letter")
@@ -544,7 +544,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             char faaModeIndicator,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setFAAModeIndicator(faaModeIndicator);
+        data.setFaaModeIndicator(faaModeIndicator);
     }
 
     @Rule("letter")
@@ -591,87 +591,87 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setDepthBelowKeel(toMeters(depth, unit));
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void f1ClockParameter(
-            float f1ClockParameter,
+            int f1ClockParameter,
             @ParserContext("data") NMEAObserver data)
     {
         data.setF1ClockParameter(f1ClockParameter);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void f0ClockParameter(
-            float f0ClockParameter,
+            int f0ClockParameter,
             @ParserContext("data") NMEAObserver data)
     {
         data.setF0ClockParameter(f0ClockParameter);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void meanAnomaly(
-            float meanAnomaly,
+            int meanAnomaly,
             @ParserContext("data") NMEAObserver data)
     {
         data.setMeanAnomaly(meanAnomaly);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void longitudeOfAscensionNode(
-            float longitudeOfAscensionNode,
+            int longitudeOfAscensionNode,
             @ParserContext("data") NMEAObserver data)
     {
         data.setLongitudeOfAscensionNode(longitudeOfAscensionNode);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void argumentOfPerigee(
-            float argumentOfPerigee,
+            int argumentOfPerigee,
             @ParserContext("data") NMEAObserver data)
     {
         data.setArgumentOfPerigee(argumentOfPerigee);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void rootOfSemiMajorAxis(
-            float rootOfSemiMajorAxis,
+            int rootOfSemiMajorAxis,
             @ParserContext("data") NMEAObserver data)
     {
         data.setRootOfSemiMajorAxis(rootOfSemiMajorAxis);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void rateOfRightAscension(
-            float rateOfRightAscension,
+            int rateOfRightAscension,
             @ParserContext("data") NMEAObserver data)
     {
         data.setRateOfRightAscension(rateOfRightAscension);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void inclinationAngle(
-            float inclinationAngle,
+            int inclinationAngle,
             @ParserContext("data") NMEAObserver data)
     {
         data.setInclinationAngle(inclinationAngle);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void almanacReferenceTime(
-            float almanacReferenceTime,
+            int almanacReferenceTime,
             @ParserContext("data") NMEAObserver data)
     {
         data.setAlmanacReferenceTime(almanacReferenceTime);
     }
 
-    @Rule("decimal")
+    @Rule("hex")
     protected void eccentricity(
-            float eccentricity,
+            int eccentricity,
             @ParserContext("data") NMEAObserver data)
     {
         data.setEccentricity(eccentricity);
     }
 
-    @Rule("integer")
+    @Rule("hex")
     protected void svHealth(
             int svHealth,
             @ParserContext("data") NMEAObserver data)
@@ -1031,7 +1031,8 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     @Rule("letterNotP letter")
     protected void talkerId(char c1, char c2, @ParserContext("data") NMEAObserver data)
     {
-        data.setTalkerId(new String(new char[] {c1, c2}));
+        data.setTalkerId1(c1);
+        data.setTalkerId2(c2);
     }
 
     @Rule("hexAlpha hexAlpha")
@@ -1113,6 +1114,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
 
     @Terminal(expression = "[\\+\\-]?[0-9]+")
     protected abstract int integer(int i);
+
+    @Terminal(expression = "[\\+\\-]?[0-9]+")
+    protected int hex(Input);
 
     @Terminal(expression = "[\\+\\-]?[0-9]+(\\.[0-9]+)?")
     protected abstract float decimal(float f);

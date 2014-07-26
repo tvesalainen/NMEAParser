@@ -837,7 +837,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void mmsi(int mmsi, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMMSI(mmsi);
+        aisData.setMmsi(mmsi);
     }
 
     protected void aisVersion(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -1084,7 +1084,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
      */
     protected void raim(int raim, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setRAIM(raim == 1);
+        aisData.setRaim(raim == 1);
     }
     /**
      * Bits 149-167 are diagnostic information for the radio system. 
@@ -1162,7 +1162,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void epfd(int epfd, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setEPFD(EPFDFixTypes.values()[epfd]);
+        aisData.setEpfd(EPFDFixTypes.values()[epfd]);
     }
 
     protected void version(int version, @ParserContext("aisData") AISObserver aisData)
@@ -1172,17 +1172,17 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void imo(int imo, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setIMONumber(imo);
+        aisData.setImoNumber(imo);
     }
 
     protected void callsign(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setCallSign(AisUtil.makeString(reader));
+        aisData.setCallSign(AISUtil.makeString(reader));
     }
 
     protected void shipname(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setVesselName(AisUtil.makeString(reader));
+        aisData.setVesselName(AISUtil.makeString(reader));
     }
 
     protected void shiptype(int shiptype, @ParserContext("aisData") AISObserver aisData)
@@ -1221,16 +1221,16 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void destination_120(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDestination(AisUtil.makeString(reader));
+        aisData.setDestination(AISUtil.makeString(reader));
     }
     protected void destination_30(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDestination(AisUtil.makeString(reader));
+        aisData.setDestination(AISUtil.makeString(reader));
     }
 
     protected void dte(int dte, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDTE(dte != 1);
+        aisData.setDte(dte != 1);
     }
 
     protected void seqno(int seq, @ParserContext("aisData") AISObserver aisData)
@@ -1250,17 +1250,17 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void dac(int dac, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDAC(dac);
+        aisData.setDac(dac);
     }
 
     protected void fid(int fid, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setFID(fid);
+        aisData.setFid(fid);
     }
 
     protected void lastport(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setLastPort(AisUtil.makeString(reader));
+        aisData.setLastPort(AISUtil.makeString(reader));
     }
 
     protected void lmonth(int month, @ParserContext("aisData") AISObserver aisData)
@@ -1297,7 +1297,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void nextport(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setNextPort(AisUtil.makeString(reader));
+        aisData.setNextPort(AISUtil.makeString(reader));
     }
 
     protected void nmonth(int month, @ParserContext("aisData") AISObserver aisData)
@@ -1334,17 +1334,17 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void dangerous(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMainDangerousGood(AisUtil.makeString(reader));
+        aisData.setMainDangerousGood(AISUtil.makeString(reader));
     }
 
     protected void imdcat(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setIMDCategory(AisUtil.makeString(reader));
+        aisData.setImdCategory(AISUtil.makeString(reader));
     }
 
     protected void unid(int unid, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setUNNumber(unid);
+        aisData.setUnNumber(unid);
     }
 
     protected void amount(int amount, @ParserContext("aisData") AISObserver aisData)
@@ -1430,7 +1430,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void portname(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setPortname(AisUtil.makeString(reader));
+        aisData.setPortname(AISUtil.makeString(reader));
     }
 
     protected void notice(int notice, @ParserContext("aisData") AISObserver aisData)
@@ -1503,7 +1503,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void text(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setText(AisUtil.makeString(reader));
+        aisData.setText(AISUtil.makeString(reader));
     }
 
     protected void berthLength(int meters, @ParserContext("aisData") AISObserver aisData)
@@ -1659,7 +1659,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void berthName(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setBerthName(AisUtil.makeString(reader));
+        aisData.setBerthName(AISUtil.makeString(reader));
     }
 
     protected void berthLon_I3(int lon, @ParserContext("aisData") AISObserver aisData)
@@ -1697,27 +1697,27 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void description(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDescription(AisUtil.makeString(reader));
+        aisData.setDescription(AISUtil.makeString(reader));
     }
 
     protected void mmsi1(int mmsi, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMMSI1(mmsi);
+        aisData.setMmsi1(mmsi);
     }
 
     protected void mmsi2(int mmsi, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMMSI2(mmsi);
+        aisData.setMmsi2(mmsi);
     }
 
     protected void mmsi3(int mmsi, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMMSI3(mmsi);
+        aisData.setMmsi3(mmsi);
     }
 
     protected void mmsi4(int mmsi, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMMSI4(mmsi);
+        aisData.setMmsi4(mmsi);
     }
 
     protected void wspeed(int knots, @ParserContext("aisData") AISObserver aisData)
@@ -2015,17 +2015,17 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void reason(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setReasonForClosing(AisUtil.makeString(reader));
+        aisData.setReasonForClosing(AISUtil.makeString(reader));
     }
 
     protected void closefrom(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setClosingFrom(AisUtil.makeString(reader));
+        aisData.setClosingFrom(AISUtil.makeString(reader));
     }
 
     protected void closeto(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setClosingTo(AisUtil.makeString(reader));
+        aisData.setClosingTo(AISUtil.makeString(reader));
     }
 
     protected void extunit(int unit, @ParserContext("aisData") AISObserver aisData)
@@ -2208,7 +2208,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void station(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setStation(AisUtil.makeString(reader));
+        aisData.setStation(AISUtil.makeString(reader));
     }
 
     protected void signal(int signal, @ParserContext("aisData") AISObserver aisData)
@@ -2228,7 +2228,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void location(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setLocation(AisUtil.makeString(reader));
+        aisData.setLocation(AISUtil.makeString(reader));
     }
 
     protected void weather(int code, @ParserContext("aisData") AISObserver aisData)
@@ -2433,11 +2433,11 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     }
     protected void name(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setName(AisUtil.makeString(reader));
+        aisData.setName(AISUtil.makeString(reader));
     }
     protected void nameExt(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setNameExtension(AisUtil.makeString(reader));
+        aisData.setNameExtension(AISUtil.makeString(reader));
     }
     protected void sensortype(int arg, @ParserContext("aisData") AISObserver aisData)
     {
@@ -2798,7 +2798,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void cs(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setCSUnit(arg == 1);
+        aisData.setCsUnit(arg == 1);
     }
 
     protected void display(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -2808,7 +2808,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void dsc(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDSC(arg == 1);
+        aisData.setDsc(arg == 1);
     }
 
     protected void band(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -2818,7 +2818,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void msg22(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMSG22(arg == 1);
+        aisData.setMsg22(arg == 1);
     }
 // Type20DataLinkManagementMessage
     protected void number1(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -2938,7 +2938,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             if (lon <= 180 * 60 * 10 && lon >= -180 * 60 * 10)
             {
                 float f = lon;
-                aisData.setNELongitude(f / 600F);
+                aisData.setNeLongitude(f / 600F);
             }
             else
             {
@@ -2954,7 +2954,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             if (lat <= 90 * 60 * 10 && lat >= -90 * 60 * 10)
             {
                 float f = lat;
-                aisData.setNELatitude(f / 600F);
+                aisData.setNeLatitude(f / 600F);
             }
             else
             {
@@ -2970,7 +2970,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             if (lon <= 180 * 60 * 10 && lon >= -180 * 60 * 10)
             {
                 float f = lon;
-                aisData.setSWLongitude(f / 600F);
+                aisData.setSwLongitude(f / 600F);
             }
             else
             {
@@ -2986,7 +2986,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             if (lat <= 90 * 60 * 10 && lat >= -90 * 60 * 10)
             {
                 float f = lat;
-                aisData.setSWLatitude(f / 600F);
+                aisData.setSwLatitude(f / 600F);
             }
             else
             {
@@ -2997,12 +2997,12 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void dest1(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMMSI1(arg);
+        aisData.setMmsi1(arg);
     }
 
     protected void dest2(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMMSI2(arg);
+        aisData.setMmsi2(arg);
     }
     protected void boxDest(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
@@ -3018,9 +3018,9 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         int offset = input.getStart()-70;
         if (addressed)
         {
-            aisData.setMMSI1(input.parseInt(offset, 30, 2));
+            aisData.setMmsi1(input.parseInt(offset, 30, 2));
             offset+=30;
-            aisData.setMMSI2(input.parseInt(offset, 30, 2));
+            aisData.setMmsi2(input.parseInt(offset, 30, 2));
         }
         else
         {
@@ -3089,7 +3089,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void vendorid(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setVendorId(AisUtil.makeString(reader));
+        aisData.setVendorId(AISUtil.makeString(reader));
     }
 
     protected void model(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -3108,7 +3108,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     }
     protected void mothershipDim(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
-        if (aisData.getMMSIType() == CraftAssociatedWithParentShip)
+        if (aisData.getMmsiType() == CraftAssociatedWithParentShip)
         {
             aisData.setMotherShipMMSI(arg.parseIntRadix2());
         }

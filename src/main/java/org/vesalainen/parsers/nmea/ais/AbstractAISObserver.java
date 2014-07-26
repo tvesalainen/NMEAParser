@@ -79,7 +79,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMMSI(int mmsi)
+    public void setMmsi(int mmsi)
     {
         this.mmsi = mmsi;
     }
@@ -145,7 +145,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setRAIM(boolean raim)
+    public void setRaim(boolean raim)
     {
         
     }
@@ -187,7 +187,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setEPFD(EPFDFixTypes epfdFixTypes)
+    public void setEpfd(EPFDFixTypes epfdFixTypes)
     {
         
     }
@@ -199,7 +199,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setIMONumber(int imo)
+    public void setImoNumber(int imo)
     {
         
     }
@@ -253,7 +253,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDTE(boolean ready)
+    public void setDte(boolean ready)
     {
         
     }
@@ -283,13 +283,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDAC(int dac)
+    public void setDac(int dac)
     {
         
     }
 
     @Override
-    public void setFID(int fid)
+    public void setFid(int fid)
     {
         
     }
@@ -361,13 +361,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setIMDCategory(String str)
+    public void setImdCategory(String str)
     {
         
     }
 
     @Override
-    public void setUNNumber(int unid)
+    public void setUnNumber(int unid)
     {
         
     }
@@ -733,25 +733,25 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMMSI1(int mmsi)
+    public void setMmsi1(int mmsi)
     {
         
     }
 
     @Override
-    public void setMMSI2(int mmsi)
+    public void setMmsi2(int mmsi)
     {
         
     }
 
     @Override
-    public void setMMSI3(int mmsi)
+    public void setMmsi3(int mmsi)
     {
         
     }
 
     @Override
-    public void setMMSI4(int mmsi)
+    public void setMmsi4(int mmsi)
     {
         
     }
@@ -1142,7 +1142,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setCSUnit(boolean cs)
+    public void setCsUnit(boolean cs)
     {
     }
 
@@ -1152,7 +1152,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setDSC(boolean dsc)
+    public void setDsc(boolean dsc)
     {
     }
 
@@ -1162,7 +1162,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMSG22(boolean b)
+    public void setMsg22(boolean b)
     {
     }
 
@@ -1262,22 +1262,22 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setNELongitude(float f)
+    public void setNeLongitude(float f)
     {
     }
 
     @Override
-    public void setSWLongitude(float f)
+    public void setSwLongitude(float f)
     {
     }
 
     @Override
-    public void setNELatitude(float f)
+    public void setNeLatitude(float f)
     {
     }
 
     @Override
-    public void setSWLatitude(float f)
+    public void setSwLatitude(float f)
     {
     }
 
@@ -1328,13 +1328,13 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public int getMMSI()
+    public int getMmsi()
     {
         return mmsi;
     }
 
     @Override
-    public MMSIType getMMSIType()
+    public MMSIType getMmsiType()
     {
         return MMSIType.getType(mmsi);
     }

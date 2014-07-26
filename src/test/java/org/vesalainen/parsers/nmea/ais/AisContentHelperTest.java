@@ -56,7 +56,7 @@ public class AisContentHelperTest
     }
 
     /**
-     * Test of getAisData method, of class AisContentHelper.
+     * Test of getAisData method, of class AISContentHelper.
      */
     //@Test
     public void testGetAisData()
@@ -74,12 +74,12 @@ public class AisContentHelperTest
                 "E2;N1PG<JdhhRf>oNPhANBfRASdCjfI`3D3=UG2J`RQ9i1H<PS9bm<CKbREJVTPS"+
                 "rQA1@<aHJVkWD4ot2@\n"
                 ;
-        String result = AisContentHelper.getAisData(nmea);
+        String result = AISContentHelper.getAisData(nmea);
         assertEquals(expResult, result);
     }
 
     /**
-     * Test of getUInt method, of class AisContentHelper.
+     * Test of getUInt method, of class AISContentHelper.
      */
     @Test
     public void testGetInt()
@@ -87,7 +87,7 @@ public class AisContentHelperTest
         System.out.println("getInt");
         int begin = 0;
         int end = 6;
-        AisContentHelper instance = new AisContentHelper("!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23");
+        AISContentHelper instance = new AISContentHelper("!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23");
         int expResult = 1;
         int result = instance.getUInt(begin, end);
         assertEquals(expResult, result);

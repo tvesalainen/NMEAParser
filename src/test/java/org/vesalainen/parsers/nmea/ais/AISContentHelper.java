@@ -19,15 +19,16 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.io.StringReader;
+import org.vesalainen.parsers.nmea.ais.AISUtil;
 
 /**
  *
  * @author tkv
  */
-public class AisContentHelper
+public class AISContentHelper
 {
     private final String content;
-    public AisContentHelper(String nmea)
+    public AISContentHelper(String nmea)
     {
         content = getAisData(nmea);
     }
@@ -42,7 +43,7 @@ public class AisContentHelper
     public String getString(int begin, int end)
     {
         String sub = content.substring(begin, end);
-        return AisUtil.makeString(sub);
+        return AISUtil.makeString(sub);
     }
     public int getUInt(int begin, int end)
     {

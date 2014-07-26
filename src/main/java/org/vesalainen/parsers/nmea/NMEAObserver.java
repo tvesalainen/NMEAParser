@@ -17,6 +17,7 @@
 
 package org.vesalainen.parsers.nmea;
 
+import org.vesalainen.util.Transactional;
 import java.util.List;
 import org.vesalainen.parser.util.InputReader;
 
@@ -49,7 +50,12 @@ public interface NMEAObserver extends Transactional
      * Talker Id of sending device.
      * @param talkerId
      */
-    void setTalkerId(String talkerId);
+    void setTalkerId1(char talkerId);
+    /**
+     * Talker Id of sending device.
+     * @param talkerId
+     */
+    void setTalkerId2(char talkerId);
     /**
      * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
@@ -215,52 +221,52 @@ public interface NMEAObserver extends Transactional
      * ALM
      * @param eccentricity 
      */
-    void setEccentricity(float eccentricity);
+    void setEccentricity(int eccentricity);
     /**
      * ALM
      * @param almanacReferenceTime 
      */
-    void setAlmanacReferenceTime(float almanacReferenceTime);
+    void setAlmanacReferenceTime(int almanacReferenceTime);
     /**
      * ALM
      * @param inclinationAngle 
      */
-    void setInclinationAngle(float inclinationAngle);
+    void setInclinationAngle(int inclinationAngle);
     /**
      * ALM
      * @param rateOfRightAscension 
      */
-    void setRateOfRightAscension(float rateOfRightAscension);
+    void setRateOfRightAscension(int rateOfRightAscension);
     /**
      * ALM
      * @param rootOfSemiMajorAxis 
      */
-    void setRootOfSemiMajorAxis(float rootOfSemiMajorAxis);
+    void setRootOfSemiMajorAxis(int rootOfSemiMajorAxis);
     /**
      * ALM
      * @param argumentOfPerigee 
      */
-    void setArgumentOfPerigee(float argumentOfPerigee);
+    void setArgumentOfPerigee(int argumentOfPerigee);
     /**
      * ALM
      * @param longitudeOfAscensionNode 
      */
-    void setLongitudeOfAscensionNode(float longitudeOfAscensionNode);
+    void setLongitudeOfAscensionNode(int longitudeOfAscensionNode);
     /**
      * ALM
      * @param meanAnomaly 
      */
-    void setMeanAnomaly(float meanAnomaly);
+    void setMeanAnomaly(int meanAnomaly);
     /**
      * ALM
      * @param f0ClockParameter 
      */
-    void setF0ClockParameter(float f0ClockParameter);
+    void setF0ClockParameter(int f0ClockParameter);
     /**
      * ALM
      * @param f1ClockParameter 
      */
-    void setF1ClockParameter(float f1ClockParameter);
+    void setF1ClockParameter(int f1ClockParameter);
     /**
      * APA, APB, RSA, XTE
      * @param status 
@@ -300,7 +306,7 @@ public interface NMEAObserver extends Transactional
      * BWC, GLL, XTE
      * @param faaModeIndicator 
      */
-    void setFAAModeIndicator(char faaModeIndicator);
+    void setFaaModeIndicator(char faaModeIndicator);
     /**
      * RMM
      * @param horizontalDatum 
