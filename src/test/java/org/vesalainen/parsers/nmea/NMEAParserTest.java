@@ -259,7 +259,7 @@ public class NMEAParserTest
         {
             String[] nmeas = new String[] {
                 "$GPBWC,081837,,,,,,T,,M,,N,*13\r\n",
-                "$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*11\r\n"
+                "$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*21\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -278,13 +278,16 @@ public class NMEAParserTest
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
                 assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
-                assertEquals(nch.getDegree(4), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(6), ss.getFloat("longitude"), Epsilon);
-                assertEquals(nch.getFloat(6), ss.getProperty(nch.getPrefix(7)+"Bearing"));
-                assertEquals(nch.getFloat(8), ss.getProperty(nch.getPrefix(9)+"Bearing"));
-                assertEquals(nch.getFloat(10), ss.getProperty("distanceToWaypoint"));
+                assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getFloat(6), ss.getFloat(nch.getPrefix(7)+"Bearing"), Epsilon);
+                assertEquals(nch.getFloat(8), ss.getFloat(nch.getPrefix(9)+"Bearing"), Epsilon);
+                assertEquals(nch.getFloat(10), ss.getFloat("distanceToWaypoint"), Epsilon);
                 assertEquals(nch.getString(12), ss.getProperty("waypoint"));
-                assertEquals(nch.getChar(13), ss.getProperty("faaModeIndicator"));
+                if (nch.getSize() > 14)
+                {
+                    assertEquals(nch.getChar(13), ss.getProperty("faaModeIndicator"));
+                }
             }
         }
         catch (Exception ex)

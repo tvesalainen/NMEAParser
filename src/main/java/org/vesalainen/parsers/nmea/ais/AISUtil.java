@@ -21,7 +21,7 @@ package org.vesalainen.parsers.nmea.ais;
  *
  * @author tkv
  */
-public class AisUtil
+public class AISUtil
 {
     public static String makeString(CharSequence seq)
     {

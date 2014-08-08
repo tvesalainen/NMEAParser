@@ -30,6 +30,11 @@ public class NMEAContentHelper
         this.fields = msg.split("[,\\*]");
     }
     
+    public int getSize()
+    {
+        return fields.length;
+    }
+    
     public String getString(int index)
     {
         String f = fields[index];
@@ -92,10 +97,25 @@ public class NMEAContentHelper
         {
             return Float.NaN;
         }
+        String s = fields[index+1];
+        int sign;
+        switch (s)
+        {
+            case "N":
+            case "E":
+                sign = 1;
+                break;
+            case "S":
+            case "W":
+                sign = -1;
+                break;
+            default:
+                throw new IllegalArgumentException("got '"+s+"' expected N/S/E/W");
+        }
         int idx = f.indexOf('.')-2;
         float deg = Float.parseFloat(f.substring(0, idx));
         float min = Float.parseFloat(f.substring(idx));
-        return deg+min/60F;
+        return sign*(deg+min/60F);
     }
 
     public Integer getInt(int index)
