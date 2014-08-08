@@ -1126,7 +1126,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     @Terminal(expression = "[\\,]")
     protected abstract void c();
 
-    @Terminal(expression = "[^\\,]+")
+    @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)]+")
     protected abstract void skip();
 
     @RecoverMethod
