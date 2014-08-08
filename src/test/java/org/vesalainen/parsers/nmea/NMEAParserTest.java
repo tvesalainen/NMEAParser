@@ -114,7 +114,7 @@ public class NMEAParserTest
         try
         {
             String[] nmeas = new String[] {
-                "$GPALM,1,1,15,1159,00,441d,4e,16be,fd5e,a10c9f,4a2da4,686e81,58cbe1,0a4,001*5B\r\n"
+                "$GPALM,1,1,15,1159,00,441d,4e,16be,fd5e,a10c9f,4a2da4,686e81,58cbe1,0a4,001*77\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -141,6 +141,150 @@ public class NMEAParserTest
                 assertEquals(nch.getHex(13), ss.getProperty("meanAnomaly"));
                 assertEquals(nch.getHex(14), ss.getProperty("f0ClockParameter"));
                 assertEquals(nch.getHex(15), ss.getProperty("f1ClockParameter"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void apa()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPAPA,A,A,0.10,R,N,V,V,011,M,DEST*3f\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getChar(1), ss.getProperty("status"));
+                assertEquals(nch.getChar(2), ss.getProperty("status2"));
+                assertEquals(nch.getFloat(3), ss.getProperty("crossTrackError"));
+                assertEquals(nch.getChar(6), ss.getProperty("arrivalStatus"));
+                assertEquals(nch.getChar(7), ss.getProperty("waypointStatus"));
+                assertEquals(nch.getFloat(8), ss.getProperty(nch.getPrefix(9)+"BearingOriginToDestination"));
+                assertEquals(nch.getString(10), ss.getProperty("waypoint"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void apb()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPAPB,A,A,0.10,R,N,V,V,011,M,DEST,011,M,011,M*3c\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getChar(1), ss.getProperty("status"));
+                assertEquals(nch.getChar(2), ss.getProperty("status2"));
+                assertEquals(nch.getFloat(3), ss.getProperty("crossTrackError"));
+                assertEquals(nch.getChar(6), ss.getProperty("arrivalStatus"));
+                assertEquals(nch.getChar(7), ss.getProperty("waypointStatus"));
+                assertEquals(nch.getFloat(8), ss.getProperty(nch.getPrefix(9)+"BearingOriginToDestination"));
+                assertEquals(nch.getString(10), ss.getProperty("waypoint"));
+                assertEquals(nch.getFloat(11), ss.getProperty(nch.getPrefix(12)+"BearingPresentPositionToDestination"));
+                assertEquals(nch.getFloat(13), ss.getProperty(nch.getPrefix(14)+"HeadingToSteerToDestination"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void bod()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPBOD,099.3,T,105.6,M,POINTB,*48\r\n",
+                "$GPBOD,097.0,T,103.2,M,POINTB,POINTA*4a\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getFloat(1), ss.getProperty(nch.getPrefix(2)+"Bearing"));
+                assertEquals(nch.getFloat(3), ss.getProperty(nch.getPrefix(4)+"Bearing"));
+                assertEquals(nch.getString(5), ss.getProperty("toWaypoint"));
+                assertEquals(nch.getString(6), ss.getProperty("fromWaypoint"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void bwc()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPBWC,081837,,,,,,T,,M,,N,*13\r\n",
+                "$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*11\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                Clock clock = (Clock) ss.getProperty("clock");
+                cal.setTimeInMillis(clock.getTime());
+                String hhmmss = nch.getString(1);
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
+                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
+                assertEquals(nch.getDegree(4), ss.getFloat("latitude"), Epsilon);
+                assertEquals(nch.getDegree(6), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getFloat(6), ss.getProperty(nch.getPrefix(7)+"Bearing"));
+                assertEquals(nch.getFloat(8), ss.getProperty(nch.getPrefix(9)+"Bearing"));
+                assertEquals(nch.getFloat(10), ss.getProperty("distanceToWaypoint"));
+                assertEquals(nch.getString(12), ss.getProperty("waypoint"));
+                assertEquals(nch.getChar(13), ss.getProperty("faaModeIndicator"));
             }
         }
         catch (Exception ex)

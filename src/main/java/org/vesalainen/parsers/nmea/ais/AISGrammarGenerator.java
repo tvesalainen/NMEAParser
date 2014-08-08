@@ -222,10 +222,19 @@ public abstract class AISGrammarGenerator
                     int[] len = bounds(line.get(1));
                     switch (type)
                     {
+                        case 'b':
+                            if (len[0] == 1)
+                            {
+                                javaType = boolean.class;
+                            }
+                            else
+                            {
+                                javaType = int.class;
+                            }
+                            break;
                         case 'u':
                         case 'U':
                         case 'e':
-                        case 'b':
                             if (len[0] > 31)
                             {
                                 javaType = long.class;

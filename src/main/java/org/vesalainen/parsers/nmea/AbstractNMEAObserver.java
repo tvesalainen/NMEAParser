@@ -501,32 +501,32 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setBearingOriginToDestinationMagnetic(float bearingOriginToDestination)
+    public void setMagneticBearingOriginToDestination(float bearingOriginToDestination)
     {
     }
 
     @Override
-    public void setBearingOriginToDestinationTrue(float bearingOriginToDestination)
+    public void setTrueBearingOriginToDestination(float bearingOriginToDestination)
     {
     }
 
     @Override
-    public void setBearingPresentPositionToDestinationMagnetic(float bearingPresentPositionToDestination)
+    public void setMagneticBearingPresentPositionToDestination(float bearingPresentPositionToDestination)
     {
     }
 
     @Override
-    public void setBearingPresentPositionToDestinationTrue(float bearingPresentPositionToDestination)
+    public void setTrueBearingPresentPositionToDestination(float bearingPresentPositionToDestination)
     {
     }
 
     @Override
-    public void setHeadingToSteerToDestinationMagnetic(float headingToSteerToDestination)
+    public void setMagneticHeadingToSteerToDestination(float headingToSteerToDestination)
     {
     }
 
     @Override
-    public void setHeadingToSteerToDestinationTrue(float headingToSteerToDestination)
+    public void setTrueHeadingToSteerToDestination(float headingToSteerToDestination)
     {
     }
 

@@ -276,32 +276,32 @@ public interface NMEAObserver extends Transactional
      * APA, APB
      * @param bearingOriginToDestination 
      */
-    void setBearingOriginToDestinationMagnetic(float bearingOriginToDestination);
+    void setMagneticBearingOriginToDestination(float bearingOriginToDestination);
     /**
      * APA, APB
      * @param bearingOriginToDestination 
      */
-    void setBearingOriginToDestinationTrue(float bearingOriginToDestination);
+    void setTrueBearingOriginToDestination(float bearingOriginToDestination);
     /**
      * APB
      * @param bearingPresentPositionToDestination 
      */
-    void setBearingPresentPositionToDestinationMagnetic(float bearingPresentPositionToDestination);
+    void setMagneticBearingPresentPositionToDestination(float bearingPresentPositionToDestination);
     /**
      * APB
      * @param bearingPresentPositionToDestination 
      */
-    void setBearingPresentPositionToDestinationTrue(float bearingPresentPositionToDestination);
+    void setTrueBearingPresentPositionToDestination(float bearingPresentPositionToDestination);
     /**
      * APB
      * @param headingToSteerToDestination 
      */
-    void setHeadingToSteerToDestinationMagnetic(float headingToSteerToDestination);
+    void setMagneticHeadingToSteerToDestination(float headingToSteerToDestination);
     /**
      * APB
      * @param headingToSteerToDestination 
      */
-    void setHeadingToSteerToDestinationTrue(float headingToSteerToDestination);
+    void setTrueHeadingToSteerToDestination(float headingToSteerToDestination);
     /**
      * BWC, GLL, XTE
      * @param faaModeIndicator 

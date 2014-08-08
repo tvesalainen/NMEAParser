@@ -32,7 +32,12 @@ public class NMEAContentHelper
     
     public String getString(int index)
     {
-        return fields[index];
+        String f = fields[index];
+        if (f.isEmpty())
+        {
+            return null;
+        }
+        return f;
     }
     public Character getChar(int index)
     {

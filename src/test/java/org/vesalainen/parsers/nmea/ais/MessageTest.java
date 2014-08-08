@@ -22,7 +22,6 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.mmsi.MMSIEntry;
 import org.vesalainen.parsers.mmsi.MMSIParser;
 import org.vesalainen.parsers.mmsi.MMSIType;

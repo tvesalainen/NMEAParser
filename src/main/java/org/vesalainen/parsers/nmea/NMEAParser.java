@@ -103,11 +103,11 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "waterTemperature"),
     @Rule(left = "heading"),
     @Rule(left = "magneticSensorHeading"),
-    @Rule(left = "magneticDeviation", value="c"),
+    @Rule(left = "magneticDeviation", value="c skip?"),
     @Rule(left = "horizontalDatum"),
     @Rule(left = "faaModeIndicator"),
     @Rule(left = "messageMode"),
-    @Rule(left = "distanceToWaypoint"),
+    @Rule(left = "distanceToWaypoint", value="c skip?"),
     @Rule(left = "depthBelowTransducer"),
     @Rule(left = "depthBelowSurface"),
     @Rule(left = "depthBelowKeel"),
@@ -126,7 +126,7 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "satellitePRNNumber"),
     @Rule(left = "messageNumber"),
     @Rule(left = "totalNumberOfMessages"),
-    @Rule(left = "geoidalSeparation", value = "c"),
+    @Rule(left = "geoidalSeparation", value = "c skip?"),
     @Rule(left = "ageOfDifferentialGPSData"),
     @Rule(left = "differentialReferenceStationID"),
     @Rule(left = "status"),
@@ -136,40 +136,40 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "date"),
     @Rule(left = "utc"),
     @Rule(left = "waypoint"),
-    @Rule(left = "timeDifference", value = "c"),
-    @Rule(left = "arrivalCircleRadius", value = "c"),
-    @Rule(left = "depthOfWater", value = "c"),
+    @Rule(left = "timeDifference", value = "c skip?"),
+    @Rule(left = "arrivalCircleRadius", value = "c skip?"),
+    @Rule(left = "depthOfWater", value = "c skip?"),
     @Rule(left = "windSpeed"),
     @Rule(left = "destinationWaypointLocation", value = "c c c"),
     @Rule(left = "location", value = "c c c"),
     @Rule(left = "trackMadeGood"),
     @Rule(left = "speedOverGround"),
-    @Rule(left = "magneticVariation", value = "c"),
-    @Rule(left = "crossTrackErrorNM", value = "c"),
+    @Rule(left = "magneticVariation", value = "c skip?"),
+    @Rule(left = "crossTrackErrorNM", value = "c skip?"),
     @Rule(left = "crossTrackError", value = "c c"),
-    @Rule(left = "waypointToWaypoint", value = "c"),
+    @Rule(left = "waypointToWaypoint", value = "c skip?"),
     @Rule(left = "rangeToDestination"),
-    @Rule(left = "headingToSteerToDestination", value = "c"),
-    @Rule(left = "bearingPresentPositionToDestination", value = "c"),
-    @Rule(left = "bearingOriginToDestination", value = "c"),
+    @Rule(left = "headingToSteerToDestination", value = "c skip?"),
+    @Rule(left = "bearingPresentPositionToDestination", value = "c skip?"),
+    @Rule(left = "bearingOriginToDestination", value = "c skip?"),
     @Rule(left = "bearingToDestination"),
-    @Rule(left = "bearing", value = "c"),
+    @Rule(left = "bearing", value = "c skip?"),
     @Rule(left = "destinationClosingVelocity"),
     @Rule(left = "gpsQualityIndicator"),
     @Rule(left = "numberOfSatellitesInView"),
     @Rule(left = "horizontalDilutionOfPrecision"),
-    @Rule(left = "antennaAltitude", value = "c"),
+    @Rule(left = "antennaAltitude", value = "c skip?"),
     @Rule(left = "starboardRudderSensor"),
     @Rule(left = "portRudderSensor"),
     @Rule(left = "rpmSource"),
     @Rule(left = "rpmSourceNumber"),
     @Rule(left = "rpm"),
     @Rule(left = "propellerPitch"),
-    @Rule(left = "localZoneHours", value = "c"),
-    @Rule(left = "localZoneMinutes", value = "c"),
-    @Rule(left = "windDirection", value = "c"),
-    @Rule(left = "waterHeading", value = "c"),
-    @Rule(left = "waterSpeed", value = "c"),
+    @Rule(left = "localZoneHours", value = "c skip?"),
+    @Rule(left = "localZoneMinutes", value = "c skip?"),
+    @Rule(left = "windDirection", value = "c skip?"),
+    @Rule(left = "waterHeading", value = "c skip?"),
+    @Rule(left = "waterSpeed", value = "c skip?"),
     @Rule(left = "windAngle")
 })
 public abstract class NMEAParser implements ParserInfo, ChecksumProvider
@@ -888,10 +888,10 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         switch (mOrT)
         {
             case 'T':
-                data.setBearingOriginToDestinationTrue(bearingOriginToDestination);
+                data.setTrueBearingOriginToDestination(bearingOriginToDestination);
                 break;
             case 'M':
-                data.setBearingOriginToDestinationMagnetic(bearingOriginToDestination);
+                data.setMagneticBearingOriginToDestination(bearingOriginToDestination);
                 break;
             default:
                 throw new IllegalArgumentException(mOrT+" expected T/M");
@@ -907,10 +907,10 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         switch (mOrT)
         {
             case 'T':
-                data.setBearingPresentPositionToDestinationTrue(bearingPresentPositionToDestination);
+                data.setTrueBearingPresentPositionToDestination(bearingPresentPositionToDestination);
                 break;
             case 'M':
-                data.setBearingPresentPositionToDestinationMagnetic(bearingPresentPositionToDestination);
+                data.setMagneticBearingPresentPositionToDestination(bearingPresentPositionToDestination);
                 break;
             default:
                 throw new IllegalArgumentException(mOrT+" expected T/M");
@@ -926,10 +926,10 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         switch (mOrT)
         {
             case 'T':
-                data.setHeadingToSteerToDestinationTrue(headingToSteerToDestination);
+                data.setTrueHeadingToSteerToDestination(headingToSteerToDestination);
                 break;
             case 'M':
-                data.setHeadingToSteerToDestinationMagnetic(headingToSteerToDestination);
+                data.setMagneticHeadingToSteerToDestination(headingToSteerToDestination);
                 break;
             default:
                 throw new IllegalArgumentException(mOrT+" expected T/M");
@@ -955,6 +955,15 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setFromWaypoint(fromWaypoint);
     }
 
+    @Rule("string c")
+    protected void waypointToWaypoint(
+            String toWaypoint,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setToWaypoint(toWaypoint);
+    }
+
     @Rule("decimal c letter c letter")
     protected void crossTrackError(
             float crossTrackError, // NM
@@ -972,11 +981,6 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             @ParserContext("data") NMEAObserver data)
     {
         data.setCrossTrackError(leftOrRight(crossTrackError, directionToSteer));
-    }
-
-    @Rule("c")
-    protected void magneticVariation()
-    {
     }
 
     @Rule("decimal c ew")
@@ -1035,10 +1039,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setTalkerId2(c2);
     }
 
-    @Rule("hexAlpha hexAlpha")
+    @Rule("hex")
     protected void checksum(
-            char x1,
-            char x2,
+            int sum,
             @ParserContext(ParserConstants.InputReader) InputReader input,
             @ParserContext("clock") Clock clock,
             @ParserContext("data") NMEAObserver data,
@@ -1046,7 +1049,6 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
             )
     {
         AISObserver aisData = aisContext.getAisData();
-        int sum = 16 * parseHex(x1) + parseHex(x2);
         if (sum != checksum.getValue())
         {
             clock.rollback();
@@ -1115,8 +1117,8 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     @Terminal(expression = "[\\+\\-]?[0-9]+")
     protected abstract int integer(int i);
 
-    @Terminal(expression = "[\\+\\-]?[0-9]+")
-    protected int hex(Input);
+    @Terminal(expression = "[0-9a-fA-F]+", radix=16)
+    protected abstract int hex(int i);
 
     @Terminal(expression = "[\\+\\-]?[0-9]+(\\.[0-9]+)?")
     protected abstract float decimal(float f);
@@ -1124,39 +1126,8 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     @Terminal(expression = "[\\,]")
     protected abstract void c();
 
-    private static final int parseHex(char x)
-    {
-        switch (x)
-        {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                return x - '0';
-            case 'A':
-            case 'B':
-            case 'C':
-            case 'D':
-            case 'E':
-            case 'F':
-                return x - 'A' + 10;
-            case 'a':
-            case 'b':
-            case 'c':
-            case 'd':
-            case 'e':
-            case 'f':
-                return x - 'a' + 10;
-            default:
-                throw new IllegalArgumentException(x + " is not hex digit");
-        }
-    }
+    @Terminal(expression = "[^\\,]+")
+    protected abstract void skip();
 
     @RecoverMethod
     public void recover(
