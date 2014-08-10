@@ -195,7 +195,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setAgeOfDifferentialGPSData(int ageOfDifferentialGPSData)
+    public void setAgeOfDifferentialGPSData(float ageOfDifferentialGPSData)
     {
         
     }

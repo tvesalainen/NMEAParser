@@ -17,6 +17,9 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Timo Vesalainen
@@ -53,7 +56,7 @@ public class NMEAContentHelper
         }
         if (f.isEmpty())
         {
-            return 0;
+            return null;
         }
         return fields[index].charAt(0);
     }
@@ -136,5 +139,13 @@ public class NMEAContentHelper
         }
         return Integer.parseInt(i, 16);
     }
-    
+    public List<String> getList(int start, int length)
+    {
+        List<String> list = new ArrayList<>();
+        for (int ii=0;ii<length;ii++)
+        {
+            list.add(fields[start+ii]);
+        }
+        return list;
+    }
 }

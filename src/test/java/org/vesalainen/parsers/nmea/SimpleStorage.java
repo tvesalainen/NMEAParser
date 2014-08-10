@@ -52,6 +52,16 @@ public class SimpleStorage implements InvocationHandler
         return map.get(property);
     }
 
+    public int getInt(String property)
+    {
+        Object ob = map.get(property);
+        if (ob == null)
+        {
+            return -1;
+        }
+        Integer i = (Integer) ob;
+        return i.intValue();
+    }
     public float getFloat(String property)
     {
         Object ob = map.get(property);
@@ -100,4 +110,5 @@ public class SimpleStorage implements InvocationHandler
         }
         return null;
     }
+
 }

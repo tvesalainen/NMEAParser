@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2013 Timo Vesalainen
  *
@@ -108,9 +109,9 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "faaModeIndicator"),
     @Rule(left = "messageMode"),
     @Rule(left = "distanceToWaypoint", value="c skip?"),
-    @Rule(left = "depthBelowTransducer"),
-    @Rule(left = "depthBelowSurface"),
-    @Rule(left = "depthBelowKeel"),
+    @Rule(left = "depthBelowTransducer", value="c skip?"),
+    @Rule(left = "depthBelowSurface", value="c skip?"),
+    @Rule(left = "depthBelowKeel", value="c skip?"),
     @Rule(left = "f0ClockParameter"),
     @Rule(left = "f1ClockParameter"),
     @Rule(left = "meanAnomaly"),
@@ -794,9 +795,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setDifferentialReferenceStationID(differentialReferenceStationID);
     }
 
-    @Rule("integer")
+    @Rule("decimal")
     protected void ageOfDifferentialGPSData(
-            int ageOfDifferentialGPSData, //time in seconds since last SC104 type 1 or 9 update, null field when DGPS is not used
+            float ageOfDifferentialGPSData, //time in seconds since last SC104 type 1 or 9 update, null field when DGPS is not used
             @ParserContext("data") NMEAObserver data)
     {
         data.setAgeOfDifferentialGPSData(ageOfDifferentialGPSData);

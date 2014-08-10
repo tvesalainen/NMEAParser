@@ -151,7 +151,7 @@ public interface NMEAObserver extends Transactional
      * GGA
      * @param ageOfDifferentialGPSData 
      */
-    void setAgeOfDifferentialGPSData(int ageOfDifferentialGPSData);
+    void setAgeOfDifferentialGPSData(float ageOfDifferentialGPSData);
     /**
      * GGA
      * @param differentialReferenceStationID 
