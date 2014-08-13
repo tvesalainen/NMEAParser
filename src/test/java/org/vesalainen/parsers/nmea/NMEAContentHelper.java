@@ -83,6 +83,29 @@ public class NMEAContentHelper
                 throw new IllegalArgumentException(fields[index].charAt(0)+" cannot made prefix");
         }
     }
+    public float getSign(int index)
+    {
+        String f = fields[index];
+        if (f.length() > 1)
+        {
+            return Float.NaN;
+        }
+        if (f.isEmpty())
+        {
+            return Float.NaN;
+        }
+        switch (fields[index].charAt(0))
+        {
+            case 'R':
+            case 'E':
+                return 1;
+            case 'L':
+            case 'W':
+                return -1;
+            default:
+            return Float.NaN;
+        }
+    }
     public float getFloat(int index)
     {
         String f = fields[index];
@@ -147,5 +170,18 @@ public class NMEAContentHelper
             list.add(fields[start+ii]);
         }
         return list;
+    }
+
+    public int parseYear(String yy)
+    {
+        int year = Integer.parseInt(yy);
+        if (year > 70)
+        {
+            return 1900+year;
+        }
+        else
+        {
+            return 2000+year;
+        }
     }
 }

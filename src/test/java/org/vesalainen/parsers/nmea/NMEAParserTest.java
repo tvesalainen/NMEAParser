@@ -564,7 +564,10 @@ public class NMEAParserTest
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
                 assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
                 assertEquals(nch.getChar(6), ss.getProperty("status"));
-                assertEquals(nch.getChar(7), ss.getProperty("faaModeIndicator"));
+                if (nch.getSize() > 8)
+                {
+                    assertEquals(nch.getChar(7), ss.getProperty("faaModeIndicator"));
+                }
             }
         }
         catch (Exception ex)
@@ -764,7 +767,8 @@ public class NMEAParserTest
         try
         {
             String[] nmeas = new String[] {
-                "$GPRMB,A,0.66,L,003,004,4917.24,N,12309.57,W,001.3,052.5,000.5,V*0B\r\n"
+                "$GPRMB,A,0.66,L,003,004,4917.24,N,12309.57,W,001.3,052.5,000.5,V*20\r\n",
+                "$GPRMB,A,4.08,L,EGLL,EGLM,5130.02,N,00046.34,W,004.6,213.9,122.9,A*3D\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -777,23 +781,19 @@ public class NMEAParserTest
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 assertEquals(nch.getChar(1), ss.getProperty("status"));
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.getTime());
-                String hhmmss = nch.getString(1);
-                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
-                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
-                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
-                assertEquals(nch.getDegree(3), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(5), ss.getFloat("longitude"), Epsilon);
-                assertEquals(nch.getFloat(7), ss.getFloat("speedOverGround"), Epsilon);
-                assertEquals(nch.getFloat(8), ss.getFloat("trackMadeGood"), Epsilon);
-                String ddmmyy = nch.getString(9);
-                assertEquals(Integer.parseInt(ddmmyy.substring(0, 2)), cal.get(Calendar.DAY_OF_MONTH));
-                assertEquals(Integer.parseInt(ddmmyy.substring(2, 4)), cal.get(Calendar.MONTH)+1);
-                assertEquals(2000+Integer.parseInt(ddmmyy.substring(4, 6)), cal.get(Calendar.YEAR));
-                assertEquals(nch.getFloat(10), ss.getFloat("magneticVariation"), Epsilon);
-                assertEquals(nch.getChar(12), ss.getProperty("faaModeIndicator"));
+                assertEquals(nch.getSign(3)*nch.getFloat(2), ss.getFloat("crossTrackError"), Epsilon);
+                assertEquals(nch.getString(4), ss.getProperty("toWaypoint"));
+                assertEquals(nch.getString(5), ss.getProperty("fromWaypoint"));
+                assertEquals(nch.getDegree(6), ss.getFloat("destinationWaypointLatitude"), Epsilon);
+                assertEquals(nch.getDegree(8), ss.getFloat("destinationWaypointLongitude"), Epsilon);
+                assertEquals(nch.getFloat(10), ss.getFloat("rangeToDestination"), Epsilon);
+                assertEquals(nch.getFloat(11), ss.getFloat("bearingToDestination"), Epsilon);
+                assertEquals(nch.getFloat(12), ss.getFloat("destinationClosingVelocity"), Epsilon);
+                assertEquals(nch.getChar(13), ss.getProperty("arrivalStatus"));
+                if (nch.getSize() > 15)
+                {
+                    assertEquals(nch.getChar(14), ss.getProperty("faaModeIndicator"));
+                }
             }
         }
         catch (Exception ex)
@@ -812,7 +812,10 @@ public class NMEAParserTest
                 "$GPRMC,062455,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*78\r\n",
                 "$GPRMC,062456,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*7B\r\n",
                 "$GPRMC,062457,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*7D\r\n",
-                "$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*72\r\n"
+                "$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*72\r\n",
+                "$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62\r\n",
+                "$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68\r\n",
+                "$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -839,9 +842,41 @@ public class NMEAParserTest
                 String ddmmyy = nch.getString(9);
                 assertEquals(Integer.parseInt(ddmmyy.substring(0, 2)), cal.get(Calendar.DAY_OF_MONTH));
                 assertEquals(Integer.parseInt(ddmmyy.substring(2, 4)), cal.get(Calendar.MONTH)+1);
-                assertEquals(2000+Integer.parseInt(ddmmyy.substring(4, 6)), cal.get(Calendar.YEAR));
-                assertEquals(nch.getFloat(10), ss.getFloat("magneticVariation"), Epsilon);
-                assertEquals(nch.getChar(12), ss.getProperty("faaModeIndicator"));
+                assertEquals(nch.parseYear(ddmmyy.substring(4, 6)), cal.get(Calendar.YEAR));
+                assertEquals(nch.getSign(11)*nch.getFloat(10), ss.getFloat("magneticVariation"), Epsilon);
+                if (nch.getSize() > 13)
+                {
+                    assertEquals(nch.getChar(12), ss.getProperty("faaModeIndicator"));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void rot()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPROT,35.6,A*01\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getFloat(1), ss.getProperty("rateOfTurn"));
+                assertEquals(nch.getChar(2), ss.getProperty("status"));
             }
         }
         catch (Exception ex)
