@@ -17,7 +17,6 @@
 
 package org.vesalainen.parsers.nmea;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.TimeZone;
 import static org.junit.Assert.*;
@@ -26,33 +25,7 @@ import org.vesalainen.util.navi.Knots;
 
 /**
  * TODO
- * AAM
-   ALM
-   APA
-   APB
-   BOD
-   BWC
-   BWR
-   BWW
-   DBK
-   DBS
-   DBT
-   DPT
-   GGA
-   GLL
-   HDG
-   HDM
-   HDT
-   MTW
-   MWV
-   R00
-   RMA
-   RMB
-   RMC
    RMM
-   ROT
-   RPM
-   RSA
    RTE
    TXT
    VHW
@@ -83,7 +56,8 @@ public class NMEAParserTest
         try
         {
             String[] nmeas = new String[] {
-                "$GPAAM,A,A,0.10,N,WPTNME*32\r\n"
+                "$GPAAM,A,A,0.10,N,WPTNME*32\r\n",
+                "$GPAAM,A,A,0.50,N,WPT0001*71\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -221,13 +195,55 @@ public class NMEAParserTest
     }
 
     @Test
+    public void bec()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPBEC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*33\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                Clock clock = (Clock) ss.getProperty("clock");
+                cal.setTimeInMillis(clock.getTime());
+                String hhmmss = nch.getString(1);
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
+                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
+                assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getFloat(6), ss.getFloat(nch.getPrefix(7)+"Bearing"), Epsilon);
+                assertEquals(nch.getFloat(8), ss.getFloat(nch.getPrefix(9)+"Bearing"), Epsilon);
+                assertEquals(nch.getFloat(10), ss.getFloat("distanceToWaypoint"), Epsilon);
+                assertEquals(nch.getString(12), ss.getProperty("waypoint"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void bod()
     {
         try
         {
             String[] nmeas = new String[] {
                 "$GPBOD,099.3,T,105.6,M,POINTB,*48\r\n",
-                "$GPBOD,097.0,T,103.2,M,POINTB,POINTA*4a\r\n"
+                "$GPBOD,097.0,T,103.2,M,POINTB,POINTA*4a\r\n",
+                "$GPBOD,164.3,T,164.5,M,De Volmer,De Volmer*41\r\n",
+                "$GPBOD,345.6,T,8.6,M,BA01,AIC*04\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -259,7 +275,8 @@ public class NMEAParserTest
         {
             String[] nmeas = new String[] {
                 "$GPBWC,081837,,,,,,T,,M,,N,*13\r\n",
-                "$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*21\r\n"
+                "$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*21\r\n",
+                "$GPBWC,010003,1248.4128,S,03827.6978,W,338.4,T,1.5,M,0.314,N,BA01,A*61\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -345,7 +362,8 @@ public class NMEAParserTest
         {
             String[] nmeas = new String[] {
                 "$GPBWW,099.3,T,105.6,M,POINTB,*43\r\n",
-                "$GPBWW,097.0,T,103.2,M,POINTB,POINTA*41\r\n"
+                "$GPBWW,097.0,T,103.2,M,POINTB,POINTA*41\r\n",
+                "$GPBWW,164.3,T,164.5,M,De Volmer,De Volmer*4a\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -499,7 +517,9 @@ public class NMEAParserTest
         {
             String[] nmeas = new String[] {
                 "$GPGGA,172814.0,3723.46587704,N,12202.26957864,W,2,6,1.2,18.893,M,-25.669,M,2.0,0031*4F\r\n",
-                "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47\r\n"
+                "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47\r\n",
+                "$GPGGA,181703.200,5209.6815,N,00643.0724,E,1,08,01,+0025,M,+0047,M,00,0425*46\r\n",
+                "$GPGGA,010003,1248.7047,S,03827.5797,W,1,11,0.8,1.0,M,-10.5,M,,*66\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -542,7 +562,9 @@ public class NMEAParserTest
         try
         {
             String[] nmeas = new String[] {
-                "$GPGLL,4916.45,N,12311.12,W,225444,A,*1D\r\n"
+                "$GPGLL,4916.45,N,12311.12,W,225444,A,*1D\r\n",
+                "$GPGLL,5209.6815,N,00643.0724,E,181703.00,A*0C\r\n",
+                "$GPGLL,1248.7047,S,03827.5797,W,010003,A,A*43\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -578,6 +600,62 @@ public class NMEAParserTest
     }
 
     @Test
+    public void gsa()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPGSA,A,3,01,03,06,,14,15,16,18,19,21,22,25,1.5,0.8,1.3*3B\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void gsv()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPGSV,3,1,12,01,43,333,54,03,43,237,49,06,05,030, 43,09,02,120,00*7C\r\n",
+                "$GPGSV,3,2,12,14,86,032,47,15,46,140,45,16,18,315, 47,18,19,143,49*70\r\n",
+                "$GPGSV,3,3,12,19,21,221,35,21,29,091,49,22,39,174, 43,25,17,000,50*70\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void hdg()
     {
         try
@@ -586,7 +664,8 @@ public class NMEAParserTest
                 "$IIHDG,171,,,06,E*13\r\n",
                 "$IIHDG,177,,,06,E*15\r\n",
                 "$IIHDG,175,,,06,E*17\r\n",
-                "$IIHDG,174,,,06,E*16\r\n"
+                "$IIHDG,174,,,06,E*16\r\n",
+                "$IIHDG,98.3,0.0,E,12.6,W*5C\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -600,7 +679,7 @@ public class NMEAParserTest
                 assertEquals('I', ss.getProperty("talkerId2"));
                 assertEquals(nch.getFloat(1), ss.getFloat("magneticSensorHeading"), Epsilon);
                 assertEquals(nch.getFloat(2), ss.getFloat("magneticDeviation"), Epsilon);
-                assertEquals(nch.getFloat(4), ss.getFloat("magneticVariation"), Epsilon);
+                assertEquals(nch.getSign(5)*nch.getFloat(4), ss.getFloat("magneticVariation"), Epsilon);
             }
         }
         catch (Exception ex)
@@ -762,13 +841,49 @@ public class NMEAParserTest
     }
 
     @Test
+    public void rma()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPRMA,A,6009.2054,N,02453.6493,E,12.3,23.4,6.7,265.3,6.7,E*77\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getChar(1), ss.getProperty("status"));
+                assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getFloat(6), ss.getFloat("timeDifferenceA"), Epsilon);
+                assertEquals(nch.getFloat(7), ss.getFloat("timeDifferenceB"), Epsilon);
+                assertEquals(nch.getFloat(8), ss.getFloat("speedOverGround"), Epsilon);
+                assertEquals(nch.getFloat(9), ss.getFloat("trackMadeGood"), Epsilon);
+                assertEquals(nch.getSign(11)*nch.getFloat(10), ss.getFloat("magneticVariation"), Epsilon);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void rmb()
     {
         try
         {
             String[] nmeas = new String[] {
                 "$GPRMB,A,0.66,L,003,004,4917.24,N,12309.57,W,001.3,052.5,000.5,V*20\r\n",
-                "$GPRMB,A,4.08,L,EGLL,EGLM,5130.02,N,00046.34,W,004.6,213.9,122.9,A*3D\r\n"
+                "$GPRMB,A,4.08,L,EGLL,EGLM,5130.02,N,00046.34,W,004.6,213.9,122.9,A*3D\r\n",
+                "$GPRMB,A,0.04,L,AIC,BA01,1248.4128,S,03827.6978,W,0.314,338.4,,V,A*33\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -815,7 +930,8 @@ public class NMEAParserTest
                 "$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*72\r\n",
                 "$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62\r\n",
                 "$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68\r\n",
-                "$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70\r\n"
+                "$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70\r\n",
+                "$GPRMC,010003,A,1248.7047,S,03827.5797,W,0.0,94.9,290505,23.0,W,A*03\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -858,6 +974,87 @@ public class NMEAParserTest
     }
 
     @Test
+    public void pgrme()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$PGRME,6.7,M,9.5,M,11.6,M*15\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals("GRME", ss.getProperty("proprietaryType"));
+                assertEquals(nch.getList(1, 6), ss.getProperty("proprietaryData"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void pgrmm()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$PGRMM,WGS 84*06\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals("GRMM", ss.getProperty("proprietaryType"));
+                assertEquals(nch.getList(1, 1), ss.getProperty("proprietaryData"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void pgrmz()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$PGRMZ,3,f,3*18\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals("GRMZ", ss.getProperty("proprietaryType"));
+                assertEquals(nch.getList(1, 3), ss.getProperty("proprietaryData"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void rot()
     {
         try
@@ -877,6 +1074,150 @@ public class NMEAParserTest
                 assertEquals('P', ss.getProperty("talkerId2"));
                 assertEquals(nch.getFloat(1), ss.getProperty("rateOfTurn"));
                 assertEquals(nch.getChar(2), ss.getProperty("status"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void rpm()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPRPM,S,1,3500.6,5.6,A*64\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getChar(1), ss.getProperty("rpmSource"));
+                assertEquals(nch.getInt(2), ss.getProperty("rpmSourceNumber"));
+                assertEquals(nch.getFloat(3), ss.getFloat("rpm"), Epsilon);
+                assertEquals(nch.getFloat(4), ss.getFloat("propellerPitch"), Epsilon);
+                assertEquals(nch.getChar(5), ss.getProperty("status"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void rsa()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPRSA,-4.2,A,-4.0,A*55\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getFloat(1), ss.getFloat("starboardRudderSensor"), Epsilon);
+                assertEquals(nch.getChar(2), ss.getProperty("status"));
+                assertEquals(nch.getFloat(3), ss.getFloat("portRudderSensor"), Epsilon);
+                assertEquals(nch.getChar(4), ss.getProperty("status2"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void vtg()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPVTG,94.9,T,117.9,M,0.0,N,0.0,K,A*19\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void wpl()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPWPL,1249.4946,S,03830.9732,W,USIB*4F\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void xte()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPXTE,A,A,0.04,L,N,A*07\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
             }
         }
         catch (Exception ex)

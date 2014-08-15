@@ -51,6 +51,7 @@ import org.vesalainen.util.navi.Velocity;
  * @author Timo Vesalainen
  * @see <a href="http://catb.org/gpsd/NMEA.html">NMEA Revealed</a>
  * @see <a href="http://catb.org/gpsd/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
+ * @see <a href="http://www.eye4software.com/hydromagic/documentation/nmea0183/">Professional hydrographic survey software</a>
  * @see <a href="doc-files/NMEAParser-statements.html#BNF">BNF Syntax for NMEA</a>
  */
 @GenClassname("org.vesalainen.parsers.nmea.NMEAParserImpl")
@@ -60,7 +61,7 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "statements", value = "statement*"),
     @Rule(left = "statement", value = "nmeaStatement"),
     @Rule(left = "nmeaStatement", value = "'\\$' talkerId nmeaSentence '[\\,]*\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType ('[\\,]' proprietaryData)* '\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType c proprietaryData '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "aivdm aisPrefix '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "aivdo aisPrefix '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaSentence", value = "'AAM' c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
@@ -68,6 +69,7 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "nmeaSentence", value = "'APA' c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),
     @Rule(left = "nmeaSentence", value = "'APB' c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint c bearingPresentPositionToDestination c headingToSteerToDestination"),
     @Rule(left = "nmeaSentence", value = "'BOD' c bearing c bearing c waypointToWaypoint"),
+    @Rule(left = "nmeaSentence", value = "'BEC' c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
     @Rule(left = "nmeaSentence", value = "'BWC' c utc c location c bearing c bearing c distanceToWaypoint c waypoint faaModeIndicator"),
     @Rule(left = "nmeaSentence", value = "'BWR' c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
     @Rule(left = "nmeaSentence", value = "'BWW' c bearing c bearing c waypointToWaypoint"),
@@ -77,6 +79,7 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "nmeaSentence", value = "'DPT' c depthOfWater"),
     @Rule(left = "nmeaSentence", value = "'GGA' c utc c location c gpsQualityIndicator c numberOfSatellitesInView c horizontalDilutionOfPrecision c antennaAltitude c geoidalSeparation c ageOfDifferentialGPSData c differentialReferenceStationID"),
     @Rule(left = "nmeaSentence", value = "'GLL' c location c utc c status faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "'GSA' c selectionMode c mode c sat1 c sat2 c sat3 c sat4 c sat5 c sat6 c sat7 c sat8 c sat9 c sat10 c sat11 c sat12 c pdop c hdop c vdop"),
     @Rule(left = "nmeaSentence", value = "'HDG' c magneticSensorHeading c magneticDeviation c magneticVariation"),
     @Rule(left = "nmeaSentence", value = "'HDM' c heading"),
     @Rule(left = "nmeaSentence", value = "'HDT' c heading"),
@@ -84,9 +87,8 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "nmeaSentence", value = "'MWV' c windAngle c windSpeed c status"),
     @Rule(left = "nmeaSentence", value = "'R00' c waypoints"),
     @Rule(left = "nmeaSentence", value = "'RMA' c status c location c timeDifference c speedOverGround c trackMadeGood c magneticVariation"),
-    @Rule(left = "nmeaSentence", value = "'RMB' c status c crossTrackErrorNM c waypointToWaypoint c destinationWaypointLocation c rangeToDestination c bearingToDestination c destinationClosingVelocity c arrivalStatus"),
+    @Rule(left = "nmeaSentence", value = "'RMB' c status c crossTrackErrorNM c waypointToWaypoint c destinationWaypointLocation c rangeToDestination c bearingToDestination c destinationClosingVelocity c arrivalStatus faaModeIndicator"),
     @Rule(left = "nmeaSentence", value = "'RMC' c utc c status c location c speedOverGround c trackMadeGood c date c magneticVariation faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "'RMM' c horizontalDatum"),
     @Rule(left = "nmeaSentence", value = "'ROT' c rateOfTurn c status"),
     @Rule(left = "nmeaSentence", value = "'RPM' c rpmSource c rpmSourceNumber c rpm c propellerPitch c status"),
     @Rule(left = "nmeaSentence", value = "'RSA' c starboardRudderSensor c status c portRudderSensor c status2"),
@@ -105,7 +107,6 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "heading"),
     @Rule(left = "magneticSensorHeading"),
     @Rule(left = "magneticDeviation", value="c skip?"),
-    @Rule(left = "horizontalDatum"),
     @Rule(left = "faaModeIndicator"),
     @Rule(left = "messageMode"),
     @Rule(left = "distanceToWaypoint", value="c skip?"),
@@ -191,6 +192,108 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         aisData.setOwnMessage(true);
     }
 
+    @Rule("letter")
+    protected void selectionMode(char mode, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSelectionMode(mode);
+    }
+    
+    @Rule("letter")
+    protected void mode(char mode, @ParserContext("data") NMEAObserver data)
+    {
+        data.setMode(mode);
+    }
+    
+    @Rule("integer")
+    protected void sat1(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId1(id);
+    }
+    
+    @Rule("integer")
+    protected void sat2(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId2(id);
+    }
+    
+    @Rule("integer")
+    protected void sat3(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId3(id);
+    }
+    
+    @Rule("integer")
+    protected void sat4(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId4(id);
+    }
+    
+    @Rule("integer")
+    protected void sat5(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId5(id);
+    }
+    
+    @Rule("integer")
+    protected void sat6(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId6(id);
+    }
+    
+    @Rule("integer")
+    protected void sat7(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId7(id);
+    }
+    
+    @Rule("integer")
+    protected void sat8(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId8(id);
+    }
+    
+    @Rule("integer")
+    protected void sat9(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId9(id);
+    }
+    
+    @Rule("integer")
+    protected void sat10(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId10(id);
+    }
+    
+    @Rule("integer")
+    protected void sat11(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId11(id);
+    }
+    
+    @Rule("integer")
+    protected void sat12(int id, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSatelliteId12(id);
+    }
+    
+    @Rule("decimal")
+    protected void pdop(float value, @ParserContext("data") NMEAObserver data)
+    {
+        data.setPdop(value);
+    }
+    
+    @Rule("decimal")
+    protected void hdop(float value, @ParserContext("data") NMEAObserver data)
+    {
+        data.setHdop(value);
+    }
+    
+    @Rule("decimal")
+    protected void vdop(float value, @ParserContext("data") NMEAObserver data)
+    {
+        data.setVdop(value);
+    }
+    
     @Rule("string")
     protected void proprietaryType(
             String type,
@@ -198,13 +301,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     {
         data.setProprietaryType(type);
     }
-    @Rule
-    protected void proprietaryData()
-    {
-    }
-    @Rule("string")
+    @Rule("stringList")
     protected void proprietaryData(
-            String pdata,
+            List<String> pdata,
             @ParserContext("data") NMEAObserver data)
     {
         data.setProprietaryData(pdata);
@@ -402,9 +501,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setRpmSourceNumber(rpmSourceNumber);
     }
 
-    @Rule("integer")
+    @Rule("decimal")
     protected void rpm(
-            int rpm,
+            float rpm,
             @ParserContext("data") NMEAObserver data)
     {
         data.setRpm(rpm);
@@ -530,14 +629,6 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     {
         list.add(waypoint);
         return list;
-    }
-
-    @Rule("string")
-    protected void horizontalDatum(
-            String horizontalDatum,
-            @ParserContext("data") NMEAObserver data)
-    {
-        data.setHorizontalDatum(horizontalDatum);
     }
 
     @Rule("c letter")

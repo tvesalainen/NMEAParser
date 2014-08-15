@@ -308,11 +308,6 @@ public interface NMEAObserver extends Transactional
      */
     void setFaaModeIndicator(char faaModeIndicator);
     /**
-     * RMM
-     * @param horizontalDatum 
-     */
-    void setHorizontalDatum(String horizontalDatum);
-    /**
      * RTE
      * @param messageMode 
      */
@@ -425,7 +420,7 @@ public interface NMEAObserver extends Transactional
      * Speed, Revolutions per minute
      * @param rpm 
      */
-    void setRpm(int rpm);
+    void setRpm(float rpm);
     /**
      * RPM
      * Propeller pitch, % of maximum, "-" means astern
@@ -490,6 +485,40 @@ public interface NMEAObserver extends Transactional
      * Proprietary data. Comma separated proprietary data fields.
      * @param data
      */
-    void setProprietaryData(String data);
+    void setProprietaryData(List<String> data);
+
+    public void setSelectionMode(char mode);
+
+    public void setMode(char mode);
+
+    public void setSatelliteId1(int id);
+
+    public void setSatelliteId2(int id);
+
+    public void setSatelliteId3(int id);
+
+    public void setSatelliteId4(int id);
+
+    public void setSatelliteId5(int id);
+
+    public void setSatelliteId6(int id);
+
+    public void setSatelliteId7(int id);
+
+    public void setSatelliteId8(int id);
+
+    public void setSatelliteId9(int id);
+
+    public void setSatelliteId10(int id);
+
+    public void setSatelliteId11(int id);
+
+    public void setSatelliteId12(int id);
+
+    public void setPdop(float value);
+
+    public void setHdop(float value);
+
+    public void setVdop(float value);
 
 }

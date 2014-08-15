@@ -351,12 +351,6 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setHorizontalDatum(String horizontalDatum)
-    {
-        
-    }
-
-    @Override
     public void setMessageMode(char messageMode)
     {
         
@@ -429,7 +423,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setRpm(int rpm)
+    public void setRpm(float rpm)
     {
         
     }
@@ -486,7 +480,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setProprietaryData(String data)
+    public void setProprietaryData(List<String> data)
     {
     }
 
@@ -592,6 +586,91 @@ public class AbstractNMEAObserver implements NMEAObserver
 
     @Override
     public void setWindDirection(float windDirection)
+    {
+    }
+
+    @Override
+    public void setSelectionMode(char mode)
+    {
+    }
+
+    @Override
+    public void setMode(char mode)
+    {
+    }
+
+    @Override
+    public void setSatelliteId1(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId2(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId3(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId4(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId5(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId6(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId7(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId8(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId9(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId10(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId11(int id)
+    {
+    }
+
+    @Override
+    public void setSatelliteId12(int id)
+    {
+    }
+
+    @Override
+    public void setPdop(float value)
+    {
+    }
+
+    @Override
+    public void setHdop(float value)
+    {
+    }
+
+    @Override
+    public void setVdop(float value)
     {
     }
 
