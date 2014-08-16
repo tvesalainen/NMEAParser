@@ -617,6 +617,15 @@ public class NMEAParserTest
                 assertNull(ss.getRollbackReason());
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getChar(1), ss.getProperty("selectionMode"));
+                assertEquals(nch.getChar(2), ss.getProperty("mode"));
+                for (int ii=1;ii<=12;ii++)
+                {
+                    assertEquals(nch.getInt(2+ii), ss.getProperty("satelliteId"+ii));
+                }
+                assertEquals(nch.getFloat(15), ss.getFloat("pdop"), Epsilon);
+                assertEquals(nch.getFloat(16), ss.getFloat("hdop"), Epsilon);
+                assertEquals(nch.getFloat(17), ss.getFloat("vdop"), Epsilon);
             }
         }
         catch (Exception ex)
@@ -632,9 +641,9 @@ public class NMEAParserTest
         try
         {
             String[] nmeas = new String[] {
-                "$GPGSV,3,1,12,01,43,333,54,03,43,237,49,06,05,030, 43,09,02,120,00*7C\r\n",
-                "$GPGSV,3,2,12,14,86,032,47,15,46,140,45,16,18,315, 47,18,19,143,49*70\r\n",
-                "$GPGSV,3,3,12,19,21,221,35,21,29,091,49,22,39,174, 43,25,17,000,50*70\r\n"
+                "$GPGSV,3,1,12,01,43,333,54,03,43,237,49,06,05,030,43,09,02,120,00*7C\r\n",
+                "$GPGSV,3,2,12,14,86,032,47,15,46,140,45,16,18,315,47,18,19,143,49*70\r\n",
+                "$GPGSV,3,3,12,19,21,221,35,21,29,091,49,22,39,174,43,25,17,000,50*70\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -646,6 +655,15 @@ public class NMEAParserTest
                 assertNull(ss.getRollbackReason());
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getInt(1), ss.getProperty("totalNumberOfMessages"));
+                assertEquals(nch.getInt(2), ss.getProperty("messageNumber"));
+                assertEquals(nch.getInt(3), ss.getProperty("totalNumberOfSatellitesInView"));
+                int count = (nch.getSize()-5)/4;
+                int index = 4+4*(count-1);
+                assertEquals(nch.getInt(index++), ss.getProperty("prn"));
+                assertEquals(nch.getInt(index++), ss.getProperty("elevation"));
+                assertEquals(nch.getInt(index++), ss.getProperty("azimuth"));
+                assertEquals(nch.getInt(index++), ss.getProperty("snr"));
             }
         }
         catch (Exception ex)
@@ -1147,12 +1165,79 @@ public class NMEAParserTest
     }
 
     @Test
+    public void rte()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPRTE,2,1,c,0,PBRCPK,PBRTO,PTELGR,PPLAND,PYAMBU,PPFAIR,PWARRN,PMORTL,PLISMR*73\r\n",
+                "$GPRTE,2,2,c,0,PCRESY,GRYRIE,GCORIO,GWERR,GWESTG,7FED*34\r\n",
+                "$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getInt(1), ss.getProperty("totalNumberOfMessages"));
+                assertEquals(nch.getInt(2), ss.getProperty("messageNumber"));
+                assertEquals(nch.getChar(3), ss.getProperty("messageMode"));
+                assertEquals(nch.getString(4), ss.getProperty("route"));
+                int no = nch.getSize()-6;
+                assertEquals(nch.getList(5, no), ss.getProperty("waypoints"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void txt()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPTXT,01,01,TARG1,Message*35\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getInt(1), ss.getProperty("totalNumberOfMessages"));
+                assertEquals(nch.getInt(2), ss.getProperty("messageNumber"));
+                assertEquals(nch.getString(3), ss.getProperty("targetName"));
+                assertEquals(nch.getString(4), ss.getProperty("message"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void vtg()
     {
         try
         {
             String[] nmeas = new String[] {
-                "$GPVTG,94.9,T,117.9,M,0.0,N,0.0,K,A*19\r\n"
+                "$GPVTG,94.9,T,117.9,M,0.0,N,0.0,K,A*4d\r\n",
+                "$GPVTG,94.9,117.9,0.0,0.0*48\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -1164,6 +1249,9 @@ public class NMEAParserTest
                 assertNull(ss.getRollbackReason());
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(94.9, ss.getFloat("trueTrackMadeGood"), Epsilon);
+                assertEquals(117.9, ss.getFloat("magneticTrackMadeGood"), Epsilon);
+                assertEquals(0, ss.getFloat("speedOverGround"), Epsilon);
             }
         }
         catch (Exception ex)

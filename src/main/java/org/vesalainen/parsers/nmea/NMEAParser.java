@@ -79,7 +79,8 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "nmeaSentence", value = "'DPT' c depthOfWater"),
     @Rule(left = "nmeaSentence", value = "'GGA' c utc c location c gpsQualityIndicator c numberOfSatellitesInView c horizontalDilutionOfPrecision c antennaAltitude c geoidalSeparation c ageOfDifferentialGPSData c differentialReferenceStationID"),
     @Rule(left = "nmeaSentence", value = "'GLL' c location c utc c status faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "'GSA' c selectionMode c mode c sat1 c sat2 c sat3 c sat4 c sat5 c sat6 c sat7 c sat8 c sat9 c sat10 c sat11 c sat12 c pdop c hdop c vdop"),
+    @Rule(left = "nmeaSentence", value = "'GSA' c selectionMode c mode c sat1? c sat2? c sat3? c sat4? c sat5? c sat6? c sat7? c sat8? c sat9? c sat10? c sat11? c sat12? c pdop c hdop c vdop"),
+    @Rule(left = "nmeaSentence", value = "'GSV' c totalNumberOfMessages c messageNumber c totalNumberOfSatellitesInView (c prn c elevation c azimuth c snr)+"),
     @Rule(left = "nmeaSentence", value = "'HDG' c magneticSensorHeading c magneticDeviation c magneticVariation"),
     @Rule(left = "nmeaSentence", value = "'HDM' c heading"),
     @Rule(left = "nmeaSentence", value = "'HDT' c heading"),
@@ -92,9 +93,12 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "nmeaSentence", value = "'ROT' c rateOfTurn c status"),
     @Rule(left = "nmeaSentence", value = "'RPM' c rpmSource c rpmSourceNumber c rpm c propellerPitch c status"),
     @Rule(left = "nmeaSentence", value = "'RSA' c starboardRudderSensor c status c portRudderSensor c status2"),
-    @Rule(left = "nmeaSentence", value = "'RTE' c totalNumberOfMessages c messageNumber c messageMode c waypoints"),
+    @Rule(left = "nmeaSentence", value = "'RTE' c totalNumberOfMessages c messageNumber c messageMode c route c waypoints"),
+    @Rule(left = "nmeaSentence", value = "'TLL' c targetNumber c destinationWaypointLocation c target c targetTime c targetStatus c referenceTarget"),
     @Rule(left = "nmeaSentence", value = "'TXT' c totalNumberOfMessages c messageNumber c targetName c message"),
     @Rule(left = "nmeaSentence", value = "'VHW' c waterHeading c waterHeading c waterSpeed c waterSpeed"),
+    @Rule(left = "nmeaSentence", value = "'VTG' c track c track c speed c speed faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "'VTG' c trueCourseOverGround c magneticCourseOverGround c speedOverGroundKnots c speedOverGroundKilometers"),
     @Rule(left = "nmeaSentence", value = "'VWR' c windDirection c windSpeed c windSpeed c windSpeed"),
     @Rule(left = "nmeaSentence", value = "'WCV' c velocityToWaypoint c waypoint"),
     @Rule(left = "nmeaSentence", value = "'WNC' c distanceToWaypoint c distanceToWaypoint c waypointToWaypoint"),
@@ -172,6 +176,8 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "windDirection", value = "c skip?"),
     @Rule(left = "waterHeading", value = "c skip?"),
     @Rule(left = "waterSpeed", value = "c skip?"),
+    @Rule(left = "track", value = "c skip?"),
+    @Rule(left = "speed", value = "c skip?"),
     @Rule(left = "windAngle")
 })
 public abstract class NMEAParser implements ParserInfo, ChecksumProvider
@@ -198,7 +204,7 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setSelectionMode(mode);
     }
     
-    @Rule("letter")
+    @Rule("alphaNum")
     protected void mode(char mode, @ParserContext("data") NMEAObserver data)
     {
         data.setMode(mode);
@@ -292,6 +298,36 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
     protected void vdop(float value, @ParserContext("data") NMEAObserver data)
     {
         data.setVdop(value);
+    }
+    
+    @Rule("integer")
+    protected void totalNumberOfSatellitesInView(int count, @ParserContext("data") NMEAObserver data)
+    {
+        data.setTotalNumberOfSatellitesInView(count);
+    }
+    
+    @Rule("integer")
+    protected void prn(int prn, @ParserContext("data") NMEAObserver data)
+    {
+        data.setPrn(prn);
+    }
+    
+    @Rule("integer")
+    protected void elevation(int elevation, @ParserContext("data") NMEAObserver data)
+    {
+        data.setElevation(elevation);
+    }
+    
+    @Rule("integer")
+    protected void azimuth(int azimuth, @ParserContext("data") NMEAObserver data)
+    {
+        data.setAzimuth(azimuth);
+    }
+    
+    @Rule("integer")
+    protected void snr(int snr, @ParserContext("data") NMEAObserver data)
+    {
+        data.setSnr(snr);
     }
     
     @Rule("string")
@@ -830,6 +866,30 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setWaypoint(waypoint);
     }
 
+    @Rule("string")
+    protected void route(
+            String route,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setRoute(route);
+    }
+
+    @Rule("integer")
+    protected void targetNumber(
+            int target,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTargetNumber(target);
+    }
+
+    @Rule("decimal")
+    protected void targetTime(
+            float utc, // hhmmss.ss
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTime(utc);
+    }
+
     @Rule("decimal")
     protected void utc(
             float utc, // hhmmss.ss
@@ -1100,6 +1160,66 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setTrackMadeGood(trackMadeGood);
     }
 
+    @Rule("decimal c letter")
+    protected void track(
+            float degrees,
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        switch (unit)
+        {
+            case 'T':
+                data.setTrueTrackMadeGood(degrees);
+                break;
+            case 'M':
+                data.setMagneticTrackMadeGood(degrees);
+                break;
+            default:
+                throw new IllegalArgumentException(unit+" expected T/M");
+        }
+    }
+
+    @Rule("decimal")
+    protected void trueCourseOverGround(
+            float degrees,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTrueTrackMadeGood(degrees);
+    }
+
+    @Rule("decimal")
+    protected void magneticCourseOverGround(
+            float degrees,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setMagneticTrackMadeGood(degrees);
+    }
+
+    @Rule("decimal c letter")
+    protected void speed(
+            float speed,
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setSpeedOverGround(toKnots(speed, unit));
+    }
+
+    @Rule("decimal")
+    protected void speedOverGroundKnots(
+            float speed,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setSpeedOverGround(speed);
+    }
+
+    @Rule("decimal")
+    protected void speedOverGroundKilometers(
+            float speed,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setSpeedOverGround(toKnots(speed, 'K'));
+    }
+
     @Rule("latitude c ns c longitude c ew")
     protected void location(
             float latitude,
@@ -1193,6 +1313,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
 
     @Terminal(expression = "[a-zA-Z]")
     protected abstract char letter(char c);
+
+    @Terminal(expression = "[a-zA-Z0-9]")
+    protected abstract char alphaNum(char c);
 
     @Terminal(expression = "[a-zA-OQ-Z]")
     protected abstract char letterNotP(char c);

@@ -486,11 +486,23 @@ public interface NMEAObserver extends Transactional
      * @param data
      */
     void setProprietaryData(List<String> data);
-
+    /**
+     * GSA
+     * Selection mode: M=Manual, forced to operate in 2D or 3D, A=Automatic, 3D/2D
+     * @param mode 
+     */
     public void setSelectionMode(char mode);
-
+    /**
+     * GSA
+     * Mode (1 = no fix, 2 = 2D fix, 3 = 3D fix)
+     * @param mode 
+     */
     public void setMode(char mode);
-
+    /**
+     * GSA
+     * ID of 1st satellite used for fix
+     * @param id 
+     */
     public void setSatelliteId1(int id);
 
     public void setSatelliteId2(int id);
@@ -520,5 +532,41 @@ public interface NMEAObserver extends Transactional
     public void setHdop(float value);
 
     public void setVdop(float value);
+    /**
+     * Total number of satellites in view
+     * @param count 
+     */
+    public void setTotalNumberOfSatellitesInView(int count);
+    /**
+     * Satellite PRN number
+     * @param prn 
+     */
+    public void setPrn(int prn);
+    /**
+     * Elevation in degrees
+     * @param elevation 
+     */
+    public void setElevation(int elevation);
+    /**
+     * Azimuth in degrees to true north
+     * @param azimuth 
+     */
+    public void setAzimuth(int azimuth);
+    /**
+     * SNR in dB
+     * @param snr 
+     */
+    public void setSnr(int snr);
+
+    public void setTrueTrackMadeGood(float track);
+
+    public void setMagneticTrackMadeGood(float track);
+    /**
+     * Route id
+     * @param route 
+     */
+    public void setRoute(String route);
+
+    public void setTargetNumber(int target);
 
 }

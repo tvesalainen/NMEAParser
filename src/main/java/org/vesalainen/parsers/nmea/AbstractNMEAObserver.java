@@ -674,4 +674,44 @@ public class AbstractNMEAObserver implements NMEAObserver
     {
     }
 
+    @Override
+    public void setTotalNumberOfSatellitesInView(int count)
+    {
+    }
+
+    @Override
+    public void setPrn(int prn)
+    {
+    }
+
+    @Override
+    public void setElevation(int elevation)
+    {
+    }
+
+    @Override
+    public void setAzimuth(int azimuth)
+    {
+    }
+
+    @Override
+    public void setSnr(int snr)
+    {
+    }
+
+    @Override
+    public void setTrueTrackMadeGood(float track)
+    {
+    }
+
+    @Override
+    public void setMagneticTrackMadeGood(float track)
+    {
+    }
+
+    @Override
+    public void setRoute(String route)
+    {
+    }
+
 }
