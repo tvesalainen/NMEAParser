@@ -66,6 +66,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.AAM, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -97,6 +98,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.ALM, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -139,6 +141,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.APA, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -173,6 +176,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.APB, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -209,6 +213,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.BEC, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -252,6 +257,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.BOD, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -285,6 +291,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.BWC, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -330,6 +337,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.BWR, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -372,6 +380,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.BWW, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -405,6 +414,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.DBK, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
@@ -435,6 +445,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.DBS, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
@@ -465,6 +476,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.DBT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
@@ -496,6 +508,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.DPT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
@@ -529,6 +542,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.GGA, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -574,6 +588,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.GLL, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 assertEquals(nch.getDegree(1), ss.getFloat("latitude"), Epsilon);
@@ -615,6 +630,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.GSA, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 assertEquals(nch.getChar(1), ss.getProperty("selectionMode"));
@@ -653,6 +669,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.GSV, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 assertEquals(nch.getInt(1), ss.getProperty("totalNumberOfMessages"));
@@ -693,6 +710,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.HDG, ss.getProperty("messageType"));
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
                 assertEquals(nch.getFloat(1), ss.getFloat("magneticSensorHeading"), Epsilon);
@@ -726,6 +744,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.HDM, ss.getProperty("messageType"));
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
                 assertEquals(nch.getFloat(1), ss.getFloat("magneticHeading"), Epsilon);
@@ -757,6 +776,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.HDT, ss.getProperty("messageType"));
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
                 assertEquals(nch.getFloat(1), ss.getFloat("trueHeading"), Epsilon);
@@ -785,6 +805,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.MTW, ss.getProperty("messageType"));
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
                 assertEquals(nch.getFloat(1), ss.getFloat("waterTemperature"), Epsilon);
@@ -815,6 +836,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.MWV, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
@@ -845,6 +867,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.R00, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('I', ss.getProperty("talkerId1"));
                 assertEquals('I', ss.getProperty("talkerId2"));
@@ -874,6 +897,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.RMA, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 assertEquals(nch.getChar(1), ss.getProperty("status"));
@@ -911,6 +935,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.RMB, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 assertEquals(nch.getChar(1), ss.getProperty("status"));
@@ -959,6 +984,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.RMC, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -1087,6 +1113,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.ROT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -1116,6 +1143,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.RPM, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -1148,6 +1176,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.RSA, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -1181,6 +1210,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.RTE, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -1190,6 +1220,44 @@ public class NMEAParserTest
                 assertEquals(nch.getString(4), ss.getProperty("route"));
                 int no = nch.getSize()-6;
                 assertEquals(nch.getList(5, no), ss.getProperty("waypoints"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void tll()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPTLL,01,4305.4281,N,07147.3170,W,TARG1,123456.21,T,R*57\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.TLL, ss.getProperty("messageType"));
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getInt(1), ss.getProperty("targetNumber"));
+                assertEquals(nch.getDegree(2), ss.getFloat("destinationWaypointLatitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getFloat("destinationWaypointLongitude"), Epsilon);
+                assertEquals(nch.getString(6), ss.getProperty("targetName"));
+                String hhmmss = nch.getString(7);
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), ss.getInt("targetHour"));
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), ss.getInt("targetMinute"));
+                assertEquals(Float.parseFloat(hhmmss.substring(4)), ss.getFloat("targetSecond"), Epsilon);
+                assertEquals(nch.getChar(8), ss.getProperty("targetStatus"));
+                assertEquals(nch.getString(9), ss.getProperty("referenceTarget"));
             }
         }
         catch (Exception ex)
@@ -1214,6 +1282,7 @@ public class NMEAParserTest
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
                 parser.parse(nmea, tc, null);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.TXT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
@@ -1247,6 +1316,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.VTG, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
                 assertEquals(94.9, ss.getFloat("trueTrackMadeGood"), Epsilon);
@@ -1277,6 +1347,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.WPL, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
             }
@@ -1304,6 +1375,7 @@ public class NMEAParserTest
                 parser.parse(nmea, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.XTE, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
             }

@@ -27,18 +27,36 @@ public interface Clock
      * @return 
      */
     long getTime();
-
     /**
-     * Update UTC Date
-     * @param time hhmmss.ss
+     * Set utc time
+     * @param hour 0 - 23
+     * @param minute 0 - 59
+     * @param second 0.0 - 59.999
      */
-    public void setTime(float utc);
-
+    public void setTime(int hour, int minute, float second);
     /**
-     * Update UTC Date
-     * @param date ddmmyy
+     * Set utc date
+     * @param year yy
+     * @param month mm 1 - 12
+     * @param day dd 1 - 31
      */
-    public void setDate(int date);
+    public void setDate(int year, int month, int day);
+    /**
+     * Update UTC Hour
+     * @param hour
+     */
+    public void setHour(int hour);
+    /**
+     * Update utc minute
+     * @param minute 
+     */
+    public void setMinute(int minute);
+    /**
+     * Update utc second
+     * @param second 
+     */
+    public void setSecond(float second);
+
     /**
      * Read NMEA sentence was broken.
      */

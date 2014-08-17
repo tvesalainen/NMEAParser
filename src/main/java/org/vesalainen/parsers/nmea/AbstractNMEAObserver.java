@@ -714,4 +714,39 @@ public class AbstractNMEAObserver implements NMEAObserver
     {
     }
 
+    @Override
+    public void setTargetNumber(int target)
+    {
+    }
+
+    @Override
+    public void setTargetStatus(char status)
+    {
+    }
+
+    @Override
+    public void setReferenceTarget(String referenceTarget)
+    {
+    }
+
+    @Override
+    public void setTargetHour(int hour)
+    {
+    }
+
+    @Override
+    public void setTargetMinute(int minute)
+    {
+    }
+
+    @Override
+    public void setTargetSecond(float second)
+    {
+    }
+
+    @Override
+    public void setMessageType(MessageType messageType)
+    {
+    }
+
 }

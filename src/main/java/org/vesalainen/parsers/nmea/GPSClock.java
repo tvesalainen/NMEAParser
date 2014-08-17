@@ -38,24 +38,36 @@ public class GPSClock implements Clock
     }
 
     @Override
-    public void setTime(float utc)
+    public void setTime(int hour, int minute, float second)
     {
-        int i = (int)utc;
-        wc.set(Calendar.HOUR_OF_DAY, i / 10000);
-        wc.set(Calendar.MINUTE, (i / 100) % 100);
-        wc.set(Calendar.SECOND, i % 100);
-        wc.set(Calendar.MILLISECOND, (int)((utc - (float)i)*1000));
+        wc.set(Calendar.HOUR_OF_DAY, hour);
+        wc.set(Calendar.MINUTE, minute);
+        int s = (int) second;
+        wc.set(Calendar.SECOND, s);
+        wc.set(Calendar.MILLISECOND, (int)((second - (float)s)*1000));
     }
 
     @Override
-    public void setDate(int date)
+    public void setHour(int hour)
     {
-        wc.set(Calendar.DAY_OF_MONTH, date / 10000);
-        wc.set(Calendar.MONTH, ((date / 100) % 100) - 1);
-        wc.set(Calendar.YEAR, getYear(date % 100));
+        wc.set(Calendar.HOUR_OF_DAY, hour);
     }
 
-    private static final int getYear(int year)
+    @Override
+    public void setMinute(int minute)
+    {
+        wc.set(Calendar.MINUTE, minute);
+    }
+
+    @Override
+    public void setSecond(float second)
+    {
+        int s = (int) second;
+        wc.set(Calendar.SECOND, s);
+        wc.set(Calendar.MILLISECOND, (int)((second - (float)s)*1000));
+    }
+    
+    private static int getYear(int year)
     {
         if (year < 70)
         {
@@ -66,6 +78,7 @@ public class GPSClock implements Clock
             return 1900 + year;
         }
     }
+    
     @Override
     public void rollback()
     {
@@ -104,6 +117,14 @@ public class GPSClock implements Clock
     }
 
     @Override
+    public void setDate(int year, int month, int day)
+    {
+        wc.set(Calendar.DAY_OF_MONTH, day);
+        wc.set(Calendar.MONTH, month - 1);
+        wc.set(Calendar.YEAR, getYear(year));
+    }
+
+    @Override
     public void setDay(int day)
     {
         wc.set(Calendar.DAY_OF_MONTH, day);
@@ -118,7 +139,7 @@ public class GPSClock implements Clock
     @Override
     public void setYear(int year)
     {
-        wc.set(Calendar.YEAR, year);
+        wc.set(Calendar.YEAR, getYear(year));
     }
 
     private static final int HourAsMillis = 60*60*1000;
@@ -140,4 +161,5 @@ public class GPSClock implements Clock
     {
         return committed;
     }
+
 }

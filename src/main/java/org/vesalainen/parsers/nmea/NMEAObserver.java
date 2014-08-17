@@ -569,4 +569,17 @@ public interface NMEAObserver extends Transactional
 
     public void setTargetNumber(int target);
 
+    public void setTargetHour(int hour);
+    public void setTargetMinute(int minute);
+    public void setTargetSecond(float second);
+    /**
+     * S = SOS
+     * @param status 
+     */
+    public void setTargetStatus(char status);
+
+    public void setReferenceTarget(String referenceTarget);
+
+    public void setMessageType(MessageType messageType);
+
 }

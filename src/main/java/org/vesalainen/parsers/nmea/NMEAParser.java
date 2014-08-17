@@ -64,48 +64,48 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType c proprietaryData '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "aivdm aisPrefix '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "aivdo aisPrefix '\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaSentence", value = "'AAM' c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
-    @Rule(left = "nmeaSentence", value = "'ALM' c totalNumberOfMessages c messageNumber c satellitePRNNumber c gpsWeekNumber c svHealth c eccentricity c almanacReferenceTime c inclinationAngle c rateOfRightAscension c rootOfSemiMajorAxis c argumentOfPerigee c longitudeOfAscensionNode c meanAnomaly c f0ClockParameter c f1ClockParameter"),
-    @Rule(left = "nmeaSentence", value = "'APA' c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),
-    @Rule(left = "nmeaSentence", value = "'APB' c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint c bearingPresentPositionToDestination c headingToSteerToDestination"),
-    @Rule(left = "nmeaSentence", value = "'BOD' c bearing c bearing c waypointToWaypoint"),
-    @Rule(left = "nmeaSentence", value = "'BEC' c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
-    @Rule(left = "nmeaSentence", value = "'BWC' c utc c location c bearing c bearing c distanceToWaypoint c waypoint faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "'BWR' c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
-    @Rule(left = "nmeaSentence", value = "'BWW' c bearing c bearing c waypointToWaypoint"),
-    @Rule(left = "nmeaSentence", value = "'DBK' c depthBelowKeel c depthBelowKeel c depthBelowKeel"),
-    @Rule(left = "nmeaSentence", value = "'DBS' c depthBelowSurface c depthBelowSurface c depthBelowSurface"),
-    @Rule(left = "nmeaSentence", value = "'DBT' c depthBelowTransducer c depthBelowTransducer c depthBelowTransducer"),
-    @Rule(left = "nmeaSentence", value = "'DPT' c depthOfWater"),
-    @Rule(left = "nmeaSentence", value = "'GGA' c utc c location c gpsQualityIndicator c numberOfSatellitesInView c horizontalDilutionOfPrecision c antennaAltitude c geoidalSeparation c ageOfDifferentialGPSData c differentialReferenceStationID"),
-    @Rule(left = "nmeaSentence", value = "'GLL' c location c utc c status faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "'GSA' c selectionMode c mode c sat1? c sat2? c sat3? c sat4? c sat5? c sat6? c sat7? c sat8? c sat9? c sat10? c sat11? c sat12? c pdop c hdop c vdop"),
-    @Rule(left = "nmeaSentence", value = "'GSV' c totalNumberOfMessages c messageNumber c totalNumberOfSatellitesInView (c prn c elevation c azimuth c snr)+"),
-    @Rule(left = "nmeaSentence", value = "'HDG' c magneticSensorHeading c magneticDeviation c magneticVariation"),
-    @Rule(left = "nmeaSentence", value = "'HDM' c heading"),
-    @Rule(left = "nmeaSentence", value = "'HDT' c heading"),
-    @Rule(left = "nmeaSentence", value = "'MTW' c waterTemperature"),
-    @Rule(left = "nmeaSentence", value = "'MWV' c windAngle c windSpeed c status"),
-    @Rule(left = "nmeaSentence", value = "'R00' c waypoints"),
-    @Rule(left = "nmeaSentence", value = "'RMA' c status c location c timeDifference c speedOverGround c trackMadeGood c magneticVariation"),
-    @Rule(left = "nmeaSentence", value = "'RMB' c status c crossTrackErrorNM c waypointToWaypoint c destinationWaypointLocation c rangeToDestination c bearingToDestination c destinationClosingVelocity c arrivalStatus faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "'RMC' c utc c status c location c speedOverGround c trackMadeGood c date c magneticVariation faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "'ROT' c rateOfTurn c status"),
-    @Rule(left = "nmeaSentence", value = "'RPM' c rpmSource c rpmSourceNumber c rpm c propellerPitch c status"),
-    @Rule(left = "nmeaSentence", value = "'RSA' c starboardRudderSensor c status c portRudderSensor c status2"),
-    @Rule(left = "nmeaSentence", value = "'RTE' c totalNumberOfMessages c messageNumber c messageMode c route c waypoints"),
-    @Rule(left = "nmeaSentence", value = "'TLL' c targetNumber c destinationWaypointLocation c target c targetTime c targetStatus c referenceTarget"),
-    @Rule(left = "nmeaSentence", value = "'TXT' c totalNumberOfMessages c messageNumber c targetName c message"),
-    @Rule(left = "nmeaSentence", value = "'VHW' c waterHeading c waterHeading c waterSpeed c waterSpeed"),
-    @Rule(left = "nmeaSentence", value = "'VTG' c track c track c speed c speed faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "'VTG' c trueCourseOverGround c magneticCourseOverGround c speedOverGroundKnots c speedOverGroundKilometers"),
-    @Rule(left = "nmeaSentence", value = "'VWR' c windDirection c windSpeed c windSpeed c windSpeed"),
-    @Rule(left = "nmeaSentence", value = "'WCV' c velocityToWaypoint c waypoint"),
-    @Rule(left = "nmeaSentence", value = "'WNC' c distanceToWaypoint c distanceToWaypoint c waypointToWaypoint"),
-    @Rule(left = "nmeaSentence", value = "'WPL' c destinationWaypointLocation c waypoint"),
-    @Rule(left = "nmeaSentence", value = "'XTE' c status c status2 c crossTrackError faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "'XTR' c crossTrackError"),
-    @Rule(left = "nmeaSentence", value = "'ZDA' c utc c day c month c year c localZoneHours c localZoneMinutes"),
+    @Rule(left = "nmeaSentence", value = "aam c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
+    @Rule(left = "nmeaSentence", value = "alm c totalNumberOfMessages c messageNumber c satellitePRNNumber c gpsWeekNumber c svHealth c eccentricity c almanacReferenceTime c inclinationAngle c rateOfRightAscension c rootOfSemiMajorAxis c argumentOfPerigee c longitudeOfAscensionNode c meanAnomaly c f0ClockParameter c f1ClockParameter"),
+    @Rule(left = "nmeaSentence", value = "apa c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),
+    @Rule(left = "nmeaSentence", value = "apb c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint c bearingPresentPositionToDestination c headingToSteerToDestination"),
+    @Rule(left = "nmeaSentence", value = "bod c bearing c bearing c waypointToWaypoint"),
+    @Rule(left = "nmeaSentence", value = "bec c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
+    @Rule(left = "nmeaSentence", value = "bwc c utc c location c bearing c bearing c distanceToWaypoint c waypoint faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "bwr c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
+    @Rule(left = "nmeaSentence", value = "bww c bearing c bearing c waypointToWaypoint"),
+    @Rule(left = "nmeaSentence", value = "dbk c depthBelowKeel c depthBelowKeel c depthBelowKeel"),
+    @Rule(left = "nmeaSentence", value = "dbs c depthBelowSurface c depthBelowSurface c depthBelowSurface"),
+    @Rule(left = "nmeaSentence", value = "dbt c depthBelowTransducer c depthBelowTransducer c depthBelowTransducer"),
+    @Rule(left = "nmeaSentence", value = "dpt c depthOfWater"),
+    @Rule(left = "nmeaSentence", value = "gga c utc c location c gpsQualityIndicator c numberOfSatellitesInView c horizontalDilutionOfPrecision c antennaAltitude c geoidalSeparation c ageOfDifferentialGPSData c differentialReferenceStationID"),
+    @Rule(left = "nmeaSentence", value = "gll c location c utc c status faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "gsa c selectionMode c mode c sat1? c sat2? c sat3? c sat4? c sat5? c sat6? c sat7? c sat8? c sat9? c sat10? c sat11? c sat12? c pdop c hdop c vdop"),
+    @Rule(left = "nmeaSentence", value = "gsv c totalNumberOfMessages c messageNumber c totalNumberOfSatellitesInView (c prn c elevation c azimuth c snr)+"),
+    @Rule(left = "nmeaSentence", value = "hdg c magneticSensorHeading c magneticDeviation c magneticVariation"),
+    @Rule(left = "nmeaSentence", value = "hdm c heading"),
+    @Rule(left = "nmeaSentence", value = "hdt c heading"),
+    @Rule(left = "nmeaSentence", value = "mtw c waterTemperature"),
+    @Rule(left = "nmeaSentence", value = "mwv c windAngle c windSpeed c status"),
+    @Rule(left = "nmeaSentence", value = "r00 c waypoints"),
+    @Rule(left = "nmeaSentence", value = "rma c status c location c timeDifference c speedOverGround c trackMadeGood c magneticVariation"),
+    @Rule(left = "nmeaSentence", value = "rmb c status c crossTrackErrorNM c waypointToWaypoint c destinationWaypointLocation c rangeToDestination c bearingToDestination c destinationClosingVelocity c arrivalStatus faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "rmc c utc c status c location c speedOverGround c trackMadeGood c date c magneticVariation faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "rot c rateOfTurn c status"),
+    @Rule(left = "nmeaSentence", value = "rpm c rpmSource c rpmSourceNumber c rpm c propellerPitch c status"),
+    @Rule(left = "nmeaSentence", value = "rsa c starboardRudderSensor c status c portRudderSensor c status2"),
+    @Rule(left = "nmeaSentence", value = "rte c totalNumberOfMessages c messageNumber c messageMode c route c waypoints"),
+    @Rule(left = "nmeaSentence", value = "tll c targetNumber c destinationWaypointLocation c targetName c targetTime c targetStatus c referenceTarget"),
+    @Rule(left = "nmeaSentence", value = "txt c totalNumberOfMessages c messageNumber c targetName c message"),
+    @Rule(left = "nmeaSentence", value = "vhw c waterHeading c waterHeading c waterSpeed c waterSpeed"),
+    @Rule(left = "nmeaSentence", value = "vtg c track c track c speed c speed faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "vtg c trueCourseOverGround c magneticCourseOverGround c speedOverGroundKnots c speedOverGroundKilometers"),
+    @Rule(left = "nmeaSentence", value = "vwr c windDirection c windSpeed c windSpeed c windSpeed"),
+    @Rule(left = "nmeaSentence", value = "wcv' c velocityToWaypoint c waypoint"),
+    @Rule(left = "nmeaSentence", value = "wnc c distanceToWaypoint c distanceToWaypoint c waypointToWaypoint"),
+    @Rule(left = "nmeaSentence", value = "wpl c destinationWaypointLocation c waypoint"),
+    @Rule(left = "nmeaSentence", value = "xte c status c status2 c crossTrackError faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "xtr c crossTrackError"),
+    @Rule(left = "nmeaSentence", value = "zda c utc c day c month c year c localZoneHours c localZoneMinutes"),
     @Rule(left = "rateOfTurn"),
     @Rule(left = "waterTemperature"),
     @Rule(left = "heading"),
@@ -180,7 +180,7 @@ import org.vesalainen.util.navi.Velocity;
     @Rule(left = "speed", value = "c skip?"),
     @Rule(left = "windAngle")
 })
-public abstract class NMEAParser implements ParserInfo, ChecksumProvider
+public abstract class NMEAParser extends NMEASentences implements ParserInfo, ChecksumProvider
 {
     private final Checksum checksum = new NMEAChecksum();
     
@@ -882,28 +882,52 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
         data.setTargetNumber(target);
     }
 
-    @Rule("decimal")
-    protected void targetTime(
-            float utc, // hhmmss.ss
+    @Rule("letter")
+    protected void targetStatus(
+            char status,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setTime(utc);
+        data.setTargetStatus(status);
+    }
+    
+    @Rule("string")
+    protected void referenceTarget(
+            String referenceTarget,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setReferenceTarget(referenceTarget);
     }
 
-    @Rule("decimal")
+    @Rule("digit2 digit2 decimal")
+    protected void targetTime(
+            int hour,
+            int minute,
+            float second,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTargetHour(hour);
+        data.setTargetMinute(minute);
+        data.setTargetSecond(second);
+    }
+
+    @Rule("digit2 digit2 decimal")
     protected void utc(
-            float utc, // hhmmss.ss
+            int hour,
+            int minute,
+            float second,
             @ParserContext("clock") Clock clock)
     {
-        clock.setTime(utc);
+        clock.setTime(hour, minute, second);
     }
 
-    @Rule("integer")
+    @Rule("digit2 digit2 digit2")
     protected void date(
-            int date, // ddmmyy
+            int day,
+            int month,
+            int year,
             @ParserContext("clock") Clock clock)
     {
-        clock.setDate(date);
+        clock.setDate(year, month, day);
     }
 
     @Rule("letter")
@@ -1331,6 +1355,9 @@ public abstract class NMEAParser implements ParserInfo, ChecksumProvider
 
     @Terminal(expression = "[\\+\\-]?[0-9]+")
     protected abstract int integer(int i);
+
+    @Terminal(expression = "[0-9]{2}")
+    protected abstract int digit2(int i);
 
     @Terminal(expression = "[0-9a-fA-F]+", radix=16)
     protected abstract int hex(int i);
