@@ -17,7 +17,9 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -1350,6 +1352,9 @@ public class NMEAParserTest
                 assertEquals(MessageType.WPL, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getDegree(1), ss.getFloat("destinationWaypointLatitude"), Epsilon);
+                assertEquals(nch.getDegree(3), ss.getFloat("destinationWaypointLongitude"), Epsilon);
+                assertEquals(nch.getString(5), ss.getProperty("waypoint"));
             }
         }
         catch (Exception ex)
@@ -1365,7 +1370,8 @@ public class NMEAParserTest
         try
         {
             String[] nmeas = new String[] {
-                "$GPXTE,A,A,0.04,L,N,A*07\r\n"
+                "$GPXTE,A,A,0.04,L,N,A*07\r\n",
+                "$GPXTE,A,A,0.67,L,N*6F\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -1378,7 +1384,126 @@ public class NMEAParserTest
                 assertEquals(MessageType.XTE, ss.getProperty("messageType"));
                 assertEquals('G', ss.getProperty("talkerId1"));
                 assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getChar(1), ss.getProperty("status"));
+                assertEquals(nch.getChar(2), ss.getProperty("status2"));
+                assertEquals(nch.getFloat(3)*nch.getSign(4), ss.getProperty("crossTrackError"));
+                if (nch.getSize() > 7)
+                {
+                    assertEquals(nch.getChar(6), ss.getProperty("faaModeIndicator"));
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void zda()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPZDA,201530.00,04,07,2002,00,00*60\r\n",
+                "$GPZDA,160012.71,11,03,2004,-1,00*7D\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.ZDA, ss.getProperty("messageType"));
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                int hd = nch.getInt(5);
+                int md = nch.getInt(6);
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                Clock clock = (Clock) ss.getProperty("clock");
+                cal.setTimeInMillis(clock.getTime());
+                String hhmmss = nch.getString(1);
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY)+hd);
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
+                // note that clock is running!
+                assertEquals(Float.parseFloat(hhmmss.substring(4)), (double)cal.get(Calendar.SECOND)+(double)cal.get(Calendar.MILLISECOND)/1000.0, 0.001);  
+                assertEquals(nch.getInt(2), Integer.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
+                assertEquals(nch.getInt(3), Integer.valueOf(cal.get(Calendar.MONTH)+1));
+                assertEquals(nch.getInt(4), Integer.valueOf(cal.get(Calendar.YEAR)));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void err0()
+    {
+        try
+        {
+            String nmea = 
+                "$GPRMC,062455,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*78\r\n"+
+                "$GPRMC,062456,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*7B\r\n"+
+                "$GPRMC,062457,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*7D\r\n"+
+                "$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*72\r\n"+
+                "$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62\r\n"+
+                "$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68\r\n"+
+                "$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70\r\n"+
+                "$GPRMC,010003,A,1248.7047,S,03827.5797,W,0.0,94.9,290505,23.0,W,A*03\r\n"
+            ;
+            System.err.println(nmea);
+            List<Object> list = new ArrayList<>();
+            list.add(1.3F);
+            list.add(1.3F);
+            list.add(1.3F);
+            list.add(1.3F);
+            list.add(360F);
+            list.add(54.7F);
+            list.add(231.8F);
+            list.add(94.9F);
+            ListStorage ls = new ListStorage();
+            NMEAObserver tc = ls.getStorage(NMEAObserver.class);
+            parser.parse(nmea, tc, null);
+            assertEquals(list, ls.getProperty("trackMadeGood"));
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void err1()
+    {
+        try
+        {
+            String nmea = 
+                "@GPRMC,062455,A,6009.2054,N,02453.6493,E,000.0,001.7,171009,,,A*78\r\n"+   // err
+                "$GPRMC,062456,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*7B\r\n"+
+                "$GPRMC,062457,A,6009.2053,N,02453.6493,E,000.0,001.9,171009,,,A*70\r\n"+   // err
+                "$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.5,171009,,,A*72\r\n"+   // err
+                "$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62\r\n"+
+                "$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68\r\n"+
+                "$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70\r\n"+
+                "$GPRMC,A010003,A,1248.7047,S,03827.5797,W,0.0,94.9,290505,23.0,W,A*03\r\n" // err
+            ;
+            System.err.println(nmea);
+            List<Object> list = new ArrayList<>();
+            list.add(1.3F);
+            list.add(360F);
+            list.add(54.7F);
+            list.add(231.8F);
+            ListStorage ls = new ListStorage();
+            NMEAObserver tc = ls.getStorage(NMEAObserver.class);
+            parser.parse(nmea, tc, null);
+            assertEquals(list, ls.getProperty("trackMadeGood"));
         }
         catch (Exception ex)
         {

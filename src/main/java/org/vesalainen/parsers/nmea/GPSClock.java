@@ -75,7 +75,14 @@ public class GPSClock implements Clock
         }
         else
         {
-            return 1900 + year;
+            if (year < 100)
+            {
+                return 1900 + year;
+            }
+            else
+            {
+                return year;
+            }
         }
     }
     
