@@ -182,7 +182,6 @@ import org.vesalainen.util.navi.Velocity;
 })
 public abstract class NMEAParser extends NMEASentences implements ParserInfo, ChecksumProvider
 {
-    private final Checksum checksum = new NMEAChecksum();
     
     @Rule("'!AIVDM'")
     protected void aivdm(@ParserContext("aisContext") AISContext aisContext)
@@ -1501,7 +1500,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     @Override
     public Checksum getChecksum()
     {
-        return checksum;
+        return new NMEAChecksum();
     }
 
     private float toKnots(float velocity, char unit)
