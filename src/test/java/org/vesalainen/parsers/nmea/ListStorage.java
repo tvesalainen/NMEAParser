@@ -42,7 +42,7 @@ public class ListStorage implements InvocationHandler
     private String commitReason;
     private String rollbackReason;
     
-    protected <T extends Transactional> T getStorage(Class<T>... intf)
+    public <T extends Transactional> T getStorage(Class<T>... intf)
     {
         return (T) Proxy.newProxyInstance(
                 intf[0].getClassLoader(), 
