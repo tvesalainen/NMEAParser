@@ -187,15 +187,13 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     @Rule("'!AIVDM'")
     protected void aivdm(@ParserContext("aisContext") AISContext aisContext)
     {
-        AISObserver aisData = aisContext.getAisData();
-        aisData.setOwnMessage(false);
+        aisContext.setOwnMessage(false);
     }
 
     @Rule("'!AIVDO'")
     protected void aivdo(@ParserContext("aisContext") AISContext aisContext)
     {
-        AISObserver aisData = aisContext.getAisData();
-        aisData.setOwnMessage(true);
+        aisContext.setOwnMessage(true);
     }
 
     @Rule("letter")
@@ -400,23 +398,13 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException, InterruptedException
     {
-        aisContext.setInput(input);
-        AISObserver aisData = aisContext.getAisData();
-        aisData.setPrefix(
-            numberOfSentences,
-            sentenceNumber,
-            sequentialMessageID,
-            channel
-                );
-        if (sentenceNumber == 1)
-        {
-            aisContext.setNumberOfMessages(numberOfSentences);
-            aisContext.switchTo(0);
-        }
-        else
-        {
-            aisContext.switchTo(aisContext.getLast());
-        }
+        aisContext.startOfSentence(
+                input, 
+                numberOfSentences, 
+                sentenceNumber,
+                sequentialMessageID,
+                channel
+        );
     }
 
     @Rule("integer")
@@ -1284,21 +1272,20 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             @ParserContext("aisContext") AISContext aisContext
             )
     {
-        AISObserver aisData = aisContext.getAisData();
         NMEAChecksum checksum = (NMEAChecksum) getChecksum();
         if (sum != checksum.getValue())
         {
             clock.rollback();
             String reason = input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
             data.rollback(reason);
-            aisData.rollback(reason);
+            aisContext.rollback(reason);
         }
         else
         {
             clock.commit();
             String reason = input.getLineNumber()+": "+Integer.toHexString(sum);
             data.commit(reason);
-            aisData.commit(reason);
+            aisContext.commit(reason);
         }
     }
 

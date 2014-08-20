@@ -18,7 +18,6 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 import org.vesalainen.parser.util.InputReader;
@@ -34,7 +33,7 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
     private int cc;
     private int bit;
     private final AISContext context;
-    private boolean nextSentence;
+    private boolean underflow;
 
     AISChannel(InputReader in, AISContext context)
     {
@@ -57,10 +56,23 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
     @Override
     public long read(ByteBuffer[] dsts, int offset, int length) throws IOException
     {
-        if (nextSentence)
+        if (underflow)
         {
             context.join();// wait for nmea thread
-            nextSentence = false;
+            underflow = false;
+            if (context.isEnded())
+            {
+                ByteBuffer bb = dsts[offset];
+                if (context.isCommitted())
+                {
+                    bb.put((byte)'C');
+                }
+                else
+                {
+                    bb.put((byte)'R');
+                }
+                return 1;
+            }
         }
         int count = 0;
         for (int ii=offset;ii<length;ii++)
@@ -84,7 +96,7 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
                     {
                         if (cc == ',')
                         {
-                            nextSentence = true;
+                            underflow = true;
                             try
                             {
                                 int p = in.read();
@@ -103,15 +115,7 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
                                     bb = dsts[ii-1];
                                     bb.position(bb.position()-padding);
                                 }
-                                if (context.isLastMessage())
-                                {
-                                    bb.put((byte)'\n');
-                                    return count-padding+1;
-                                }
-                                else
-                                {
-                                    return count-padding;
-                                }
+                                return count-padding;
                             }
                             finally
                             {

@@ -18,7 +18,6 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -32,45 +31,95 @@ public class AISContext extends SimpleWorkflow<Integer>
 {
     private final AISObserver aisData;
     private final AISParser aisParser;
-    private int last;
+    private int current;
     private int numberOfSentences;
+    private int sentenceNumber;
+    private boolean ended = true;
+    private boolean committed;
     private InputReader input;
 
     public AISContext(AISObserver aisData) throws IOException
     {
-        super(-1, Runtime.getRuntime().availableProcessors()+1, 5, TimeUnit.MINUTES);
+        super(-1, 1, 5, TimeUnit.MINUTES);  // one nmea and one ais thread in parallel!
         this.aisData = aisData;
         aisParser = AISParser.newInstance();
     }
 
-    public void setInput(InputReader input)
+    public void startOfSentence(
+            InputReader input, 
+            int numberOfSentences, 
+            int sentenceNumber,
+            int sequentialMessageID,
+            char channel
+            )
     {
         this.input = input;
+        aisData.setPrefix(
+            numberOfSentences,
+            sentenceNumber,
+            sequentialMessageID,
+            channel
+                );
+        if (sentenceNumber == 1)
+        {
+            if (!ended)
+            {
+                ended = true;
+                committed = false;
+                switchTo(current);
+            }
+            ended = false;
+            this.numberOfSentences = numberOfSentences;
+            this.sentenceNumber = 1;
+            switchTo(0);
+        }
+        else
+        {
+            this.sentenceNumber++;
+            if (this.sentenceNumber != sentenceNumber)
+            {
+                ended = true;
+                committed = false;
+            }
+            switchTo(current);
+        }
     }
-    
-    public AISObserver getAisData()
+    public void setMessageType(int messageType)
     {
-        return aisData;
+        this.current = messageType;
+        switchTo(messageType);
     }
 
-    public void setNumberOfMessages(int numberOfMessages)
+    public void rollback(String reason)
     {
-        this.numberOfSentences = numberOfMessages;
+        ended = true;
+        committed = false;
+        switchTo(current);
     }
 
-    boolean isLastMessage()
+    public void commit(String reason)
     {
-        return --numberOfSentences == 0;
+        if (!ended && numberOfSentences == sentenceNumber)
+        {
+            ended = true;
+            committed = true;
+            switchTo(current);
+        }
     }
 
-    public int getLast()
+    public void setOwnMessage(boolean b)
     {
-        return last;
+        aisData.setOwnMessage(b);
     }
 
-    public void setLast(int last)
+    public boolean isEnded()
     {
-        this.last = last;
+        return ended;
+    }
+
+    public boolean isCommitted()
+    {
+        return committed;
     }
 
     @Override
@@ -79,6 +128,7 @@ public class AISContext extends SimpleWorkflow<Integer>
         System.err.println("Message "+key);
         return new AISThread(key, this);
     }
+
     class AISThread implements Runnable
     {
         private final int message;
