@@ -32,6 +32,7 @@ import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.Terminals;
 import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.mmsi.MMSIType.*;
+import org.vesalainen.util.concurrent.ThreadStoppedException;
 
 /**
  * @author Timo Vesalainen
@@ -638,7 +639,7 @@ import static org.vesalainen.parsers.mmsi.MMSIType.*;
 ,@Rule(left="WeatherObservationReportFromShipWMOVariant", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid21", "wmo1", "lon_I3_16", "lat_I3_15", "month", "day_6", "hour", "minute_3", "course_7", "speed_U1_5", "heading_7", "pressure_U1_11", "pdelta", "ptend", "twinddir", "twindspeed", "rwinddir", "rwindspeed", "mgustspeed", "mgustdir", "airtemp_U1_10", "humidity", "surftemp", "visibility_U2_6", "weather_9", "pweather1", "pweather2", "totalcloud", "lowclouda", "lowcloudt", "midcloudt", "highcloudt", "cloudbase", "wwperiod", "wwheight", "swelldir1", "swperiod1", "swheight1", "swelldir2", "swperiod2", "swheight2", "icedeposit", "icerate", "icecause", "seaice", "icetype", "icestate", "icedevel", "icebearing"})
 ,@Rule(left="27Content", value={"Type27LongRangeAISBroadcastMessage"})
 })
-public abstract class AISParser implements ParserInfo
+public abstract class AISParser //implements ParserInfo
 {
 protected void payload(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void aisState(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -682,122 +683,122 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     protected abstract void parse(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
 
     @ParseMethod(start = "1-3Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse123Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "4Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse4Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "5Messages", size=422, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse5Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "6Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse6Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "7Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse7Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "8Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse8Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "9Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse9Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "10Messages", size=72, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse10Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "11Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse11Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "12Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse12Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "14Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse14Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "15Messages", size=160, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse15Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "16Messages", size=144, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse16Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "17Messages", size=816, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse17Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "18Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse18Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "19Messages", size=312, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse19Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "20Messages", size=160, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse20Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "21Messages", size=360, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse21Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "22Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse22Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "23Messages", size=160, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse23Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "24Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse24Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
     @ParseMethod(start = "27Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse27Messages(
             AISChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext);
+            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
 
-    @RecoverMethod
+    //@RecoverMethod
     public void recover(
-            @ParserContext("aisData") AISObserver aisData,
+            @ParserContext("aisContext") AISContext aisContext,
             @ParserContext(ParserConstants.InputReader) InputReader reader,
             @ParserContext(ParserConstants.ExpectedDescription) String expected,
             @ParserContext(ParserConstants.LastToken) String got,
@@ -807,9 +808,9 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         System.err.println("Expected "+expected);
         System.err.println("Got      "+got);
         String input = reader.getInput();
-        if (input.endsWith("\n"))
+        if (input.endsWith("C") || input.endsWith("R"))
         {
-            aisData.rollback("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
+            aisContext.recover("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
             System.err.println("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
             reader.clear();
         }
@@ -820,16 +821,17 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             sb.append('^');
             reader.clear();
             int cc = reader.read();
-            while (cc != '\n' && cc != -1)
+            while (cc != 'C' && cc != 'R' && cc != -1)
             {
                 reader.clear();
                 sb.append((char) cc);
                 cc = reader.read();
             }
             reader.clear();
-            aisData.rollback("skipping " + sb+" "+thr);
+            aisContext.recover("skipping " + sb+" "+thr);
             System.err.println("skipping " + sb+" "+thr);
         }
+        aisContext.switchTo(-1);
     }
 
     protected void type(

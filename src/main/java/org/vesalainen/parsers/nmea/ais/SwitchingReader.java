@@ -66,7 +66,7 @@ public class SwitchingReader extends Reader implements Recoverable
         return cc;
     }
     @Override
-    public boolean recover()
+    public boolean recover() throws IOException
     {
         if (in instanceof Recoverable)
         {

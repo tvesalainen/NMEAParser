@@ -40,7 +40,7 @@ public class AISContext extends SimpleWorkflow<Integer>
 
     public AISContext(AISObserver aisData) throws IOException
     {
-        super(-1, 1, 5, TimeUnit.MINUTES);  // one nmea and one ais thread in parallel!
+        super(-1, 1, 100, TimeUnit.MINUTES);  // one nmea and one ais thread in parallel!
         this.aisData = aisData;
         aisParser = AISParser.newInstance();
     }
@@ -105,6 +105,12 @@ public class AISContext extends SimpleWorkflow<Integer>
             committed = true;
             switchTo(current);
         }
+    }
+
+    public void recover(String reason)
+    {
+        ended = true;
+        committed = false;
     }
 
     public void setOwnMessage(boolean b)

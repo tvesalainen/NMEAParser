@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.Recoverable;
+import org.vesalainen.regex.SyntaxErrorException;
 
 /**
  * AISChannel converts ais content to binary input.
@@ -42,9 +43,18 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
     }
 
     @Override
-    public boolean recover()
+    public boolean recover() throws IOException
     {
-        return false;
+        if (!underflow)
+        {
+            int c = in.read();
+            while (c != ',')
+            {
+                c = in.read();
+            }
+        }
+        underflow = false;
+        return true;
     }
 
     @Override
@@ -59,20 +69,24 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
         if (underflow)
         {
             context.join();// wait for nmea thread
-            underflow = false;
-            if (context.isEnded())
+            if (context.isEnded() && context.isCommitted())
             {
-                ByteBuffer bb = dsts[offset];
-                if (context.isCommitted())
+                try
                 {
+                    ByteBuffer bb = dsts[offset];
                     bb.put((byte)'C');
+                    return 1;
                 }
-                else
+                finally
                 {
-                    bb.put((byte)'R');
+                    context.fork(-1);   // let nmea thread run
                 }
-                return 1;
             }
+            underflow = false;
+        }
+        if (context.isEnded() && !context.isCommitted())
+        {
+            throw new SyntaxErrorException("NMEA failure");
         }
         int count = 0;
         for (int ii=offset;ii<length;ii++)
@@ -124,7 +138,7 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
                         }
                         else
                         {
-                            throw new IOException("expected ',' got '"+(char)cc+"'");
+                            throw new SyntaxErrorException("expected ',' got '"+(char)cc+"'");
                         }
                     }
                 }
