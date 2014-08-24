@@ -200,6 +200,7 @@ public abstract class AISGrammarGenerator
             while (iterator.hasNext())
             {
                 List<String> line = iterator.next();
+                boolean last = !iterator.hasNext();
                 String member = line.get(3);
                 if (hasArray && "shape".equals(member))
                 {
@@ -220,6 +221,7 @@ public abstract class AISGrammarGenerator
                     Class<?> javaType = int.class;
                     int radix = 2;
                     int[] len = bounds(line.get(1));
+                    boolean opt = false;
                     switch (type)
                     {
                         case 'b':
@@ -253,6 +255,10 @@ public abstract class AISGrammarGenerator
                             javaType = InputReader.class;
                             break;
                         case 'x':
+                            if (last)
+                            {
+                                opt = true;
+                            }
                             break;
                     }
                     checkReference(units);
@@ -303,7 +309,14 @@ public abstract class AISGrammarGenerator
                     {
                         if (member.isEmpty())
                         {
-                            rhs.append(" `"+expression+"´");
+                            if (opt)
+                            {
+                                rhs.append(" (`"+expression+"´)?");
+                            }
+                            else
+                            {
+                                rhs.append(" `"+expression+"´");
+                            }
                         }
                         else
                         {

@@ -43,18 +43,27 @@ public class AISChannel implements ScatteringByteChannel, Recoverable
     }
 
     @Override
-    public boolean recover() throws IOException
+    public boolean recover(String msg, String source, int line, int column) throws IOException
     {
-        if (!underflow)
+        try
         {
-            int c = in.read();
-            while (c != ',')
+            context.afterSyntaxError(msg);
+            if (!underflow)
             {
-                c = in.read();
+                int c = in.read();
+                while (c != ',')
+                {
+                    c = in.read();
+                }
+                c = in.read();  // padding
             }
+            underflow = true;
+            return true;
         }
-        underflow = false;
-        return true;
+        finally
+        {
+            context.fork(-1);   // let nmea thread run
+        }
     }
 
     @Override

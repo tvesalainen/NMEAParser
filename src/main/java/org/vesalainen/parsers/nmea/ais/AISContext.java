@@ -90,25 +90,29 @@ public class AISContext extends SimpleWorkflow<Integer>
         switchTo(messageType);
     }
 
-    public void rollback(String reason)
+    public void afterChecksum(boolean committed, String reason)
     {
-        ended = true;
-        committed = false;
-        switchTo(current);
-    }
-
-    public void commit(String reason)
-    {
-        if (!ended && numberOfSentences == sentenceNumber)
+        if (committed)
         {
-            ended = true;
-            committed = true;
+            if (!ended && numberOfSentences == sentenceNumber)
+            {
+                this.ended = true;
+                this.committed = true;
+                switchTo(current);
+            }
+        }
+        else
+        {
+            this.ended = true;
+            this.committed = false;
+            aisData.rollback(reason);
             switchTo(current);
         }
     }
 
-    public void recover(String reason)
+    public void afterSyntaxError(String reason)
     {
+        aisData.rollback(reason);
         ended = true;
         committed = false;
     }

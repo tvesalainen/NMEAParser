@@ -23,10 +23,10 @@ package org.vesalainen.parsers.nmea.ais;
  */
 public class TC extends AbstractAISObserver
 {
-    private boolean ownMessage;
-    private String commitReason;
-    private String rollbackReason;
-    private int seq;
+    boolean ownMessage;
+    String commitReason;
+    String rollbackReason;
+    int seq;
     int second = -1;
     int heading = -1;
     float course = Float.NaN;
@@ -36,7 +36,7 @@ public class TC extends AbstractAISObserver
     float rateOfTurn = Float.NaN;
     NavigationStatus navigationStatus;
     int mmsi = -1;
-    private int sequentialMessageId;
+    int sequentialMessageId;
     MessageTypes messageType;
     EPFDFixTypes epfd;
     int aisVersion = -1;
