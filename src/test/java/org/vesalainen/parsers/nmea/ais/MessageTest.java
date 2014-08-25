@@ -615,6 +615,10 @@ public class MessageTest
                 assertEquals((float)ach.getInt(89, 116)/600000.0 , tc.latitude, Epsilon);
                 assertEquals((float)ach.getUInt(116, 128)/10, tc.course, Epsilon);
                 assertEquals(ach.getUInt(128, 134), tc.second);
+                assertEquals(!ach.getBoolean(142), tc.dte);
+                assertEquals(ach.getBoolean(146), tc.assigned);
+                assertEquals(ach.getBoolean(147), tc.raim);
+                assertEquals(ach.getUInt(148, 168), tc.radio);
                 assertNull(tc.error);
             }
         }
@@ -1090,6 +1094,20 @@ public class MessageTest
     {
         try
         {
+            String[] nmeas = new String[] {
+                "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n",
+                "!AIVDM,1,1,,A,133sVfPP00PD>hRMDH@jNOvN20S8,0*7F\r\n",
+                "!AIVDM,1,1,,A,13aDr=PP00PGIljMhwO3F?wN20RJ,0*62\r\n",
+                "!AIVDM,1,1,,B,16:@?m001o85tmL<SbP5OlHN25Ip,0*7F\r\n",
+                "!AIVDM,1,1,,A,133w;`PP00PCqghMcqNqdOvPR5Ip,0*65\r\n",
+                "!AIVDM,1,1,,B,139eb:PP00PIHDNMdd6@0?vN2D2s,0*43\r\n"
+            };
+            List<Object> list = new ArrayList<>();
+            for (String nmea : nmeas)
+            {
+                AISContentHelper ach = new AISContentHelper(nmea);
+                list.add((float)ach.getUInt(116, 128)/10);
+            }
             String nmea = 
                 "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n"+
                 "!AIVDM,1,1,,A,133sVfPP00PD>hRMDH@jNOvN20S8,0*7F\r\n"+
@@ -1101,11 +1119,6 @@ public class MessageTest
             ListStorage ls = new ListStorage();
             AISObserver tc = ls.getStorage(AISObserver.class);
             parser.parse(nmea, null, tc);
-            List<Object> list = new ArrayList<>();
-            list.add(36.7F);
-            list.add(63.3F);
-            list.add(140.7F);
-            list.add(0.0F);
             assertEquals(list, ls.getProperty("course"));
         }
         catch (Exception ex)

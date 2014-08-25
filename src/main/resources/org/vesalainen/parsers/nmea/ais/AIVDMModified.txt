@@ -3266,7 +3266,7 @@ bits is 168.
 |143-145 | 3  |Spare              |           |x|Not used
 |146-146 | 1  |Assigned           |assigned   |b|Assigned-mode flag
 |147-147 | 1  |RAIM flag          |raim       |b|As for common navigation block
-|148-167 |19  |Radio status       |radio      |u|See <<IALA>> for details.
+|148-167 |20  |Radio status       |radio      |u|See <<IALA>> for details.
 |==============================================================================
 
 Altitude is in meters.  The special value 4095 indicates altitude is

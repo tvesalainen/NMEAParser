@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.regex.SyntaxErrorException;
 import org.vesalainen.util.concurrent.SimpleWorkflow;
 
 /**
@@ -29,14 +30,16 @@ import org.vesalainen.util.concurrent.SimpleWorkflow;
  */
 public class AISContext extends SimpleWorkflow<Integer>
 {
+    private static final byte Commit = (byte)'C';
+    private static final byte Rollback = (byte)'R';
+    
     private final AISObserver aisData;
     private final AISParser aisParser;
     private int current;
     private int numberOfSentences;
     private int sentenceNumber;
-    private boolean ended = true;
-    private boolean committed;
     private InputReader input;
+    private byte pushed;
 
     public AISContext(AISObserver aisData) throws IOException
     {
@@ -62,13 +65,11 @@ public class AISContext extends SimpleWorkflow<Integer>
                 );
         if (sentenceNumber == 1)
         {
-            if (!ended)
+            if (this.numberOfSentences != 0)
             {
-                ended = true;
-                committed = false;
+                pushed = Rollback;
                 switchTo(current);
             }
-            ended = false;
             this.numberOfSentences = numberOfSentences;
             this.sentenceNumber = 1;
             switchTo(0);
@@ -78,10 +79,19 @@ public class AISContext extends SimpleWorkflow<Integer>
             this.sentenceNumber++;
             if (this.sentenceNumber != sentenceNumber)
             {
-                ended = true;
-                committed = false;
+                if (this.numberOfSentences != 0)
+                {
+                    pushed = Rollback;
+                    this.numberOfSentences = 0;
+                    this.sentenceNumber = 0;
+                    switchTo(current);
+                }
+                throw new SyntaxErrorException("Wrong AIS sentence number");
             }
-            switchTo(current);
+            else
+            {
+                switchTo(current);
+            }
         }
     }
     public void setMessageType(int messageType)
@@ -92,44 +102,38 @@ public class AISContext extends SimpleWorkflow<Integer>
 
     public void afterChecksum(boolean committed, String reason)
     {
-        if (committed)
+        if (this.numberOfSentences != 0)
         {
-            if (!ended && numberOfSentences == sentenceNumber)
+            if (committed)
             {
-                this.ended = true;
-                this.committed = true;
+                if (this.numberOfSentences == this.sentenceNumber)
+                {
+                    pushed = Commit;
+                    this.numberOfSentences = 0;
+                    this.sentenceNumber = 0;
+                    switchTo(current);
+                }
+            }
+            else
+            {
+                pushed = Rollback;
+                this.numberOfSentences = 0;
+                this.sentenceNumber = 0;
                 switchTo(current);
             }
         }
-        else
-        {
-            this.ended = true;
-            this.committed = false;
-            aisData.rollback(reason);
-            switchTo(current);
-        }
     }
 
-    public void afterSyntaxError(String reason)
+    public byte checkPushed()
     {
-        aisData.rollback(reason);
-        ended = true;
-        committed = false;
+        byte p = pushed;
+        pushed = 0;
+        return p;
     }
-
+    
     public void setOwnMessage(boolean b)
     {
         aisData.setOwnMessage(b);
-    }
-
-    public boolean isEnded()
-    {
-        return ended;
-    }
-
-    public boolean isCommitted()
-    {
-        return committed;
     }
 
     @Override

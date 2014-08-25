@@ -25,6 +25,7 @@ import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
+import org.vesalainen.parser.annotation.RecoverMethod;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
@@ -578,7 +579,6 @@ import org.vesalainen.util.concurrent.ThreadStoppedException;
 ,@Rule(left="Type22ChannelManagement", value={"repeat", "mmsi", "'[01]{2}'", "channel_a", "channel_b", "txrx_4", "power", "box_dest", "addressed", "band_a", "band_b", "zonesize", "('[01]{23}')?"})
 ,@Rule(left="6Content", value={"IMO236DangerousCargoIndication"})
 ,@Rule(left="IMO289TextDescriptionBroadcast", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid29", "linkage", "description_6_966"})
-,@Rule(left="Type9StandardSARAircraftPositionReport", value={"repeat", "mmsi", "alt_12", "speed_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "second", "regional_8", "dte", "'[01]{3}'", "assigned", "raim", "radio_19"})
 ,@Rule(left="Type12AddressedSafetyRelatedMessage", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "text_936"})
 ,@Rule(left="Type16AssignmentModeCommandA", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "offset1", "increment1_10"})
 ,@Rule(left="EnvironmentalMessageHeader", value={"repeat", "mmsi", "seqno", "dac001", "fid26", "(sensor day_5 hour minute_6 site payload)+"})
@@ -586,6 +586,7 @@ import org.vesalainen.util.concurrent.ThreadStoppedException;
 ,@Rule(left="Polygon", value={"shape4", "scale", "(bearing distance)+"})
 ,@Rule(left="5Messages", value={"(5Content end)+"})
 ,@Rule(left="Type21AidToNavigationReport1", value={"repeat", "mmsi", "aid_type", "name_120", "accuracy", "lon_I4_28", "lat_I4_27", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "second", "off_position", "regional_8", "raim", "virtual_aid", "assigned", "('[01]{1}')?"})
+,@Rule(left="Type9StandardSARAircraftPositionReport", value={"repeat", "mmsi", "alt_12", "speed_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "second", "regional_8", "dte", "'[01]{3}'", "assigned", "raim", "radio_20"})
 ,@Rule(left="9Content", value={"Type9StandardSARAircraftPositionReport"})
 ,@Rule(left="8Content", value={"WeatherObservationReportFromShipWMOVariant"})
 ,@Rule(left="7Content", value={"Type7BinaryAcknowledge"})
@@ -795,8 +796,9 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
 
-    //@RecoverMethod
+    @RecoverMethod
     public void recover(
+            @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisContext") AISContext aisContext,
             @ParserContext(ParserConstants.InputReader) InputReader reader,
             @ParserContext(ParserConstants.ExpectedDescription) String expected,
@@ -809,7 +811,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         String input = reader.getInput();
         if (input.endsWith("C") || input.endsWith("R"))
         {
-            aisContext.afterSyntaxError("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
+            aisData.rollback("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
             System.err.println("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
             reader.clear();
         }
@@ -827,10 +829,9 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
                 cc = reader.read();
             }
             reader.clear();
-            aisContext.afterSyntaxError("skipping " + sb+" "+thr);
+            aisData.rollback("skipping " + sb+" "+thr);
             System.err.println("skipping " + sb+" "+thr);
         }
-        aisContext.switchTo(-1);
     }
 
     protected void type(
