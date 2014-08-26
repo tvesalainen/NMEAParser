@@ -1278,15 +1278,22 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             clock.rollback();
             String reason = input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
             data.rollback(reason);
-            aisContext.afterChecksum(false, reason);
+            if (aisContext.isAisMessage())
+            {
+                aisContext.afterChecksum(false, reason);
+            }
         }
         else
         {
             clock.commit();
             String reason = input.getLineNumber()+": "+Integer.toHexString(sum);
             data.commit(reason);
-            aisContext.afterChecksum(true, reason);
+            if (aisContext.isAisMessage())
+            {
+                aisContext.afterChecksum(true, reason);
+            }
         }
+        aisContext.setAisMessage(false);
     }
 
     @Terminal(expression = "[0-9]+\\.[0-9]+")

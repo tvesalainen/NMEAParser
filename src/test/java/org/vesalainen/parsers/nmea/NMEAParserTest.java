@@ -1429,7 +1429,7 @@ public class NMEAParserTest
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY)+hd);
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
                 // note that clock is running!
-                assertEquals(Float.parseFloat(hhmmss.substring(4)), (double)cal.get(Calendar.SECOND)+(double)cal.get(Calendar.MILLISECOND)/1000.0, 0.001);  
+                assertEquals(Float.parseFloat(hhmmss.substring(4)), (double)cal.get(Calendar.SECOND)+(double)cal.get(Calendar.MILLISECOND)/1000.0, 0.1);  
                 assertEquals(nch.getInt(2), Integer.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
                 assertEquals(nch.getInt(3), Integer.valueOf(cal.get(Calendar.MONTH)+1));
                 assertEquals(nch.getInt(4), Integer.valueOf(cal.get(Calendar.YEAR)));

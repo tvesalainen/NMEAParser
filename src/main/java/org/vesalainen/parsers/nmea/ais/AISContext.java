@@ -40,6 +40,7 @@ public class AISContext extends SimpleWorkflow<Integer>
     private int sentenceNumber;
     private InputReader input;
     private byte pushed;
+    private boolean aisMessage;
 
     public AISContext(AISObserver aisData) throws IOException
     {
@@ -57,6 +58,7 @@ public class AISContext extends SimpleWorkflow<Integer>
             )
     {
         this.input = input;
+        this.aisMessage = true;
         aisData.setPrefix(
             numberOfSentences,
             sentenceNumber,
@@ -134,6 +136,16 @@ public class AISContext extends SimpleWorkflow<Integer>
     public void setOwnMessage(boolean b)
     {
         aisData.setOwnMessage(b);
+    }
+
+    public boolean isAisMessage()
+    {
+        return aisMessage;
+    }
+
+    public void setAisMessage(boolean aisMessage)
+    {
+        this.aisMessage = aisMessage;
     }
 
     @Override
