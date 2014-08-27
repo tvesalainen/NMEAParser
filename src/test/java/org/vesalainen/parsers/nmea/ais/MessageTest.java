@@ -1152,7 +1152,7 @@ public class MessageTest
                 "$GPRMC,062455,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*78\r\n"+
                 "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n"+
                 "!AIVDM,1,1,,A,133sVfPP00PD>hRMDH@jNOvN20S8,0*7F\r\n"+
-                "!AIVDM,2,1,9,B,53nFBv01SJ<thHp6220H4heHTf2222222222221?50:454o<`9QSlUDp,0*02\r\n"+ // err
+                "!AIVDM,2,1,9,B,53nFBv01SJ<thHp6220H4heHTf2222222222221?50:454o<`9QSlUDp,0*02\r\n"+ // wrong checksum
                     "!AIVDM,2,2,9,B,888888888888880,2*2E\r\n"+
                 "$GPRMC,062457,A,6009.2053,N,02453.6493,E,012.0,001.3,171009,,,A*7D\r\n"+   // err
                 "!AIVDM,1,1,,A,13aDr=PP00PGIljMhwO3F?wN20RJ,0*62\r\n"+
@@ -1173,6 +1173,72 @@ public class MessageTest
         catch (Exception ex)
         {
             ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+    public void err2()
+    {
+        try
+        {
+            List<Object> list = getExpected();
+            String nmea = 
+                "$GPRMC,062455,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*78\r\n"+
+                "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n"+
+                "!AIVDM,1,1,,A,133sVfPP00PD>hRMDH@jNOvN20S8,0*7F\r\n"+
+                "!AIVDM,2,1,9,B,53nFBv01SJ<thHp6220H4heHTf2222222222221?50:454o<`9QSlUDp,0*09\r\n"+
+                    //"!AIVDM,2,2,9,B,888888888888880,2*2E\r\n"+ missing
+                "$GPRMC,062457,A,6009.2053,N,02453.6493,E,012.0,001.3,171009,,,A*7D\r\n"+   // err
+                "!AIVDM,1,1,,A,13aDr=PP00PGIljMhwO3F?wN20RJ,0*62\r\n"+
+                "!AIVDM,2,1,0,A,802R5Ph0BkHgL@PCQ:GaOwwwwwwwwwww2k8wwwwwwwwwwwwwwwwwwwww,0*3A\r\n"+
+                "!AIVDM,2,2,0,A,wwt,0*60\r\n"+  // syntax
+                "!AIVDM,1,1,,B,16:@?m001o85tmL<SbP5OlHN25Ip,0*7F\r\n"+
+                "$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69\r\n"+
+                "!AIVDM,1,1,,A,133w;`PP00PCqghMcqNqdOvPR5Ip,0*65\r\n"+
+                "!AIVDM,1,1,,B,139eb:PP00PIHDNMdd6@0?vN2D2s,0*43\r\n"
+            ;
+            list.remove(4);
+            list.remove(2);
+            ListStorage ls = new ListStorage();
+            AISObserver tc = ls.getStorage(AISObserver.class);
+            parser.parse(nmea, null, tc);
+            assertEquals(list, ls.getProperty("mmsi"));
+        }
+        catch (Exception ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void err3()
+    {
+        try
+        {
+            List<Object> list = getExpected();
+            String nmea = 
+                "$GPRMC,062455,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*78\r\n"+
+                "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n"+
+                "!AIVDM,1,1,,A,N33sVfPP00PD>hRMDH@jNOvN20S8,0*7F\r\n"+
+                //"!AIVDM,2,1,9,B,53nFBv01SJ<thHp6220H4heHTf2222222222221?50:454o<`9QSlUDp,0*09\r\n"+ missing
+                    "!AIVDM,2,2,9,B,888888888888880,2*2E\r\n"+
+                "$GPRMC,062457,A,6009.2053,N,02453.6493,E,012.0,001.3,171009,,,A*7D\r\n"+   // err
+                "!AIVDM,1,1,,A,13aDr=PP00PGIljMhwO3F?wN20RJ,0*62\r\n"+
+                //"!AIVDM,2,1,0,A,802R5Ph0BkHgL@PCQ:GaOwwwwwwwwwww2k8wwwwwwwwwwwwwwwwwwwww,0*3A\r\n"+ missing
+                "!AIVDM,2,2,0,A,wwt,2*60\r\n"+
+                "!AIVDM,1,1,,B,16:@?m001o85tmL<SbP5OlHN25Ip,0*7F\r\n"+
+                "$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69\r\n"+
+                "!AIVDM,1,1,,A,133w;`PP00PCqghMcqNqdOvPR5Ip,0*65\r\n"+
+                "!AIVDM,1,1,,B,139eb:PP00PIHDNMdd6@0?vN2D2s,0*43\r\n"
+            ;
+            list.remove(4);
+            list.remove(2);
+            list.remove(1);
+            ListStorage ls = new ListStorage();
+            AISObserver tc = ls.getStorage(AISObserver.class);
+            parser.parse(nmea, null, tc);
+            assertEquals(list, ls.getProperty("mmsi"));
+        }
+        catch (Exception ex)
+        {
             fail(ex.getMessage());
         }
     }

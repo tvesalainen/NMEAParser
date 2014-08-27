@@ -70,7 +70,7 @@ public class AISContext extends SimpleWorkflow<Integer>
             if (this.numberOfSentences != 0)
             {
                 pushed = Rollback;
-                switchTo(current);
+                fork(current);
             }
             this.numberOfSentences = numberOfSentences;
             this.sentenceNumber = 1;
@@ -86,7 +86,7 @@ public class AISContext extends SimpleWorkflow<Integer>
                     pushed = Rollback;
                     this.numberOfSentences = 0;
                     this.sentenceNumber = 0;
-                    switchTo(current);
+                    fork(current);
                 }
                 throw new SyntaxErrorException("Wrong AIS sentence number");
             }
@@ -113,7 +113,7 @@ public class AISContext extends SimpleWorkflow<Integer>
                     pushed = Commit;
                     this.numberOfSentences = 0;
                     this.sentenceNumber = 0;
-                    switchTo(current);
+                    fork(current);
                 }
             }
             else
@@ -121,7 +121,7 @@ public class AISContext extends SimpleWorkflow<Integer>
                 pushed = Rollback;
                 this.numberOfSentences = 0;
                 this.sentenceNumber = 0;
-                switchTo(current);
+                fork(current);
             }
         }
     }

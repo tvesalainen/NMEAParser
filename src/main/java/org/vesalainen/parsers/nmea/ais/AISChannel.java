@@ -56,16 +56,9 @@ public class AISChannel implements ScatteringByteChannel
             byte pushed = context.checkPushed();
             if (pushed != 0)
             {
-                try
-                {
-                    ByteBuffer bb = dsts[offset];
-                    bb.put(pushed);
-                    return 1;
-                }
-                finally
-                {
-                    context.fork(-1);   // let nmea thread run
-                }
+                ByteBuffer bb = dsts[offset];
+                bb.put(pushed);
+                return 1;
             }
             underflow = false;
         }
