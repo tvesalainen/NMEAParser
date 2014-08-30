@@ -19,139 +19,74 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.code.AbstractPropertySetter;
+import org.vesalainen.code.PropertySetter;
+import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.util.Transactional;
 
 /**
  * @author Timo Vesalainen
  */
-public class VesselMonitor extends AbstractAISObserver
+public class VesselMonitor extends AbstractPropertySetter implements Transactional
 {
-    private int messageNumber;
-    private int nmeaCount;
-    private String lastCommit;
-    private Map<Integer,Vessel> map = new HashMap<>();
+    private final Map<Integer,Vessel> map = new HashMap<>();
+    private Clock clock;
     private Vessel target;
 
-    @Override
-    public void setPrefix(int numberOfSentences, int sentenceNumber, int sequentialMessageID, char channel)
+    public VesselMonitor(Clock clock)
     {
-        nmeaCount++;
-    }
-    
-    @Override
-    public void setMessageType(MessageTypes messageTypes)
-    {
-        messageNumber = messageTypes.ordinal();
-    }
-
-    @Override
-    public void setMmsi(int mmsi)
-    {
-        target = map.get(mmsi);
-        if (target == null)
-        {
-            target = new Vessel(mmsi);
-            map.put(mmsi, target);
-        }
+        this.clock = clock;
     }
 
     @Override
     public void rollback(String reason)
     {
-        System.err.println(messageNumber+" failed "+reason+" at "+nmeaCount+" last="+lastCommit);
+        target.rollback(reason);
+        target = null;
     }
 
     @Override
     public void commit(String reason)
     {
-        if (sentenceNumber == numberOfSentences)
+        target.commit(reason);
+        target = null;
+    }
+
+    @Override
+    public void set(String property, boolean arg)
+    {
+        target.set(property, arg);
+    }
+
+    @Override
+    public void set(String property, char arg)
+    {
+        target.set(property, arg);
+    }
+
+    @Override
+    public void set(String property, int arg)
+    {
+        switch (property)
         {
-            
+            case "mmsi":
+                target = map.get(arg);
+                if (target == null)
+                {
+                    target = new Vessel(clock, arg);
+                    map.put(arg, target);
+                }
+                break;
+            default:
+                target.set(property, arg);
+                break;
         }
-        messageNumber = 0;
-        if (nmeaCount == 94)
-        {
-            System.err.println();
-        }
-        lastCommit = reason;
-    }
-
-    public void setNavigationStatus(NavigationStatus navigationStatus)
-    {
-        target.setNavigationStatus(navigationStatus);
-    }
-
-    public void setRateOfTurn(float degreesPerMinute)
-    {
-        target.setRateOfTurn(degreesPerMinute);
-    }
-
-    public void setSpeed(float knots)
-    {
-        target.setSpeed(knots);
-    }
-
-    public void setLongitude(float degrees)
-    {
-        target.setLongitude(degrees);
-    }
-
-    public void setLatitude(float degrees)
-    {
-        target.setLatitude(degrees);
-    }
-
-    public void setCourse(float cog)
-    {
-        target.setCourse(cog);
-    }
-
-    public void setYear(int year)
-    {
-        target.setYear(year);
-    }
-
-    public void setMonth(int month)
-    {
-        target.setMonth(month);
-    }
-
-    public void setDay(int day)
-    {
-        target.setDay(day);
-    }
-
-    public void setMinute(int minute)
-    {
-        target.setMinute(minute);
-    }
-
-    public void setHour(int hour)
-    {
-        target.setHour(hour);
-    }
-
-    public void setSecond(int second)
-    {
-        target.setSecond(second);
     }
 
     @Override
-    public void setRaim(boolean raim)
+    public void set(String property, Object arg)
     {
-        target.setRaim(raim);
-    }
-
-    @Override
-    public void setRadioStatus(int radio)
-    {
-        target.setRadioStatus(radio);
-    }
-
-    @Override
-    public void setCallSign(String classSign)
-    {
-        target.setCallSign(classSign);
+        target.set(property, arg);
     }
 
 }
