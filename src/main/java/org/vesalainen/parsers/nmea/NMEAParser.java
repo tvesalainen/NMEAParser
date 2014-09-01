@@ -1405,7 +1405,9 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
         }
         Clock clock = new GPSClock();
         data.setClock(clock);
+        data.commit("Set clock");
         aisData.setClock(clock);
+        aisData.commit("Set clock");
         AISContext aisContext = new AISContext(aisData);
         try
         {
