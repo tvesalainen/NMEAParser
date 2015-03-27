@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.code.PropertySetter;
+import org.vesalainen.parsers.nmea.BoatMonitor;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.util.Transactional;
 
@@ -29,13 +30,16 @@ import org.vesalainen.util.Transactional;
  */
 public class VesselMonitor extends AbstractPropertySetter implements Transactional
 {
+    public static final String Clock = "clock";
+    public static final String Mmsi = "mmsi";
     private final Map<Integer,Vessel> map = new HashMap<>();
     private Clock clock;
     private Vessel target;
+    private final BoatMonitor boat;
 
-    public VesselMonitor(Clock clock)
+    public VesselMonitor(BoatMonitor boat)
     {
-        this.clock = clock;
+        this.boat = boat;
     }
 
     @Override
@@ -69,7 +73,7 @@ public class VesselMonitor extends AbstractPropertySetter implements Transaction
     {
         switch (property)
         {
-            case "mmsi":
+            case Mmsi:
                 target = map.get(arg);
                 if (target == null)
                 {
@@ -86,7 +90,15 @@ public class VesselMonitor extends AbstractPropertySetter implements Transaction
     @Override
     public void set(String property, Object arg)
     {
-        target.set(property, arg);
+        switch (property)
+        {
+            case Clock:
+                clock = (Clock) arg;
+                break;
+            default:
+                target.set(property, arg);
+                break;
+        }
     }
 
 }

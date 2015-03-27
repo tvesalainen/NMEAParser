@@ -28,6 +28,58 @@ import org.vesalainen.util.Transactional;
  */
 public class Vessel extends AbstractPropertySetter implements Transactional
 {
+    public static final String RateOfTurn = "rateOfTurn";
+    public static final String Speed = "speed";
+    public static final String Longitude = "longitude";
+    public static final String Latitude = "latitude";
+    public static final String CourseOverGround = "courseOverGround";
+    public static final String Draught = "draugth";
+    public static final String Second = "second";
+    public static final String ImoNumber = "imoNumber";
+    public static final String Heading = "heading";
+    public static final String DimensionToBow = "dimensionToBow";
+    public static final String DimensionToStern = "dimensionToStern";
+    public static final String DimensionToPort = "dimensionToPort";
+    public static final String DimensionToStarboard = "dimensionToStarboard";
+    public static final String VesselName = "vesselName";
+    public static final String CallSign = "callSign";
+    public static final String Destination = "destination";
+    public static final String NavigationStatus = "navigationStatus";
+    public static final String ShipType = "shipType";
+    public static final String CsUnit = "csUnit";
+    public static final String Display = "display";
+    public static final String Dsc = "dsc";
+    public static final String Band = "band";
+    public static final String Msg22 = "msg22";
+    public static final String Assigned = "assigned";
+    public static final String Raim = "raim";
+    public static final String[] Properties = new String[] {
+        RateOfTurn,
+        Speed,
+        Longitude,
+        Latitude,
+        CourseOverGround,
+        Draught,
+        Second,
+        ImoNumber,
+        Heading,
+        DimensionToBow,
+        DimensionToStern,
+        DimensionToPort,
+        DimensionToStarboard,
+        VesselName,
+        CallSign,
+        Destination,
+        NavigationStatus,
+        ShipType,
+        CsUnit,
+        Display,
+        Dsc,
+        Band,
+        Msg22,
+        Assigned,
+        Raim
+    };
     protected final Clock clock;
     protected final int mmsi;
     protected String vesselName;
@@ -68,22 +120,22 @@ public class Vessel extends AbstractPropertySetter implements Transactional
     {
         switch (property)
         {
-            case "rateOfTurn":
+            case RateOfTurn:
                 rateOfTurn = arg;
                 break;
-            case "speed":
+            case Speed:
                 speed = arg;
                 break;
-            case "longitude":
+            case Longitude:
                 longitude = arg;
                 break;
-            case "latitude":
+            case Latitude:
                 latitude = arg;
                 break;
-            case "courseOverGround":
+            case CourseOverGround:
                 courseOverGround = arg;
                 break;
-            case "draught":
+            case Draught:
                 draught = arg;
                 break;
             default:
@@ -97,7 +149,7 @@ public class Vessel extends AbstractPropertySetter implements Transactional
     {
         switch (property)
         {
-            case "second":
+            case Second:
                 calendar.setTimeInMillis(clock.getTime());
                 int second = calendar.get(Calendar.SECOND);
                 if (second > arg)
@@ -109,22 +161,22 @@ public class Vessel extends AbstractPropertySetter implements Transactional
                     calendar.roll(Calendar.SECOND, -60+arg-second);
                 }
                 break;
-            case "imoNumber":
+            case ImoNumber:
                 imoNumber = arg;
                 break;
-            case "heading":
+            case Heading:
                 heading = arg;
                 break;
-            case "dimensionToBow":
+            case DimensionToBow:
                 dimensionToBow = arg;
                 break;
-            case "dimensionToStern":
+            case DimensionToStern:
                 dimensionToStern = arg;
                 break;
-            case "dimensionToPort":
+            case DimensionToPort:
                 dimensionToPort = arg;
                 break;
-            case "dimensionToStarboard":
+            case DimensionToStarboard:
                 dimensionToStarboard = arg;
                 break;
             default:
@@ -138,19 +190,19 @@ public class Vessel extends AbstractPropertySetter implements Transactional
     {
         switch (property)
         {
-            case "vesselName":
+            case VesselName:
                 vesselName = (String) arg;
                 break;
-            case "callSign":
+            case CallSign:
                 callSign = (String) arg;
                 break;
-            case "destination":
+            case Destination:
                 destination = (String) arg;
                 break;
-            case "navigationStatus":
+            case NavigationStatus:
                 navigationStatus = (NavigationStatus) arg;
                 break;
-            case "shipType":
+            case ShipType:
                 shipType = (CodesForShipType) arg;
                 break;
             default:
@@ -164,25 +216,25 @@ public class Vessel extends AbstractPropertySetter implements Transactional
     {
         switch (property)
         {
-            case "csUnit":
+            case CsUnit:
                 csUnit = arg;
                 break;
-            case "display":
+            case Display:
                 display = arg;
                 break;
-            case "dsc":
+            case Dsc:
                 dsc = arg;
                 break;
-            case "band":
+            case Band:
                 band = arg;
                 break;
-            case "msg22":
+            case Msg22:
                 msg22 = arg;
                 break;
-            case "assigned":
+            case Assigned:
                 assigned = arg;
                 break;
-            case "raim":
+            case Raim:
                 raim = arg;
                 break;
             default:
