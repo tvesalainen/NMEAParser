@@ -38,14 +38,10 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.ChecksumProvider;
 import org.vesalainen.parser.util.InputReader;
+import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
 import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
-import org.vesalainen.util.navi.Fathom;
-import org.vesalainen.util.navi.Feet;
-import org.vesalainen.util.navi.KilometersInHour;
-import org.vesalainen.util.navi.Knots;
-import org.vesalainen.util.navi.Velocity;
 
 /**
  * @author Timo Vesalainen
@@ -1499,86 +1495,6 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     public Checksum getChecksum()
     {
         return localChecksum.get();
-    }
-
-    private float toKnots(float velocity, char unit)
-    {
-        switch (unit)
-        {
-            case 'N':
-                return velocity;
-            case 'M':
-                return (float) Velocity.toKnots(velocity);
-            case 'K':
-                return (float) KilometersInHour.toKnots(velocity);
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected N/M/K");
-        }
-    }
-
-    private float toMetersPerSecond(float velocity, char unit)
-    {
-        switch (unit)
-        {
-            case 'N':
-                return (float) Knots.toMetersPerSecond(velocity);
-            case 'M':
-                return velocity;
-            case 'K':
-                return (float) KilometersInHour.toMetersPerSecond(velocity);
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected N/M/K");
-        }
-    }
-
-    private float leftOrRight(float dir, char unit)
-    {
-        switch (unit)
-        {
-            case 'L':
-                return -dir;
-            case 'R':
-                return dir;
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected L/R");
-        }
-    }
-
-    private float toCelcius(float temp, char unit)
-    {
-        switch (unit)
-        {
-            case 'C':
-                return temp;
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected C");
-        }
-    }
-
-    private float toMeters(float depth, char unit)
-    {
-        switch (unit)
-        {
-            case 'F':
-                return (float) Fathom.toMeters(depth);
-            case 'M':
-                return depth;
-            case 'f':
-                return (float) Feet.toMeters(depth);
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected f/M/F");
-        }
-    }
-
-    private float distance(float dist, char unit)
-    {
-        switch (unit)
-        {
-            case 'N':
-                return dist;
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected N");
-        }
     }
 
 }
