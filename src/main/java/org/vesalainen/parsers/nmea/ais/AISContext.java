@@ -22,16 +22,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.parser.util.InputReader;
+import static org.vesalainen.parsers.nmea.ais.ThreadMessage.*;
 import org.vesalainen.regex.SyntaxErrorException;
 import org.vesalainen.util.concurrent.SimpleWorkflow;
 
 /**
  * @author Timo Vesalainen
  */
-public class AISContext extends SimpleWorkflow<Integer>
+public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
 {
-    private static final byte Commit = (byte)'C';
-    private static final byte Rollback = (byte)'R';
     
     private final AISObserver aisData;
     private final AISParser aisParser;
@@ -39,12 +38,11 @@ public class AISContext extends SimpleWorkflow<Integer>
     private int numberOfSentences;
     private int sentenceNumber;
     private InputReader input;
-    private byte pushed;
     private boolean aisMessage;
 
     public AISContext(AISObserver aisData) throws IOException
     {
-        super(-1, 1, 100, TimeUnit.MINUTES);  // one nmea and one ais thread in parallel!
+        super(-1, null, 1, 100, TimeUnit.MINUTES);  // one nmea and one ais thread in parallel!
         this.aisData = aisData;
         aisParser = AISParser.newInstance();
     }
@@ -55,26 +53,28 @@ public class AISContext extends SimpleWorkflow<Integer>
             int sentenceNumber,
             int sequentialMessageID,
             char channel
-            )
+            ) throws IOException
     {
         this.input = input;
         this.aisMessage = true;
-        aisData.setPrefix(
-            numberOfSentences,
-            sentenceNumber,
-            sequentialMessageID,
-            channel
-                );
+
         if (sentenceNumber == 1)
         {
             if (this.numberOfSentences != 0)
             {
-                pushed = Rollback;
-                fork(current);
+                // new message without ending the last
+                switchTo(current, Rollback);    // kill it
             }
             this.numberOfSentences = numberOfSentences;
             this.sentenceNumber = 1;
-            switchTo(0);
+            aisParser.waitForTurn();
+            ThreadMessage rc = switchTo(0, Go);
+            if (Rollback.equals(rc))
+            {
+                this.numberOfSentences = 0;
+                this.sentenceNumber = 0;
+                throw new SyntaxErrorException("AIS parsing error");
+            }
         }
         else
         {
@@ -83,23 +83,36 @@ public class AISContext extends SimpleWorkflow<Integer>
             {
                 if (this.numberOfSentences != 0)
                 {
-                    pushed = Rollback;
-                    this.numberOfSentences = 0;
-                    this.sentenceNumber = 0;
-                    fork(current);
+                    switchTo(current, Rollback);    // this will kill ais thread
                 }
+                this.numberOfSentences = 0;
+                this.sentenceNumber = 0;
                 throw new SyntaxErrorException("Wrong AIS sentence number");
             }
             else
             {
-                switchTo(current);
+                ThreadMessage rc = switchTo(current, Go);
+                if (Rollback.equals(rc))
+                {
+                    // ais thread is now killed
+                    this.numberOfSentences = 0;
+                    this.sentenceNumber = 0;
+                    throw new SyntaxErrorException("AIS parsing error");
+                }
             }
         }
     }
     public void setMessageType(int messageType)
     {
         this.current = messageType;
-        switchTo(messageType);
+        ThreadMessage rc = switchTo(messageType, Go);
+        if (Rollback.equals(rc))
+        {
+            // ais thread is now killed
+            this.numberOfSentences = 0;
+            this.sentenceNumber = 0;
+            throw new SyntaxErrorException("AIS parsing error");
+        }
     }
 
     public void afterChecksum(boolean committed, String reason)
@@ -108,31 +121,22 @@ public class AISContext extends SimpleWorkflow<Integer>
         {
             if (committed)
             {
-                if (this.numberOfSentences == this.sentenceNumber)
+                if (this.numberOfSentences == this.sentenceNumber) // commit to ais
                 {
-                    pushed = Commit;
                     this.numberOfSentences = 0;
                     this.sentenceNumber = 0;
-                    fork(current);
-                }
+                    fork(current, Commit);
+                } // else more sentencies to come
             }
             else
             {
-                pushed = Rollback;
                 this.numberOfSentences = 0;
                 this.sentenceNumber = 0;
-                fork(current);
+                fork(current, Rollback);
             }
         }
     }
 
-    public byte checkPushed()
-    {
-        byte p = pushed;
-        pushed = 0;
-        return p;
-    }
-    
     public void setOwnMessage(boolean b)
     {
         aisData.setOwnMessage(b);

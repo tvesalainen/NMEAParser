@@ -40,29 +40,7 @@ import org.vesalainen.util.Transactional;
  */
 public interface AISObserver extends Transactional
 {   
-    /**
-     * Returns the message type
-     * @return 
-     */
-    MessageTypes getMessageType();
-    /**
-     * Returns mmsi
-     * @return 
-     */
-    int getMmsi();
-    /**
-     * Return MMSI Type
-     * @return 
-     */
     MMSIType getMmsiType();
-    /**
-     * 
-     * @param numberOfSentences
-     * @param sentenceNumber
-     * @param sequentialMessageID
-     * @param channel 
-     */
-    void setPrefix(int numberOfSentences, int sentenceNumber, int sequentialMessageID, char channel);
     /**
      * Set own message status. if message is !AISVDM ownMessage = false. 
      * if message is !AISVDO ownMessage = true.
@@ -74,24 +52,7 @@ public interface AISObserver extends Transactional
      * @param messageTypes 
      */
     void setMessageType(MessageTypes messageTypes);
-    
-    /**
-     * Number of Sentences (some messages need more then one)
-     * @param numberOfSentences 
-     */
-    void setNumberOfSentences(int numberOfSentences);
-    /**
-     * Sentence Number (1 unless it´s a multi-sentence message)
-     * @param sentenceNumber 
-     */
-    void setSentenceNumber(int sentenceNumber);
-
-    void setSequenceMessageId(int sequentialMessageId);
-    /**
-     * The AIS Channel (A or B)
-     * @param channel 
-     */
-    void setChannel(char channel);
+ 
     /**
      * Repeat Indicator. Message repeat count.
      * @param repeatIndicator 

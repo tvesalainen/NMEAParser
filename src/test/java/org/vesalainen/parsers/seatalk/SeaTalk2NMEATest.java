@@ -62,12 +62,16 @@ public class SeaTalk2NMEATest
             WritableByteChannel channel = Channels.newChannel(baos);
             s2n.parse(fc, channel);
             String nmea = baos.toString("US-ASCII");
+            String[] nmeas = nmea.split("\n");
             NMEAParser parser = NMEAParser.newInstance();
-            ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-            SimpleStorage ss = new SimpleStorage();
-            NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-            parser.parse(bais, tc, null);
-            assertNull(ss.getRollbackReason());
+            for (String s : nmeas)
+            {
+                System.err.println(s);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(s+"\n", tc, null);
+                assertNull(ss.getRollbackReason());
+            }
         }
         catch (URISyntaxException | IOException ex)
         {

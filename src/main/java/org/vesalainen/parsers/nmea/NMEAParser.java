@@ -392,7 +392,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             char channel,
             @ParserContext(ParserConstants.InputReader) InputReader input,
             @ParserContext("aisContext") AISContext aisContext
-            )
+            ) throws IOException
     {
         aisContext.startOfSentence(
                 input, 

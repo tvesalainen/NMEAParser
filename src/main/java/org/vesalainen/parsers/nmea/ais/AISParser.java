@@ -17,6 +17,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
+import java.util.concurrent.Semaphore;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import static org.vesalainen.parser.ParserFeature.*;
@@ -32,6 +33,8 @@ import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.Terminals;
 import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.mmsi.MMSIType.*;
+import static org.vesalainen.parsers.nmea.ais.ThreadMessage.Rollback;
+import org.vesalainen.regex.SyntaxErrorException;
 import org.vesalainen.util.concurrent.ThreadStoppedException;
 
 /**
@@ -641,6 +644,8 @@ import org.vesalainen.util.concurrent.ThreadStoppedException;
 })
 public abstract class AISParser implements ParserInfo
 {
+    private Semaphore semaphore = new Semaphore(1);
+    
 protected void payload(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void aisState(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void radius_12(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -668,11 +673,11 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     {
         if (end == 'C')
         {
-            aisData.commit("Commit");
+            commit(aisData, "Commit");
         }
         else
         {
-            aisData.rollback("Rollback");
+            rollback(aisData, "Rollback");
         }
     }
     public static AISParser newInstance() throws IOException
@@ -806,34 +811,37 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             @ParserContext(ParserConstants.Exception) Throwable thr
             ) throws IOException
     {
+        if (thr != null && !(thr instanceof SyntaxErrorException))
+        {
+            throw new IOException(thr);
+        }
         System.err.println("Expected "+expected);
         System.err.println("Got      "+got);
-        String input = reader.getInput();
-        if (input.endsWith("C") || input.endsWith("R"))
-        {
-            aisData.rollback("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
-            System.err.println("skipping " + input.substring(0, input.length()-1)+"^ "+thr);
-            reader.clear();
-        }
-        else
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.append(input);
-            sb.append('^');
-            reader.clear();
-            int cc = reader.read();
-            while (cc != 'C' && cc != 'R' && cc != -1)
-            {
-                reader.clear();
-                sb.append((char) cc);
-                cc = reader.read();
-            }
-            reader.clear();
-            aisData.rollback("skipping " + sb+" "+thr);
-            System.err.println("skipping " + sb+" "+thr);
-        }
+        rollback(aisData, "rollback");
+        aisContext.endTo(-1, Rollback);   // let nmea thread run and start new ais thread
     }
 
+    private void commit(AISObserver aisData, String comment)
+    {
+        aisData.commit(comment);
+        semaphore.release();
+    }
+    private void rollback(AISObserver aisData, String comment)
+    {
+        aisData.rollback(comment);
+        semaphore.release();
+    }
+    public void waitForTurn() throws IOException
+    {
+        try
+        {
+            semaphore.acquire();
+        }
+        catch (InterruptedException ex)
+        {
+            throw new IOException(ex);
+        }
+    }
     protected void type(
             int messageType, 
             @ParserContext("aisData") AISObserver aisData,

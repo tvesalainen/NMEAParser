@@ -34,42 +34,9 @@ public class AbstractAISObserver implements AISObserver
     protected int mmsi;
 
     @Override
-    public void setPrefix(int numberOfSentences, int sentenceNumber, int sequentialMessageID, char channel)
-    {
-        this.numberOfSentences = numberOfSentences;
-        this.sentenceNumber = sentenceNumber;
-        this.sequentialMessageID = sequentialMessageID;
-        this.channel = channel;
-    }
-
-    @Override
     public void setMessageType(MessageTypes messageType)
     {
         this.messageType = messageType;
-    }
-
-    @Override
-    public void setNumberOfSentences(int numberOfSentences)
-    {
-        
-    }
-
-    @Override
-    public void setSentenceNumber(int sentenceNumber)
-    {
-        
-    }
-
-    @Override
-    public void setSequenceMessageId(int sequentialMessageId)
-    {
-        
-    }
-
-    @Override
-    public void setChannel(char channel)
-    {
-        
     }
 
     @Override
@@ -1319,18 +1286,6 @@ public class AbstractAISObserver implements AISObserver
     @Override
     public void setSerialNumber(int arg)
     {
-    }
-
-    @Override
-    public MessageTypes getMessageType()
-    {
-        return messageType;
-    }
-
-    @Override
-    public int getMmsi()
-    {
-        return mmsi;
     }
 
     @Override

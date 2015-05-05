@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 import org.vesalainen.parser.util.InputReader;
+import static org.vesalainen.parsers.nmea.ais.ThreadMessage.*;
 import org.vesalainen.regex.SyntaxErrorException;
 
 /**
@@ -29,6 +30,9 @@ import org.vesalainen.regex.SyntaxErrorException;
  */
 public class AISChannel implements ScatteringByteChannel
 {
+    private static final byte CommitC = (byte)'C';
+    private static final byte RollbackC = (byte)'R';
+    
     private final InputReader in;
     private int cc;
     private int bit;
@@ -50,24 +54,26 @@ public class AISChannel implements ScatteringByteChannel
     @Override
     public long read(ByteBuffer[] dsts, int offset, int length) throws IOException
     {
-        if (underflow)
-        {
-            context.join();// wait for nmea thread
-            byte pushed = context.checkPushed();
-            if (pushed != 0)
-            {
-                ByteBuffer bb = dsts[offset];
-                bb.put(pushed);
-                return 1;
-            }
-            underflow = false;
-        }
         int count = 0;
         for (int ii=offset;ii<length;ii++)
         {
             ByteBuffer bb = dsts[ii];
             while (bb.hasRemaining())
             {
+                if (underflow)
+                {
+                    ThreadMessage rc = context.join(); // wait for nmea thread
+                    switch (rc)
+                    {
+                        case Commit:
+                            bb.put(CommitC);
+                            return 1;
+                        case Rollback:
+                            bb.put(RollbackC);
+                            return 1;
+                    }
+                    underflow = false;
+                }
                 if (bit == 0)
                 {
                     cc = in.read();
@@ -90,7 +96,7 @@ public class AISChannel implements ScatteringByteChannel
                                 int p = in.read();
                                 if (p<'0' || p>'5')
                                 {
-                                    throw new IOException("expected padding, got "+(char)p);
+                                    throw new SyntaxErrorException("expected padding, got "+(char)p);
                                 }
                                 int padding = p-'0';
                                 if (padding <= bb.position())
@@ -107,7 +113,7 @@ public class AISChannel implements ScatteringByteChannel
                             }
                             finally
                             {
-                                context.fork(-1);   // let nmea thread run
+                                context.fork(-1, Go);   // let nmea thread run
                             }
                         }
                         else

@@ -36,6 +36,7 @@ import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.LocalNMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
+import org.vesalainen.parsers.nmea.NMEAGen;
 import org.vesalainen.util.navi.Knots;
 import org.vesalainen.util.navi.Meters;
 import org.vesalainen.util.navi.Velocity;
@@ -60,7 +61,7 @@ import org.vesalainen.util.navi.Velocity;
 public abstract class SeaTalk2NMEA
 {
     private static final LocalNMEAChecksum localChecksum = new LocalNMEAChecksum();
-    private static final String prefix = "$ST";
+    private static final String talkerId = "ST";
     
     @Rule("'\\x00' '\\x02' b integer")
     protected void m00(
@@ -80,19 +81,7 @@ public abstract class SeaTalk2NMEA
         bb.flip();
         target.write(bb);
         bb.clear();
-        put(bb, prefix);
-        put(bb, "DBT,");
-        float meters = toMeters((float)xx/10, Ft);
-        put(bb, Meters.toFeets(meters));
-        put(bb, Ft);
-        put(bb, ',');
-        put(bb, meters);
-        put(bb, M);
-        put(bb, ',');
-        put(bb, Meters.toFathoms(meters));
-        put(bb, Fath);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        NMEAGen.dbt(talkerId, bb, (float)xx/10F);
     }
     @Rule("'\\x20' '\\x01' integer")
     protected void m20(
@@ -105,17 +94,7 @@ public abstract class SeaTalk2NMEA
         bb.flip();
         target.write(bb);
         bb.clear();
-        put(bb, prefix);
-        put(bb, "VHW,,,,,");
-        put(bb, knots);
-        put(bb, ',');
-        put(bb, Kts);
-        put(bb, ',');
-        put(bb, Knots.toKiloMetersInHour(knots));
-        put(bb, ',');
-        put(bb, KMH);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        NMEAGen.vhw(talkerId, bb, knots);
     }
     @Rule("'\\x23' '\\x01' b b")
     protected void m23(
@@ -128,13 +107,7 @@ public abstract class SeaTalk2NMEA
         bb.flip();
         target.write(bb);
         bb.clear();
-        put(bb, prefix);
-        put(bb, "MTW,");
-        put(bb, (double)c);
-        put(bb, ',');
-        put(bb, Celcius);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        NMEAGen.mtw(talkerId, bb, c);
     }
     @Rule("'\\x26' '\\x04' integer integer b")
     protected void m26(
@@ -149,17 +122,7 @@ public abstract class SeaTalk2NMEA
         bb.flip();
         target.write(bb);
         bb.clear();
-        put(bb, prefix);
-        put(bb, "VHW,,,,,");
-        put(bb, knots);
-        put(bb, ',');
-        put(bb, Kts);
-        put(bb, ',');
-        put(bb, Knots.toKiloMetersInHour(knots));
-        put(bb, ',');
-        put(bb, KMH);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        NMEAGen.vhw(talkerId, bb, knots);
     }
     @Rule("'\\x27' '\\x01' integer")
     protected void m27(
@@ -172,14 +135,7 @@ public abstract class SeaTalk2NMEA
         target.write(bb);
         bb.clear();
         float temp = (float)(xx-100)/10;
-
-        put(bb, prefix);
-        put(bb, "MTW,");
-        put(bb, temp);
-        put(bb, ',');
-        put(bb, Celcius);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        NMEAGen.mtw(talkerId, bb, temp);
     }
     @Rule("'\\x65' '\\x00' '\\x02'")
     protected void m65(
@@ -187,30 +143,6 @@ public abstract class SeaTalk2NMEA
             @ParserContext("target") WritableByteChannel target
     ) throws IOException
     {
-    }
-    private void putChecksum(ByteBuffer bb)
-    {
-        put(bb, '*');
-        NMEAChecksum cs = localChecksum.get();
-        bb.flip();
-        while (bb.hasRemaining())
-        {
-            cs.update(bb.get());
-        }
-        bb.limit(bb.capacity());
-        put(bb, String.format(Locale.US, "%02X", cs.getValue()));
-    }
-    private void put(ByteBuffer bb, double d)
-    {
-        put(bb, String.format(Locale.US, "%.1f", d));
-    }
-    private void put(ByteBuffer bb, String s)
-    {
-        bb.put(s.getBytes(StandardCharsets.US_ASCII));
-    }
-    private void put(ByteBuffer bb, char c)
-    {
-        bb.put((byte)c);
     }
     @Rule("b b")
     protected int integer(char x2, char x1)
