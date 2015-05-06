@@ -75,7 +75,6 @@ public class MessageTest
     public void tearDown()
     {
     }
-/*
     @Test
     public void types1_2_3()
     {
@@ -1121,7 +1120,6 @@ public class MessageTest
             fail(ex.getMessage());
         }
     }
-    */
     @Test
     public void err1()
     {
@@ -1130,8 +1128,8 @@ public class MessageTest
             List<Object> list = getExpected();
             String nmea = 
                 "$GPRMC,062455,A,6009.2054,N,02453.6493,E,000.0,001.3,171009,,,A*78\r\n"+
-      //          "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n"+
-        //        "!AIVDM,1,1,,A,133sVfPP00PD>hRMDH@jNOvN20S8,0*7F\r\n"+
+                "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n"+
+                "!AIVDM,1,1,,A,133sVfPP00PD>hRMDH@jNOvN20S8,0*7F\r\n"+
                 "!AIVDM,2,1,9,B,53nFBv01SJ<thHp6220H4heHTf2222222222221?50:454o<`9QSlUDp,0*02\r\n"+ // wrong checksum
                     "!AIVDM,2,2,9,B,888888888888880,2*2E\r\n"+
                 "$GPRMC,062457,A,6009.2053,N,02453.6493,E,012.0,001.3,171009,,,A*7D\r\n"+   // err
@@ -1156,7 +1154,6 @@ public class MessageTest
             fail(ex.getMessage());
         }
     }
-    /*
     @Test
     public void err2()
     {
@@ -1209,9 +1206,12 @@ public class MessageTest
                 "!AIVDM,2,2,0,A,wwt,2*60\r\n"+
                 "!AIVDM,1,1,,B,16:@?m001o85tmL<SbP5OlHN25Ip,0*7F\r\n"+
                 "$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69\r\n"+
-                "!AIVDM,1,1,,A,133w;`PP00PCqghMcqNqdOvPR5Ip,0*65\r\n"+
-                "!AIVDM,1,1,,B,139eb:PP00PIHDNMdd6@0?vN2D2s,0*43\r\n"
+                "!AIVDM,1,1,,A,133w;`PP00PCqghMcqNqdOvPR5Ip,9*65\r\n"+
+                "!AIVDM,1,1,,B,139eb:PP00PIHDNMdd6@0?vN2D2sä0*43\r\n"+
+                "$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69\r\n"
             ;
+            list.remove(7);
+            list.remove(6);
             list.remove(4);
             list.remove(2);
             list.remove(1);
@@ -1226,7 +1226,6 @@ public class MessageTest
             fail(ex.getMessage());
         }
     }
-    */
     private List<Object> getExpected()
     {
         String[] nmeas = new String[] {

@@ -67,9 +67,11 @@ public class AISChannel implements ScatteringByteChannel
                     {
                         case Commit:
                             bb.put(CommitC);
+                            context.fork(-1, Go);
                             return 1;
                         case Rollback:
                             bb.put(RollbackC);
+                            context.fork(-1, Go);
                             return 1;
                     }
                     underflow = false;
@@ -88,15 +90,17 @@ public class AISChannel implements ScatteringByteChannel
                     }
                     else
                     {
-                        if (cc == ',')
+                        try
                         {
                             underflow = true;
-                            try
+                            if (cc == ',')
                             {
                                 int p = in.read();
                                 if (p<'0' || p>'5')
                                 {
-                                    throw new SyntaxErrorException("expected padding, got "+(char)p);
+                                    bb.put(RollbackC);
+                                    return count+1;
+                                    //throw new SyntaxErrorException("expected padding, got "+(char)p);
                                 }
                                 int padding = p-'0';
                                 if (padding <= bb.position())
@@ -111,14 +115,16 @@ public class AISChannel implements ScatteringByteChannel
                                 }
                                 return count-padding;
                             }
-                            finally
+                            else
                             {
-                                context.fork(-1, Go);   // let nmea thread run
+                                bb.put(RollbackC);
+                                return count+1;
+                                //throw new SyntaxErrorException("expected ',' got '"+(char)cc+"'");
                             }
                         }
-                        else
+                        finally
                         {
-                            throw new SyntaxErrorException("expected ',' got '"+(char)cc+"'");
+                            context.fork(-1, Go);   // let nmea thread run
                         }
                     }
                 }

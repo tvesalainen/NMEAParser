@@ -817,8 +817,42 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         }
         System.err.println("Expected "+expected);
         System.err.println("Got      "+got);
-        rollback(aisData, "rollback");
-        aisContext.endTo(-1, Rollback);   // let nmea thread run and start new ais thread
+        StringBuilder sb = new StringBuilder();
+        String input = reader.getInput();
+        sb.append(input);
+        sb.append('^');
+        int myKey = aisContext.getCurrentKey();
+        if (myKey == 0)
+        {
+            for (int ii=input.length();ii<6;ii++)
+            {
+                int cc = reader.read();
+                sb.append((char) cc);
+            }
+        }
+        else
+        {
+            if (skip(input))
+            {
+                int cc = reader.read();
+                while (cc == '0' || cc == '1')
+                {
+                    sb.append((char) cc);
+                    cc = reader.read();
+                }
+            }
+        }
+        rollback(aisData, "skipping: "+sb+"\nexpected:"+expected);
+        reader.clear();
+    }
+    private boolean skip(String input)
+    {
+        if (input.isEmpty())
+        {
+            return true;
+        }
+        char cc = input.charAt(input.length()-1);
+        return cc == '0' || cc == '1';
     }
 
     private void commit(AISObserver aisData, String comment)

@@ -1365,6 +1365,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     @RecoverMethod
     public void recover(
             @ParserContext("data") NMEAObserver data,
+            @ParserContext(ParserConstants.ExpectedDescription) String expected,
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
             @ParserContext(ParserConstants.THROWABLE) Throwable thr
             ) throws IOException
@@ -1378,7 +1379,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             sb.append((char) cc);
             cc = reader.read();
         }
-        data.rollback("skipping " + sb);
+        data.rollback("skipping " + sb+"\nexpected:"+expected);
         reader.clear();
     }
     /**

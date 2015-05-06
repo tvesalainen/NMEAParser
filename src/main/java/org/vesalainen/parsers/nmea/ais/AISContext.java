@@ -87,7 +87,6 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
                 }
                 this.numberOfSentences = 0;
                 this.sentenceNumber = 0;
-                throw new SyntaxErrorException("Wrong AIS sentence number");
             }
             else
             {
@@ -97,7 +96,6 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
                     // ais thread is now killed
                     this.numberOfSentences = 0;
                     this.sentenceNumber = 0;
-                    throw new SyntaxErrorException("AIS parsing error");
                 }
             }
         }
@@ -111,7 +109,6 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
             // ais thread is now killed
             this.numberOfSentences = 0;
             this.sentenceNumber = 0;
-            throw new SyntaxErrorException("AIS parsing error");
         }
     }
 
@@ -125,14 +122,14 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
                 {
                     this.numberOfSentences = 0;
                     this.sentenceNumber = 0;
-                    fork(current, Commit);
+                    switchTo(current, Commit);
                 } // else more sentencies to come
             }
             else
             {
                 this.numberOfSentences = 0;
                 this.sentenceNumber = 0;
-                fork(current, Rollback);
+                switchTo(current, Rollback);
             }
         }
     }
