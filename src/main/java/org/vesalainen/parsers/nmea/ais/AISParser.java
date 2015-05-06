@@ -644,7 +644,6 @@ import org.vesalainen.util.concurrent.ThreadStoppedException;
 })
 public abstract class AISParser implements ParserInfo
 {
-    private Semaphore semaphore = new Semaphore(1);
     
 protected void payload(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void aisState(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -858,23 +857,10 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     private void commit(AISObserver aisData, String comment)
     {
         aisData.commit(comment);
-        semaphore.release();
     }
     private void rollback(AISObserver aisData, String comment)
     {
         aisData.rollback(comment);
-        semaphore.release();
-    }
-    public void waitForTurn() throws IOException
-    {
-        try
-        {
-            semaphore.acquire();
-        }
-        catch (InterruptedException ex)
-        {
-            throw new IOException(ex);
-        }
     }
     protected void type(
             int messageType, 

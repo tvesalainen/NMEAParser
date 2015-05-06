@@ -67,14 +67,7 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
             }
             this.numberOfSentences = numberOfSentences;
             this.sentenceNumber = 1;
-            aisParser.waitForTurn();
-            ThreadMessage rc = switchTo(0, Go);
-            if (Rollback.equals(rc))
-            {
-                this.numberOfSentences = 0;
-                this.sentenceNumber = 0;
-                throw new SyntaxErrorException("AIS parsing error");
-            }
+            switchTo(0, Go);
         }
         else
         {
@@ -90,26 +83,14 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
             }
             else
             {
-                ThreadMessage rc = switchTo(current, Go);
-                if (Rollback.equals(rc))
-                {
-                    // ais thread is now killed
-                    this.numberOfSentences = 0;
-                    this.sentenceNumber = 0;
-                }
+                switchTo(current, Go);
             }
         }
     }
     public void setMessageType(int messageType)
     {
         this.current = messageType;
-        ThreadMessage rc = switchTo(messageType, Go);
-        if (Rollback.equals(rc))
-        {
-            // ais thread is now killed
-            this.numberOfSentences = 0;
-            this.sentenceNumber = 0;
-        }
+        switchTo(messageType, Go);
     }
 
     public void afterChecksum(boolean committed, String reason)
