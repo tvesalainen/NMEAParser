@@ -115,6 +115,20 @@ public class NMEAGen
         putChecksum(bb);
         put(bb, "\r\n");
     }
+    public static void txt(String talkerId, ByteBuffer bb, String msg)
+    {
+        if (msg.indexOf(',') != -1 || msg.indexOf('*') != -1)
+        {
+            throw new IllegalArgumentException(msg+" contains (,) or (*)");
+        }
+        put(bb, '$');
+        put(bb, talkerId);
+        put(bb, "TXT,1,1,,");
+        put(bb, msg);
+        putChecksum(bb);
+        put(bb, "\r\n");
+    }
+
     private static void putChecksum(ByteBuffer bb)
     {
         put(bb, '*');

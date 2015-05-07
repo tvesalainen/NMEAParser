@@ -17,7 +17,6 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
-import java.util.concurrent.Semaphore;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import static org.vesalainen.parser.ParserFeature.*;
@@ -32,9 +31,10 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.Terminals;
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parsers.mmsi.MMSIType;
 import static org.vesalainen.parsers.mmsi.MMSIType.*;
-import static org.vesalainen.parsers.nmea.ais.ThreadMessage.Rollback;
 import org.vesalainen.regex.SyntaxErrorException;
+import org.vesalainen.util.concurrent.SimpleWorkflow.ContextAccess;
 import org.vesalainen.util.concurrent.ThreadStoppedException;
 
 /**
@@ -644,7 +644,7 @@ import org.vesalainen.util.concurrent.ThreadStoppedException;
 })
 public abstract class AISParser implements ParserInfo
 {
-    
+    private final ThreadLocal<Integer> mmsiStore = new ThreadLocal<>();
 protected void payload(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void aisState(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void radius_12(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -668,15 +668,15 @@ protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver a
 protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData){}
 
     @Terminal(expression="[CR]")
-    protected void end(char end, @ParserContext("aisData") AISObserver aisData)
+    protected void end(char end, @ParserContext("aisData") AISObserver aisData, @ParserContext("aisContext") AISContext aisContext)
     {
         if (end == 'C')
         {
-            commit(aisData, "Commit");
+            commit(aisContext, aisData, "Commit");
         }
         else
         {
-            rollback(aisData, "Rollback");
+            rollback(aisContext, aisData, "Rollback");
         }
     }
     public static AISParser newInstance() throws IOException
@@ -838,10 +838,11 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
                 {
                     sb.append((char) cc);
                     cc = reader.read();
+                    reader.clear();
                 }
             }
         }
-        rollback(aisData, "skipping: "+sb+"\nexpected:"+expected);
+        rollback(aisContext, aisData, "skipping: "+sb+"\nexpected:"+expected);
         reader.clear();
     }
     private boolean skip(String input)
@@ -854,13 +855,33 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         return cc == '0' || cc == '1';
     }
 
-    private void commit(AISObserver aisData, String comment)
+    private void commit(final AISContext aisContext, final AISObserver aisData, final String comment)
     {
-        aisData.commit(comment);
+        ContextAccess<Void,Void> ca = new ContextAccess<Void,Void>() 
+        {
+            @Override
+            public Void access(Void context)
+            {
+                Integer currentKey = aisContext.getCurrentKey();
+                aisData.setMessageType(MessageTypes.values()[currentKey]);
+                aisData.commit(comment);
+                return null;
+            }
+        };
+        aisContext.accessContext(ca);
     }
-    private void rollback(AISObserver aisData, String comment)
+    private void rollback(AISContext aisContext, final AISObserver aisData, final String comment)
     {
-        aisData.rollback(comment);
+        ContextAccess<Void,Void> ca = new ContextAccess<Void,Void>() 
+        {
+            @Override
+            public Void access(Void context)
+            {
+                aisData.rollback(comment);
+                return null;
+            }
+        };
+        aisContext.accessContext(ca);
     }
     protected void type(
             int messageType, 
@@ -868,7 +889,6 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             @ParserContext("aisContext") AISContext aisContext
     )
     {
-        aisData.setMessageType(MessageTypes.values()[messageType]);
         aisContext.setMessageType(messageType);
     }
 
@@ -880,6 +900,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     protected void mmsi(int mmsi, @ParserContext("aisData") AISObserver aisData)
     {
         aisData.setMmsi(mmsi);
+        mmsiStore.set(mmsi);
     }
 
     protected void aisVersion(int arg, @ParserContext("aisData") AISObserver aisData)
@@ -3172,7 +3193,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     }
     protected void mothershipDim(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
-        if (aisData.getMmsiType() == CraftAssociatedWithParentShip)
+        if (MMSIType.getType(mmsiStore.get()) == CraftAssociatedWithParentShip)
         {
             aisData.setMotherShipMMSI(arg.parseIntRadix2());
         }

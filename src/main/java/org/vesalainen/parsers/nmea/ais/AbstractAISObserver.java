@@ -17,7 +17,6 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
-import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.Clock;
 
@@ -1286,12 +1285,6 @@ public class AbstractAISObserver implements AISObserver
     @Override
     public void setSerialNumber(int arg)
     {
-    }
-
-    @Override
-    public MMSIType getMmsiType()
-    {
-        return MMSIType.getType(mmsi);
     }
 
 }

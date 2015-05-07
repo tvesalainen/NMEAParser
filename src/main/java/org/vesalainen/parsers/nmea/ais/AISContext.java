@@ -23,13 +23,12 @@ import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.ais.ThreadMessage.*;
-import org.vesalainen.regex.SyntaxErrorException;
 import org.vesalainen.util.concurrent.SimpleWorkflow;
 
 /**
  * @author Timo Vesalainen
  */
-public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
+public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Void>
 {
     
     private final AISObserver aisData;
@@ -133,7 +132,6 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
     @Override
     protected Runnable create(Integer key)
     {
-        System.err.println("Message "+key);
         return new AISThread(key, this);
     }
 
@@ -153,22 +151,23 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Object>
         @Override
         public void run()
         {
+            TransactionalAISObserver tao = TransactionalAISObserver.getInstance(aisData);
             switch (message)
             {
                 case 0:
-                    aisParser.parse(channel, aisData, context);
+                    aisParser.parse(channel, tao, context);
                     break;
                 case 1:
                 case 2:
                 case 3:
-                    aisParser.parse123Messages(channel, aisData, context);
+                    aisParser.parse123Messages(channel, tao, context);
                     break;
                 default:
                     String methodName = "parse"+message+"Messages";
                     try
                     {
                         Method parser = aisParser.getClass().getMethod(methodName, AISChannel.class, AISObserver.class, AISContext.class);
-                        parser.invoke(aisParser, channel, aisData, context);
+                        parser.invoke(aisParser, channel, tao, context);
                     }
                     catch (NoSuchMethodException  ex)
                     {

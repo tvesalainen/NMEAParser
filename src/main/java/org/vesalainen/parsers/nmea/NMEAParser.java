@@ -1365,6 +1365,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     @RecoverMethod
     public void recover(
             @ParserContext("data") NMEAObserver data,
+            @ParserContext("aisContext") AISContext aisContext,
             @ParserContext(ParserConstants.ExpectedDescription) String expected,
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
             @ParserContext(ParserConstants.THROWABLE) Throwable thr
@@ -1379,8 +1380,13 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             sb.append((char) cc);
             cc = reader.read();
         }
-        data.rollback("skipping " + sb+"\nexpected:"+expected);
+        String reason = "skipping " + sb+"\nexpected:"+expected;
+        data.rollback(reason);
         reader.clear();
+        if (aisContext.isAisMessage())
+        {
+            aisContext.afterChecksum(false, reason);
+        }
     }
     /**
      * Parse NMEA

@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.Locale;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.annotation.GenClassname;
@@ -33,13 +31,8 @@ import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
-import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.LocalNMEAChecksum;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
-import org.vesalainen.util.navi.Knots;
-import org.vesalainen.util.navi.Meters;
-import org.vesalainen.util.navi.Velocity;
 
 /**
  *
@@ -52,6 +45,12 @@ import org.vesalainen.util.navi.Velocity;
 {
     @Rule(left = "statements", value = "statement*"),
     @Rule(left = "statement", value = "m00"),
+    @Rule(left = "statement", value = "m01a"),
+    @Rule(left = "statement", value = "m01b"),
+    @Rule(left = "statement", value = "m01c"),
+    @Rule(left = "statement", value = "m01d"),
+    @Rule(left = "statement", value = "m01e"),
+    @Rule(left = "statement", value = "m01f"),
     @Rule(left = "statement", value = "m20"),
     @Rule(left = "statement", value = "m23"),
     @Rule(left = "statement", value = "m26"),
@@ -63,7 +62,7 @@ public abstract class SeaTalk2NMEA
     private static final LocalNMEAChecksum localChecksum = new LocalNMEAChecksum();
     private static final String talkerId = "ST";
     
-    @Rule("'\\x00' '\\x02' b integer")
+    @Rule("'\\x00\\x02' b integer")
     protected void m00(
             char yz, 
             int xx, 
@@ -83,7 +82,61 @@ public abstract class SeaTalk2NMEA
         bb.clear();
         NMEAGen.dbt(talkerId, bb, (float)xx/10F);
     }
-    @Rule("'\\x20' '\\x01' integer")
+    @Rule("'\\x01\\x05\\x00\\x00\\x00\\x60\\x01\\x00'")
+    protected void m01a(
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
+        send(bb, target);
+        NMEAGen.txt(talkerId, bb, "Course Computer 400G");
+    }
+    @Rule("'\\x01\\x05\\x04\\xBA\\x20\\x28\\x01\\x00'")
+    protected void m01b(
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
+        send(bb, target);
+        NMEAGen.txt(talkerId, bb, "ST60 Tridata");
+    }
+    @Rule("'\\x01\\x05\\x70\\x99\\x10\\x28\\x01\\x00'")
+    protected void m01c(
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
+        send(bb, target);
+        NMEAGen.txt(talkerId, bb, "ST60 Log");
+    }
+    @Rule("'\\x01\\x05\\xF3\\x18\\x00\\x26\\x0F\\x06'")
+    protected void m01d(
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
+        send(bb, target);
+        NMEAGen.txt(talkerId, bb, "ST80 Masterview");
+    }
+    @Rule("'\\x01\\x05\\xFA\\x03\\x00\\x30\\x07\\x03'")
+    protected void m01e(
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
+        send(bb, target);
+        NMEAGen.txt(talkerId, bb, "ST80 Maxi Display");
+    }
+    @Rule("'\\x01\\x05\\xFF\\xFF\\xFF\\xD0\\x00\\x00'")
+    protected void m01f(
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
+        send(bb, target);
+        NMEAGen.txt(talkerId, bb, "Smart Controller Remote Control Handset");
+    }
+    @Rule("'\\x20\\x01' integer")
     protected void m20(
             int xx, 
             @ParserContext("bb") ByteBuffer bb,
@@ -91,12 +144,10 @@ public abstract class SeaTalk2NMEA
     ) throws IOException
     {
         float knots = (float)xx/10;
-        bb.flip();
-        target.write(bb);
-        bb.clear();
+        send(bb, target);
         NMEAGen.vhw(talkerId, bb, knots);
     }
-    @Rule("'\\x23' '\\x01' b b")
+    @Rule("'\\x23\\x01' b b")
     protected void m23(
             char c, 
             char f, 
@@ -104,12 +155,10 @@ public abstract class SeaTalk2NMEA
             @ParserContext("target") WritableByteChannel target
     ) throws IOException
     {
-        bb.flip();
-        target.write(bb);
-        bb.clear();
+        send(bb, target);
         NMEAGen.mtw(talkerId, bb, c);
     }
-    @Rule("'\\x26' '\\x04' integer integer b")
+    @Rule("'\\x26\\x04' integer integer b")
     protected void m26(
             int xx, 
             int yy,
@@ -119,25 +168,21 @@ public abstract class SeaTalk2NMEA
     ) throws IOException
     {
         float knots = (float)xx/100;
-        bb.flip();
-        target.write(bb);
-        bb.clear();
+        send(bb, target);
         NMEAGen.vhw(talkerId, bb, knots);
     }
-    @Rule("'\\x27' '\\x01' integer")
+    @Rule("'\\x27\\x01' integer")
     protected void m27(
             int xx, 
             @ParserContext("bb") ByteBuffer bb,
             @ParserContext("target") WritableByteChannel target
     ) throws IOException
     {
-        bb.flip();
-        target.write(bb);
-        bb.clear();
+        send(bb, target);
         float temp = (float)(xx-100)/10;
         NMEAGen.mtw(talkerId, bb, temp);
     }
-    @Rule("'\\x65' '\\x00' '\\x02'")
+    @Rule("'\\x65\\x00\\x02'")
     protected void m65(
             @ParserContext("bb") ByteBuffer bb,
             @ParserContext("target") WritableByteChannel target
@@ -179,6 +224,13 @@ public abstract class SeaTalk2NMEA
         int columnNumber = reader.getColumnNumber();
         int length = reader.getLength();
         reader.clear();
+        bb.clear();
+    }
+
+    private void send(ByteBuffer bb, WritableByteChannel target) throws IOException
+    {
+        bb.flip();
+        target.write(bb);
         bb.clear();
     }
 }

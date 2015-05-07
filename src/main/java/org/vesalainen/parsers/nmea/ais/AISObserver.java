@@ -40,7 +40,6 @@ import org.vesalainen.util.Transactional;
  */
 public interface AISObserver extends Transactional
 {   
-    MMSIType getMmsiType();
     /**
      * Set own message status. if message is !AISVDM ownMessage = false. 
      * if message is !AISVDO ownMessage = true.
