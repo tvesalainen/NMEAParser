@@ -35,7 +35,7 @@ import org.vesalainen.parsers.nmea.LocalNMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
 
 /**
- *
+ * Note! This class is not thread safe.
  * @author tkv
  * @see <a href="http://www.thomasknauf.de/seatalk.htm">SeaTalk Technical Reference</a>
  */
@@ -43,7 +43,9 @@ import org.vesalainen.parsers.nmea.NMEAGen;
 @GrammarDef()
 @Rules(
 {
-    @Rule(left = "statements", value = "statement*"),
+    @Rule(left = "statements", value = "(prefix statement)*"),
+    @Rule(left = "prefix", value = "linuxPrefix"),
+    @Rule(left = "prefix", value = "winPrefix"),
     @Rule(left = "statement", value = "m00"),
     @Rule(left = "statement", value = "m01a"),
     @Rule(left = "statement", value = "m01b"),
@@ -54,14 +56,29 @@ import org.vesalainen.parsers.nmea.NMEAGen;
     @Rule(left = "statement", value = "m20"),
     @Rule(left = "statement", value = "m23"),
     @Rule(left = "statement", value = "m26"),
+    @Rule(left = "statement", value = "m24"),
     @Rule(left = "statement", value = "m27"),
+    @Rule(left = "statement", value = "m30"),
+    @Rule(left = "statement", value = "m60"),
     @Rule(left = "statement", value = "m65")
 })
 public abstract class SeaTalk2NMEA
 {
     private static final LocalNMEAChecksum localChecksum = new LocalNMEAChecksum();
     private static final String talkerId = "ST";
+    private boolean haveBetterMTW;
+    private boolean haveBetterVHW;
     
+    @Rule("'\\xff\\xff'")
+    protected void winPrefix()
+    {
+        //System.err.println("win");
+    }
+    @Rule("'\\xff\\x00'")
+    protected void linuxPrefix()
+    {
+        //System.err.println("linux");
+    }
     @Rule("'\\x00\\x02' b integer")
     protected void m00(
             char yz, 
@@ -143,9 +160,12 @@ public abstract class SeaTalk2NMEA
             @ParserContext("target") WritableByteChannel target
     ) throws IOException
     {
-        float knots = (float)xx/10;
         send(bb, target);
-        NMEAGen.vhw(talkerId, bb, knots);
+        if (!haveBetterVHW)
+        {
+            float knots = (float)xx/10;
+            NMEAGen.vhw(talkerId, bb, knots);
+        }
     }
     @Rule("'\\x23\\x01' b b")
     protected void m23(
@@ -156,7 +176,18 @@ public abstract class SeaTalk2NMEA
     ) throws IOException
     {
         send(bb, target);
-        NMEAGen.mtw(talkerId, bb, c);
+        if (!haveBetterMTW)
+        {
+            NMEAGen.mtw(talkerId, bb, c);
+        }
+    }
+    @Rule("'\\x24\\x02\\x00\\x00' b")
+    protected void m24(
+            char displayUnits,
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
     }
     @Rule("'\\x26\\x04' integer integer b")
     protected void m26(
@@ -169,6 +200,7 @@ public abstract class SeaTalk2NMEA
     {
         float knots = (float)xx/100;
         send(bb, target);
+        haveBetterVHW = true;
         NMEAGen.vhw(talkerId, bb, knots);
     }
     @Rule("'\\x27\\x01' integer")
@@ -179,8 +211,59 @@ public abstract class SeaTalk2NMEA
     ) throws IOException
     {
         send(bb, target);
+        haveBetterMTW = true;
         float temp = (float)(xx-100)/10;
         NMEAGen.mtw(talkerId, bb, temp);
+    }
+    @Rule("'\\x30\\x00' b")
+    protected void m30(
+            char cc, 
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
+        send(bb, target);
+        char i;
+        switch (cc)
+        {
+            case 0x0:
+                i = '0';
+                break;
+            case 0x4:
+                i = '1';
+                break;
+            case 0x8:
+                i = '2';
+                break;
+            case 0xc:
+                i = '3';
+                break;
+            default:
+                i = '?';
+                break;
+        }
+        NMEAGen.txt(talkerId, bb, "Light L"+i);
+    }
+    @Rule("'\\x60\\x0c' b b b b b b b b b b b b b")
+    protected void m60(
+            char c1,
+            char c2,
+            char c3,
+            char c4,
+            char c5,
+            char c6,
+            char c7,
+            char c8,
+            char c9,
+            char c10,
+            char c11,
+            char c12,
+            char c13,
+            @ParserContext("bb") ByteBuffer bb,
+            @ParserContext("target") WritableByteChannel target
+    ) throws IOException
+    {
+        System.err.println(String.format("unknown 0x600x0c %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13));
     }
     @Rule("'\\x65\\x00\\x02'")
     protected void m65(
@@ -223,6 +306,9 @@ public abstract class SeaTalk2NMEA
     {
         int columnNumber = reader.getColumnNumber();
         int length = reader.getLength();
+        String input = reader.getInput();
+        int cc = input.charAt(0);
+        System.err.println(Integer.toHexString(cc));
         reader.clear();
         bb.clear();
     }

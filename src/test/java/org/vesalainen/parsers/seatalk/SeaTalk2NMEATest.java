@@ -16,11 +16,9 @@
  */
 package org.vesalainen.parsers.seatalk;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -29,10 +27,13 @@ import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.vesalainen.comm.channel.SerialChannel;
+import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.parsers.nmea.NMEAObserver;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.SimpleStorage;
@@ -48,7 +49,7 @@ public class SeaTalk2NMEATest
     {
     }
 
-    @Test
+    //@Test
     public void test1()
     {
         try
@@ -76,6 +77,31 @@ public class SeaTalk2NMEATest
         catch (URISyntaxException | IOException ex)
         {
             fail(ex.getMessage());
+        }
+    }
+    //@Test
+    public void testSerial()
+    {
+        List<String> allPorts = SerialChannel.getFreePorts();
+        assertNotNull(allPorts);
+        for (String port : allPorts)
+        {
+            try 
+            {
+                Builder builder = new Builder(port, 4800)
+                        .setReplaceError(true)
+                        .setParity(SerialChannel.Parity.SPACE);
+                try (SerialChannel sc = builder.get())
+                {
+                    WritableByteChannel channel = Channels.newChannel(System.err);
+                    SeaTalk2NMEA s2n = SeaTalk2NMEA.newInstance();
+                    s2n.parse(sc, channel);
+                }
+            }
+            catch (IOException ex)
+            {
+                fail(ex.getMessage());
+            }
         }
     }
     
