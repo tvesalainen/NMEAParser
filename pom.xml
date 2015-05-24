@@ -6,38 +6,16 @@
         <version>1.0.5</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.vesalainen.lpg</groupId>
-    <artifactId>NMEAParser</artifactId>
-    <version>0.0.2</version>
-    <packaging>jar</packaging>
-
-    <name>NMEA Parser</name>
+    <groupId>org.vesalainen.nmea</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>parser</module>
+        <module>router</module>
+    </modules>
+    <name>NMEA Utilities</name>
     <description>
-        NMEA Parser parses NMEA (including AIS) messages.
+        NMEA Utilities
     </description>
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.vesalainen.lpg</groupId>
-            <artifactId>javalpg</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.vesalainen</groupId>
-            <artifactId>comm</artifactId>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.vesalainen</groupId>
-            <artifactId>util</artifactId>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.htmlparser</groupId>
-            <artifactId>htmlparser</artifactId>
-        </dependency>
-    </dependencies>
 </project>
