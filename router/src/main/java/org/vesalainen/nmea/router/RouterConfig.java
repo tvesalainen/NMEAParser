@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.net.URL;
 import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -74,6 +75,12 @@ public class RouterConfig
         {
             router = (JAXBElement<RouterType>) unmarshaller.unmarshal(fis); //NOI18N
         }
+    }
+
+    public RouterConfig(URL url) throws IOException, JAXBException
+    {
+        Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
+        router = (JAXBElement<RouterType>) unmarshaller.unmarshal(url);
     }
 
     public RouterConfig(InputStream is) throws IOException, JAXBException
