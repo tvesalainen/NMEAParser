@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.vesalainen.nmea</groupId>
+        <artifactId>parent</artifactId>
+        <version>1.0.0</version>
+    </parent>    
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.vesalainen.nmea</groupId>
+    <artifactId>router</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>NMEA Router</name>
+    <description>
+        NMEA Router
+    </description>
+    <dependencies>
+        <dependency>
+            <groupId>org.vesalainen.nmea</groupId>
+            <artifactId>parser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.vesalainen</groupId>
+            <artifactId>comm</artifactId>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.vesalainen</groupId>
+            <artifactId>util</artifactId>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.vesalainen.lpg</groupId>
+            <artifactId>javalpg</artifactId>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
+</project>
