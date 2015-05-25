@@ -10,6 +10,10 @@
         <route prefix="$??RMC" target="Net"/>
     </channel>
     <channel>
+        <nmea-hs name="AIS"/>
+        <route prefix="!??VDM" target="Net"/>
+    </channel>
+    <channel>
         <broadcast-nmea name="Net"/>
     </channel>
 </router>

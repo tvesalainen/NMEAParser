@@ -26,18 +26,18 @@
     </xs:complexType>
     <xs:complexType name="broadcastNMEAType">
         <xs:complexContent>
-            <xs:restriction base="datagramType">
-                <xs:attribute name="address" type="addressType" use="required" fixed="255.255.255.255"/>
-                <xs:attribute name="port" type="portType" use="required" fixed="10110"/>
-            </xs:restriction>
+            <xs:extension base="endpointType">
+                <xs:attribute name="address" type="addressType" default="255.255.255.255"/>
+                <xs:attribute name="port" type="portType" default="10110"/>
+            </xs:extension>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="broadcastType">
         <xs:complexContent>
-            <xs:restriction base="datagramType">
-                <xs:attribute name="address" type="addressType" use="required" fixed="255.255.255.255"/>
+            <xs:extension base="endpointType">
+                <xs:attribute name="address" type="addressType" default="255.255.255.255"/>
                 <xs:attribute name="port" type="portType" use="required"/>
-            </xs:restriction>
+            </xs:extension>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="datagramType">
@@ -50,24 +50,32 @@
     </xs:complexType>
     <xs:complexType name="seatalkType">
         <xs:complexContent>
-            <xs:restriction base="serialType">
-                <xs:attribute name="speed" type="speedType" use="required" fixed="4800"/>
-                <xs:attribute name="parity" type="parityType" fixed="SPACE"/>
-            </xs:restriction>
+            <xs:extension base="endpointType">
+                <xs:attribute name="speed" type="speedType" default="4800"/>
+                <xs:attribute name="bits" type="bitsType" default="8"/>
+                <xs:attribute name="parity" type="parityType" default="SPACE"/>
+                <xs:attribute name="stops" type="stopsType" default="1"/>
+            </xs:extension>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="nmea-hsType">
         <xs:complexContent>
-            <xs:restriction base="serialType">
-                <xs:attribute name="speed" type="speedType" use="required" fixed="38400"/>
-            </xs:restriction>
+            <xs:extension base="endpointType">
+                <xs:attribute name="speed" type="speedType" default="38400"/>
+                <xs:attribute name="bits" type="bitsType" default="8"/>
+                <xs:attribute name="parity" type="parityType" default="NONE"/>
+                <xs:attribute name="stops" type="stopsType" default="1"/>
+            </xs:extension>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="nmeaType">
         <xs:complexContent>
-            <xs:restriction base="serialType">
-                <xs:attribute name="speed" type="speedType" use="required" fixed="4800"/>
-            </xs:restriction>
+            <xs:extension base="endpointType">
+                <xs:attribute name="speed" type="speedType" default="4800"/>
+                <xs:attribute name="bits" type="bitsType" default="8"/>
+                <xs:attribute name="parity" type="parityType" default="NONE"/>
+                <xs:attribute name="stops" type="stopsType" default="1"/>
+            </xs:extension>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="serialType">
@@ -108,7 +116,7 @@
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="speedType">
-        <xs:restriction base="xs:integer">
+        <xs:restriction base="xs:unsignedInt">
             <xs:enumeration value="50"/>
             <xs:enumeration value="75"/>
             <xs:enumeration value="110"/>
