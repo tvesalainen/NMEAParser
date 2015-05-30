@@ -17,18 +17,15 @@
 package org.vesalainen.nmea.router;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.spi.AbstractSelectableChannel;
-import java.nio.channels.spi.SelectorProvider;
-import java.util.List;
-import java.util.Set;
 import org.vesalainen.comm.channel.SerialChannel;
+import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialSelectorProvider;
 import org.vesalainen.nio.RingByteBuffer;
+import org.vesalainen.nio.channels.ByteBufferOutputStream;
+import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
 
 /**
  *
@@ -38,6 +35,19 @@ public class SeaTalkChannel extends AbstractSelectableChannel implements Scatter
 {
     private final SerialChannel channel;
     private final RingByteBuffer ring = new RingByteBuffer(100, true);
+    private final ByteBufferOutputStream out = new ByteBufferOutputStream();
+    private final SeaTalkMatcher matcher = new SeaTalkMatcher();
+    private final SeaTalk2NMEA parser = SeaTalk2NMEA.newInstance();
+    private boolean mark = true;
+
+    public SeaTalkChannel(String port) throws IOException
+    {
+        super(SerialSelectorProvider.provider());
+        Builder builder = new Builder(port, SerialChannel.Speed.B4800)
+                .setParity(SerialChannel.Parity.SPACE)
+                .setReplaceError(true);
+        this.channel = builder.get();
+    }
 
     public SeaTalkChannel(SerialChannel channel)
     {
@@ -45,24 +55,56 @@ public class SeaTalkChannel extends AbstractSelectableChannel implements Scatter
         this.channel = channel;
     }
 
-    private final ByteBuffer[] readArray = new ByteBuffer[1];
+    private int read() throws IOException
+    {
+        int remaining = out.getRemaining();
+        while (out.getRemaining() >= 80)
+        {
+            ring.read(channel);
+            while (ring.hasRemaining())
+            {
+                byte b = ring.get(mark);
+                switch (matcher.match(b))
+                {
+                    case Ok:
+                        mark = false;
+                        break;
+                    case Error:
+                        mark = true;
+                        break;
+                    case Match:
+                        for (int ii=0;ii<ring.length();ii++)
+                        {
+                            System.err.print(String.format("%02X ", (int)ring.charAt(ii)));
+                        }
+                        System.err.println();
+                        parser.parse(ring, out);
+                        mark = true;
+                        break;
+                }
+            }
+        }
+        return remaining - out.getRemaining();
+    }
     @Override
     public int read(ByteBuffer dst) throws IOException
     {
-        readArray[0] = dst;
-        return (int) read(readArray);
+        out.set(dst);
+        return read();
     }
 
     @Override
     public long read(ByteBuffer[] dsts, int offset, int length) throws IOException
     {
-        return channel.read(dsts, offset, length);
+        out.set(dsts, offset, length);
+        return read();
     }
 
     @Override
     public long read(ByteBuffer[] dsts) throws IOException
     {
-        return read(dsts, 0, dsts.length);
+        out.set(dsts);
+        return read();
     }
 
     @Override

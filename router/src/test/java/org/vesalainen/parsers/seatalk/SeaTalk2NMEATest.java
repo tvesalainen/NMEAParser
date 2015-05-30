@@ -20,14 +20,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import static org.junit.Assert.*;
+import org.junit.Test;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.parsers.nmea.NMEAParser;
@@ -54,8 +53,7 @@ public class SeaTalk2NMEATest
             SeaTalk2NMEA s2n = SeaTalk2NMEA.newInstance();
             assertNotNull(s2n);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            WritableByteChannel channel = Channels.newChannel(baos);
-            s2n.parse(fc, channel);
+            s2n.parse(fc, baos);
             String nmea = baos.toString("US-ASCII");
             String[] nmeas = nmea.split("\n");
             NMEAParser parser = NMEAParser.newInstance();
@@ -70,7 +68,7 @@ public class SeaTalk2NMEATest
             fail(ex.getMessage());
         }
     }
-    //@Test
+    @Test
     public void testSerial()
     {
         List<String> allPorts = SerialChannel.getFreePorts();
@@ -84,9 +82,8 @@ public class SeaTalk2NMEATest
                         .setParity(SerialChannel.Parity.SPACE);
                 try (SerialChannel sc = builder.get())
                 {
-                    WritableByteChannel channel = Channels.newChannel(System.err);
                     SeaTalk2NMEA s2n = SeaTalk2NMEA.newInstance();
-                    s2n.parse(sc, channel);
+                    s2n.parse(sc, System.err);
                 }
             }
             catch (IOException ex)

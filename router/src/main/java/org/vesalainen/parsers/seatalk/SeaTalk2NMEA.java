@@ -17,9 +17,9 @@
 package org.vesalainen.parsers.seatalk;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.io.OutputStream;
+import java.util.zip.CheckedOutputStream;
 import java.nio.channels.ScatteringByteChannel;
-import java.nio.channels.WritableByteChannel;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.annotation.GenClassname;
@@ -32,6 +32,7 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.LocalNMEAChecksum;
+import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
 
 /**
@@ -46,6 +47,7 @@ import org.vesalainen.parsers.nmea.NMEAGen;
     @Rule(left = "statements", value = "(prefix statement)*"),
     @Rule(left = "prefix", value = "linuxPrefix"),
     @Rule(left = "prefix", value = "winPrefix"),
+    @Rule(left = "prefix", value = "noPrefix"),
     @Rule(left = "statement", value = "m00"),
     @Rule(left = "statement", value = "m01a"),
     @Rule(left = "statement", value = "m01b"),
@@ -64,7 +66,6 @@ import org.vesalainen.parsers.nmea.NMEAGen;
 })
 public abstract class SeaTalk2NMEA
 {
-    private static final LocalNMEAChecksum localChecksum = new LocalNMEAChecksum();
     private static final String talkerId = "ST";
     private boolean haveBetterMTW;
     private boolean haveBetterVHW;
@@ -79,12 +80,16 @@ public abstract class SeaTalk2NMEA
     {
         //System.err.println("linux");
     }
+    @Rule
+    protected void noPrefix()
+    {
+        //System.err.println("linux");
+    }
     @Rule("'\\x00\\x02' b integer")
     protected void m00(
             char yz, 
             int xx, 
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
         int y = yz >> 4;
@@ -94,98 +99,78 @@ public abstract class SeaTalk2NMEA
         boolean defect = (z & 4) == 4;
         boolean deepAlarm = (z & 2) == 2;
         boolean shallowAlarm = (z & 1) == 1;
-        bb.flip();
-        target.write(bb);
-        bb.clear();
-        NMEAGen.dbt(talkerId, bb, (float)xx/10F);
+        NMEAGen.dbt(talkerId, out, (float)xx/10F);
     }
     @Rule("'\\x01\\x05\\x00\\x00\\x00\\x60\\x01\\x00'")
     protected void m01a(
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
-        NMEAGen.txt(talkerId, bb, "Course Computer 400G");
+        NMEAGen.txt(talkerId, out, "Course Computer 400G");
     }
     @Rule("'\\x01\\x05\\x04\\xBA\\x20\\x28\\x01\\x00'")
     protected void m01b(
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
-        NMEAGen.txt(talkerId, bb, "ST60 Tridata");
+        NMEAGen.txt(talkerId, out, "ST60 Tridata");
     }
     @Rule("'\\x01\\x05\\x70\\x99\\x10\\x28\\x01\\x00'")
     protected void m01c(
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
-        NMEAGen.txt(talkerId, bb, "ST60 Log");
+        NMEAGen.txt(talkerId, out, "ST60 Log");
     }
     @Rule("'\\x01\\x05\\xF3\\x18\\x00\\x26\\x0F\\x06'")
     protected void m01d(
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
-        NMEAGen.txt(talkerId, bb, "ST80 Masterview");
+        NMEAGen.txt(talkerId, out, "ST80 Masterview");
     }
     @Rule("'\\x01\\x05\\xFA\\x03\\x00\\x30\\x07\\x03'")
     protected void m01e(
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
-        NMEAGen.txt(talkerId, bb, "ST80 Maxi Display");
+        NMEAGen.txt(talkerId, out, "ST80 Maxi Display");
     }
     @Rule("'\\x01\\x05\\xFF\\xFF\\xFF\\xD0\\x00\\x00'")
     protected void m01f(
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
-        NMEAGen.txt(talkerId, bb, "Smart Controller Remote Control Handset");
+        NMEAGen.txt(talkerId, out, "Smart Controller Remote Control Handset");
     }
     @Rule("'\\x20\\x01' integer")
     protected void m20(
             int xx, 
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
         if (!haveBetterVHW)
         {
             float knots = (float)xx/10;
-            NMEAGen.vhw(talkerId, bb, knots);
+            NMEAGen.vhw(talkerId, out, knots);
         }
     }
     @Rule("'\\x23\\x01' b b")
     protected void m23(
             char c, 
             char f, 
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
         if (!haveBetterMTW)
         {
-            NMEAGen.mtw(talkerId, bb, c);
+            NMEAGen.mtw(talkerId, out, c);
         }
     }
     @Rule("'\\x24\\x02\\x00\\x00' b")
     protected void m24(
             char displayUnits,
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
     }
@@ -194,35 +179,29 @@ public abstract class SeaTalk2NMEA
             int xx, 
             int yy,
             char de,
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
         float knots = (float)xx/100;
-        send(bb, target);
         haveBetterVHW = true;
-        NMEAGen.vhw(talkerId, bb, knots);
+        NMEAGen.vhw(talkerId, out, knots);
     }
     @Rule("'\\x27\\x01' integer")
     protected void m27(
             int xx, 
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
         haveBetterMTW = true;
         float temp = (float)(xx-100)/10;
-        NMEAGen.mtw(talkerId, bb, temp);
+        NMEAGen.mtw(talkerId, out, temp);
     }
     @Rule("'\\x30\\x00' b")
     protected void m30(
             char cc, 
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        send(bb, target);
         char i;
         switch (cc)
         {
@@ -242,7 +221,7 @@ public abstract class SeaTalk2NMEA
                 i = '?';
                 break;
         }
-        NMEAGen.txt(talkerId, bb, "Light L"+i);
+        NMEAGen.txt(talkerId, out, "Light L"+i);
     }
     @Rule("'\\x60\\x0c' b b b b b b b b b b b b b")
     protected void m60(
@@ -259,16 +238,14 @@ public abstract class SeaTalk2NMEA
             char c11,
             char c12,
             char c13,
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
         System.err.println(String.format("unknown 0x600x0c %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13));
     }
     @Rule("'\\x65\\x00\\x02'")
     protected void m65(
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
     }
@@ -284,39 +261,36 @@ public abstract class SeaTalk2NMEA
     {
         return (SeaTalk2NMEA) GenClassFactory.loadGenInstance(SeaTalk2NMEA.class);
     }
-    public void parse(
-            ScatteringByteChannel channel,
-            @ParserContext("target") WritableByteChannel target
-    ) throws IOException
+    public void parse(CharSequence cs, OutputStream out) throws IOException
     {
-        ByteBuffer bb = ByteBuffer.allocate(80);
-        parse(channel, bb, target);
+        CheckedOutputStream cos = new CheckedOutputStream(out, new NMEAChecksum());
+        parse(cs, cos);
     }
+    public void parse(ScatteringByteChannel channel, OutputStream out) throws IOException
+    {
+        CheckedOutputStream cos = new CheckedOutputStream(out, new NMEAChecksum());
+        parse(channel, cos);
+    }
+    @ParseMethod(start = "statements")
+    protected abstract void parse(
+            CharSequence cs,
+            @ParserContext("out") CheckedOutputStream out
+    ) throws IOException;
     @ParseMethod(start = "statements", size = 256, charSet = "US-ASCII" )
     protected abstract void parse(
             ScatteringByteChannel channel,
-            @ParserContext("bb") ByteBuffer bb,
-            @ParserContext("target") WritableByteChannel target
+            @ParserContext("out") CheckedOutputStream out
     ) throws IOException;
     @RecoverMethod
     public void recover(
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
             @ParserContext(ParserConstants.THROWABLE) Throwable thr,
-            @ParserContext("bb") ByteBuffer bb) throws IOException
+            @ParserContext("out") CheckedOutputStream out) throws IOException
     {
         int columnNumber = reader.getColumnNumber();
         int length = reader.getLength();
         String input = reader.getInput();
-        int cc = input.charAt(0);
-        System.err.println(Integer.toHexString(cc));
         reader.clear();
-        bb.clear();
     }
 
-    private void send(ByteBuffer bb, WritableByteChannel target) throws IOException
-    {
-        bb.flip();
-        target.write(bb);
-        bb.clear();
-    }
 }

@@ -42,7 +42,7 @@ public class SeaTalkMatcher extends SimpleMatcher
                 case 0:
                     break;
                 case 1:
-                    end = cc+2;
+                    end = (cc&0xf)+2;
                     break;
                 default:
                     if (index == end)

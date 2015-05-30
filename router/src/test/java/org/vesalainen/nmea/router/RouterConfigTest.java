@@ -23,7 +23,6 @@ import javax.xml.bind.JAXBException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.nmea.jaxb.router.BroadcastNMEAType;
-import org.vesalainen.nmea.jaxb.router.ChannelType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.NmeaHsType;
 import org.vesalainen.nmea.jaxb.router.NmeaType;
@@ -47,19 +46,14 @@ public class RouterConfigTest
         try (InputStream is = RouterConfigTest.class.getClassLoader().getResourceAsStream("router.xml");)
         {
             RouterConfig rc = new RouterConfig(is);
-            List<ChannelType> channels = rc.getChannels();
-            assertNotNull(channels);
-            assertEquals(4, channels.size());
+            List<EndpointType> endpoints = rc.getEndpoints();
+            assertNotNull(endpoints);
+            assertEquals(4, endpoints.size());
             
-            ChannelType c1 = channels.get(0);
-            EndpointType et = c1.getBroadcastOrBroadcastNmeaOrDatagram();
+            EndpointType et = endpoints.get(0);
             assertEquals("SeaTalk", et.getName());
             SeatalkType stt = (SeatalkType) et;
-            assertEquals(4800, stt.getSpeed());
-            assertEquals(8, stt.getBits());
-            assertEquals(1, stt.getStops());
-            assertEquals("SPACE", stt.getParity().name());
-            List<RouteType> rl1 = c1.getRoute();
+            List<RouteType> rl1 = et.getRoute();
             assertEquals(2, rl1.size());
             RouteType r1 = rl1.get(0);
             assertEquals("$??MTW", r1.getPrefix());
@@ -67,26 +61,15 @@ public class RouterConfigTest
             assertEquals(1, target.size());
             assertEquals("Net", target.get(0));
             
-            ChannelType c2 = channels.get(1);
-            et = c2.getBroadcastOrBroadcastNmeaOrDatagram();
+            et = endpoints.get(1);
             assertEquals("Furuno", et.getName());
             NmeaType nt = (NmeaType) et;
-            assertEquals(4800, nt.getSpeed());
-            assertEquals(8, nt.getBits());
-            assertEquals(1, nt.getStops());
-            assertEquals("NONE", nt.getParity().name());
 
-            ChannelType c3 = channels.get(2);
-            et = c3.getBroadcastOrBroadcastNmeaOrDatagram();
+            et = endpoints.get(2);
             assertEquals("AIS", et.getName());
             NmeaHsType hst = (NmeaHsType) et;
-            assertEquals(38400, hst.getSpeed());
-            assertEquals(8, hst.getBits());
-            assertEquals(1, hst.getStops());
-            assertEquals("NONE", hst.getParity().name());
             
-            ChannelType c4 = channels.get(3);
-            et = c4.getBroadcastOrBroadcastNmeaOrDatagram();
+            et = endpoints.get(3);
             assertEquals("Net", et.getName());
             BroadcastNMEAType bnt = (BroadcastNMEAType) et;
             assertEquals("255.255.255.255", bnt.getAddress());

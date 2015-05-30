@@ -1,19 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <router>
-    <channel>
-        <seatalk name="SeaTalk"/>
+    <seatalk name="SeaTalk">
         <route prefix="$??MTW" target="Net"/>
         <route prefix="$??DBT" target="Net"/>
-    </channel>
-    <channel>
-        <nmea name="Furuno"/>
+    </seatalk>
+    <nmea name="Furuno">
         <route prefix="$??RMC" target="Net"/>
-    </channel>
-    <channel>
-        <nmea-hs name="AIS"/>
+    </nmea>
+    <nmea-hs name="AIS">
         <route prefix="!??VDM" target="Net"/>
-    </channel>
-    <channel>
-        <broadcast-nmea name="Net"/>
-    </channel>
+    </nmea-hs>
+    <broadcast-nmea name="Net"/>
 </router>

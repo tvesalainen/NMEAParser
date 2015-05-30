@@ -30,7 +30,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
-import org.vesalainen.nmea.jaxb.router.ChannelType;
+import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
 import org.vesalainen.nmea.jaxb.router.RouterType;
 
@@ -89,9 +89,9 @@ public class RouterConfig
         router = (JAXBElement<RouterType>) unmarshaller.unmarshal(is);
     }
 
-    public List<ChannelType> getChannels()
+    public List<EndpointType> getEndpoints()
     {
-        return router.getValue().getChannel();
+        return router.getValue().getBroadcastOrBroadcastNmeaOrDatagram();
     }
     
     public void write(Writer writer) throws IOException

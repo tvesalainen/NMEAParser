@@ -3,26 +3,14 @@
            elementFormDefault="qualified" attributeFormDefault="unqualified">
     <xs:element name="router" type="routerType"/>
     <xs:complexType name="routerType">
-        <xs:sequence>
-            <xs:element name="channel" type="channelType" minOccurs="1" maxOccurs="unbounded"/>
-        </xs:sequence>
-    </xs:complexType>
-    <xs:complexType name="channelType">
-        <xs:sequence>
-            <xs:choice>
-                <xs:element name="broadcast" type="broadcastType"/>
-                <xs:element name="broadcast-nmea" type="broadcastNMEAType"/>
-                <xs:element name="datagram" type="datagramType"/>
-                <xs:element name="seatalk" type="seatalkType"/>
-                <xs:element name="nmea-hs" type="nmea-hsType"/>
-                <xs:element name="nmea" type="nmeaType"/>
-            </xs:choice>
-            <xs:element name="route" type="routeType" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-    </xs:complexType>
-    <xs:complexType name="routeType">
-        <xs:attribute name="prefix" type="prefixType" use="required"/>
-        <xs:attribute name="target" type="targetType" use="required"/>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="broadcast" type="broadcastType"/>
+            <xs:element name="broadcast-nmea" type="broadcastNMEAType"/>
+            <xs:element name="datagram" type="datagramType"/>
+            <xs:element name="seatalk" type="seatalkType"/>
+            <xs:element name="nmea-hs" type="nmea-hsType"/>
+            <xs:element name="nmea" type="nmeaType"/>
+        </xs:choice>
     </xs:complexType>
     <xs:complexType name="broadcastNMEAType">
         <xs:complexContent>
@@ -50,46 +38,39 @@
     </xs:complexType>
     <xs:complexType name="seatalkType">
         <xs:complexContent>
-            <xs:extension base="endpointType">
-                <xs:attribute name="speed" type="speedType" default="4800"/>
-                <xs:attribute name="bits" type="bitsType" default="8"/>
-                <xs:attribute name="parity" type="parityType" default="SPACE"/>
-                <xs:attribute name="stops" type="stopsType" default="1"/>
-            </xs:extension>
+            <xs:extension base="serialType"/>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="nmea-hsType">
         <xs:complexContent>
-            <xs:extension base="endpointType">
-                <xs:attribute name="speed" type="speedType" default="38400"/>
-                <xs:attribute name="bits" type="bitsType" default="8"/>
-                <xs:attribute name="parity" type="parityType" default="NONE"/>
-                <xs:attribute name="stops" type="stopsType" default="1"/>
-            </xs:extension>
+            <xs:extension base="serialType"/>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="nmeaType">
         <xs:complexContent>
-            <xs:extension base="endpointType">
-                <xs:attribute name="speed" type="speedType" default="4800"/>
-                <xs:attribute name="bits" type="bitsType" default="8"/>
-                <xs:attribute name="parity" type="parityType" default="NONE"/>
-                <xs:attribute name="stops" type="stopsType" default="1"/>
-            </xs:extension>
+            <xs:extension base="serialType"/>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="serialType">
         <xs:complexContent>
             <xs:extension base="endpointType">
-                <xs:attribute name="speed" type="speedType" use="required"/>
-                <xs:attribute name="bits" type="bitsType" default="8"/>
-                <xs:attribute name="parity" type="parityType" default="NONE"/>
-                <xs:attribute name="stops" type="stopsType" default="1"/>
+                <xs:attribute name="speed" type="speedType"/>
+                <xs:attribute name="bits" type="bitsType"/>
+                <xs:attribute name="parity" type="parityType"/>
+                <xs:attribute name="stops" type="stopsType"/>
+                <xs:attribute name="flowControl" type="flowControlType"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="endpointType">
+        <xs:sequence>
+            <xs:element name="route" type="routeType" maxOccurs="unbounded"/>
+        </xs:sequence>
         <xs:attribute name="name" type="nameType" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="routeType">
+        <xs:attribute name="prefix" type="prefixType" use="required"/>
+        <xs:attribute name="target" type="targetType" use="required"/>
     </xs:complexType>
     <xs:simpleType name="addressType">
         <xs:restriction base="xs:string">
@@ -161,7 +142,7 @@
             <xs:maxInclusive value="2"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="flowType">
+    <xs:simpleType name="flowControlType">
         <xs:restriction base="xs:string">
             <xs:enumeration value="NONE"/>
             <xs:enumeration value="XONXOFF"/>
