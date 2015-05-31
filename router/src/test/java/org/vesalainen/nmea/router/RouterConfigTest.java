@@ -72,8 +72,6 @@ public class RouterConfigTest
             et = endpoints.get(3);
             assertEquals("Net", et.getName());
             BroadcastNMEAType bnt = (BroadcastNMEAType) et;
-            assertEquals("255.255.255.255", bnt.getAddress());
-            assertEquals(10110, bnt.getPort());
         }
         catch(IOException | JAXBException ex)
         {

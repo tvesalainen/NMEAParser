@@ -10,29 +10,24 @@
             <xs:element name="seatalk" type="seatalkType"/>
             <xs:element name="nmea-hs" type="nmea-hsType"/>
             <xs:element name="nmea" type="nmeaType"/>
+            <xs:element name="serial" type="serialType"/>
         </xs:choice>
     </xs:complexType>
     <xs:complexType name="broadcastNMEAType">
         <xs:complexContent>
-            <xs:extension base="endpointType">
-                <xs:attribute name="address" type="addressType" default="255.255.255.255"/>
-                <xs:attribute name="port" type="portType" default="10110"/>
-            </xs:extension>
+            <xs:extension base="broadcastType"/>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="broadcastType">
         <xs:complexContent>
-            <xs:extension base="endpointType">
-                <xs:attribute name="address" type="addressType" default="255.255.255.255"/>
-                <xs:attribute name="port" type="portType" use="required"/>
-            </xs:extension>
+            <xs:extension base="datagramType"/>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="datagramType">
         <xs:complexContent>
             <xs:extension base="endpointType">
-                <xs:attribute name="address" type="addressType" use="required"/>
-                <xs:attribute name="port" type="portType" use="required"/>
+                <xs:attribute name="address" type="addressType"/>
+                <xs:attribute name="port" type="portType"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
