@@ -58,30 +58,23 @@ public class SeaTalkChannel extends AbstractSelectableChannel implements Scatter
     private int read() throws IOException
     {
         int remaining = out.getRemaining();
-        while (out.getRemaining() >= 80)
+        ring.read(channel);
+        while (ring.hasRemaining() && out.getRemaining() >= 80)
         {
-            ring.read(channel);
-            while (ring.hasRemaining())
+            byte b = ring.get(mark);
+            switch (matcher.match(b))
             {
-                byte b = ring.get(mark);
-                switch (matcher.match(b))
-                {
-                    case Ok:
-                        mark = false;
-                        break;
-                    case Error:
-                        mark = true;
-                        break;
-                    case Match:
-                        for (int ii=0;ii<ring.length();ii++)
-                        {
-                            System.err.print(String.format("%02X ", (int)ring.charAt(ii)));
-                        }
-                        System.err.println();
-                        parser.parse(ring, out);
-                        mark = true;
-                        break;
-                }
+                case Ok:
+                    mark = false;
+                    break;
+                case Error:
+                    mark = true;
+                    break;
+                case Match:
+                    System.err.println();
+                    parser.parse(ring, out);
+                    mark = true;
+                    break;
             }
         }
         return remaining - out.getRemaining();
