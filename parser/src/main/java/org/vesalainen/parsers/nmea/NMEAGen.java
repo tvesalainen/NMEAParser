@@ -16,7 +16,8 @@
  */
 package org.vesalainen.parsers.nmea;
 
-import java.nio.ByteBuffer;
+import java.io.IOException;
+import java.util.zip.CheckedOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import static org.vesalainen.parsers.nmea.Converter.Celcius;
@@ -35,117 +36,84 @@ import org.vesalainen.util.navi.Meters;
  */
 public class NMEAGen
 {
-    /**
-     * Calculates the checksum for nmea sentence. Sentence starts at 0 and
-     * ends in position. 
-     * @param bb 
-     * @return 
-     */
-    public static final int checkSum(ByteBuffer bb)
+    public static void dbt(String talkerId, CheckedOutputStream out, float depth) throws IOException
     {
-        boolean on = false;
-        int value = 0;
-        int limit = bb.limit();
-        bb.flip();
-        while (bb.hasRemaining())
-        {
-            int b = bb.get();
-            if (b == '*')
-            {
-                on = false;
-            }
-            if (on)
-            {
-                value ^= b;
-            }
-            if (b == '$' || b == '!')
-            {
-                value = 0;
-                on = true;
-            }
-        }
-        bb.limit(limit);
-        return value;
-    }
-
-    public static void dbt(String talkerId, ByteBuffer bb, float depth)
-    {
-        put(bb, '$');
-        put(bb, talkerId);
-        put(bb, "DBT,");
+        put(out, '$');
+        put(out, talkerId);
+        put(out, "DBT,");
         float meters = toMeters(depth, Ft);
-        put(bb, Meters.toFeets(meters));
-        put(bb, ',');
-        put(bb, Ft);
-        put(bb, ',');
-        put(bb, meters);
-        put(bb, ',');
-        put(bb, M);
-        put(bb, ',');
-        put(bb, Meters.toFathoms(meters));
-        put(bb, ',');
-        put(bb, Fath);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        put(out, Meters.toFeets(meters));
+        put(out, ',');
+        put(out, Ft);
+        put(out, ',');
+        put(out, meters);
+        put(out, ',');
+        put(out, M);
+        put(out, ',');
+        put(out, Meters.toFathoms(meters));
+        put(out, ',');
+        put(out, Fath);
+        putChecksum(out);
+        put(out, "\r\n");
     }
-    public static void vhw(String talkerId, ByteBuffer bb, float knots)
+    public static void vhw(String talkerId, CheckedOutputStream out, float knots) throws IOException
     {
-        put(bb, '$');
-        put(bb, talkerId);
-        put(bb, "VHW,,,,,");
-        put(bb, knots);
-        put(bb, ',');
-        put(bb, Kts);
-        put(bb, ',');
-        put(bb, Knots.toKiloMetersInHour(knots));
-        put(bb, ',');
-        put(bb, KMH);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        put(out, '$');
+        put(out, talkerId);
+        put(out, "VHW,,,,,");
+        put(out, knots);
+        put(out, ',');
+        put(out, Kts);
+        put(out, ',');
+        put(out, Knots.toKiloMetersInHour(knots));
+        put(out, ',');
+        put(out, KMH);
+        putChecksum(out);
+        put(out, "\r\n");
     }
 
-    public static void mtw(String talkerId, ByteBuffer bb, float c)
+    public static void mtw(String talkerId, CheckedOutputStream out, float c) throws IOException
     {
-        put(bb, '$');
-        put(bb, talkerId);
-        put(bb, "MTW,");
-        put(bb, c);
-        put(bb, ',');
-        put(bb, Celcius);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        put(out, '$');
+        put(out, talkerId);
+        put(out, "MTW,");
+        put(out, c);
+        put(out, ',');
+        put(out, Celcius);
+        putChecksum(out);
+        put(out, "\r\n");
     }
-    public static void txt(String talkerId, ByteBuffer bb, String msg)
+    public static void txt(String talkerId, CheckedOutputStream out, String msg) throws IOException
     {
         if (msg.indexOf(',') != -1 || msg.indexOf('*') != -1)
         {
             throw new IllegalArgumentException(msg+" contains (,) or (*)");
         }
-        put(bb, '$');
-        put(bb, talkerId);
-        put(bb, "TXT,1,1,,");
-        put(bb, msg);
-        putChecksum(bb);
-        put(bb, "\r\n");
+        put(out, '$');
+        put(out, talkerId);
+        put(out, "TXT,1,1,,");
+        put(out, msg);
+        putChecksum(out);
+        put(out, "\r\n");
     }
 
-    private static void putChecksum(ByteBuffer bb)
+    private static void putChecksum(CheckedOutputStream out) throws IOException
     {
-        put(bb, '*');
-        int cs = checkSum(bb);
-        put(bb, String.format(Locale.US, "%02X", cs));
+        put(out, '*');
+        int cs = (int) out.getChecksum().getValue();
+        put(out, String.format(Locale.US, "%02X", cs));
     }
-    private static void put(ByteBuffer bb, double d)
+    private static void put(CheckedOutputStream out, double d) throws IOException
     {
-        put(bb, String.format(Locale.US, "%.1f", d));
+        put(out, String.format(Locale.US, "%.1f", d));
     }
-    private static void put(ByteBuffer bb, String s)
+    private static void put(CheckedOutputStream out, String s) throws IOException
     {
-        bb.put(s.getBytes(StandardCharsets.US_ASCII));
+        out.write(s.getBytes(StandardCharsets.US_ASCII));
     }
-    private static void put(ByteBuffer bb, char c)
+    private static void put(CheckedOutputStream out, char c) throws IOException
     {
-        bb.put((byte)c);
+        out.write((byte)c);
     }
 
 }
