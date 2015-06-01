@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<router>
+    <seatalk name="SeaTalk">
+        <route prefix="$??MTW" target="Net"/>
+        <route prefix="$??DBT" target="Net"/>
+    </seatalk>
+    <nmea name="Furuno">
+        <route prefix="$??RMC" target="Net"/>
+    </nmea>
+    <broadcast-nmea name="Net"/>
+</router>

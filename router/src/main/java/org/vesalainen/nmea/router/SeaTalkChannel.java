@@ -23,6 +23,7 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialSelectorProvider;
+import org.vesalainen.comm.channel.WrappedSerialChannel;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
@@ -31,7 +32,7 @@ import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
  *
  * @author tkv
  */
-public class SeaTalkChannel extends AbstractSelectableChannel implements ScatteringByteChannel
+public class SeaTalkChannel extends AbstractSelectableChannel implements ScatteringByteChannel, WrappedSerialChannel
 {
     private final SerialChannel channel;
     private final RingByteBuffer ring = new RingByteBuffer(100, true);
@@ -55,13 +56,21 @@ public class SeaTalkChannel extends AbstractSelectableChannel implements Scatter
         this.channel = channel;
     }
 
+    @Override
+    public SerialChannel getSerialChannel()
+    {
+        return channel;
+    }
+    
     private int read() throws IOException
     {
         int remaining = out.getRemaining();
+        System.err.println("seatalk "+remaining+" "+out.getRemaining());
         ring.read(channel);
         while (ring.hasRemaining() && out.getRemaining() >= 80)
         {
             byte b = ring.get(mark);
+            System.err.print(String.format("%02X ", b));
             switch (matcher.match(b))
             {
                 case Ok:
@@ -77,6 +86,7 @@ public class SeaTalkChannel extends AbstractSelectableChannel implements Scatter
                     break;
             }
         }
+        System.err.println();
         return remaining - out.getRemaining();
     }
     @Override

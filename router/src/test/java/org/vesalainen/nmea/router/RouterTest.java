@@ -16,10 +16,8 @@
  */
 package org.vesalainen.nmea.router;
 
-import java.io.InputStream;
 import java.net.URL;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -35,7 +33,7 @@ public class RouterTest
     @Test
     public void test()
     {
-        URL url = RouterConfigTest.class.getClassLoader().getResource("router.xml");
+        URL url = RouterConfigTest.class.getClassLoader().getResource("router2.xml");
         String filename = url.getFile();
         Router.main(filename);
     }
