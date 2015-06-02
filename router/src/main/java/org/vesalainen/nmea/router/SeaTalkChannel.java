@@ -18,12 +18,14 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ScatteringByteChannel;
-import java.nio.channels.spi.AbstractSelectableChannel;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.spi.SelectorProvider;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
-import org.vesalainen.comm.channel.SerialSelectorProvider;
-import org.vesalainen.comm.channel.WrappedSerialChannel;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
@@ -32,7 +34,7 @@ import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
  *
  * @author tkv
  */
-public class SeaTalkChannel extends AbstractSelectableChannel implements ScatteringByteChannel, WrappedSerialChannel
+public class SeaTalkChannel extends SelectableChannel implements ScatteringByteChannel
 {
     private final SerialChannel channel;
     private final RingByteBuffer ring = new RingByteBuffer(100, true);
@@ -43,7 +45,6 @@ public class SeaTalkChannel extends AbstractSelectableChannel implements Scatter
 
     public SeaTalkChannel(String port) throws IOException
     {
-        super(SerialSelectorProvider.provider());
         Builder builder = new Builder(port, SerialChannel.Speed.B4800)
                 .setParity(SerialChannel.Parity.SPACE)
                 .setReplaceError(true);
@@ -52,16 +53,9 @@ public class SeaTalkChannel extends AbstractSelectableChannel implements Scatter
 
     public SeaTalkChannel(SerialChannel channel)
     {
-        super(SerialSelectorProvider.provider());
         this.channel = channel;
     }
 
-    @Override
-    public SerialChannel getSerialChannel()
-    {
-        return channel;
-    }
-    
     private int read() throws IOException
     {
         int remaining = out.getRemaining();
@@ -117,15 +111,57 @@ public class SeaTalkChannel extends AbstractSelectableChannel implements Scatter
     }
 
     @Override
-    protected void implCloseSelectableChannel() throws IOException
+    public SelectorProvider provider()
+    {
+        return channel.provider();
+    }
+
+    @Override
+    public boolean isRegistered()
+    {
+        return channel.isRegistered();
+    }
+
+    @Override
+    public SelectionKey keyFor(Selector sel)
+    {
+        return channel.keyFor(sel);
+    }
+
+    @Override
+    public SelectionKey register(Selector sel, int ops, Object att) throws ClosedChannelException
+    {
+        return channel.register(sel, ops, att);
+    }
+
+    @Override
+    public SelectableChannel configureBlocking(boolean block) throws IOException
+    {
+        return channel.configureBlocking(block);
+    }
+
+    @Override
+    public boolean isBlocking()
+    {
+        return channel.isBlocking();
+    }
+
+    @Override
+    public Object blockingLock()
+    {
+        return channel.blockingLock();
+    }
+
+    @Override
+    protected void implCloseChannel() throws IOException
     {
         channel.close();
     }
 
     @Override
-    protected void implConfigureBlocking(boolean block) throws IOException
+    public String toString()
     {
-        channel.configureBlocking(block);
+        return "SeaTalkChannel{" + "channel=" + channel + '}';
     }
     
 }

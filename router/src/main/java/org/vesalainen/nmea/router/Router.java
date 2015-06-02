@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import static java.net.StandardSocketOptions.IP_MULTICAST_LOOP;
 import static java.net.StandardSocketOptions.SO_BROADCAST;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -74,20 +76,20 @@ public class Router
     private void start() throws IOException
     {
         boolean allResolved = false;
-        Set<SelectionKey> resolvPool = new HashSet<>();
+        Set<Endpoint> resolvPool = new HashSet<>();
         List<AutoCloseable> autoCloseables = new ArrayList<>();
         try (AutoCloseableCollection<AutoCloseable> closer = new AutoCloseableCollection<>(autoCloseables))
         {
             MultiProviderSelector selector = new MultiProviderSelector();
             autoCloseables.add(selector);
-            Builder builder = new SerialChannel.Builder("", SerialChannel.Speed.B4800);
+            Builder builder = new SerialChannel.Builder("", SerialChannel.Speed.B4800)
+                    .setBlocking(false);
             Map<String,SerialChannel> portPool = new HashMap<>();
             for (String port : SerialChannel.getFreePorts())
             {
                 SerialChannel sc = builder.setPort(port).get();
                 autoCloseables.add(sc);
                 portPool.put(port, sc);
-                SelectionKey sk = sc.register(selector, OP_READ);
             }
             for (EndpointType et : config.getEndpoints())
             {
@@ -97,7 +99,6 @@ public class Router
             while (true)
             {
                 int count = selector.select(ResolvTimeout);
-                System.err.println("count="+count);
                 if (count > 0)
                 {
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
@@ -107,6 +108,14 @@ public class Router
                         iterator.remove();
                         Endpoint endpoint = (Endpoint) sk.attachment();
                         endpoint.read(sk);
+                    }
+                }
+                else
+                {
+                    if (selector.keys().isEmpty())
+                    {
+                        System.err.println("Couldn't resolv ports");
+                        return;
                     }
                 }
                 if (!allResolved)
@@ -124,19 +133,18 @@ public class Router
                             if (endpoint.failed())
                             {
                                 allResolved = false;
-                                SerialChannel channel = endpoint.getChannel();
-                                if (channel != null)
-                                {
-                                    String port = channel.getPort();
-                                    portPool.put(port, endpoint.getChannel());
-                                }
-                                resolvPool.add(sk);
+                                SerialChannel channel = (SerialChannel) sk.channel();
+                                assert (channel != null);
+                                String port = channel.getPort();
+                                portPool.put(port, channel);
+                                resolvPool.add(endpoint);
+                                sk.cancel();
+                                System.err.println("pooled "+port);
                             }
                         }
                     }
-                    for (SelectionKey sk : resolvPool)
+                    for (Endpoint endpoint : resolvPool)
                     {
-                        Endpoint endpoint = (Endpoint) sk.attachment();
                         configureChannel(endpoint, selector, portPool);
                     }
                     resolvPool.clear();
@@ -159,7 +167,17 @@ public class Router
         SelectableChannel sc = endpoint.configureChannel(portPool);
         if (sc != null)
         {
-            sc.configureBlocking(false);
+            SelectionKey sk = sc.keyFor(selector.getSelectorFor(sc));
+            if (sk != null && sk.isValid())
+            {
+                Endpoint attach = (Endpoint) sk.attach(endpoint);
+                System.err.println(attach);
+            }
+            else
+            {
+                SelectionKey register = sc.register(selector, OP_READ, endpoint);
+                System.err.println(register);
+            }
         }
     }
     public static void main(String... args)
@@ -263,6 +281,7 @@ public class Router
         protected SelectableChannel configureChannel(Map<String, SerialChannel> portPool) throws IOException
         {
             channel = DatagramChannel.open();
+            channel.configureBlocking(false);
             channel.bind(new InetSocketAddress(socketAddress.getPort()));
             channel.setOption(SO_BROADCAST, true);
             channel.setOption(IP_MULTICAST_LOOP, false);
@@ -308,6 +327,7 @@ public class Router
         protected SelectableChannel configureChannel(Map<String, SerialChannel> portPool) throws IOException
         {
             channel = DatagramChannel.open();
+            channel.configureBlocking(false);
             channel.connect(socketAddress);
             return channel;
         }
@@ -349,10 +369,11 @@ public class Router
         @Override
         protected SelectableChannel configureChannel(Map<String, SerialChannel> portPool) throws IOException
         {
-            channel = (SerialChannel) super.configureChannel(portPool);
-            if (channel != null)
+            SerialChannel serialChannel = (SerialChannel) super.configureChannel(portPool);
+            if (serialChannel != null)
             {
-                return new SeaTalkChannel(channel);
+                channel = new SeaTalkChannel(serialChannel);
+                return channel;
             }
             else
             {
@@ -360,12 +381,6 @@ public class Router
             }
         }
         
-        @Override
-        protected SerialChannel getChannel()
-        {
-            return channel;
-        }
-
     }
     private class NmeaHsEndpoint extends SerialEndpoint
     {
@@ -395,7 +410,6 @@ public class Router
     {
         protected Configuration configuration;
         private long resolvStarted;
-        protected SerialChannel channel;
         protected Set<String> triedPorts = new HashSet<>();
         
         public SerialEndpoint(SerialType serialType)
@@ -440,12 +454,6 @@ public class Router
         }
 
         @Override
-        protected SerialChannel getChannel()
-        {
-            return channel;
-        }
-
-        @Override
         protected SelectableChannel configureChannel(Map<String, SerialChannel> portPool) throws IOException
         {
             Iterator<String> iterator = portPool.keySet().iterator();
@@ -455,12 +463,13 @@ public class Router
                 if (!triedPorts.contains(port))
                 {
                     triedPorts.add(port);
-                    channel = portPool.get(port);
+                    SerialChannel serialChannel = portPool.get(port);
                     iterator.remove();
-                    channel.configure(configuration);
+                    serialChannel.configure(configuration);
                     resolvStarted = System.currentTimeMillis();
                     System.err.println(port+" -> "+configuration);
-                    return channel;
+                    channel = serialChannel;
+                    return serialChannel;
                 }
             }
             return null;
@@ -469,7 +478,7 @@ public class Router
         @Override
         protected void write(RingByteBuffer ring) throws IOException
         {
-            ring.write(channel);
+            ring.write((GatheringByteChannel)channel);
         }
 
         @Override
@@ -487,6 +496,7 @@ public class Router
     private abstract class Endpoint
     {
         protected final String name;
+        protected SelectableChannel channel;
         protected OrMatcher<String> matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean failed = true;
@@ -513,13 +523,12 @@ public class Router
         protected void read(SelectionKey sk) throws IOException
         {   
             Matcher.Status match = null;
-            ScatteringByteChannel channel = (ScatteringByteChannel) sk.channel();
-            ring.read(channel);
-            System.err.println("reading ->"+this+" "+ring.remaining());
+            ring.read((ScatteringByteChannel)channel);
+            //System.err.println("reading ->"+this+" "+ring.remaining()+" "+channel);
             while (ring.hasRemaining())
             {
                 byte b = ring.get(mark);
-                System.err.print((char)b);
+                //System.err.print((char)b);
                 match = matcher.match(b);
                 switch (match)
                 {
@@ -541,7 +550,7 @@ public class Router
                         break;
                 }
             }
-            System.err.println();
+            //System.err.println();
             if (match == Status.WillMatch && canWritePartially())
             {
                 write(matcher, ring);
@@ -577,10 +586,5 @@ public class Router
 
         protected abstract boolean resolving();
 
-        protected SerialChannel getChannel()
-        {
-            return null;
-        }
-        
     }
 }
