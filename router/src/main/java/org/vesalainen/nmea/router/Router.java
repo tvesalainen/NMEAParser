@@ -18,17 +18,22 @@ package org.vesalainen.nmea.router;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import static java.net.StandardSocketOptions.IP_MULTICAST_LOOP;
 import static java.net.StandardSocketOptions.SO_BROADCAST;
-import java.nio.channels.ByteChannel;
+import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import static java.nio.channels.SelectionKey.OP_READ;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -52,6 +57,8 @@ import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.util.AutoCloseableCollection;
+import org.vesalainen.util.HashMapList;
+import org.vesalainen.util.MapList;
 import org.vesalainen.util.Matcher;
 import org.vesalainen.util.Matcher.Status;
 import org.vesalainen.util.OrMatcher;
@@ -66,7 +73,9 @@ public class Router
     private final RouterConfig config;
     private static final long ResolvTimeout = 5000;
     private static final int BufferSize = 5000;
-    private Map<String,Endpoint> targets = new HashMap<>();
+    private final Map<String,Endpoint> targets = new HashMap<>();
+    private final MapList<String,Endpoint> sources = new HashMapList<>();
+    private List<InetAddress> localAddresses = new ArrayList<>();
 
     public Router(RouterConfig config)
     {
@@ -138,8 +147,6 @@ public class Router
                                 String port = channel.getPort();
                                 portPool.put(port, channel);
                                 resolvPool.add(endpoint);
-                                sk.cancel();
-                                System.err.println("pooled "+port);
                             }
                         }
                     }
@@ -164,20 +171,10 @@ public class Router
 
     private void configureChannel(Endpoint endpoint, MultiProviderSelector selector, Map<String,SerialChannel> portPool) throws IOException
     {
-        SelectableChannel sc = endpoint.configureChannel(portPool);
-        if (sc != null)
+        SelectableChannel readChannel = endpoint.configureChannel(portPool);
+        if (readChannel != null)
         {
-            SelectionKey sk = sc.keyFor(selector.getSelectorFor(sc));
-            if (sk != null && sk.isValid())
-            {
-                Endpoint attach = (Endpoint) sk.attach(endpoint);
-                System.err.println(attach);
-            }
-            else
-            {
-                SelectionKey register = sc.register(selector, OP_READ, endpoint);
-                System.err.println(register);
-            }
+            selector.register(readChannel, OP_READ, endpoint);
         }
     }
     public static void main(String... args)
@@ -280,20 +277,29 @@ public class Router
         @Override
         protected SelectableChannel configureChannel(Map<String, SerialChannel> portPool) throws IOException
         {
-            channel = DatagramChannel.open();
-            channel.configureBlocking(false);
-            channel.bind(new InetSocketAddress(socketAddress.getPort()));
-            channel.setOption(SO_BROADCAST, true);
-            channel.setOption(IP_MULTICAST_LOOP, false);
-            channel.connect(socketAddress);
-            return channel;
+            writeChannel = DatagramChannel.open();
+            writeChannel.configureBlocking(false);
+            writeChannel.setOption(SO_BROADCAST, true);
+            writeChannel.setOption(IP_MULTICAST_LOOP, false);
+            writeChannel.connect(socketAddress);
+            matched();
+            if (isSource())
+            {
+                readChannel = DatagramChannel.open();
+                readChannel.configureBlocking(false);
+                readChannel.bind(new InetSocketAddress(socketAddress.getPort()));
+            }
+            return readChannel;
         }
-        
+
     }
     private class DatagramEndpoint extends Endpoint
     {
-        protected DatagramChannel channel;
+        protected DatagramChannel readChannel;
+        protected DatagramChannel writeChannel;
         protected InetSocketAddress socketAddress;
+        protected ByteBuffer readBuffer;
+        
         public DatagramEndpoint(DatagramType datagramType)
         {
             super(datagramType);
@@ -326,18 +332,81 @@ public class Router
         @Override
         protected SelectableChannel configureChannel(Map<String, SerialChannel> portPool) throws IOException
         {
-            channel = DatagramChannel.open();
-            channel.configureBlocking(false);
-            channel.connect(socketAddress);
-            return channel;
+            writeChannel = DatagramChannel.open();
+            writeChannel.configureBlocking(false);
+            writeChannel.connect(socketAddress);
+            matched();
+            if (isSource())
+            {
+                if (localAddresses == null)
+                {
+                    localAddresses = new ArrayList<>();
+                    Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+                    while (nis.hasMoreElements())
+                    {
+                        NetworkInterface ni = nis.nextElement();
+                        Enumeration<InetAddress> ias = ni.getInetAddresses();
+                        while (ias.hasMoreElements())
+                        {
+                            localAddresses.add(ias.nextElement());
+                        }
+                    }
+                }
+                readBuffer = ByteBuffer.allocateDirect(100);
+                readChannel = DatagramChannel.open();
+                readChannel.configureBlocking(false);
+                readChannel.bind(new InetSocketAddress(socketAddress.getPort()));
+            }
+            return readChannel;
         }
 
         @Override
+        protected void read(SelectionKey sk) throws IOException
+        {
+            readBuffer.clear();
+            InetSocketAddress receiveAddr = (InetSocketAddress) readChannel.receive(readBuffer);
+            if (!localAddresses.contains(receiveAddr.getAddress()))
+            {
+                readBuffer.flip();
+                while (readBuffer.hasRemaining())
+                {
+                    matcher.clear();
+                    byte b = readBuffer.get();
+                    switch (matcher.match(b))
+                    {
+                        case Error:
+                            return;
+                        case Ok:
+                        case WillMatch:
+                            break;
+                        case Match:
+                            for (String target : matcher.getLastMatched())
+                            {
+                                Endpoint ep = targets.get(target);
+                                if (ep != null)
+                                {
+                                    readBuffer.flip();
+                                    ep.write(readBuffer);
+                                }
+                            }
+                            return;
+                    }
+                }
+            }
+        }
+        
+        @Override
         protected void write(RingByteBuffer ring) throws IOException
         {
-            ring.write(channel);
+            ring.write(writeChannel);
         }
 
+        @Override
+        protected void write(ByteBuffer bb) throws IOException
+        {
+            writeChannel.write(bb);
+        }
+        
         @Override
         protected boolean failed()
         {
@@ -349,6 +418,7 @@ public class Router
         {
             return false;
         }
+
     }
     private class SeaTalkEndpoint extends SerialEndpoint
     {
@@ -482,6 +552,12 @@ public class Router
         }
 
         @Override
+        protected void write(ByteBuffer bb) throws IOException
+        {
+            ((WritableByteChannel)channel).write(bb);
+        }
+
+        @Override
         protected boolean failed()
         {
             return failed && resolvStarted + ResolvTimeout < System.currentTimeMillis();
@@ -501,6 +577,9 @@ public class Router
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean failed = true;
         private boolean mark = true;
+        private boolean isSink;
+        private boolean ready;
+        private boolean isSingleSink;
 
         public Endpoint(EndpointType endpointType)
         {
@@ -515,20 +594,52 @@ public class Router
                 matcher = new OrMatcher<>();
                 for (RouteType rt : route)
                 {
-                    matcher.add(new SimpleMatcher(rt.getPrefix()+"*\r\n"), rt.getTarget());
+                    List<String> targetList = rt.getTarget();
+                    matcher.add(new SimpleMatcher(rt.getPrefix()+"*\r\n"), targetList);
+                    for (String trg : targetList)
+                    {
+                        sources.add(trg, this);
+                    }
                 }
             }
+        }
+
+        public boolean isSource()
+        {
+            return matcher != null;
+        }
+        public boolean isSink()
+        {
+            if (!ready)
+            {
+                isSink = sources.get(this) != null;
+                ready = true;
+            }
+            return isSink;
+        }
+        /**
+         * Returns true if only one endpoint writes to target and matched 
+         * input is written to only one target.
+         * @return 
+         */
+        protected boolean isSingleSink()
+        {
+            if (!ready)
+            {
+                List<Endpoint> list = sources.get(this);
+                isSingleSink = list != null && list.size() == 1;
+                ready = true;
+            }
+            return isSingleSink;
         }
 
         protected void read(SelectionKey sk) throws IOException
         {   
             Matcher.Status match = null;
             ring.read((ScatteringByteChannel)channel);
-            //System.err.println("reading ->"+this+" "+ring.remaining()+" "+channel);
             while (ring.hasRemaining())
             {
                 byte b = ring.get(mark);
-                //System.err.print((char)b);
                 match = matcher.match(b);
                 switch (match)
                 {
@@ -543,15 +654,14 @@ public class Router
                         write(matcher, ring);
                         if (failed)
                         {
-                            System.err.println("matched");
+                            matched();
                         }
                         failed = false;
                         mark = true;
                         break;
                 }
             }
-            //System.err.println();
-            if (match == Status.WillMatch && canWritePartially())
+            if (match == Status.WillMatch && isSingleSink())
             {
                 write(matcher, ring);
                 ring.mark();
@@ -572,19 +682,16 @@ public class Router
         protected abstract SelectableChannel configureChannel(Map<String,SerialChannel> portPool) throws IOException;
 
         protected abstract void write(RingByteBuffer ring) throws IOException;
-        /**
-         * Can write partially if only one endpoint writes to target and matched 
-         * input is written to only one target.
-         * @return 
-         */
-        protected boolean canWritePartially()
-        {
-            return false;
-        }
-
+        protected abstract void write(ByteBuffer bb) throws IOException;
         protected abstract boolean failed();
 
         protected abstract boolean resolving();
+
+        protected void matched()
+        {
+            System.err.println("matched="+name);
+            targets.put(name, this);
+        }
 
     }
 }

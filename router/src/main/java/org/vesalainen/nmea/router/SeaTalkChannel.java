@@ -59,12 +59,10 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
     private int read() throws IOException
     {
         int remaining = out.getRemaining();
-        System.err.println("seatalk "+remaining+" "+out.getRemaining());
         ring.read(channel);
         while (ring.hasRemaining() && out.getRemaining() >= 80)
         {
             byte b = ring.get(mark);
-            System.err.print(String.format("%02X ", b));
             switch (matcher.match(b))
             {
                 case Ok:
@@ -74,13 +72,11 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
                     mark = true;
                     break;
                 case Match:
-                    System.err.println();
                     parser.parse(ring, out);
                     mark = true;
                     break;
             }
         }
-        System.err.println();
         return remaining - out.getRemaining();
     }
     @Override

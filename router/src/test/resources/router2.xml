@@ -5,7 +5,12 @@
         <route prefix="$??DBT" target="Net"/>
     </seatalk>
     <nmea name="Furuno">
+        <route prefix="$??RMB" target="Net"/>
         <route prefix="$??RMC" target="Net"/>
+        <route prefix="$??BWC" target="Net"/>
+        <route prefix="$??GLL" target="Net"/>
+        <route prefix="$??VTG" target="Net"/>
+        <route prefix="$??ZDA" target="Net"/>
     </nmea>
     <broadcast-nmea name="Net"/>
 </router>
