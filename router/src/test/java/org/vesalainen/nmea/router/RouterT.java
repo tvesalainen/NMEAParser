@@ -23,10 +23,10 @@ import org.junit.Test;
  *
  * @author tkv
  */
-public class RouterTest
+public class RouterT
 {
     
-    public RouterTest()
+    public RouterT()
     {
     }
 

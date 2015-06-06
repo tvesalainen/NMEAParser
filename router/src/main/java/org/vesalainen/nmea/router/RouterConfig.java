@@ -94,6 +94,11 @@ public class RouterConfig
         return router.getValue().getBroadcastOrBroadcastNmeaOrDatagram();
     }
     
+    public RouterType getRouterType()
+    {
+        return router.getValue();
+    }
+    
     public void write(Writer writer) throws IOException
     {
         try

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<router>
+<router proprietaryPrefix="IRS">
     <seatalk name="SeaTalk">
         <route prefix="$??MTW" target="Net"/>
         <route prefix="$??DBT" target="Net"/>
@@ -12,5 +12,7 @@
         <route prefix="$??VTG" target="Net"/>
         <route prefix="$??ZDA" target="Net"/>
     </nmea>
-    <broadcast-nmea name="Net"/>
+    <broadcast-nmea name="Net">
+        <route prefix="$PIRS,ST,LAMP" target="SeaTalk"/>
+    </broadcast-nmea>
 </router>
