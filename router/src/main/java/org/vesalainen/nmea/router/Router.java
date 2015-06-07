@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialChannel.Configuration;
@@ -82,7 +83,8 @@ public class Router
     private int resolvCount = 0;
     private boolean canForce;
     private String proprietaryPrefix;
-    private Integer tcpPort;
+    private Integer tcpPort = 10110;
+    private Logger log = Logger.getGlobal();
 
     public Router(RouterConfig config)
     {
@@ -91,6 +93,7 @@ public class Router
     
     private void start() throws IOException
     {
+        log.info(Version.getVersion());
         Set<Endpoint> resolvPool = new HashSet<>();
         List<AutoCloseable> autoCloseables = new ArrayList<>();
         try (AutoCloseableCollection<AutoCloseable> closer = new AutoCloseableCollection<>(autoCloseables))
@@ -112,7 +115,11 @@ public class Router
             
             RouterType routerType = config.getRouterType();
             proprietaryPrefix = routerType.getProprietaryPrefix();
-            tcpPort = routerType.getTcpPort();
+            Integer port = routerType.getTcpPort();
+            if (port != null)
+            {
+                tcpPort = port;
+            }
             
             for (EndpointType et : config.getEndpoints())
             {
@@ -148,7 +155,7 @@ public class Router
                 {
                     if (selector.keys().isEmpty())
                     {
-                        System.err.println("Couldn't resolv ports");
+                        log.warning("Couldn't resolv ports");
                         return;
                     }
                 }
@@ -565,7 +572,7 @@ public class Router
                     iterator.remove();
                     serialChannel.configure(configuration);
                     resolvStarted = System.currentTimeMillis();
-                    System.err.println(serialChannel+" -> "+configuration);
+                    log.info(serialChannel+" -> "+configuration);
                     channel = serialChannel;
                     return serialChannel;
                 }
@@ -725,7 +732,7 @@ public class Router
 
         protected void matched()
         {
-            System.err.println("matched="+name);
+            log.info("matched="+name);
             targets.put(name, this);
         }
 

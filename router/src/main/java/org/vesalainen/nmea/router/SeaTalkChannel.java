@@ -88,7 +88,6 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
                 case WillMatch:
                     break;
                 case Match:
-                    byte bbb = src.get(10+proprietaryPrefix.length());
                     lamp = src.get(11+proprietaryPrefix.length())-'0';
                     return res;
             }

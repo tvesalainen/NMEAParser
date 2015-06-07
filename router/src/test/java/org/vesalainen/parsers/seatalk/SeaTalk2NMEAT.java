@@ -35,10 +35,10 @@ import org.vesalainen.parsers.nmea.NMEAParser;
  *
  * @author tkv
  */
-public class SeaTalk2NMEATest
+public class SeaTalk2NMEAT
 {
     
-    public SeaTalk2NMEATest()
+    public SeaTalk2NMEAT()
     {
     }
 
@@ -47,7 +47,7 @@ public class SeaTalk2NMEATest
     {
         try
         {
-            URL url = SeaTalk2NMEATest.class.getClassLoader().getResource("seatalk");
+            URL url = SeaTalk2NMEAT.class.getClassLoader().getResource("seatalk");
             Path path = Paths.get(url.toURI());
             FileChannel fc = FileChannel.open(path, StandardOpenOption.READ);
             SeaTalk2NMEA s2n = SeaTalk2NMEA.newInstance();
