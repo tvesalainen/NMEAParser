@@ -30,7 +30,10 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
+import static java.nio.channels.SelectionKey.OP_ACCEPT;
 import static java.nio.channels.SelectionKey.OP_READ;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -39,12 +42,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialChannel.Configuration;
+import org.vesalainen.io.AppendablePrinter;
 import org.vesalainen.nio.RingByteBuffer;
+import org.vesalainen.nio.channels.AppendableByteChannel;
 import org.vesalainen.nio.channels.MultiProviderSelector;
 import org.vesalainen.nmea.jaxb.router.BroadcastNMEAType;
 import org.vesalainen.nmea.jaxb.router.BroadcastType;
@@ -58,7 +64,7 @@ import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
-import org.vesalainen.util.AutoCloseableCollection;
+import org.vesalainen.util.AutoCloseableList;
 import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.MapList;
 import org.vesalainen.util.Matcher;
@@ -75,65 +81,34 @@ public class Router
     private final RouterConfig config;
     private static final long ResolvTimeout = 5000;
     private static final int BufferSize = 1024;
+    private AutoCloseableList<AutoCloseable> autoCloseables;
+    private MultiProviderSelector selector;
     private Set<SerialChannel> portPool = new HashSet<>();
-    private final Map<String,Endpoint> targets = new HashMap<>();
-    private final MapList<String,Endpoint> sources = new HashMapList<>();
+    private Set<SerialEndpoint> resolvPool = new HashSet<>();
+    private final Map<String,DataSource> targets = new HashMap<>();
+    private final MapList<String,DataSource> sources = new HashMapList<>();
     private List<InetAddress> localAddresses;
     private int serialCount = 0;
     private int resolvCount = 0;
     private boolean canForce;
     private String proprietaryPrefix;
     private Integer tcpPort = 10110;
-    private Logger log = Logger.getGlobal();
+    private static final Logger log = Logger.getGlobal();
 
     public Router(RouterConfig config)
     {
         this.config = config;
     }
     
-    private void start() throws IOException
+    private void run() throws IOException
     {
         log.info(Version.getVersion());
-        Set<Endpoint> resolvPool = new HashSet<>();
-        List<AutoCloseable> autoCloseables = new ArrayList<>();
-        try (AutoCloseableCollection<AutoCloseable> closer = new AutoCloseableCollection<>(autoCloseables))
+        
+        try (AutoCloseableList ac = new AutoCloseableList<>())
         {
-            MultiProviderSelector selector = new MultiProviderSelector();
-            autoCloseables.add(selector);
-            Builder builder = new SerialChannel.Builder("", SerialChannel.Speed.B4800)
-                    .setBlocking(false);
-            for (String port : SerialChannel.getFreePorts())
-            {
-                SerialChannel sc = builder.setPort(port).get();
-                autoCloseables.add(sc);
-                portPool.add(sc);
-            }
-            if (portPool.isEmpty())
-            {
-                throw new IOException("no ports");
-            }
-            
-            RouterType routerType = config.getRouterType();
-            proprietaryPrefix = routerType.getProprietaryPrefix();
-            Integer port = routerType.getTcpPort();
-            if (port != null)
-            {
-                tcpPort = port;
-            }
-            
-            for (EndpointType et : config.getEndpoints())
-            {
-                Endpoint endpoint = getInstance(et);
-                if (endpoint instanceof SerialEndpoint)
-                {
-                    serialCount++;
-                }
-                configureChannel(endpoint, selector, false);
-            }
-            if (serialCount == portPool.size())
-            {
-                canForce = true;
-            }
+            autoCloseables = ac;
+            initialize();
+            startSocketServer();
             while (true)
             {
                 int count = selector.select(ResolvTimeout);
@@ -142,12 +117,24 @@ public class Router
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                     while (iterator.hasNext())
                     {
-                        SelectionKey sk = iterator.next();
+                        SelectionKey selectionKey = iterator.next();
                         iterator.remove();
-                        if (sk.isReadable())
+                        if (selectionKey.isReadable())
                         {
-                            Endpoint endpoint = (Endpoint) sk.attachment();
-                            endpoint.read(sk);
+                            DataSource dataSource = (DataSource) selectionKey.attachment();
+                            dataSource.read(selectionKey);
+                        }
+                        else
+                        {
+                            if (selectionKey.isAcceptable())
+                            {
+                                ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
+                                SocketChannel socketChannel = serverSocketChannel.accept();
+                                autoCloseables.add(socketChannel);
+                                socketChannel.configureBlocking(false);
+                                Monitor monitor = new Monitor(socketChannel);
+                                selector.register(socketChannel, OP_READ, monitor);
+                            }
                         }
                     }
                 }
@@ -161,33 +148,92 @@ public class Router
                 }
                 if (resolvCount < serialCount)
                 {
-                    for (SelectionKey sk : selector.keys())
-                    {
-                        Endpoint endpoint = (Endpoint) sk.attachment();
-                        if (!endpoint.resolving() && endpoint.failed())
-                        {
-                            SerialChannel channel = (SerialChannel) sk.channel();
-                            assert (channel != null);
-                            portPool.add(channel);
-                            resolvPool.add(endpoint);
-                        }
-                    }
-                    for (Endpoint endpoint : resolvPool)
-                    {
-                        configureChannel(endpoint, selector, canForce && serialCount-resolvCount==1);
-                    }
-                    resolvPool.clear();
-                    if (resolvCount == serialCount)
-                    {   // release extra ports
-                        for (SerialChannel sc : portPool)
-                        {
-                            sc.close();
-                            autoCloseables.remove(sc);
-                        }
-                        portPool = null;
-                    }
+                    resolvPorts();
                 }
             }
+        }
+    }
+    private void initialize() throws IOException
+    {
+        selector = new MultiProviderSelector();
+        autoCloseables.add(selector);
+        Builder builder = new SerialChannel.Builder("", SerialChannel.Speed.B4800)
+                .setBlocking(false);
+        for (String port : SerialChannel.getFreePorts())
+        {
+            SerialChannel sc = builder.setPort(port).get();
+            autoCloseables.add(sc);
+            portPool.add(sc);
+        }
+        if (portPool.isEmpty())
+        {
+            throw new IOException("no ports");
+        }
+
+        RouterType routerType = config.getRouterType();
+        proprietaryPrefix = routerType.getProprietaryPrefix();
+        Integer port = routerType.getTcpPort();
+        if (port != null)
+        {
+            tcpPort = port;
+        }
+
+        for (EndpointType et : config.getEndpoints())
+        {
+            Endpoint endpoint = getInstance(et);
+            if (endpoint instanceof SerialEndpoint)
+            {
+                serialCount++;
+            }
+            configureChannel(endpoint, selector, false);
+        }
+        if (serialCount == portPool.size())
+        {
+            canForce = true;
+        }
+    }
+
+    private void startSocketServer() throws IOException
+    {
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        autoCloseables.add(serverSocketChannel);
+        serverSocketChannel.configureBlocking(false);
+        serverSocketChannel.bind(new InetSocketAddress(tcpPort));
+        selector.register(serverSocketChannel, OP_ACCEPT);
+    }
+    
+    private void resolvPorts() throws IOException
+    {
+        for (SelectionKey sk : selector.keys())
+        {
+            DataSource dataSource = (DataSource) sk.attachment();
+            if (dataSource != null && (dataSource instanceof SerialEndpoint))
+            {
+                SerialEndpoint endpoint = (SerialEndpoint) dataSource;
+                if (!endpoint.resolving() && endpoint.failed())
+                {
+                    SerialChannel channel = (SerialChannel) sk.channel();
+                    assert (channel != null);
+                    portPool.add(channel);
+                    resolvPool.add(endpoint);
+                }
+            }
+        }
+        for (Endpoint endpoint : resolvPool)
+        {
+            configureChannel(endpoint, selector, canForce && serialCount-resolvCount==1);
+        }
+        resolvPool.clear();
+        if (resolvCount == serialCount)
+        {   
+            log.info("release extra ports");
+            for (SerialChannel sc : portPool)
+            {
+                sc.close();
+                log.fine("release: "+sc);
+            }
+            portPool = null;
+            resolvPool = null;
         }
     }
 
@@ -211,7 +257,7 @@ public class Router
             File configfile = new File(args[0]);
             RouterConfig config = new RouterConfig(configfile);
             Router router = new Router(config);
-            router.start();
+            router.run();
         }
         catch (Exception ex)
         {
@@ -250,6 +296,7 @@ public class Router
         }
         throw new IllegalArgumentException(endpointType+" unknown");
     }
+
     private class BroadcastNMEAEndpoint extends BroadcastEndpoint
     {
         public BroadcastNMEAEndpoint(BroadcastNMEAType broadcastNMEAType)
@@ -392,11 +439,11 @@ public class Router
                             case Match:
                                 for (String target : matcher.getLastMatched())
                                 {
-                                    Endpoint ep = targets.get(target);
-                                    if (ep != null)
+                                    DataSource ds = targets.get(target);
+                                    if (ds != null)
                                     {
                                         readBuffer.flip();
-                                        ep.write(readBuffer);
+                                        ds.write(readBuffer);
                                     }
                                 }
                                 return;
@@ -612,9 +659,8 @@ public class Router
         }
         
     }
-    private abstract class Endpoint
+    private abstract class Endpoint extends DataSource
     {
-        protected final String name;
         protected SelectableChannel channel;
         protected OrMatcher<String> matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
@@ -626,7 +672,7 @@ public class Router
 
         public Endpoint(EndpointType endpointType)
         {
-            this.name = endpointType.getName();
+            super(endpointType.getName());
             init(endpointType);
         }
         private void init(EndpointType endpointType)
@@ -669,13 +715,14 @@ public class Router
         {
             if (!ready)
             {
-                List<Endpoint> list = sources.get(this);
+                List<DataSource> list = sources.get(this);
                 isSingleSink = list != null && list.size() == 1;
                 ready = true;
             }
             return isSingleSink;
         }
 
+        @Override
         protected void read(SelectionKey sk) throws IOException
         {   
             Matcher.Status match = null;
@@ -709,23 +756,28 @@ public class Router
                 write(matcher, ring);
                 ring.mark();
             }
+            
+        }
+
+        @Override
+        public String toString()
+        {
+            return "Endpoint{" + "name=" + name + '}';
         }
 
         private void write(OrMatcher<String> matcher, RingByteBuffer ring) throws IOException
         {
             for (String target : matcher.getLastMatched())
             {
-                Endpoint ep = targets.get(target);
-                if (ep != null)
+                DataSource ds = targets.get(target);
+                if (ds != null)
                 {
-                    ep.write(ring);
+                    ds.write(ring);
                 }
             }
         }
         protected abstract SelectableChannel configureChannel(boolean force) throws IOException;
 
-        protected abstract void write(RingByteBuffer ring) throws IOException;
-        protected abstract void write(ByteBuffer bb) throws IOException;
         protected abstract boolean failed();
 
         protected abstract boolean resolving();
@@ -736,5 +788,208 @@ public class Router
             targets.put(name, this);
         }
 
+    }
+    private class Monitor extends DataSource
+    {
+        private final SocketChannel channel;
+        private final ByteBuffer bb = ByteBuffer.allocateDirect(4096);
+        private final AppendablePrinter out;
+        private final AppendableByteChannel outChannel;
+        private final RingByteBuffer ring = new RingByteBuffer(100, true);
+        private final OrMatcher<String> matcher = new OrMatcher<>();
+        private boolean mark = true;
+        private final String help;
+        private DataSource attached;
+
+        public Monitor(SocketChannel socketChannel) throws IOException
+        {
+            super(socketChannel.getRemoteAddress().toString());
+            outChannel = new AppendableByteChannel(socketChannel, 80, true);
+            out = new AppendablePrinter(outChannel, "\r\n");
+            this.channel = socketChannel;
+            out.println(Version.getVersion());
+            log.info("connection from "+name);
+            StringBuilder sb = new StringBuilder();
+            matcher.add(new SimpleMatcher("h*\n"), "help");
+            sb.append("h[elp] Prints help\r\n");
+            matcher.add(new SimpleMatcher("i*\n"), "info");
+            sb.append("i[nfo] prints router info\r\n");
+            matcher.add(new SimpleMatcher("s*\n"), "send");
+            sb.append("s[end] <target> ... Send a string to target\r\n");
+            matcher.add(new SimpleMatcher("a*\n"), "attach");
+            sb.append("a[ttach] <target> Attach target \r\n");
+            matcher.add(new SimpleMatcher("exit*\n"), "exit");
+            sb.append("exit Exits the session\r\n");
+            help = sb.toString();
+            outChannel.flush();
+        }
+        
+        @Override
+        protected void read(SelectionKey sk) throws IOException
+        {
+            if (attached != null)
+            {
+                int count = ring.read(channel);
+                if (count == -1)
+                {
+                    return;
+                }
+                while (ring.hasRemaining())
+                {
+                    ring.get(false);
+                }
+                attached.write(ring);
+            }
+            else
+            {
+                Matcher.Status match = null;
+                int count = ring.read(channel);
+                if (count == -1)
+                {
+                    return;
+                }
+                while (ring.hasRemaining())
+                {
+                    byte b = ring.get(mark);
+                    match = matcher.match(b);
+                    switch (match)
+                    {
+                        case Error:
+                            mark = true;
+                            break;
+                        case Ok:
+                        case WillMatch:
+                            mark = false;
+                            break;
+                        case Match:
+                            for (String act : matcher.getLastMatched())
+                            {
+                                if (!action(ring, act))
+                                {
+                                    return;
+                                }
+                            }
+                            mark = true;
+                            break;
+                    }
+                }
+            }
+        }
+
+        private boolean action(RingByteBuffer ring, String act) throws IOException
+        {
+            switch (act)
+            {
+                case "help":
+                    out.println(help);
+                    outChannel.flush();
+                    break;
+                case "info":
+                    info();
+                    break;
+                case "send":
+                    send(ring);
+                    break;
+                case "attach":
+                    attach(ring);
+                    break;
+                case "exit":
+                    channel.close();
+                    return false;
+                default:
+                    log.severe(act+" unknown");
+            }
+            return true;
+        }
+
+        private void info() throws IOException
+        {
+            for (Entry<String,DataSource> entry :targets.entrySet())
+            {
+                out.println(entry.getKey());
+            }
+            outChannel.flush();
+        }
+
+        @Override
+        protected void write(ByteBuffer readBuffer) throws IOException
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        protected void write(RingByteBuffer ring) throws IOException
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        private void send(RingByteBuffer ring) throws IOException
+        {
+            String cmd = ring.getString();
+            String[] arr = cmd.split("[ \t]+", 3);
+            if (arr.length < 3)
+            {
+                out.println("error: "+cmd);
+                outChannel.flush();
+                return;
+            }
+            String target = arr[1];
+            DataSource ds = targets.get(target);
+            if (ds == null)
+            {
+                out.println("no such target: "+target);
+                outChannel.flush();
+                return;
+            }
+            String msg = arr[2];
+            bb.clear();
+            bb.put(msg.getBytes());
+            if (!msg.endsWith("\n"))
+            {
+                bb.put((byte)'\n');
+            }
+            bb.flip();
+            ds.write(bb);
+            out.println("sent: "+msg);
+            outChannel.flush();
+        }
+
+        private void attach(RingByteBuffer ring) throws IOException
+        {
+            String cmd = ring.getString();
+            String[] arr = cmd.split("[ \t]+", 3);
+            if (arr.length < 2)
+            {
+                out.println("error: "+cmd);
+                outChannel.flush();
+                return;
+            }
+            String target = arr[1];
+            DataSource ds = targets.get(target);
+            if (ds == null)
+            {
+                out.println("no such target: "+target);
+                outChannel.flush();
+                return;
+            }
+            targets.
+        }
+
+    }
+    private abstract class DataSource
+    {
+        protected final String name;
+
+        public DataSource(String name)
+        {
+            this.name = name;
+        }
+        
+        protected abstract void read(SelectionKey sk) throws IOException;
+
+        protected abstract void write(ByteBuffer readBuffer) throws IOException;
+
+        protected abstract void write(RingByteBuffer ring) throws IOException;
+        
     }
 }
