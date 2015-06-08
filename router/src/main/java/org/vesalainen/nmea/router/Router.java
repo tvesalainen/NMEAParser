@@ -44,7 +44,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.MemoryHandler;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialChannel.Configuration;
@@ -71,6 +74,8 @@ import org.vesalainen.util.Matcher;
 import org.vesalainen.util.Matcher.Status;
 import org.vesalainen.util.OrMatcher;
 import org.vesalainen.util.SimpleMatcher;
+import org.vesalainen.util.logging.ChannelHandler;
+import org.vesalainen.util.logging.MinimalFormatter;
 
 /**
  *
@@ -78,6 +83,7 @@ import org.vesalainen.util.SimpleMatcher;
  */
 public class Router
 {
+    private static final String whiteSpace = "[ \r\n\t]+";
     private final RouterConfig config;
     private static final long ResolvTimeout = 5000;
     private static final int BufferSize = 1024;
@@ -93,16 +99,17 @@ public class Router
     private boolean canForce;
     private String proprietaryPrefix;
     private Integer tcpPort = 10110;
-    private static final Logger log = Logger.getGlobal();
+    private static Logger rootLog;
 
-    public Router(RouterConfig config)
+    public Router(RouterConfig config, Logger rootLog)
     {
         this.config = config;
+        this.rootLog = rootLog;
     }
     
     private void run() throws IOException
     {
-        log.info(Version.getVersion());
+        rootLog.info(Version.getVersion());
         
         try (AutoCloseableList ac = new AutoCloseableList<>())
         {
@@ -122,6 +129,7 @@ public class Router
                         if (selectionKey.isReadable())
                         {
                             DataSource dataSource = (DataSource) selectionKey.attachment();
+                            rootLog.log(Level.FINE, "read {0}", dataSource);
                             dataSource.read(selectionKey);
                         }
                         else
@@ -130,6 +138,7 @@ public class Router
                             {
                                 ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
                                 SocketChannel socketChannel = serverSocketChannel.accept();
+                                rootLog.log(Level.FINE, "accept {0}", socketChannel);
                                 autoCloseables.add(socketChannel);
                                 socketChannel.configureBlocking(false);
                                 Monitor monitor = new Monitor(socketChannel);
@@ -142,7 +151,7 @@ public class Router
                 {
                     if (selector.keys().isEmpty())
                     {
-                        log.warning("Couldn't resolv ports");
+                        rootLog.warning("Couldn't resolv ports");
                         return;
                     }
                 }
@@ -226,11 +235,11 @@ public class Router
         resolvPool.clear();
         if (resolvCount == serialCount)
         {   
-            log.info("release extra ports");
+            rootLog.info("release extra ports");
             for (SerialChannel sc : portPool)
             {
                 sc.close();
-                log.fine("release: "+sc);
+                rootLog.fine("release: "+sc);
             }
             portPool = null;
             resolvPool = null;
@@ -247,21 +256,29 @@ public class Router
     }
     public static void main(String... args)
     {
+        Logger log = Logger.getLogger(Router.class.getName());
+        log.setUseParentHandlers(false);
+        MinimalFormatter minimalFormatter = new MinimalFormatter();
+        ConsoleHandler consoleHandler = new ConsoleHandler();
+        consoleHandler.setFormatter(minimalFormatter);
+        MemoryHandler memoryHandler = new MemoryHandler(consoleHandler, 1000, Level.SEVERE);
+        memoryHandler.setFormatter(minimalFormatter);
+        log.addHandler(memoryHandler);
         try
         {
             if (args.length != 1)
             {
-                System.err.println("usage: ... <xml configuration file>");
+                log.severe("usage: ... <xml configuration file>");
                 System.exit(-1);
             }
             File configfile = new File(args[0]);
             RouterConfig config = new RouterConfig(configfile);
-            Router router = new Router(config);
+            Router router = new Router(config, log);
             router.run();
         }
         catch (Exception ex)
         {
-            ex.printStackTrace();
+            log.log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
     private Endpoint getInstance(EndpointType endpointType)
@@ -501,6 +518,12 @@ public class Router
             return readChannel;
         }
 
+        @Override
+        public String toString()
+        {
+            return "DatagramEndpoint{" + "name="+name+" socketAddress=" + socketAddress + '}';
+        }
+
     }
     private class SeaTalkEndpoint extends SerialEndpoint
     {
@@ -619,7 +642,7 @@ public class Router
                     iterator.remove();
                     serialChannel.configure(configuration);
                     resolvStarted = System.currentTimeMillis();
-                    log.info(serialChannel+" -> "+configuration);
+                    log.log(Level.INFO, "{0} -> {1}", new Object[]{serialChannel, configuration});
                     channel = serialChannel;
                     return serialChannel;
                 }
@@ -628,15 +651,27 @@ public class Router
         }
 
         @Override
-        protected void write(RingByteBuffer ring) throws IOException
+        protected void attachedWrite(RingByteBuffer ring) throws IOException
         {
             ring.write((GatheringByteChannel)channel);
         }
 
         @Override
+        protected void write(RingByteBuffer ring) throws IOException
+        {
+            if (attached == null)
+            {
+                ring.write((GatheringByteChannel)channel);
+            }
+        }
+
+        @Override
         protected void write(ByteBuffer bb) throws IOException
         {
-            ((WritableByteChannel)channel).write(bb);
+            if (attached == null)
+            {
+                ((WritableByteChannel)channel).write(bb);
+            }
         }
 
         @Override
@@ -656,6 +691,12 @@ public class Router
         {
             super.matched();
             resolvCount++;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "SerialEndpoint{" + "name="+name+" configuration=" + configuration + '}';
         }
         
     }
@@ -725,38 +766,50 @@ public class Router
         @Override
         protected void read(SelectionKey sk) throws IOException
         {   
-            Matcher.Status match = null;
-            int count = ring.read((ScatteringByteChannel)channel);
-            while (ring.hasRemaining())
+            if (attached != null)
             {
-                byte b = ring.get(mark);
-                match = matcher.match(b);
-                switch (match)
+                int count = ring.read((ScatteringByteChannel)channel);
+                if (count == -1)
                 {
-                    case Error:
-                        mark = true;
-                        break;
-                    case Ok:
-                    case WillMatch:
-                        mark = false;
-                        break;
-                    case Match:
-                        write(matcher, ring);
-                        if (failed)
-                        {
-                            matched();
-                        }
-                        failed = false;
-                        mark = true;
-                        break;
+                    return;
+                }
+                ring.getAll(false);
+                attached.write(ring);
+            }
+            else
+            {
+                Matcher.Status match = null;
+                int count = ring.read((ScatteringByteChannel)channel);
+                while (ring.hasRemaining())
+                {
+                    byte b = ring.get(mark);
+                    match = matcher.match(b);
+                    switch (match)
+                    {
+                        case Error:
+                            mark = true;
+                            break;
+                        case Ok:
+                        case WillMatch:
+                            mark = false;
+                            break;
+                        case Match:
+                            write(matcher, ring);
+                            if (failed)
+                            {
+                                matched();
+                            }
+                            failed = false;
+                            mark = true;
+                            break;
+                    }
+                }
+                if (match == Status.WillMatch && isSingleSink())
+                {
+                    write(matcher, ring);
+                    ring.mark();
                 }
             }
-            if (match == Status.WillMatch && isSingleSink())
-            {
-                write(matcher, ring);
-                ring.mark();
-            }
-            
         }
 
         @Override
@@ -784,7 +837,7 @@ public class Router
 
         protected void matched()
         {
-            log.info("matched="+name);
+            log.log(Level.INFO, "matched={0}", name);
             targets.put(name, this);
         }
 
@@ -797,9 +850,12 @@ public class Router
         private final AppendableByteChannel outChannel;
         private final RingByteBuffer ring = new RingByteBuffer(100, true);
         private final OrMatcher<String> matcher = new OrMatcher<>();
+        private final OrMatcher<String> nmeaMatcher = new OrMatcher<>();
         private boolean mark = true;
         private final String help;
-        private DataSource attached;
+        private ChannelHandler logHandler;
+        private Level safeLevel;
+        private Logger safeLogger;
 
         public Monitor(SocketChannel socketChannel) throws IOException
         {
@@ -808,7 +864,7 @@ public class Router
             out = new AppendablePrinter(outChannel, "\r\n");
             this.channel = socketChannel;
             out.println(Version.getVersion());
-            log.info("connection from "+name);
+            
             StringBuilder sb = new StringBuilder();
             matcher.add(new SimpleMatcher("h*\n"), "help");
             sb.append("h[elp] Prints help\r\n");
@@ -818,10 +874,14 @@ public class Router
             sb.append("s[end] <target> ... Send a string to target\r\n");
             matcher.add(new SimpleMatcher("a*\n"), "attach");
             sb.append("a[ttach] <target> Attach target \r\n");
+            matcher.add(new SimpleMatcher("l*\n"), "log");
+            sb.append("l[og] [target] [level] Log\r\n");
             matcher.add(new SimpleMatcher("exit*\n"), "exit");
             sb.append("exit Exits the session\r\n");
             help = sb.toString();
             outChannel.flush();
+            
+            nmeaMatcher.add(new SimpleMatcher("$*\n"));
         }
         
         @Override
@@ -836,9 +896,24 @@ public class Router
                 }
                 while (ring.hasRemaining())
                 {
-                    ring.get(false);
+                    byte b = ring.get(mark);
+                    switch (nmeaMatcher.match(b))
+                    {
+                        case Error:
+                            mark = true;
+                            detach();
+                            ring.getAll(true);
+                            break;
+                        case Ok:
+                        case WillMatch:
+                            mark = false;
+                            break;
+                        case Match:
+                            mark = true;
+                            attachedWrite(ring);
+                            break;
+                    }
                 }
-                attached.write(ring);
             }
             else
             {
@@ -856,6 +931,7 @@ public class Router
                     {
                         case Error:
                             mark = true;
+                            reset();
                             break;
                         case Ok:
                         case WillMatch:
@@ -878,76 +954,88 @@ public class Router
 
         private boolean action(RingByteBuffer ring, String act) throws IOException
         {
-            switch (act)
+            try
             {
-                case "help":
-                    out.println(help);
-                    outChannel.flush();
-                    break;
-                case "info":
-                    info();
-                    break;
-                case "send":
-                    send(ring);
-                    break;
-                case "attach":
-                    attach(ring);
-                    break;
-                case "exit":
-                    channel.close();
-                    return false;
-                default:
-                    log.severe(act+" unknown");
+                switch (act)
+                {
+                    case "help":
+                        out.println(help);
+                        outChannel.flush();
+                        break;
+                    case "info":
+                        info();
+                        break;
+                    case "send":
+                        send(ring);
+                        break;
+                    case "attach":
+                        attach(ring);
+                        break;
+                    case "log":
+                        log(ring);
+                        break;
+                    case "exit":
+                        channel.close();
+                        return false;
+                    default:
+                        log.log(Level.SEVERE, "{0} unknown", act);
+                }
+                return true;
             }
-            return true;
+            catch (BadInputException ex)
+            {
+                out.println(ex.getMessage());
+                outChannel.flush();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.log(Level.SEVERE, ex.getMessage(), ex);
+                channel.close();
+                return false;
+            }
         }
 
         private void info() throws IOException
         {
             for (Entry<String,DataSource> entry :targets.entrySet())
             {
-                out.println(entry.getKey());
+                out.println(entry.getValue());
             }
             outChannel.flush();
         }
 
         @Override
-        protected void write(ByteBuffer readBuffer) throws IOException
+        protected void write(ByteBuffer src) throws IOException
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            channel.write(src);
         }
 
         @Override
         protected void write(RingByteBuffer ring) throws IOException
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            ring.write(channel);
         }
 
         private void send(RingByteBuffer ring) throws IOException
         {
             String cmd = ring.getString();
-            String[] arr = cmd.split("[ \t]+", 3);
+            String[] arr = cmd.split(whiteSpace, 3);
             if (arr.length < 3)
             {
-                out.println("error: "+cmd);
-                outChannel.flush();
-                return;
+                throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
             DataSource ds = targets.get(target);
             if (ds == null)
             {
-                out.println("no such target: "+target);
-                outChannel.flush();
-                return;
+                throw new BadInputException("no such target: "+target);
             }
             String msg = arr[2];
             bb.clear();
             bb.put(msg.getBytes());
-            if (!msg.endsWith("\n"))
-            {
-                bb.put((byte)'\n');
-            }
+            bb.put((byte)'\r');
+            bb.put((byte)'\n');
             bb.flip();
             ds.write(bb);
             out.println("sent: "+msg);
@@ -957,32 +1045,100 @@ public class Router
         private void attach(RingByteBuffer ring) throws IOException
         {
             String cmd = ring.getString();
-            String[] arr = cmd.split("[ \t]+", 3);
+            String[] arr = cmd.split(whiteSpace, 3);
             if (arr.length < 2)
             {
-                out.println("error: "+cmd);
-                outChannel.flush();
-                return;
+                throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
             DataSource ds = targets.get(target);
             if (ds == null)
             {
-                out.println("no such target: "+target);
-                outChannel.flush();
-                return;
+                throw new BadInputException("no such target: "+target);
             }
-            targets.
+            nmeaMatcher.clear();
+            mark = true;
+            ds.attach(this);
+            attached = ds;
         }
 
+        @Override
+        protected void detach()
+        {
+            attached.detach();
+            super.detach();
+        }
+
+        private void log(RingByteBuffer ring)
+        {
+            String cmd = ring.getString();
+            String[] arr = cmd.split(whiteSpace);
+            int l = arr.length;
+            Level level = level(arr[l-1]);
+            if (level != null)
+            {
+                l--;
+            }
+            Logger lg;
+            switch (l)
+            {
+                case 1:
+                    lg = rootLog;
+                    break;
+                case 2:
+                    DataSource ds = targets.get(arr[1]);
+                    if (ds == null)
+                    {
+                        throw new BadInputException("target: "+arr[1]+" not found");
+                    }
+                    lg = ds.log;
+                    break;
+                default:
+                    throw new BadInputException("error : "+cmd);
+            }
+            safeLogger = lg;
+            safeLevel = lg.getLevel();
+            if (level != null)
+            {
+                lg.setLevel(level);
+            }
+            logHandler = new ChannelHandler(channel);
+            lg.addHandler(logHandler);
+        }
+        private Level level(String s)
+        {
+            try
+            {
+                return Level.parse(s);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                return null;
+            }
+        }
+
+        private void reset()
+        {
+            if (logHandler != null)
+            {
+                safeLogger.removeHandler(logHandler);
+                logHandler = null;
+                safeLogger.setLevel(safeLevel);
+                safeLogger = null;
+                safeLevel = null;
+            }
+        }
     }
     private abstract class DataSource
     {
         protected final String name;
+        protected DataSource attached;
+        protected Logger log;
 
         public DataSource(String name)
         {
             this.name = name;
+            log = Logger.getLogger(this.getClass().getName().replace('$', '.'));
         }
         
         protected abstract void read(SelectionKey sk) throws IOException;
@@ -990,6 +1146,28 @@ public class Router
         protected abstract void write(ByteBuffer readBuffer) throws IOException;
 
         protected abstract void write(RingByteBuffer ring) throws IOException;
+
+        protected void attachedWrite(RingByteBuffer ring) throws IOException
+        {
+            
+        }
+
+        protected void attach(DataSource ds)
+        {
+            if (attached != null)
+            {
+                throw new IllegalArgumentException(name+" is already attached");
+            }
+            attached = ds;
+        }
+        protected void detach()
+        {
+            attached = null;
+        }
+        protected boolean isAttached()
+        {
+            return attached != null;
+        }
         
     }
 }
