@@ -25,14 +25,17 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.WritableByteChannel;
 import java.nio.channels.spi.SelectorProvider;
+import java.util.logging.Logger;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialChannel.Configuration;
+import org.vesalainen.nio.RingBuffer;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
 import org.vesalainen.util.OrMatcher;
 import org.vesalainen.util.SimpleMatcher;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -42,7 +45,6 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
 {
     private final SerialChannel channel;
     private final RingByteBuffer readRing = new RingByteBuffer(100, true);
-    private final RingByteBuffer writeRing = new RingByteBuffer(100, true);
     private final ByteBufferOutputStream out = new ByteBufferOutputStream();
     private final SeaTalkMatcher matcher = new SeaTalkMatcher();
     private final SeaTalk2NMEA parser = SeaTalk2NMEA.newInstance();
@@ -52,6 +54,7 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
     private int lamp = -1;
     private String proprietaryPrefix;
     private final OrMatcher nmeaMatcher = new OrMatcher();
+    private final JavaLogging log = new JavaLogging();
 
     public SeaTalkChannel(String port) throws IOException
     {
@@ -59,11 +62,13 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
                 .setParity(SerialChannel.Parity.SPACE)
                 .setReplaceError(true);
         this.channel = builder.get();
+        log.setLogger(Logger.getLogger(this.getClass().getName()));
     }
 
     public SeaTalkChannel(SerialChannel channel)
     {
         this.channel = channel;
+        log.setLogger(Logger.getLogger(this.getClass().getName()));
     }
 
     public void setProprietaryPrefix(String proprietaryPrefix)
@@ -153,6 +158,7 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
                     mark = false;
                     break;
                 case Error:
+                    log.finest("drop: '%1$c' %1$d 0x%1$02X %2$s", b, (RingBuffer)readRing);
                     mark = true;
                     break;
                 case Match:
@@ -160,6 +166,7 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
                     {
                         write();
                     }
+                    log.finer("read: %s", readRing);
                     parser.parse(readRing, out);
                     mark = true;
                     matched = true;

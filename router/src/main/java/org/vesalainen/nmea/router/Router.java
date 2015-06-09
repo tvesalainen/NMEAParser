@@ -268,7 +268,7 @@ public class Router extends JavaLogging
             System.err.println("usage: ... <xml configuration file> [pattern|host port]");
             System.exit(-1);
         }
-        Logger log = Logger.getLogger(Router.class.getName());
+        Logger log = Logger.getLogger(Router.class.getPackage().getName());
         log.setUseParentHandlers(false);
         Handler handler = null;
         try
