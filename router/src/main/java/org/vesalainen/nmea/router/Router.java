@@ -45,13 +45,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.MemoryHandler;
+import java.util.logging.SocketHandler;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialChannel.Configuration;
 import org.vesalainen.io.AppendablePrinter;
+import org.vesalainen.nio.RingBuffer;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.AppendableByteChannel;
 import org.vesalainen.nio.channels.MultiProviderSelector;
@@ -75,13 +79,14 @@ import org.vesalainen.util.Matcher.Status;
 import org.vesalainen.util.OrMatcher;
 import org.vesalainen.util.SimpleMatcher;
 import org.vesalainen.util.logging.ChannelHandler;
+import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.logging.MinimalFormatter;
 
 /**
  *
  * @author tkv
  */
-public class Router
+public class Router extends JavaLogging
 {
     private static final String whiteSpace = "[ \r\n\t]+";
     private final RouterConfig config;
@@ -98,18 +103,17 @@ public class Router
     private int resolvCount = 0;
     private boolean canForce;
     private String proprietaryPrefix;
-    private Integer tcpPort = 10110;
-    private static Logger rootLog;
+    private int ctrlTcpPort;
 
     public Router(RouterConfig config, Logger rootLog)
     {
+        super(rootLog);
         this.config = config;
-        this.rootLog = rootLog;
     }
     
     private void run() throws IOException
     {
-        rootLog.info(Version.getVersion());
+        info(Version.getVersion());
         
         try (AutoCloseableList ac = new AutoCloseableList<>())
         {
@@ -129,7 +133,7 @@ public class Router
                         if (selectionKey.isReadable())
                         {
                             DataSource dataSource = (DataSource) selectionKey.attachment();
-                            rootLog.log(Level.FINE, "read {0}", dataSource);
+                            fine("read %s", dataSource);
                             dataSource.read(selectionKey);
                         }
                         else
@@ -138,7 +142,7 @@ public class Router
                             {
                                 ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
                                 SocketChannel socketChannel = serverSocketChannel.accept();
-                                rootLog.log(Level.FINE, "accept {0}", socketChannel);
+                                fine("accept %s", socketChannel);
                                 autoCloseables.add(socketChannel);
                                 socketChannel.configureBlocking(false);
                                 Monitor monitor = new Monitor(socketChannel);
@@ -151,7 +155,7 @@ public class Router
                 {
                     if (selector.keys().isEmpty())
                     {
-                        rootLog.warning("Couldn't resolv ports");
+                        warning("Couldn't resolv ports");
                         return;
                     }
                 }
@@ -181,10 +185,10 @@ public class Router
 
         RouterType routerType = config.getRouterType();
         proprietaryPrefix = routerType.getProprietaryPrefix();
-        Integer port = routerType.getTcpPort();
+        Integer port = routerType.getCtrlTcpPort();
         if (port != null)
         {
-            tcpPort = port;
+            ctrlTcpPort = port;
         }
 
         for (EndpointType et : config.getEndpoints())
@@ -204,11 +208,14 @@ public class Router
 
     private void startSocketServer() throws IOException
     {
-        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-        autoCloseables.add(serverSocketChannel);
-        serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.bind(new InetSocketAddress(tcpPort));
-        selector.register(serverSocketChannel, OP_ACCEPT);
+        if (ctrlTcpPort > 0)
+        {
+            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+            autoCloseables.add(serverSocketChannel);
+            serverSocketChannel.configureBlocking(false);
+            serverSocketChannel.bind(new InetSocketAddress(ctrlTcpPort));
+            selector.register(serverSocketChannel, OP_ACCEPT);
+        }
     }
     
     private void resolvPorts() throws IOException
@@ -235,11 +242,11 @@ public class Router
         resolvPool.clear();
         if (resolvCount == serialCount)
         {   
-            rootLog.info("release extra ports");
+            info("release extra ports");
             for (SerialChannel sc : portPool)
             {
                 sc.close();
-                rootLog.fine("release: "+sc);
+                fine("release: "+sc);
             }
             portPool = null;
             resolvPool = null;
@@ -256,29 +263,61 @@ public class Router
     }
     public static void main(String... args)
     {
+        if (args.length < 1)
+        {
+            System.err.println("usage: ... <xml configuration file> [pattern|host port]");
+            System.exit(-1);
+        }
         Logger log = Logger.getLogger(Router.class.getName());
         log.setUseParentHandlers(false);
-        MinimalFormatter minimalFormatter = new MinimalFormatter();
-        ConsoleHandler consoleHandler = new ConsoleHandler();
-        consoleHandler.setFormatter(minimalFormatter);
-        MemoryHandler memoryHandler = new MemoryHandler(consoleHandler, 1000, Level.SEVERE);
-        memoryHandler.setFormatter(minimalFormatter);
-        log.addHandler(memoryHandler);
+        Handler handler = null;
         try
         {
-            if (args.length != 1)
+            switch (args.length)
             {
-                log.severe("usage: ... <xml configuration file>");
-                System.exit(-1);
+                case 1:
+                    handler = new ConsoleHandler();
+                    break;
+                case 2:
+                    handler = new FileHandler(args[1], 4096000, 1024, true);
+                    break;
+                case 3:
+                    handler = new SocketHandler(args[1], Integer.parseInt(args[2]));
+                    break;
             }
-            File configfile = new File(args[0]);
-            RouterConfig config = new RouterConfig(configfile);
-            Router router = new Router(config, log);
-            router.run();
         }
-        catch (Exception ex)
+        catch (IOException | SecurityException ex)
         {
-            log.log(Level.SEVERE, ex.getMessage(), ex);
+            Logger.getLogger(Router.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        MinimalFormatter minimalFormatter = new MinimalFormatter();
+        handler.setFormatter(minimalFormatter);
+        MemoryHandler memoryHandler = new MemoryHandler(handler, 256, Level.SEVERE);
+        memoryHandler.setFormatter(minimalFormatter);
+        log.addHandler(memoryHandler);
+        while (true)
+        {
+            try
+            {
+                File configfile = new File(args[0]);
+                RouterConfig config = new RouterConfig(configfile);
+                Router router = new Router(config, log);
+                router.run();
+            }
+            catch (RestartException ex)
+            {
+                log.info("restarted by "+ex.getMessage());
+            }
+            catch (ShutdownException ex)
+            {
+                log.info("shutdown by "+ex.getMessage());
+                return;
+            }
+            catch (Exception ex)
+            {
+                log.log(Level.SEVERE, ex.getMessage(), ex);
+                return;
+            }
         }
     }
     private Endpoint getInstance(EndpointType endpointType)
@@ -442,6 +481,8 @@ public class Router
                 if (!localAddresses.contains(receiveAddr.getAddress()))
                 {
                     readBuffer.flip();
+                    readCount++;
+                    readBytes += readBuffer.remaining();
                     matcher.clear();
                     while (readBuffer.hasRemaining())
                     {
@@ -473,13 +514,17 @@ public class Router
         @Override
         protected void write(RingByteBuffer ring) throws IOException
         {
-            ring.write(writeChannel);
+            int cnt = ring.write(writeChannel);
+            writeCount++;
+            writeBytes += cnt;
         }
 
         @Override
         protected void write(ByteBuffer bb) throws IOException
         {
-            writeChannel.write(bb);
+            int cnt = writeChannel.write(bb);
+            writeCount++;
+            writeBytes += cnt;
         }
         
         @Override
@@ -587,6 +632,7 @@ public class Router
         protected Configuration configuration;
         private long resolvStarted;
         protected Set<SerialChannel> triedPorts = new HashSet<>();
+        protected String port;
         
         public SerialEndpoint(SerialType serialType)
         {
@@ -642,8 +688,9 @@ public class Router
                     iterator.remove();
                     serialChannel.configure(configuration);
                     resolvStarted = System.currentTimeMillis();
-                    log.log(Level.INFO, "{0} -> {1}", new Object[]{serialChannel, configuration});
+                    info("%s -> %s", serialChannel, configuration);
                     channel = serialChannel;
+                    port = serialChannel.getPort();
                     return serialChannel;
                 }
             }
@@ -653,7 +700,9 @@ public class Router
         @Override
         protected void attachedWrite(RingByteBuffer ring) throws IOException
         {
-            ring.write((GatheringByteChannel)channel);
+            int cnt = ring.write((GatheringByteChannel)channel);
+            writeCount++;
+            writeBytes += cnt;
         }
 
         @Override
@@ -661,7 +710,9 @@ public class Router
         {
             if (attached == null)
             {
-                ring.write((GatheringByteChannel)channel);
+                int cnt = ring.write((GatheringByteChannel)channel);
+                writeCount++;
+                writeBytes += cnt;
             }
         }
 
@@ -670,7 +721,9 @@ public class Router
         {
             if (attached == null)
             {
-                ((WritableByteChannel)channel).write(bb);
+                int cnt = ((WritableByteChannel)channel).write(bb);
+                writeCount++;
+                writeBytes += cnt;
             }
         }
 
@@ -696,7 +749,7 @@ public class Router
         @Override
         public String toString()
         {
-            return "SerialEndpoint{" + "name="+name+" configuration=" + configuration + '}';
+            return "SerialEndpoint{" + "name="+name+" port="+port+" configuration=" + configuration + '}';
         }
         
     }
@@ -766,20 +819,28 @@ public class Router
         @Override
         protected void read(SelectionKey sk) throws IOException
         {   
+            int count = ring.read((ScatteringByteChannel)channel);
+            if (count == -1)
+            {
+                return;
+            }
+            readCount++;
+            readBytes += count;
             if (attached != null)
             {
-                int count = ring.read((ScatteringByteChannel)channel);
-                if (count == -1)
-                {
-                    return;
-                }
                 ring.getAll(false);
+                /*
+                while (ring.hasRemaining())
+                {
+                    ring.get(false);
+                }
+                        */
                 attached.write(ring);
+                ring.mark();
             }
             else
             {
                 Matcher.Status match = null;
-                int count = ring.read((ScatteringByteChannel)channel);
                 while (ring.hasRemaining())
                 {
                     byte b = ring.get(mark);
@@ -787,6 +848,7 @@ public class Router
                     switch (match)
                     {
                         case Error:
+                            finest("drop: '%1$c' %1$d 0x%1$02X %2$s", b, (RingBuffer)ring);
                             mark = true;
                             break;
                         case Ok:
@@ -794,6 +856,7 @@ public class Router
                             mark = false;
                             break;
                         case Match:
+                            finer("read: %s", ring);
                             write(matcher, ring);
                             if (failed)
                             {
@@ -806,6 +869,7 @@ public class Router
                 }
                 if (match == Status.WillMatch && isSingleSink())
                 {
+                    finer("partial: %s", ring);
                     write(matcher, ring);
                     ring.mark();
                 }
@@ -837,7 +901,7 @@ public class Router
 
         protected void matched()
         {
-            log.log(Level.INFO, "matched={0}", name);
+            log(Level.INFO, "matched=%s", name);
             targets.put(name, this);
         }
 
@@ -870,14 +934,20 @@ public class Router
             sb.append("h[elp] Prints help\r\n");
             matcher.add(new SimpleMatcher("i*\n"), "info");
             sb.append("i[nfo] prints router info\r\n");
-            matcher.add(new SimpleMatcher("s*\n"), "send");
-            sb.append("s[end] <target> ... Send a string to target\r\n");
+            matcher.add(new SimpleMatcher("se*\n"), "send");
+            sb.append("se[nd] <target> ... Send a string to target\r\n");
             matcher.add(new SimpleMatcher("a*\n"), "attach");
             sb.append("a[ttach] <target> Attach target \r\n");
             matcher.add(new SimpleMatcher("l*\n"), "log");
             sb.append("l[og] [target] [level] Log\r\n");
+            matcher.add(new SimpleMatcher("st*\n"), "statistics");
+            sb.append("st[atistics] Print statistics\r\n");
             matcher.add(new SimpleMatcher("exit*\n"), "exit");
             sb.append("exit Exits the session\r\n");
+            matcher.add(new SimpleMatcher("shutdown*\n"), "shutdown");
+            sb.append("shutdown Shutdown the router\r\n");
+            matcher.add(new SimpleMatcher("restart*\n"), "restart");
+            sb.append("restart Restarts the router\r\n");
             help = sb.toString();
             outChannel.flush();
             
@@ -887,13 +957,15 @@ public class Router
         @Override
         protected void read(SelectionKey sk) throws IOException
         {
+            int count = ring.read(channel);
+            if (count == -1)
+            {
+                return;
+            }
+            readCount++;
+            readBytes += count;
             if (attached != null)
             {
-                int count = ring.read(channel);
-                if (count == -1)
-                {
-                    return;
-                }
                 while (ring.hasRemaining())
                 {
                     byte b = ring.get(mark);
@@ -918,11 +990,6 @@ public class Router
             else
             {
                 Matcher.Status match = null;
-                int count = ring.read(channel);
-                if (count == -1)
-                {
-                    return;
-                }
                 while (ring.hasRemaining())
                 {
                     byte b = ring.get(mark);
@@ -974,11 +1041,18 @@ public class Router
                     case "log":
                         log(ring);
                         break;
+                    case "statistics":
+                        statistics();
+                        break;
                     case "exit":
                         channel.close();
                         return false;
+                    case "shutdown":
+                        throw new ShutdownException(name);
+                    case "restart":
+                        throw new RestartException(name);
                     default:
-                        log.log(Level.SEVERE, "{0} unknown", act);
+                        log(Level.SEVERE, "%s unknown", act);
                 }
                 return true;
             }
@@ -988,9 +1062,13 @@ public class Router
                 outChannel.flush();
                 return true;
             }
+            catch (ShutdownException | RestartException ex)
+            {
+                throw ex;
+            }
             catch (Exception ex)
             {
-                log.log(Level.SEVERE, ex.getMessage(), ex);
+                log(Level.SEVERE, ex, ex.getMessage());
                 channel.close();
                 return false;
             }
@@ -1005,16 +1083,48 @@ public class Router
             outChannel.flush();
         }
 
+        private void statistics() throws IOException
+        {
+            out.println("Name\tReads\tBytes\tMean\tWrites\tBytes\tMean");
+            for (Entry<String,DataSource> entry :targets.entrySet())
+            {
+                DataSource d = entry.getValue();
+                String readMean = "N/A";
+                if (d.readCount > 0)
+                {
+                    readMean = String.valueOf(d.readBytes/d.readCount);
+                }
+                String writeMean = "N/A";
+                if (d.writeCount > 0)
+                {
+                    writeMean = String.valueOf(d.writeBytes/d.writeCount);
+                }
+                out.println(
+                        entry.getKey()+"\t"+
+                        d.readCount+"\t"+
+                        d.readBytes+"\t"+
+                        readMean+"\t"+
+                        d.writeCount+"\t"+
+                        d.writeBytes+"\t"+
+                        writeMean+"\t"
+                );
+            }
+            outChannel.flush();
+        }
         @Override
         protected void write(ByteBuffer src) throws IOException
         {
-            channel.write(src);
+            int cnt = channel.write(src);
+            writeCount++;
+            writeBytes += cnt;
         }
 
         @Override
         protected void write(RingByteBuffer ring) throws IOException
         {
-            ring.write(channel);
+            int cnt = ring.write(channel);
+            writeCount++;
+            writeBytes += cnt;
         }
 
         private void send(RingByteBuffer ring) throws IOException
@@ -1083,7 +1193,7 @@ public class Router
             switch (l)
             {
                 case 1:
-                    lg = rootLog;
+                    lg = Router.this.getLogger();
                     break;
                 case 2:
                     DataSource ds = targets.get(arr[1]);
@@ -1091,7 +1201,7 @@ public class Router
                     {
                         throw new BadInputException("target: "+arr[1]+" not found");
                     }
-                    lg = ds.log;
+                    lg = ds.getLogger();
                     break;
                 default:
                     throw new BadInputException("error : "+cmd);
@@ -1109,7 +1219,7 @@ public class Router
         {
             try
             {
-                return Level.parse(s);
+                return Level.parse(s.toUpperCase());
             }
             catch (IllegalArgumentException ex)
             {
@@ -1128,17 +1238,21 @@ public class Router
                 safeLevel = null;
             }
         }
+
     }
-    private abstract class DataSource
+    private abstract class DataSource extends JavaLogging
     {
         protected final String name;
         protected DataSource attached;
-        protected Logger log;
+        protected long readCount;
+        protected long readBytes;
+        protected long writeCount;
+        protected long writeBytes;
 
         public DataSource(String name)
         {
             this.name = name;
-            log = Logger.getLogger(this.getClass().getName().replace('$', '.'));
+            setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.')));
         }
         
         protected abstract void read(SelectionKey sk) throws IOException;

@@ -13,7 +13,7 @@
             <xs:element name="serial" type="serialType"/>
         </xs:choice>
         <xs:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xs:attribute>
-        <xs:attribute name="tcpPort" type="portType"/>
+        <xs:attribute name="ctrlTcpPort" type="portType"/>
     </xs:complexType>
     <xs:complexType name="broadcastNMEAType">
         <xs:complexContent>

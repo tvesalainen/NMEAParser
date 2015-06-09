@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<router proprietaryPrefix="IRS">
+<router proprietaryPrefix="IRS" ctrlTcpPort="10110">
     <seatalk name="SeaTalk">
         <route prefix="$??MTW" target="Net"/>
         <route prefix="$??DBT" target="Net"/>
