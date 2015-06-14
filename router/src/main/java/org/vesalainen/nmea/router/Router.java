@@ -946,6 +946,8 @@ public class Router extends JavaLogging
             sb.append("se[nd] <target> ... Send a string to target\r\n");
             matcher.add(new SimpleMatcher("a*\n"), "attach");
             sb.append("a[ttach] <target> Attach target \r\n");
+            matcher.add(new SimpleMatcher("kill*\n"), "kill");
+            sb.append("kill <target> Kill target \r\n");
             matcher.add(new SimpleMatcher("l*\n"), "log");
             sb.append("l[og] [target] [level] Log\r\n");
             matcher.add(new SimpleMatcher("st*\n"), "statistics");
@@ -1045,6 +1047,9 @@ public class Router extends JavaLogging
                         break;
                     case "attach":
                         attach(ring);
+                        break;
+                    case "kill":
+                        kill(ring);
                         break;
                     case "log":
                         log(ring);
@@ -1178,6 +1183,30 @@ public class Router extends JavaLogging
             mark = true;
             ds.attach(this);
             attached = ds;
+        }
+
+        private void kill(RingByteBuffer ring)
+        {
+            String cmd = ring.getString();
+            String[] arr = cmd.split(whiteSpace, 3);
+            if (arr.length < 2)
+            {
+                throw new BadInputException("error: "+cmd);
+            }
+            String target = arr[1];
+            DataSource ds = targets.get(target);
+            if (ds == null)
+            {
+                throw new BadInputException("no such target: "+target);
+            }
+            for (SelectionKey sk : selector.keys())
+            {
+                if (ds.equals(sk.attachment()))
+                {
+                    sk.cancel();
+                    break;
+                }
+            }
         }
 
         @Override
