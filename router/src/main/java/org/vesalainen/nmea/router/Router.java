@@ -474,6 +474,7 @@ public class Router extends JavaLogging
             {
                 readBuffer.clear();
                 InetSocketAddress receiveAddr = (InetSocketAddress) readChannel.receive(readBuffer);
+                finest("receive-from="+receiveAddr);
                 if (receiveAddr == null)
                 {
                     return;
@@ -684,10 +685,17 @@ public class Router extends JavaLogging
                 SerialChannel serialChannel = iterator.next();
                 if (!triedPorts.contains(serialChannel) || force)
                 {
-                    triedPorts.add(serialChannel);
                     iterator.remove();
                     serialChannel.configure(configuration);
-                    resolvStarted = System.currentTimeMillis();
+                    if (force)
+                    {
+                        matched();
+                    }
+                    else
+                    {
+                        triedPorts.add(serialChannel);
+                        resolvStarted = System.currentTimeMillis();
+                    }
                     info("%s -> %s", serialChannel, configuration);
                     channel = serialChannel;
                     port = serialChannel.getPort();
@@ -862,7 +870,6 @@ public class Router extends JavaLogging
                             {
                                 matched();
                             }
-                            failed = false;
                             mark = true;
                             break;
                     }
@@ -901,6 +908,7 @@ public class Router extends JavaLogging
 
         protected void matched()
         {
+            failed = false;
             log(Level.INFO, "matched=%s", name);
             targets.put(name, this);
         }
