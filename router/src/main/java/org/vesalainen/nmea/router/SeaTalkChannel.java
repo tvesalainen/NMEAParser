@@ -94,6 +94,7 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
                     break;
                 case Match:
                     lamp = src.get(11+proprietaryPrefix.length())-'0';
+                    log.finer("lamp=%d", lamp);
                     return res;
             }
         }
@@ -136,6 +137,7 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
             }
             writeBuffer.flip();
             channel.write(writeBuffer);
+            log.finer("wrote lamp=%s", lamp);
             lamp = -1;
         }
     }
@@ -143,7 +145,9 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
     private int read() throws IOException
     {
         int remaining = out.getRemaining();
+        log.finest("out remaining = %d", remaining);
         readRing.read(channel);
+        log.finest("ring remaining = %d", readRing.remaining());
         boolean canWrite = false;
         if (!readRing.isFull())
         {
@@ -158,7 +162,7 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
                     mark = false;
                     break;
                 case Error:
-                    log.finest("drop: '%1$c' %1$d 0x%1$02X %2$s", b, (RingBuffer)readRing);
+                    log.finest("drop: '%1$c' %1$d 0x%1$02X %2$s", b & 0xff, (RingBuffer)readRing);
                     mark = true;
                     break;
                 case Match:
@@ -173,7 +177,9 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
                     break;
             }
         }
-        return remaining - out.getRemaining();
+        int res = remaining - out.getRemaining();
+        log.finest("read= %d", res);
+        return res;
     }
     @Override
     public int read(ByteBuffer dst) throws IOException
@@ -223,12 +229,14 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
     @Override
     public SelectionKey register(Selector sel, int ops, Object att) throws ClosedChannelException
     {
+        log.info("register(%s)", sel);
         return channel.register(sel, ops, att);
     }
 
     @Override
     public SelectableChannel configureBlocking(boolean block) throws IOException
     {
+        log.info("configureBlocking(%b)", block);
         return channel.configureBlocking(block);
     }
 
@@ -247,6 +255,7 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
     @Override
     protected void implCloseChannel() throws IOException
     {
+        log.info("close");
         channel.close();
     }
 

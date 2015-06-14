@@ -153,6 +153,7 @@ public class Router extends JavaLogging
                 }
                 else
                 {
+                    info("no data in %d millis", ResolvTimeout);
                     if (selector.keys().isEmpty())
                     {
                         warning("Couldn't resolv ports");
@@ -316,7 +317,7 @@ public class Router extends JavaLogging
             catch (Exception ex)
             {
                 log.log(Level.SEVERE, ex.getMessage(), ex);
-                return;
+                log.info("recovering...");
             }
         }
     }
@@ -856,7 +857,7 @@ public class Router extends JavaLogging
                     switch (match)
                     {
                         case Error:
-                            finest("drop: '%1$c' %1$d 0x%1$02X %2$s", b, (RingBuffer)ring);
+                            finest("drop: '%1$c' %1$d 0x%1$02X %2$s", b & 0xff, (RingBuffer)ring);
                             mark = true;
                             break;
                         case Ok:
@@ -928,6 +929,7 @@ public class Router extends JavaLogging
         private ChannelHandler logHandler;
         private Level safeLevel;
         private Logger safeLogger;
+        private List<String> loggerNames;
 
         public Monitor(SocketChannel socketChannel) throws IOException
         {
@@ -936,30 +938,32 @@ public class Router extends JavaLogging
             out = new AppendablePrinter(outChannel, "\r\n");
             this.channel = socketChannel;
             out.println(Version.getVersion());
+            outChannel.flush();
             
             StringBuilder sb = new StringBuilder();
             matcher.add(new SimpleMatcher("h*\n"), "help");
-            sb.append("h[elp] Prints help\r\n");
+            sb.append("h[elp] - Prints help\r\n");
             matcher.add(new SimpleMatcher("i*\n"), "info");
-            sb.append("i[nfo] prints router info\r\n");
+            sb.append("i[nfo] - prints router info\r\n");
             matcher.add(new SimpleMatcher("se*\n"), "send");
-            sb.append("se[nd] <target> ... Send a string to target\r\n");
+            sb.append("se[nd] <target> ... - Send a string to target\r\n");
             matcher.add(new SimpleMatcher("a*\n"), "attach");
-            sb.append("a[ttach] <target> Attach target \r\n");
+            sb.append("a[ttach] <target> - Attach target \r\n");
             matcher.add(new SimpleMatcher("kill*\n"), "kill");
-            sb.append("kill <target> Kill target \r\n");
+            sb.append("kill <target> - Kill target \r\n");
             matcher.add(new SimpleMatcher("l*\n"), "log");
-            sb.append("l[og] [target] [level] Log\r\n");
+            sb.append("l[og] [target] [level] - Log\r\n");
+            matcher.add(new SimpleMatcher("sho*\n"), "logs");
+            sb.append("sho[w logs] - Show available logs\r\n");
             matcher.add(new SimpleMatcher("st*\n"), "statistics");
-            sb.append("st[atistics] Print statistics\r\n");
+            sb.append("st[atistics] - Print statistics\r\n");
             matcher.add(new SimpleMatcher("exit*\n"), "exit");
-            sb.append("exit Exits the session\r\n");
+            sb.append("exit - Exits the session\r\n");
             matcher.add(new SimpleMatcher("shutdown*\n"), "shutdown");
-            sb.append("shutdown Shutdown the router\r\n");
+            sb.append("shutdown - Shutdown the router\r\n");
             matcher.add(new SimpleMatcher("restart*\n"), "restart");
-            sb.append("restart Restarts the router\r\n");
+            sb.append("restart - Restarts the router\r\n");
             help = sb.toString();
-            outChannel.flush();
             
             nmeaMatcher.add(new SimpleMatcher("$*\n"));
         }
@@ -1037,7 +1041,6 @@ public class Router extends JavaLogging
                 {
                     case "help":
                         out.println(help);
-                        outChannel.flush();
                         break;
                     case "info":
                         info();
@@ -1054,6 +1057,9 @@ public class Router extends JavaLogging
                     case "log":
                         log(ring);
                         break;
+                    case "logs":
+                        logs();
+                        break;
                     case "statistics":
                         statistics();
                         break;
@@ -1067,6 +1073,7 @@ public class Router extends JavaLogging
                     default:
                         log(Level.SEVERE, "%s unknown", act);
                 }
+                outChannel.flush();
                 return true;
             }
             catch (BadInputException ex)
@@ -1093,7 +1100,6 @@ public class Router extends JavaLogging
             {
                 out.println(entry.getValue());
             }
-            outChannel.flush();
         }
 
         private void statistics() throws IOException
@@ -1122,24 +1128,7 @@ public class Router extends JavaLogging
                         writeMean+"\t"
                 );
             }
-            outChannel.flush();
         }
-        @Override
-        protected void write(ByteBuffer src) throws IOException
-        {
-            int cnt = channel.write(src);
-            writeCount++;
-            writeBytes += cnt;
-        }
-
-        @Override
-        protected void write(RingByteBuffer ring) throws IOException
-        {
-            int cnt = ring.write(channel);
-            writeCount++;
-            writeBytes += cnt;
-        }
-
         private void send(RingByteBuffer ring) throws IOException
         {
             String cmd = ring.getString();
@@ -1162,7 +1151,6 @@ public class Router extends JavaLogging
             bb.flip();
             ds.write(bb);
             out.println("sent: "+msg);
-            outChannel.flush();
         }
 
         private void attach(RingByteBuffer ring) throws IOException
@@ -1216,6 +1204,26 @@ public class Router extends JavaLogging
             super.detach();
         }
 
+        private void logs()
+        {
+            int index = 1;
+            loggerNames = getLoggerNames();
+            if (loggerNames.isEmpty())
+            {
+                out.println("no logs");
+            }
+            else
+            {
+                for (String log : loggerNames)
+                {
+                    out.print(index);
+                    out.print("\t");
+                    out.println(log);
+                    index++;
+                }
+            }
+        }
+
         private void log(RingByteBuffer ring)
         {
             String cmd = ring.getString();
@@ -1233,12 +1241,7 @@ public class Router extends JavaLogging
                     lg = Router.this.getLogger();
                     break;
                 case 2:
-                    DataSource ds = targets.get(arr[1]);
-                    if (ds == null)
-                    {
-                        throw new BadInputException("target: "+arr[1]+" not found");
-                    }
-                    lg = ds.getLogger();
+                    lg = getLogger(arr[1]);
                     break;
                 default:
                     throw new BadInputException("error : "+cmd);
@@ -1251,6 +1254,31 @@ public class Router extends JavaLogging
             }
             logHandler = new ChannelHandler(channel);
             lg.addHandler(logHandler);
+        }
+        private Logger getLogger(String s)
+        {
+            DataSource ds = targets.get(s);
+            if (ds != null)
+            {
+                return ds.getLogger();
+            }
+            try
+            {
+                int idx = Integer.parseInt(s);
+                if (loggerNames != null && idx > 0 && idx <= loggerNames.size())
+                {
+                    return Logger.getLogger(loggerNames.get(idx-1));
+                }
+            }
+            catch (NumberFormatException ex)
+            {
+                Logger logger = Logger.getLogger(s);
+                if (logger != null)
+                {
+                    return logger;
+                }
+            }
+            throw new BadInputException(s+" log not found");
         }
         private Level level(String s)
         {
@@ -1274,6 +1302,22 @@ public class Router extends JavaLogging
                 safeLogger = null;
                 safeLevel = null;
             }
+        }
+
+        @Override
+        protected void write(ByteBuffer src) throws IOException
+        {
+            int cnt = channel.write(src);
+            writeCount++;
+            writeBytes += cnt;
+        }
+
+        @Override
+        protected void write(RingByteBuffer ring) throws IOException
+        {
+            int cnt = ring.write(channel);
+            writeCount++;
+            writeBytes += cnt;
         }
 
     }

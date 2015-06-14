@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<router proprietaryPrefix="IRS" ctrlTcpPort="10110">
+    <nmea name="Simrad1">
+        <route prefix="$AGRSA" target="Net"/>
+        <route prefix="$AGGLL" target="Net"/>
+        <route prefix="$AGHDT" target="Net"/>
+        <route prefix="$AGRMC" target="Net"/>
+        <route prefix="$AGXTE" target="Net"/>
+    </nmea>
+    <nmea name="Simrad2">
+        <route prefix="$??HDT" target="Net"/>
+        <route prefix="$??HDM" target="Net"/>
+        <route prefix="$??RSA" target="Net"/>
+    </nmea>
+    <nmea name="Airmar">
+        <route prefix="$HCHDT" target="Net Simrad2"/>
+    </nmea>
+    <nmea-hs name="NAIS">
+        <route prefix="$GPGLL" target="Net"/>
+        <route prefix="$GPRMC" target="Net Airmar Simrad1"/>
+        <route prefix="$GPGGA" target="Net"/>
+        <route prefix="$GPGLL" target="Net"/>
+        <route prefix="!AIVDM" target="Net"/>
+        <route prefix="!AIVDO" target="Net"/>
+    </nmea-hs>
+    <broadcast-nmea name="Net">
+        <route prefix="$??APB" target="Simrad1"/>
+        <route prefix="$??BOD" target="Simrad1"/>
+        <route prefix="$??BWW" target="Simrad1"/>
+        <route prefix="$??BWC" target="Simrad1"/>
+        <route prefix="$??BWR" target="Simrad1"/>
+        <route prefix="$??RMB" target="Simrad1"/>
+        <route prefix="$??XTE" target="Simrad1"/>
+    </broadcast-nmea>
+</router>

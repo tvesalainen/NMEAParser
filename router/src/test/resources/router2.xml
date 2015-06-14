@@ -3,12 +3,14 @@
     <seatalk name="SeaTalk">
         <route prefix="$??MTW" target="Net"/>
         <route prefix="$??DBT" target="Net"/>
+        <route prefix="$??VHW" target="Net"/>
     </seatalk>
     <nmea name="Furuno">
         <route prefix="$??RMB" target="Net"/>
         <route prefix="$??RMC" target="Net"/>
         <route prefix="$??BWC" target="Net"/>
         <route prefix="$??GLL" target="Net"/>
+        <route prefix="$??GAA" target="Net"/>
         <route prefix="$??VTG" target="Net"/>
         <route prefix="$??ZDA" target="Net"/>
     </nmea>

@@ -22,6 +22,7 @@ import java.util.zip.CheckedOutputStream;
 import java.nio.channels.ScatteringByteChannel;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
+import static org.vesalainen.parser.ParserFeature.SingleThread;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
@@ -271,7 +272,7 @@ public abstract class SeaTalk2NMEA
         CheckedOutputStream cos = new CheckedOutputStream(out, new NMEAChecksum());
         parse(channel, cos);
     }
-    @ParseMethod(start = "statements")
+    @ParseMethod(start = "statements", features = {SingleThread})
     protected abstract void parse(
             CharSequence cs,
             @ParserContext("out") CheckedOutputStream out
