@@ -14,28 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.router;
+package org.vesalainen.nmea.watcher;
 
-import java.net.URL;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author tkv
  */
-public class RouterT
+public class WatcherTest
 {
     
-    public RouterT()
+    public WatcherTest()
     {
     }
 
     @Test
-    public void test()
+    public void test1()
     {
-        URL url = RouterConfigTest.class.getClassLoader().getResource("router4.xml");
-        String filename = url.getFile();
-        Router.main("-pl", "INFO", filename);
+        Watcher.main();
     }
     
 }

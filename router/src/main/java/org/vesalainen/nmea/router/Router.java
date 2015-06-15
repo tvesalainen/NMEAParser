@@ -18,10 +18,7 @@ package org.vesalainen.nmea.router;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import static java.net.StandardSocketOptions.IP_MULTICAST_LOOP;
 import static java.net.StandardSocketOptions.SO_BROADCAST;
 import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
@@ -35,8 +32,6 @@ import static java.nio.channels.SelectionKey.OP_READ;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,9 +43,11 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import static java.util.logging.Level.*;
 import java.util.logging.Logger;
 import java.util.logging.MemoryHandler;
 import java.util.logging.SocketHandler;
+import javax.xml.bind.JAXBException;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialChannel.Configuration;
@@ -72,6 +69,7 @@ import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.util.AutoCloseableList;
+import org.vesalainen.util.CmdArgs;
 import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.MapList;
 import org.vesalainen.util.Matcher;
@@ -88,6 +86,7 @@ import org.vesalainen.util.logging.MinimalFormatter;
  */
 public class Router extends JavaLogging
 {
+    private static final long RestartLimit = 300000;
     private static final String whiteSpace = "[ \r\n\t]+";
     private final RouterConfig config;
     private static final long ResolvTimeout = 5000;
@@ -98,7 +97,6 @@ public class Router extends JavaLogging
     private Set<SerialEndpoint> resolvPool = new HashSet<>();
     private final Map<String,DataSource> targets = new HashMap<>();
     private final MapList<String,DataSource> sources = new HashMapList<>();
-    private List<InetAddress> localAddresses;
     private int serialCount = 0;
     private int resolvCount = 0;
     private boolean canForce;
@@ -262,65 +260,6 @@ public class Router extends JavaLogging
             selector.register(readChannel, OP_READ, endpoint);
         }
     }
-    public static void main(String... args)
-    {
-        if (args.length < 1)
-        {
-            System.err.println("usage: ... <xml configuration file> [pattern|host port]");
-            System.exit(-1);
-        }
-        Logger log = Logger.getLogger(Router.class.getPackage().getName());
-        log.setUseParentHandlers(false);
-        Handler handler = null;
-        try
-        {
-            switch (args.length)
-            {
-                case 1:
-                    handler = new ConsoleHandler();
-                    break;
-                case 2:
-                    handler = new FileHandler(args[1], 4096000, 1024, true);
-                    break;
-                case 3:
-                    handler = new SocketHandler(args[1], Integer.parseInt(args[2]));
-                    break;
-            }
-        }
-        catch (IOException | SecurityException ex)
-        {
-            Logger.getLogger(Router.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        MinimalFormatter minimalFormatter = new MinimalFormatter();
-        handler.setFormatter(minimalFormatter);
-        MemoryHandler memoryHandler = new MemoryHandler(handler, 256, Level.SEVERE);
-        memoryHandler.setFormatter(minimalFormatter);
-        log.addHandler(memoryHandler);
-        while (true)
-        {
-            try
-            {
-                File configfile = new File(args[0]);
-                RouterConfig config = new RouterConfig(configfile);
-                Router router = new Router(config, log);
-                router.run();
-            }
-            catch (RestartException ex)
-            {
-                log.info("restarted by "+ex.getMessage());
-            }
-            catch (ShutdownException ex)
-            {
-                log.info("shutdown by "+ex.getMessage());
-                return;
-            }
-            catch (Exception ex)
-            {
-                log.log(Level.SEVERE, ex.getMessage(), ex);
-                log.info("recovering...");
-            }
-        }
-    }
     private Endpoint getInstance(EndpointType endpointType)
     {
         if (endpointType instanceof BroadcastNMEAType)
@@ -407,7 +346,6 @@ public class Router extends JavaLogging
             writeChannel.configureBlocking(false);
             writeChannel.bind(null);
             writeChannel.setOption(SO_BROADCAST, true);
-            writeChannel.setOption(IP_MULTICAST_LOOP, false);
             writeChannel.connect(socketAddress);
             matched();
             if (isSource())
@@ -480,34 +418,31 @@ public class Router extends JavaLogging
                 {
                     return;
                 }
-                if (!localAddresses.contains(receiveAddr.getAddress()))
+                readBuffer.flip();
+                readCount++;
+                readBytes += readBuffer.remaining();
+                matcher.clear();
+                while (readBuffer.hasRemaining())
                 {
-                    readBuffer.flip();
-                    readCount++;
-                    readBytes += readBuffer.remaining();
-                    matcher.clear();
-                    while (readBuffer.hasRemaining())
+                    byte b = readBuffer.get();
+                    switch (matcher.match(b))
                     {
-                        byte b = readBuffer.get();
-                        switch (matcher.match(b))
-                        {
-                            case Error:
-                                return;
-                            case Ok:
-                            case WillMatch:
-                                break;
-                            case Match:
-                                for (String target : matcher.getLastMatched())
+                        case Error:
+                            return;
+                        case Ok:
+                        case WillMatch:
+                            break;
+                        case Match:
+                            for (String target : matcher.getLastMatched())
+                            {
+                                DataSource ds = targets.get(target);
+                                if (ds != null)
                                 {
-                                    DataSource ds = targets.get(target);
-                                    if (ds != null)
-                                    {
-                                        readBuffer.flip();
-                                        ds.write(readBuffer);
-                                    }
+                                    readBuffer.flip();
+                                    ds.write(readBuffer);
                                 }
-                                return;
-                        }
+                            }
+                            return;
                     }
                 }
             }
@@ -543,23 +478,10 @@ public class Router extends JavaLogging
 
         protected DatagramChannel createReadChannel() throws IOException
         {
-            if (localAddresses == null)
-            {
-                localAddresses = new ArrayList<>();
-                Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
-                while (nis.hasMoreElements())
-                {
-                    NetworkInterface ni = nis.nextElement();
-                    Enumeration<InetAddress> ias = ni.getInetAddresses();
-                    while (ias.hasMoreElements())
-                    {
-                        localAddresses.add(ias.nextElement());
-                    }
-                }
-            }
             readBuffer = ByteBuffer.allocateDirect(100);
             readChannel = DatagramChannel.open();
             readChannel.configureBlocking(false);
+            readChannel.setOption(SO_BROADCAST, true);
             readChannel.setOption(SO_REUSEADDR, true);
             readChannel.bind(new InetSocketAddress(socketAddress.getPort()));
             return readChannel;
@@ -720,6 +642,7 @@ public class Router extends JavaLogging
             if (attached == null)
             {
                 int cnt = ring.write((GatheringByteChannel)channel);
+                finest("write %s = %d", ring, cnt);
                 writeCount++;
                 writeBytes += cnt;
             }
@@ -731,6 +654,7 @@ public class Router extends JavaLogging
             if (attached == null)
             {
                 int cnt = ((WritableByteChannel)channel).write(bb);
+                finest("write %s = %d", bb, cnt);
                 writeCount++;
                 writeBytes += cnt;
             }
@@ -765,7 +689,7 @@ public class Router extends JavaLogging
     private abstract class Endpoint extends DataSource
     {
         protected SelectableChannel channel;
-        protected OrMatcher<String> matcher;
+        protected OrMatcher<String> matcher = new OrMatcher<>();
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean failed = true;
         private boolean mark = true;
@@ -783,7 +707,6 @@ public class Router extends JavaLogging
             List<RouteType> route = endpointType.getRoute();
             if (!endpointType.getRoute().isEmpty())
             {
-                matcher = new OrMatcher<>();
                 for (RouteType rt : route)
                 {
                     List<String> targetList = rt.getTarget();
@@ -897,6 +820,7 @@ public class Router extends JavaLogging
                 DataSource ds = targets.get(target);
                 if (ds != null)
                 {
+                    finest("writeto %s %s", target, ring);
                     ds.write(ring);
                 }
             }
@@ -910,7 +834,7 @@ public class Router extends JavaLogging
         protected void matched()
         {
             failed = false;
-            log(Level.INFO, "matched=%s", name);
+            info("matched=%s", name);
             targets.put(name, this);
         }
 
@@ -1307,6 +1231,7 @@ public class Router extends JavaLogging
         @Override
         protected void write(ByteBuffer src) throws IOException
         {
+            finest("write %s", src);
             int cnt = channel.write(src);
             writeCount++;
             writeBytes += cnt;
@@ -1315,6 +1240,7 @@ public class Router extends JavaLogging
         @Override
         protected void write(RingByteBuffer ring) throws IOException
         {
+            finest("write %s", ring);
             int cnt = ring.write(channel);
             writeCount++;
             writeBytes += cnt;
@@ -1333,7 +1259,7 @@ public class Router extends JavaLogging
         public DataSource(String name)
         {
             this.name = name;
-            setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.')));
+            setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.')+"."+name));
         }
         
         protected abstract void read(SelectionKey sk) throws IOException;
@@ -1364,5 +1290,96 @@ public class Router extends JavaLogging
             return attached != null;
         }
         
+    }
+    public static void main(String... args)
+    {
+        CmdArgs cmdArgs = new CmdArgs();
+        cmdArgs.addArgument(File.class, "configuration file");
+        cmdArgs.addOption("lp", "log pattern", "filelog", "%t/router%g.log");
+        cmdArgs.addOption("h", "host", "netlog", "localhost");
+        cmdArgs.addOption("p", "port", "netlog", 0);
+        cmdArgs.addOption("ll", "log level", null, INFO);
+        cmdArgs.addOption("pl", "push level", null, SEVERE);
+        try
+        {
+            cmdArgs.setArgs(args);
+        }
+        catch (CmdArgs.CmdArgsException ex)
+        {
+            Logger logger = Logger.getLogger(Router.class.getName());
+            logger.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, ex.usage());
+            System.exit(-1);
+        }
+        Logger log = Logger.getLogger(Router.class.getPackage().getName());
+        log.setUseParentHandlers(false);
+        log.setLevel((Level) cmdArgs.getOption("ll"));
+        Handler handler = null;
+        RouterConfig config = null;
+        try
+        {
+            String effectiveGroup = cmdArgs.getEffectiveGroup();
+            if (effectiveGroup == null)
+            {
+                handler = new ConsoleHandler();
+            }
+            else
+            {
+                switch (effectiveGroup)
+                {
+                case "filelog":
+                    
+                    handler = new FileHandler((String) cmdArgs.getOption("lp"), 4096000, 1024, true);
+                    break;
+                case "netlog":
+                    handler = new SocketHandler((String) cmdArgs.getOption("h"), (int) cmdArgs.getOption("p"));
+                    break;
+                }
+            }
+            File configfile = (File) cmdArgs.getArgument("configuration file");
+            config = new RouterConfig(configfile);
+        }
+        catch (IOException | SecurityException | JAXBException ex)
+        {
+            Logger.getLogger(Router.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        MinimalFormatter minimalFormatter = new MinimalFormatter();
+        handler.setFormatter(minimalFormatter);
+        MemoryHandler memoryHandler = new MemoryHandler(handler, 256, Level.SEVERE);
+        memoryHandler.setFormatter(minimalFormatter);
+        memoryHandler.setPushLevel((Level) cmdArgs.getOption("pl"));
+        log.addHandler(memoryHandler);
+        while (true)
+        {
+            long started = System.currentTimeMillis();
+            try
+            {
+                Router router = new Router(config, log);
+                router.run();
+            }
+            catch (RestartException ex)
+            {
+                log.info("restarted by "+ex.getMessage());
+            }
+            catch (ShutdownException ex)
+            {
+                log.info("shutdown by "+ex.getMessage());
+                return;
+            }
+            catch (Exception ex)
+            {
+                log.log(Level.SEVERE, ex.getMessage(), ex);
+                long elapsed = System.currentTimeMillis()-started;
+                if (elapsed > RestartLimit)
+                {
+                    log.info("recovering...");
+                }
+                else
+                {
+                    log.info("stopped because failing too often...");
+                    return;
+                }
+            }
+        }
     }
 }

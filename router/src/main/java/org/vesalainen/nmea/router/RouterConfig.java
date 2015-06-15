@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.net.URL;
 import java.util.List;
+import java.util.Map.Entry;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -32,7 +33,10 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
+import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.RouterType;
+import org.vesalainen.util.HashMapList;
+import org.vesalainen.util.MapList;
 
 /**
  *
@@ -75,18 +79,21 @@ public class RouterConfig
         {
             router = (JAXBElement<RouterType>) unmarshaller.unmarshal(fis); //NOI18N
         }
+        check();
     }
 
     public RouterConfig(URL url) throws IOException, JAXBException
     {
         Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
         router = (JAXBElement<RouterType>) unmarshaller.unmarshal(url);
+        check();
     }
 
     public RouterConfig(InputStream is) throws IOException, JAXBException
     {
         Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
         router = (JAXBElement<RouterType>) unmarshaller.unmarshal(is);
+        check();
     }
 
     public List<EndpointType> getEndpoints()
@@ -110,5 +117,48 @@ public class RouterConfig
         {
             throw new IOException(ex);
         }
+    }
+
+    private void check()
+    {
+        MapList<String,String> prefixes = new HashMapList<>();
+        for (EndpointType et : router.getValue().getBroadcastOrBroadcastNmeaOrDatagram())
+        {
+            String name = et.getName();
+            for (RouteType rt : et.getRoute())
+            {
+                String prefix = rt.getPrefix();
+                for (Entry<String,List<String>> e : prefixes.entrySet())
+                {
+                    String key = e.getKey();
+                    if (!name.equals(key))
+                    {
+                        for (String pre : e.getValue())
+                        {
+                            if (matchesSame(prefix, pre))
+                            {
+                                throw new IllegalArgumentException(key+"->"+pre+" and "+name+"->"+prefix+" both match the same");
+                            }
+                        }
+                    }
+                }
+                prefixes.add(name, prefix);
+            }
+        }
+    }
+
+    private boolean matchesSame(String p1, String p2)
+    {
+        int len = Math.min(p1.length(), p2.length());
+        for (int ii=0;ii<len;ii++)
+        {
+            char c1 = p1.charAt(ii);
+            char c2 = p2.charAt(ii);
+            if (!((c1=='?' || c2=='?') || c1 == c2))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -2,15 +2,8 @@
 <router proprietaryPrefix="IRS" ctrlTcpPort="10110">
     <nmea name="Simrad1">
         <route prefix="$AGRSA" target="Net"/>
-        <route prefix="$AGGLL" target="Net"/>
-        <route prefix="$AGHDT" target="Net"/>
-        <route prefix="$AGRMC" target="Net"/>
-        <route prefix="$AGXTE" target="Net"/>
     </nmea>
     <nmea name="Simrad2">
-        <route prefix="$??HDT" target="Net"/>
-        <route prefix="$??HDM" target="Net"/>
-        <route prefix="$??RSA" target="Net"/>
     </nmea>
     <nmea name="Airmar">
         <route prefix="$HCHDT" target="Net Simrad2"/>
@@ -22,6 +15,7 @@
         <route prefix="$GPGLL" target="Net"/>
         <route prefix="!AIVDM" target="Net"/>
         <route prefix="!AIVDO" target="Net"/>
+        <route prefix="$AITXT" target="Net"/>
     </nmea-hs>
     <broadcast-nmea name="Net">
         <route prefix="$??APB" target="Simrad1"/>
