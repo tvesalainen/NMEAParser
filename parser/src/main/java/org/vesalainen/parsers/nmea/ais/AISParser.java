@@ -17,6 +17,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import static org.vesalainen.parser.ParserFeature.*;
@@ -36,6 +37,7 @@ import static org.vesalainen.parsers.mmsi.MMSIType.*;
 import org.vesalainen.regex.SyntaxErrorException;
 import org.vesalainen.util.concurrent.SimpleWorkflow.ContextAccess;
 import org.vesalainen.util.concurrent.ThreadStoppedException;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * @author Timo Vesalainen
@@ -642,9 +644,15 @@ import org.vesalainen.util.concurrent.ThreadStoppedException;
 ,@Rule(left="IMO236NumberOfPersonsOnBoard", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid16", "persons", "('[01]{35}')?"})
 ,@Rule(left="27Content", value={"Type27LongRangeAISBroadcastMessage"})
 })
-public abstract class AISParser implements ParserInfo
+public abstract class AISParser extends JavaLogging implements ParserInfo
 {
     private final ThreadLocal<Integer> mmsiStore = new ThreadLocal<>();
+
+    public AISParser()
+    {
+        super(AISParser.class);
+    }
+    
 protected void payload(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void aisState(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void radius_12(int arg, @ParserContext("aisData") AISObserver aisData){}
@@ -812,10 +820,10 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     {
         if (thr != null && !(thr instanceof SyntaxErrorException))
         {
+            this.log(Level.SEVERE, thr, "recover exp=%s", expected);
             throw new IOException(thr);
         }
-        System.err.println("Expected "+expected);
-        System.err.println("Got      "+got);
+        warning("recover exp=%s", expected);
         StringBuilder sb = new StringBuilder();
         String input = reader.getInput();
         sb.append(input);
@@ -3004,7 +3012,11 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
      */
     protected void txrx_4(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setTransceiverMode(TransceiverModes.values()[arg]);
+        if (arg > 3)
+        {
+            warning("txrx_4(%d)", arg);
+        }
+        aisData.setTransceiverMode(TransceiverModes.values()[arg & 0b11]);
     }
     protected void txrx_2(int arg, @ParserContext("aisData") AISObserver aisData)
     {

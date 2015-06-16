@@ -18,6 +18,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -27,8 +28,8 @@ import java.util.TimeZone;
  */
 public class GPSClock implements Clock
 {
-    private final Calendar wc = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
-    private final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
+    private final GregorianCalendar wc = (GregorianCalendar) Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
+    private final GregorianCalendar calendar = (GregorianCalendar) Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
     private long offset;
     private boolean committed;
     @Override
@@ -167,6 +168,12 @@ public class GPSClock implements Clock
     public boolean isCommitted()
     {
         return committed;
+    }
+
+    @Override
+    public GregorianCalendar getCalendar()
+    {
+        return calendar;
     }
 
 }

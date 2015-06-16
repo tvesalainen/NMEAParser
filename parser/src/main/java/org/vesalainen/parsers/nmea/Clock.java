@@ -16,12 +16,20 @@
  */
 package org.vesalainen.parsers.nmea;
 
+import java.util.GregorianCalendar;
+
 /**
  *
  * @author Timo Vesalainen
  */
 public interface Clock
 {
+    /**
+     * Returns current GregorianCalendar. This object is not copy and it should
+     * not be modified!
+     * @return 
+     */
+    GregorianCalendar getCalendar();
     /**
      * Returns this Clocks Time
      * @return 

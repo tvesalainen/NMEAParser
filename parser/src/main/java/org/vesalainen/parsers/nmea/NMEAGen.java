@@ -16,9 +16,11 @@
  */
 package org.vesalainen.parsers.nmea;
 
+import d3.env.TSAGeoMag;
 import java.io.IOException;
 import java.util.zip.CheckedOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.GregorianCalendar;
 import java.util.Locale;
 import static org.vesalainen.parsers.nmea.Converter.Celcius;
 import static org.vesalainen.parsers.nmea.Converter.Fath;
@@ -36,10 +38,39 @@ import org.vesalainen.util.navi.Meters;
  */
 public class NMEAGen
 {
-    public static void dbt(String talkerId, CheckedOutputStream out, float depth) throws IOException
+    private static TSAGeoMag geoMag;
+    public static void rmc(CheckedOutputStream out, float latitude, float longitude, GregorianCalendar calendar) throws IOException
+    {
+        if (geoMag == null)
+        {
+            geoMag = new TSAGeoMag();
+        }
+        double declination = geoMag.getDeclination(latitude, longitude, geoMag.decimalYear(calendar), 0);
+        String variation = String.format(Locale.US, "%.1f", Math.abs(declination));
+        char ew = declination > 0 ? 'E' : 'W';
+        
+        put(out, '$');
+        put(out, "IN");
+        put(out, "RMC");
+        put(out, ",");  // utc
+        put(out, ",A");  // status
+        put(out, ",");  // lat
+        put(out, ",");  // N / S
+        put(out, ",");  // lon
+        put(out, ",");  // E / W
+        put(out, ",");  // sog
+        put(out, ",");  // tmg
+        put(out, ",");  // ddmmyy
+        put(out, ","+variation);  // Magnetic variation degrees
+        put(out, ","+ew);  // E / W
+        put(out, ",A");  // FAA
+        putChecksum(out);
+        put(out, "\r\n");
+    }
+    public static void dbt(CheckedOutputStream out, float depth) throws IOException
     {
         put(out, '$');
-        put(out, talkerId);
+        put(out, "SD");
         put(out, "DBT,");
         float meters = toMeters(depth, Ft);
         put(out, Meters.toFeets(meters));
@@ -56,10 +87,10 @@ public class NMEAGen
         putChecksum(out);
         put(out, "\r\n");
     }
-    public static void vhw(String talkerId, CheckedOutputStream out, float knots) throws IOException
+    public static void vhw(CheckedOutputStream out, float knots) throws IOException
     {
         put(out, '$');
-        put(out, talkerId);
+        put(out, "VW");
         put(out, "VHW,,,,,");
         put(out, knots);
         put(out, ',');
@@ -72,10 +103,10 @@ public class NMEAGen
         put(out, "\r\n");
     }
 
-    public static void mtw(String talkerId, CheckedOutputStream out, float c) throws IOException
+    public static void mtw(CheckedOutputStream out, float c) throws IOException
     {
         put(out, '$');
-        put(out, talkerId);
+        put(out, "YC");
         put(out, "MTW,");
         put(out, c);
         put(out, ',');
@@ -83,14 +114,14 @@ public class NMEAGen
         putChecksum(out);
         put(out, "\r\n");
     }
-    public static void txt(String talkerId, CheckedOutputStream out, String msg) throws IOException
+    public static void txt(CheckedOutputStream out, String msg) throws IOException
     {
         if (msg.indexOf(',') != -1 || msg.indexOf('*') != -1)
         {
             throw new IllegalArgumentException(msg+" contains (,) or (*)");
         }
         put(out, '$');
-        put(out, talkerId);
+        put(out, "U0");
         put(out, "TXT,1,1,,");
         put(out, msg);
         putChecksum(out);
