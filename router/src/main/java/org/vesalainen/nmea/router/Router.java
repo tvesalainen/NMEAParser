@@ -1311,7 +1311,7 @@ public class Router extends JavaLogging
             logger.log(Level.SEVERE, ex.usage());
             System.exit(-1);
         }
-        Logger log = Logger.getLogger(Router.class.getPackage().getName());
+        Logger log = Logger.getLogger("org.vesalainen");
         log.setUseParentHandlers(false);
         log.setLevel((Level) cmdArgs.getOption("ll"));
         Handler handler = null;

@@ -17,16 +17,17 @@
 package org.vesalainen.nmea.watcher;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetSocketAddress;
-import static java.net.StandardSocketOptions.SO_BROADCAST;
-import static java.net.StandardSocketOptions.SO_REUSEADDR;
-import java.nio.channels.Channels;
-import java.nio.channels.DatagramChannel;
+import java.nio.ByteBuffer;
+import java.util.GregorianCalendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.CheckedOutputStream;
+import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
+import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAChecksum;
+import org.vesalainen.parsers.nmea.NMEAGen;
 import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
@@ -39,31 +40,51 @@ public class Watcher extends AbstractNMEAObserver
     private float speedOverGround;
     private float longitude;
     private float latitude;
-    private String message;
+    private boolean positionUpdated;
+    private UnconnectedDatagramChannel channel;
+    private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
+    private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
+    private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
+    private GregorianCalendar calendar;
 
     public Watcher() throws IOException
     {
     }
     private void run() throws IOException
     {
-        try (UnconnectedDatagramChannel channel = UnconnectedDatagramChannel.open("255.255.255.255", 10110))
+        try (UnconnectedDatagramChannel ch = UnconnectedDatagramChannel.open("255.255.255.255", 10110, 100, true, false))
         {
+            channel = ch;
             NMEAParser parser = NMEAParser.newInstance();
-            InputStream is = Channels.newInputStream(channel);
-            parser.parse(is, this, null);
+            parser.parse(channel, this, null);
         }
     }
 
     @Override
     public void commit(String reason)
     {
-        System.err.println();
+        if (positionUpdated)
+        {
+            bb.clear();
+            try
+            {
+                NMEAGen.rmc(cout, latitude, longitude, calendar);
+                bb.flip();
+                channel.write(bb);
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(Watcher.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            positionUpdated = false;
+        }
     }
 
     @Override
-    public void setMessage(String message)
+    public void setClock(Clock clock)
     {
-        this.message = message;
+        super.setClock(clock);
+        calendar = clock.getCalendar();
     }
 
     @Override
@@ -88,6 +109,7 @@ public class Watcher extends AbstractNMEAObserver
     public void setLatitude(float latitude)
     {
         this.latitude = latitude;
+        this.positionUpdated = true;
     }
     
     public static void main(String... args)
