@@ -100,49 +100,49 @@ public abstract class SeaTalk2NMEA
         boolean defect = (z & 4) == 4;
         boolean deepAlarm = (z & 2) == 2;
         boolean shallowAlarm = (z & 1) == 1;
-        NMEAGen.dbt(talkerId, out, (float)xx/10F);
+        NMEAGen.dbt(out, (float)xx/10F);
     }
     @Rule("'\\x01\\x05\\x00\\x00\\x00\\x60\\x01\\x00'")
     protected void m01a(
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        NMEAGen.txt(talkerId, out, "Course Computer 400G");
+        NMEAGen.txt(out, "Course Computer 400G");
     }
     @Rule("'\\x01\\x05\\x04\\xBA\\x20\\x28\\x01\\x00'")
     protected void m01b(
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        NMEAGen.txt(talkerId, out, "ST60 Tridata");
+        NMEAGen.txt(out, "ST60 Tridata");
     }
     @Rule("'\\x01\\x05\\x70\\x99\\x10\\x28\\x01\\x00'")
     protected void m01c(
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        NMEAGen.txt(talkerId, out, "ST60 Log");
+        NMEAGen.txt(out, "ST60 Log");
     }
     @Rule("'\\x01\\x05\\xF3\\x18\\x00\\x26\\x0F\\x06'")
     protected void m01d(
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        NMEAGen.txt(talkerId, out, "ST80 Masterview");
+        NMEAGen.txt(out, "ST80 Masterview");
     }
     @Rule("'\\x01\\x05\\xFA\\x03\\x00\\x30\\x07\\x03'")
     protected void m01e(
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        NMEAGen.txt(talkerId, out, "ST80 Maxi Display");
+        NMEAGen.txt(out, "ST80 Maxi Display");
     }
     @Rule("'\\x01\\x05\\xFF\\xFF\\xFF\\xD0\\x00\\x00'")
     protected void m01f(
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        NMEAGen.txt(talkerId, out, "Smart Controller Remote Control Handset");
+        NMEAGen.txt(out, "Smart Controller Remote Control Handset");
     }
     @Rule("'\\x20\\x01' integer")
     protected void m20(
@@ -153,7 +153,7 @@ public abstract class SeaTalk2NMEA
         if (!haveBetterVHW)
         {
             float knots = (float)xx/10;
-            NMEAGen.vhw(talkerId, out, knots);
+            NMEAGen.vhw(out, knots);
         }
     }
     @Rule("'\\x23\\x01' b b")
@@ -165,7 +165,7 @@ public abstract class SeaTalk2NMEA
     {
         if (!haveBetterMTW)
         {
-            NMEAGen.mtw(talkerId, out, c);
+            NMEAGen.mtw(out, c);
         }
     }
     @Rule("'\\x24\\x02\\x00\\x00' b")
@@ -185,7 +185,7 @@ public abstract class SeaTalk2NMEA
     {
         float knots = (float)xx/100;
         haveBetterVHW = true;
-        NMEAGen.vhw(talkerId, out, knots);
+        NMEAGen.vhw(out, knots);
     }
     @Rule("'\\x27\\x01' integer")
     protected void m27(
@@ -195,7 +195,7 @@ public abstract class SeaTalk2NMEA
     {
         haveBetterMTW = true;
         float temp = (float)(xx-100)/10;
-        NMEAGen.mtw(talkerId, out, temp);
+        NMEAGen.mtw(out, temp);
     }
     @Rule("'\\x30\\x00' b")
     protected void m30(
@@ -222,7 +222,7 @@ public abstract class SeaTalk2NMEA
                 i = '?';
                 break;
         }
-        NMEAGen.txt(talkerId, out, "Light L"+i);
+        NMEAGen.txt(out, "Light L"+i);
     }
     @Rule("'\\x60\\x0c' b b b b b b b b b b b b b")
     protected void m60(

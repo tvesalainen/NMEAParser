@@ -23,10 +23,10 @@ import static org.junit.Assert.*;
  *
  * @author tkv
  */
-public class WatcherTest
+public class WatcherT
 {
     
-    public WatcherTest()
+    public WatcherT()
     {
     }
 
