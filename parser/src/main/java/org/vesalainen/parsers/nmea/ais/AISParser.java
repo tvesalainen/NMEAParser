@@ -650,7 +650,7 @@ public abstract class AISParser extends JavaLogging implements ParserInfo
 
     public AISParser()
     {
-        super(AISParser.class);
+        super(AISParser.class.getName()+"."+Thread.currentThread().getName());
     }
     
 protected void payload(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
