@@ -42,9 +42,7 @@ import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
-import org.vesalainen.parsers.nmea.ais.AISParser;
 import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
-import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * @author Timo Vesalainen
@@ -182,11 +180,10 @@ import org.vesalainen.util.logging.JavaLogging;
 public abstract class NMEAParser extends NMEASentences implements ParserInfo, ChecksumProvider
 {
     private static final LocalNMEAChecksum localChecksum = new LocalNMEAChecksum();
-    private JavaLogging log;
 
     public NMEAParser()
     {
-        log = new JavaLogging(NMEAParser.class);
+        this.setLogger(this.getClass());
     }
     
     @Rule("'!AIVDM'")
@@ -1283,6 +1280,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             clock.rollback();
             String reason = input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
             data.rollback(reason);
+            warning(reason);
             if (aisContext.isAisMessage())
             {
                 aisContext.afterChecksum(false, reason);
@@ -1382,7 +1380,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     {
         if (thr != null)
         {
-            log.log(Level.SEVERE, thr, "recover exp=%s", expected);
+            log(Level.SEVERE, thr, "recover exp=%s", expected);
         }
         StringBuilder sb = new StringBuilder();
         sb.append(reader.getInput());
@@ -1394,7 +1392,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             cc = reader.read();
         }
         String reason = "skipping " + sb+"\nexpected:"+expected;
-        log.warning(reason);
+        warning(reason);
         data.rollback(reason);
         reader.clear();
         if (aisContext.isAisMessage())

@@ -19,13 +19,15 @@ package org.vesalainen.parsers.nmea;
 
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.annotation.Rule;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen
  */
-public class NMEASentences
+public class NMEASentences extends JavaLogging
 {
+
     @Rule("'AAM'")
     protected void aam(@ParserContext("data") NMEAObserver data)
     {
