@@ -35,7 +35,7 @@ public class RouterT
     {
         URL url = RouterConfigTest.class.getClassLoader().getResource("router4.xml");
         String filename = url.getFile();
-        Router.main("-pl", "INFO", filename);
+        Router.main("-ll", "FINEST", "-pl", "FINEST", filename);
     }
     
 }

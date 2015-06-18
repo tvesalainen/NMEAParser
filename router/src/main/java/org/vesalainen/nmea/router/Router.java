@@ -128,30 +128,14 @@ public class Router extends JavaLogging
                     {
                         SelectionKey selectionKey = iterator.next();
                         iterator.remove();
-                        if (selectionKey.isReadable())
-                        {
-                            DataSource dataSource = (DataSource) selectionKey.attachment();
-                            fine("read %s", dataSource);
-                            dataSource.read(selectionKey);
-                        }
-                        else
-                        {
-                            if (selectionKey.isAcceptable())
-                            {
-                                ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
-                                SocketChannel socketChannel = serverSocketChannel.accept();
-                                fine("accept %s", socketChannel);
-                                autoCloseables.add(socketChannel);
-                                socketChannel.configureBlocking(false);
-                                Monitor monitor = new Monitor(socketChannel);
-                                selector.register(socketChannel, OP_READ, monitor);
-                            }
-                        }
+                        DataSource dataSource = (DataSource) selectionKey.attachment();
+                        fine("handle %s", dataSource);
+                        dataSource.handle(selectionKey);
                     }
                 }
                 else
                 {
-                    info("no data in %d millis", ResolvTimeout);
+                    //info("no data in %d millis", ResolvTimeout);
                     if (selector.keys().isEmpty())
                     {
                         warning("Couldn't resolv ports");
@@ -177,6 +161,7 @@ public class Router extends JavaLogging
             autoCloseables.add(sc);
             portPool.add(sc);
         }
+        int portCount = portPool.size();
         if (portPool.isEmpty())
         {
             throw new IOException("no ports");
@@ -199,7 +184,7 @@ public class Router extends JavaLogging
             }
             configureChannel(endpoint, selector, false);
         }
-        if (serialCount == portPool.size())
+        if (serialCount == portCount)
         {
             canForce = true;
         }
@@ -209,55 +194,64 @@ public class Router extends JavaLogging
     {
         if (ctrlTcpPort > 0)
         {
-            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-            autoCloseables.add(serverSocketChannel);
-            serverSocketChannel.configureBlocking(false);
-            serverSocketChannel.bind(new InetSocketAddress(ctrlTcpPort));
-            selector.register(serverSocketChannel, OP_ACCEPT);
+            SocketSource ss = new SocketSource(ctrlTcpPort);
         }
     }
     
     private void resolvPorts() throws IOException
     {
+        Iterator<SerialEndpoint> iterator = resolvPool.iterator();
+        while (iterator.hasNext())
+        {
+            SerialEndpoint endpoint = iterator.next();
+            boolean success = configureChannel(endpoint, selector, canForce && serialCount-resolvCount==1);
+            if (success)
+            {
+                iterator.remove();
+            }
+        }
         for (SelectionKey sk : selector.keys())
         {
-            DataSource dataSource = (DataSource) sk.attachment();
-            if (dataSource != null && (dataSource instanceof SerialEndpoint))
+            DataSource ds = (DataSource) sk.attachment();
+            if (ds != null && (ds instanceof SerialEndpoint))
             {
-                SerialEndpoint endpoint = (SerialEndpoint) dataSource;
+                SerialEndpoint endpoint = (SerialEndpoint) ds;
                 if (!endpoint.resolving() && endpoint.failed())
                 {
                     SerialChannel channel = (SerialChannel) sk.channel();
                     assert (channel != null);
+                    info("%s: failed %s read cound=%d bytes=%d", ds.name, channel, ds.readCount, ds.readBytes);
+                    info("add portPool -> %s", channel);
                     portPool.add(channel);
+                    info("add resolvPool -> %s", endpoint);
                     resolvPool.add(endpoint);
+                    sk.cancel();
                 }
             }
         }
-        for (Endpoint endpoint : resolvPool)
-        {
-            configureChannel(endpoint, selector, canForce && serialCount-resolvCount==1);
-        }
-        resolvPool.clear();
         if (resolvCount == serialCount)
         {   
-            info("release extra ports");
             for (SerialChannel sc : portPool)
             {
                 sc.close();
-                fine("release: "+sc);
+                info("release extra port %s",sc);
             }
             portPool = null;
             resolvPool = null;
         }
     }
 
-    private void configureChannel(Endpoint endpoint, MultiProviderSelector selector, boolean force) throws IOException
+    private boolean configureChannel(Endpoint endpoint, MultiProviderSelector selector, boolean force) throws IOException
     {
-        SelectableChannel readChannel = endpoint.configureChannel(force);
-        if (readChannel != null)
+        SelectableChannel channel = endpoint.configureChannel(force);
+        if (channel != null)
         {
-            selector.register(readChannel, OP_READ, endpoint);
+            channel.register(selector, OP_READ, endpoint);
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
     private Endpoint getInstance(EndpointType endpointType)
@@ -407,7 +401,7 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected void read(SelectionKey sk) throws IOException
+        protected void handle(SelectionKey sk) throws IOException
         {
             while (true)
             {
@@ -619,11 +613,15 @@ public class Router extends JavaLogging
                         triedPorts.add(serialChannel);
                         resolvStarted = System.currentTimeMillis();
                     }
-                    info("%s -> %s", serialChannel, configuration);
+                    info("%s: %s -> %s", name, serialChannel, configuration);
                     channel = serialChannel;
                     port = serialChannel.getPort();
                     return serialChannel;
                 }
+            }
+            if (serialCount == triedPorts.size())
+            {
+                info("%s: all ports tried read cound=%d bytes=%d", name, readCount, readBytes);
             }
             return null;
         }
@@ -694,7 +692,6 @@ public class Router extends JavaLogging
         protected boolean failed = true;
         private boolean mark = true;
         private boolean isSink;
-        private boolean ready;
         private boolean isSingleSink;
 
         public Endpoint(EndpointType endpointType)
@@ -723,13 +720,17 @@ public class Router extends JavaLogging
         {
             return matcher != null;
         }
+
+        @Override
+        protected void updateStatus()
+        {
+            List<DataSource> list = sources.get(this);
+            isSink = list != null;
+            isSingleSink = isSink && list.size() == 1;
+        }
+        
         public boolean isSink()
         {
-            if (!ready)
-            {
-                isSink = sources.get(this) != null;
-                ready = true;
-            }
             return isSink;
         }
         /**
@@ -739,34 +740,27 @@ public class Router extends JavaLogging
          */
         protected boolean isSingleSink()
         {
-            if (!ready)
-            {
-                List<DataSource> list = sources.get(this);
-                isSingleSink = list != null && list.size() == 1;
-                ready = true;
-            }
             return isSingleSink;
         }
 
         @Override
-        protected void read(SelectionKey sk) throws IOException
+        protected void handle(SelectionKey sk) throws IOException
         {   
             int count = ring.read((ScatteringByteChannel)channel);
             if (count == -1)
             {
+                warning("eof(%s)", name);
                 return;
+            }
+            if (ring.isFull())
+            {
+                warning("buffer not big enough (%s)", name);
             }
             readCount++;
             readBytes += count;
             if (attached != null)
             {
                 ring.getAll(false);
-                /*
-                while (ring.hasRemaining())
-                {
-                    ring.get(false);
-                }
-                        */
                 attached.write(ring);
                 ring.mark();
             }
@@ -836,8 +830,58 @@ public class Router extends JavaLogging
             failed = false;
             info("matched=%s", name);
             targets.put(name, this);
+            for (SelectionKey sk : selector.keys())
+            {
+                DataSource ds = (DataSource) sk.attachment();
+                ds.updateStatus();
+            }
         }
 
+    }
+    private class SocketSource extends DataSource
+    {
+
+        public SocketSource(int port) throws IOException
+        {
+            super("SocketSource("+port+")");
+            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+            autoCloseables.add(serverSocketChannel);
+            serverSocketChannel.configureBlocking(false);
+            serverSocketChannel.bind(new InetSocketAddress(port));
+            serverSocketChannel.register(selector, OP_ACCEPT, this);
+        }
+
+        @Override
+        protected void handle(SelectionKey selectionKey) throws IOException
+        {
+            ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
+            SocketChannel socketChannel = serverSocketChannel.accept();
+            if (socketChannel != null)
+            {
+                fine("accept %s", socketChannel);
+                autoCloseables.add(socketChannel);
+                socketChannel.configureBlocking(false);
+                Monitor monitor = new Monitor(socketChannel);
+                socketChannel.register(selector, OP_READ, monitor);
+            }
+            else
+            {
+                warning("accept = null");
+            }
+        }
+
+        @Override
+        protected void write(ByteBuffer readBuffer) throws IOException
+        {
+            throw new UnsupportedOperationException("Not supported.");
+        }
+
+        @Override
+        protected void write(RingByteBuffer ring) throws IOException
+        {
+            throw new UnsupportedOperationException("Not supported.");
+        }
+        
     }
     private class Monitor extends DataSource
     {
@@ -893,7 +937,7 @@ public class Router extends JavaLogging
         }
         
         @Override
-        protected void read(SelectionKey sk) throws IOException
+        protected void handle(SelectionKey sk) throws IOException
         {
             int count = ring.read(channel);
             if (count == -1)
@@ -1020,6 +1064,13 @@ public class Router extends JavaLogging
 
         private void info() throws IOException
         {
+            out.println("selectors:");
+            for (SelectionKey sk : selector.keys())
+            {
+                DataSource ds = (DataSource) sk.attachment();
+                out.println(ds);
+            }
+            out.println("targets:");
             for (Entry<String,DataSource> entry :targets.entrySet())
             {
                 out.println(entry.getValue());
@@ -1262,7 +1313,7 @@ public class Router extends JavaLogging
             setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.')+"."+name));
         }
         
-        protected abstract void read(SelectionKey sk) throws IOException;
+        protected abstract void handle(SelectionKey sk) throws IOException;
 
         protected abstract void write(ByteBuffer readBuffer) throws IOException;
 
@@ -1270,7 +1321,6 @@ public class Router extends JavaLogging
 
         protected void attachedWrite(RingByteBuffer ring) throws IOException
         {
-            
         }
 
         protected void attach(DataSource ds)
@@ -1289,7 +1339,10 @@ public class Router extends JavaLogging
         {
             return attached != null;
         }
-        
+
+        protected void updateStatus()
+        {
+        }
     }
     public static void main(String... args)
     {
