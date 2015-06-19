@@ -32,9 +32,11 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
+import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.RouterType;
+import org.vesalainen.nmea.jaxb.router.SenderType;
 import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.MapList;
 
@@ -48,7 +50,7 @@ public class RouterConfig
     protected static ObjectFactory factory;
     protected static DatatypeFactory dtFactory;
     
-    protected JAXBElement<RouterType> router;
+    protected JAXBElement<NmeaType> nmea;
     static
     {
         try
@@ -69,7 +71,7 @@ public class RouterConfig
 
     public RouterConfig()
     {
-        router = factory.createRouter(factory.createRouterType());
+        nmea = factory.createNmea(factory.createNmeaType());
     }
     
     public RouterConfig(File file) throws IOException, JAXBException
@@ -77,7 +79,7 @@ public class RouterConfig
         Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
         try (FileInputStream fis = new FileInputStream(file))
         {
-            router = (JAXBElement<RouterType>) unmarshaller.unmarshal(fis); //NOI18N
+            nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(fis); //NOI18N
         }
         check();
     }
@@ -85,25 +87,54 @@ public class RouterConfig
     public RouterConfig(URL url) throws IOException, JAXBException
     {
         Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
-        router = (JAXBElement<RouterType>) unmarshaller.unmarshal(url);
+        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(url);
         check();
     }
 
     public RouterConfig(InputStream is) throws IOException, JAXBException
     {
         Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
-        router = (JAXBElement<RouterType>) unmarshaller.unmarshal(is);
+        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(is);
         check();
     }
 
-    public List<EndpointType> getEndpoints()
+    public boolean isVariationSource()
     {
-        return router.getValue().getBroadcastOrBroadcastNmeaOrDatagram();
+        SenderType senderType = getSenderType();
+        if (senderType != null)
+        {
+            return senderType.getVariationSource() != null;
+        }
+        return false;
+    }
+    public SenderType getSenderType()
+    {
+        for (Object ob : nmea.getValue().getSenderOrRouter())
+        {
+            if (ob instanceof SenderType)
+            {
+                return (SenderType) ob;
+            }
+        }
+        return null;
     }
     
-    public RouterType getRouterType()
+    public List<EndpointType> getEndpoints()
     {
-        return router.getValue();
+        for (Object ob : nmea.getValue().getSenderOrRouter())
+        {
+            if (ob instanceof RouterType)
+            {
+                RouterType rt = (RouterType) ob;
+                return rt.getBroadcastOrBroadcastNmea0183OrDatagram();
+            }
+        }
+        return null;
+    }
+    
+    public NmeaType getNmeaType()
+    {
+        return nmea.getValue();
     }
     
     public void write(Writer writer) throws IOException
@@ -111,7 +142,7 @@ public class RouterConfig
         try
         {
             Marshaller marshaller = jaxbCtx.createMarshaller();
-            marshaller.marshal(router, writer);
+            marshaller.marshal(nmea, writer);
         }
         catch (JAXBException ex)
         {
@@ -122,7 +153,7 @@ public class RouterConfig
     private void check()
     {
         MapList<String,String> prefixes = new HashMapList<>();
-        for (EndpointType et : router.getValue().getBroadcastOrBroadcastNmeaOrDatagram())
+        for (EndpointType et : getEndpoints())
         {
             String name = et.getName();
             for (RouteType rt : et.getRoute())

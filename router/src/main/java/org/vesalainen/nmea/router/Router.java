@@ -19,10 +19,7 @@ package org.vesalainen.nmea.router;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import static java.net.StandardSocketOptions.SO_BROADCAST;
-import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
@@ -56,18 +53,21 @@ import org.vesalainen.nio.RingBuffer;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.AppendableByteChannel;
 import org.vesalainen.nio.channels.MultiProviderSelector;
+import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.jaxb.router.BroadcastNMEAType;
 import org.vesalainen.nmea.jaxb.router.BroadcastType;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.FlowControlType;
-import org.vesalainen.nmea.jaxb.router.NmeaHsType;
+import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
+import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ParityType;
 import org.vesalainen.nmea.jaxb.router.RouteType;
-import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
+import org.vesalainen.nmea.jaxb.router.SenderType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
+import org.vesalainen.nmea.sender.Sender;
 import org.vesalainen.util.AutoCloseableList;
 import org.vesalainen.util.CmdArgs;
 import org.vesalainen.util.HashMapList;
@@ -76,6 +76,7 @@ import org.vesalainen.util.Matcher;
 import org.vesalainen.util.Matcher.Status;
 import org.vesalainen.util.OrMatcher;
 import org.vesalainen.util.SimpleMatcher;
+import org.vesalainen.util.concurrent.ConcurrentArraySet;
 import org.vesalainen.util.logging.ChannelHandler;
 import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.logging.MinimalFormatter;
@@ -93,8 +94,8 @@ public class Router extends JavaLogging
     private static final int BufferSize = 1024;
     private AutoCloseableList<AutoCloseable> autoCloseables;
     private MultiProviderSelector selector;
-    private Set<SerialChannel> portPool = new HashSet<>();
-    private Set<SerialEndpoint> resolvPool = new HashSet<>();
+    private Set<SerialChannel> portPool = new ConcurrentArraySet<>();
+    private Set<SerialEndpoint> resolvPool = new ConcurrentArraySet<>();
     private final Map<String,DataSource> targets = new HashMap<>();
     private final MapList<String,DataSource> sources = new HashMapList<>();
     private int serialCount = 0;
@@ -167,9 +168,9 @@ public class Router extends JavaLogging
             throw new IOException("no ports");
         }
 
-        RouterType routerType = config.getRouterType();
-        proprietaryPrefix = routerType.getProprietaryPrefix();
-        Integer port = routerType.getCtrlTcpPort();
+        NmeaType nmeaType = config.getNmeaType();
+        proprietaryPrefix = nmeaType.getProprietaryPrefix();
+        Integer port = nmeaType.getCtrlTcpPort();
         if (port != null)
         {
             ctrlTcpPort = port;
@@ -187,6 +188,13 @@ public class Router extends JavaLogging
         if (serialCount == portCount)
         {
             canForce = true;
+        }
+        SenderType senderType = config.getSenderType();
+        if (senderType != null)
+        {
+            Sender sender = new Sender(senderType);
+            Thread thread = new Thread(sender, "sender");
+            thread.start();
         }
     }
 
@@ -268,13 +276,13 @@ public class Router extends JavaLogging
         {
             return new DatagramEndpoint((DatagramType) endpointType);
         }
-        if (endpointType instanceof NmeaHsType)
+        if (endpointType instanceof Nmea0183HsType)
         {
-            return new NmeaHsEndpoint((NmeaHsType) endpointType);
+            return new NmeaHsEndpoint((Nmea0183HsType) endpointType);
         }
-        if (endpointType instanceof NmeaType)
+        if (endpointType instanceof Nmea0183Type)
         {
-            return new NmeaEndpoint((NmeaType) endpointType);
+            return new NmeaEndpoint((Nmea0183Type) endpointType);
         }
         if (endpointType instanceof SeatalkType)
         {
@@ -293,19 +301,6 @@ public class Router extends JavaLogging
         {
             super(broadcastNMEAType);
         }
-        @Override
-        protected InetSocketAddress createSocketAddress(String address, Integer port)
-        {
-            if (address == null)
-            {
-                address = "255.255.255.255";
-            }
-            if (port == null)
-            {
-                port = 10110;
-            }
-            return new InetSocketAddress(address, port);
-        }
     }
     private class BroadcastEndpoint extends DatagramEndpoint
     {
@@ -313,151 +308,41 @@ public class Router extends JavaLogging
         {
             super(broadcastType);
         }
-        @Override
-        protected InetSocketAddress createSocketAddress(String address, Integer port)
-        {
-            if (address != null && port != null)
-            {
-                return new InetSocketAddress(name, port);
-            }
-            else
-            {
-                if (port != null)
-                {
-                    return new InetSocketAddress("255.255.255.255", port);
-                }
-                else
-                {
-                    throw new IllegalArgumentException("port is null");
-                }
-            }
-        }
-
-        @Override
-        protected SelectableChannel configureChannel(boolean force) throws IOException
-        {
-            writeChannel = DatagramChannel.open();
-            writeChannel.configureBlocking(false);
-            writeChannel.bind(null);
-            writeChannel.setOption(SO_BROADCAST, true);
-            writeChannel.connect(socketAddress);
-            matched();
-            if (isSource())
-            {
-                readChannel = createReadChannel();
-            }
-            return readChannel;
-        }
-
     }
     private class DatagramEndpoint extends Endpoint
     {
-        protected DatagramChannel readChannel;
-        protected DatagramChannel writeChannel;
-        protected InetSocketAddress socketAddress;
-        protected ByteBuffer readBuffer;
+        protected String host = "255.255.255.255";
+        protected int port = 10110;
         
         public DatagramEndpoint(DatagramType datagramType)
         {
             super(datagramType);
             init(datagramType);
         }
-        protected InetSocketAddress createSocketAddress(String address, Integer port)
-        {
-            if (address != null && port != null)
-            {
-                return new InetSocketAddress(name, port);
-            }
-            else
-            {
-                if (port != null)
-                {
-                    return new InetSocketAddress(port);
-                }
-                else
-                {
-                    throw new IllegalArgumentException("port is null");
-                }
-            }
-        }
 
         private void init(DatagramType datagramType)
         {
-            socketAddress = createSocketAddress(datagramType.getAddress(), datagramType.getPort());
+            String address = datagramType.getAddress();
+            if (address != null)
+            {
+                this.host = address;
+            }
+            Integer p = datagramType.getPort();
+            if (p != null)
+            {
+                this.port = p;
+            }
         }
 
         @Override
         protected SelectableChannel configureChannel(boolean force) throws IOException
         {
-            writeChannel = DatagramChannel.open();
-            writeChannel.configureBlocking(false);
-            writeChannel.connect(socketAddress);
             matched();
-            if (isSource())
-            {
-                readChannel = createReadChannel();
-            }
-            return readChannel;
+            channel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, isSource());
+            channel.configureBlocking(false);
+            return channel;
         }
 
-        @Override
-        protected void handle(SelectionKey sk) throws IOException
-        {
-            while (true)
-            {
-                readBuffer.clear();
-                InetSocketAddress receiveAddr = (InetSocketAddress) readChannel.receive(readBuffer);
-                finest("receive-from="+receiveAddr);
-                if (receiveAddr == null)
-                {
-                    return;
-                }
-                readBuffer.flip();
-                readCount++;
-                readBytes += readBuffer.remaining();
-                matcher.clear();
-                while (readBuffer.hasRemaining())
-                {
-                    byte b = readBuffer.get();
-                    switch (matcher.match(b))
-                    {
-                        case Error:
-                            return;
-                        case Ok:
-                        case WillMatch:
-                            break;
-                        case Match:
-                            for (String target : matcher.getLastMatched())
-                            {
-                                DataSource ds = targets.get(target);
-                                if (ds != null)
-                                {
-                                    readBuffer.flip();
-                                    ds.write(readBuffer);
-                                }
-                            }
-                            return;
-                    }
-                }
-            }
-        }
-        
-        @Override
-        protected void write(RingByteBuffer ring) throws IOException
-        {
-            int cnt = ring.write(writeChannel);
-            writeCount++;
-            writeBytes += cnt;
-        }
-
-        @Override
-        protected void write(ByteBuffer bb) throws IOException
-        {
-            int cnt = writeChannel.write(bb);
-            writeCount++;
-            writeBytes += cnt;
-        }
-        
         @Override
         protected boolean failed()
         {
@@ -470,21 +355,10 @@ public class Router extends JavaLogging
             return false;
         }
 
-        protected DatagramChannel createReadChannel() throws IOException
-        {
-            readBuffer = ByteBuffer.allocateDirect(100);
-            readChannel = DatagramChannel.open();
-            readChannel.configureBlocking(false);
-            readChannel.setOption(SO_BROADCAST, true);
-            readChannel.setOption(SO_REUSEADDR, true);
-            readChannel.bind(new InetSocketAddress(socketAddress.getPort()));
-            return readChannel;
-        }
-
         @Override
         public String toString()
         {
-            return "DatagramEndpoint{" + "name="+name+" socketAddress=" + socketAddress + '}';
+            return "DatagramEndpoint{name=" +name+ ", host=" + host + ", port=" + port + '}';
         }
 
     }
@@ -524,7 +398,7 @@ public class Router extends JavaLogging
     private class NmeaHsEndpoint extends SerialEndpoint
     {
 
-        public NmeaHsEndpoint(NmeaHsType nmeaHsType)
+        public NmeaHsEndpoint(Nmea0183HsType nmeaHsType)
         {
             super(nmeaHsType);
         }
@@ -539,7 +413,7 @@ public class Router extends JavaLogging
     private class NmeaEndpoint extends SerialEndpoint
     {
 
-        public NmeaEndpoint(NmeaType nmeaType)
+        public NmeaEndpoint(Nmea0183Type nmeaType)
         {
             super(nmeaType);
         }
@@ -549,6 +423,7 @@ public class Router extends JavaLogging
     {
         protected Configuration configuration;
         private long resolvStarted;
+        private long resolvTimeout = ResolvTimeout;
         protected Set<SerialChannel> triedPorts = new HashSet<>();
         protected String port;
         
@@ -619,10 +494,9 @@ public class Router extends JavaLogging
                     return serialChannel;
                 }
             }
-            if (serialCount == triedPorts.size())
-            {
-                info("%s: all ports tried read cound=%d bytes=%d", name, readCount, readBytes);
-            }
+            resolvTimeout += ResolvTimeout;
+            triedPorts.clear();
+            info("set resolvTimeout=%d", resolvTimeout);
             return null;
         }
 
@@ -635,39 +509,15 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected void write(RingByteBuffer ring) throws IOException
-        {
-            if (attached == null)
-            {
-                int cnt = ring.write((GatheringByteChannel)channel);
-                finest("write %s = %d", ring, cnt);
-                writeCount++;
-                writeBytes += cnt;
-            }
-        }
-
-        @Override
-        protected void write(ByteBuffer bb) throws IOException
-        {
-            if (attached == null)
-            {
-                int cnt = ((WritableByteChannel)channel).write(bb);
-                finest("write %s = %d", bb, cnt);
-                writeCount++;
-                writeBytes += cnt;
-            }
-        }
-
-        @Override
         protected boolean failed()
         {
-            return failed && resolvStarted + ResolvTimeout < System.currentTimeMillis();
+            return failed && resolvStarted + resolvTimeout < System.currentTimeMillis();
         }
 
         @Override
         protected boolean resolving()
         {
-            return failed && resolvStarted + ResolvTimeout > System.currentTimeMillis();
+            return failed && resolvStarted + resolvTimeout > System.currentTimeMillis();
         }
 
         @Override
@@ -713,6 +563,30 @@ public class Router extends JavaLogging
                         sources.add(trg, this);
                     }
                 }
+            }
+        }
+
+        @Override
+        protected void write(RingByteBuffer ring) throws IOException
+        {
+            if (attached == null)
+            {
+                int cnt = ring.write((GatheringByteChannel)channel);
+                finest("write %s = %d", ring, cnt);
+                writeCount++;
+                writeBytes += cnt;
+            }
+        }
+
+        @Override
+        protected void write(ByteBuffer bb) throws IOException
+        {
+            if (attached == null)
+            {
+                int cnt = ((WritableByteChannel)channel).write(bb);
+                finest("write %s = %d", bb, cnt);
+                writeCount++;
+                writeBytes += cnt;
             }
         }
 
@@ -1394,7 +1268,8 @@ public class Router extends JavaLogging
         }
         catch (IOException | SecurityException | JAXBException ex)
         {
-            Logger.getLogger(Router.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return;
         }
         MinimalFormatter minimalFormatter = new MinimalFormatter();
         handler.setFormatter(minimalFormatter);

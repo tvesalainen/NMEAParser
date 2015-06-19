@@ -17,111 +17,54 @@
 package org.vesalainen.nmea.sender;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.GregorianCalendar;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.zip.CheckedOutputStream;
-import org.vesalainen.nio.channels.ByteBufferOutputStream;
+import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
-import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
-import org.vesalainen.parsers.nmea.Clock;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
-import org.vesalainen.parsers.nmea.NMEAGen;
+import org.vesalainen.nmea.jaxb.router.SenderType;
+import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author tkv
  */
-public class Sender extends AbstractNMEAObserver
+public class Sender extends JavaLogging implements Runnable
 {
-    private float trackMadeGood;
-    private float speedOverGround;
-    private float longitude;
-    private float latitude;
-    private boolean positionUpdated;
     private UnconnectedDatagramChannel channel;
-    private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
-    private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
-    private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
-    private GregorianCalendar calendar;
+    private SenderType senderType;
+    private final NMEADispatcher observer = NMEADispatcher.getInstance(NMEADispatcher.class);
 
-    public Sender() throws IOException
+    public Sender(SenderType senderType) throws IOException
     {
+        this.senderType = senderType;
+        setLogger(this.getClass());
     }
-    private void run() throws IOException
+    
+    public void add(PropertySetter propertySetter)
+    {
+        observer.addObserver(propertySetter, propertySetter.getPrefixes());
+    }
+    @Override
+    public void run()
     {
         try (UnconnectedDatagramChannel ch = UnconnectedDatagramChannel.open("255.255.255.255", 10110, 100, true, false))
         {
             channel = ch;
+            VariationSourceType vst = senderType.getVariationSource();
+            if (vst != null)
+            {
+                info("add VariationSource");
+                VariationSource vs = new VariationSource(channel, vst);
+                add(vs);
+            }
             NMEAParser parser = NMEAParser.newInstance();
-            parser.parse(channel, this, null);
-        }
-    }
-
-    @Override
-    public void commit(String reason)
-    {
-        if (positionUpdated)
-        {
-            bb.clear();
-            try
-            {
-                NMEAGen.rmc(cout, latitude, longitude, calendar);
-                bb.flip();
-                channel.write(bb);
-            }
-            catch (IOException ex)
-            {
-                Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            positionUpdated = false;
-        }
-    }
-
-    @Override
-    public void setClock(Clock clock)
-    {
-        super.setClock(clock);
-        calendar = clock.getCalendar();
-    }
-
-    @Override
-    public void setTrackMadeGood(float trackMadeGood)
-    {
-        this.trackMadeGood = trackMadeGood;
-    }
-
-    @Override
-    public void setSpeedOverGround(float speedOverGround)
-    {
-        this.speedOverGround = speedOverGround;
-    }
-
-    @Override
-    public void setLongitude(float longitude)
-    {
-        this.longitude = longitude;
-    }
-
-    @Override
-    public void setLatitude(float latitude)
-    {
-        this.latitude = latitude;
-        this.positionUpdated = true;
-    }
-    
-    public static void main(String... args)
-    {
-        try
-        {
-            Sender watcher = new Sender();
-            watcher.run();
+            parser.parse(channel, observer, null);
         }
         catch (IOException ex)
         {
-            Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, ex);
+            log(Level.SEVERE, "", ex);
         }
-    }    
+    }
+
 }

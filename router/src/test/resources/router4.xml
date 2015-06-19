@@ -1,30 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<router proprietaryPrefix="IRS" ctrlTcpPort="10110">
-    <nmea name="Simrad1">
-        <route prefix="$AGRSA" target="Net"/>
-    </nmea>
-    <nmea name="Simrad2">
-    </nmea>
-    <nmea name="Airmar">
-        <route prefix="$HCHDT" target="Net Simrad2"/>
-    </nmea>
-    <nmea-hs name="NAIS">
-        <route prefix="$GPGLL" target="Net"/>
-        <route prefix="$GPRMC" target="Net"/>
-        <route prefix="$GPGGA" target="Net"/>
-        <route prefix="$GPGLL" target="Net"/>
-        <route prefix="!AIVDM" target="Net"/>
-        <route prefix="!AIVDO" target="Net"/>
-        <route prefix="$AITXT" target="Net"/>
-    </nmea-hs>
-    <broadcast-nmea name="Net">
-        <route prefix="$INRMC" target="Airmar Simrad1"/>
-        <route prefix="$??APB" target="Simrad1"/>
-        <route prefix="$??BOD" target="Simrad1"/>
-        <route prefix="$??BWW" target="Simrad1"/>
-        <route prefix="$??BWC" target="Simrad1"/>
-        <route prefix="$??BWR" target="Simrad1"/>
-        <route prefix="$??RMB" target="Simrad1"/>
-        <route prefix="$??XTE" target="Simrad1"/>
-    </broadcast-nmea>
-</router>
+<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
+    <sender>
+        <variation-source/>
+    </sender>
+    <router>
+        <nmea-0183 name="Simrad1">
+            <route prefix="$AGRSA" target="Net"/>
+        </nmea-0183>
+        <nmea-0183 name="Simrad2">
+        </nmea-0183>
+        <nmea-0183 name="Airmar">
+            <route prefix="$HCHDT" target="Net Simrad2"/>
+        </nmea-0183>
+        <nmea-0183-hs name="NAIS">
+            <route prefix="$GPGLL" target="Net"/>
+            <route prefix="$GPRMC" target="Net"/>
+            <route prefix="$GPGGA" target="Net"/>
+            <route prefix="$GPGLL" target="Net"/>
+            <route prefix="!AIVDM" target="Net"/>
+            <route prefix="!AIVDO" target="Net"/>
+            <route prefix="$AITXT" target="Net"/>
+        </nmea-0183-hs>
+        <broadcast-nmea-0183 name="Net">
+            <route prefix="$INRMC" target="Airmar Simrad1"/>
+            <route prefix="$??APB" target="Simrad1"/>
+            <route prefix="$??BOD" target="Simrad1"/>
+            <route prefix="$??BWW" target="Simrad1"/>
+            <route prefix="$??BWC" target="Simrad1"/>
+            <route prefix="$??BWR" target="Simrad1"/>
+            <route prefix="$??RMB" target="Simrad1"/>
+            <route prefix="$??XTE" target="Simrad1"/>
+        </broadcast-nmea-0183>
+    </router>
+</nmea>

@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<router proprietaryPrefix="IRS" ctrlTcpPort="10110">
-    <seatalk name="SeaTalk">
-        <route prefix="$??MTW" target="Net"/>
-        <route prefix="$??DBT" target="Net"/>
-        <route prefix="$??VHW" target="Net"/>
-    </seatalk>
-    <nmea name="Furuno">
-        <route prefix="$??RMB" target="Net"/>
-        <route prefix="$??RMC" target="Net"/>
-        <route prefix="$??BWC" target="Net"/>
-        <route prefix="$??GLL" target="Net"/>
-        <route prefix="$??GAA" target="Net"/>
-        <route prefix="$??VTG" target="Net"/>
-        <route prefix="$??ZDA" target="Net"/>
-    </nmea>
-    <broadcast-nmea name="Net">
-        <route prefix="$PIRS,ST,LAMP" target="SeaTalk"/>
-    </broadcast-nmea>
-</router>
+<nmea>
+    <router proprietaryPrefix="IRS" ctrlTcpPort="10110">
+        <seatalk name="SeaTalk">
+            <route prefix="$??MTW" target="Net"/>
+            <route prefix="$??DBT" target="Net"/>
+            <route prefix="$??VHW" target="Net"/>
+        </seatalk>
+        <nmea-0183 name="Furuno">
+            <route prefix="$??RMB" target="Net"/>
+            <route prefix="$??RMC" target="Net"/>
+            <route prefix="$??BWC" target="Net"/>
+            <route prefix="$??GLL" target="Net"/>
+            <route prefix="$??GAA" target="Net"/>
+            <route prefix="$??VTG" target="Net"/>
+            <route prefix="$??ZDA" target="Net"/>
+        </nmea-0183>
+        <broadcast-nmea-0183 name="Net">
+            <route prefix="$PIRS,ST,LAMP" target="SeaTalk"/>
+        </broadcast-nmea-0183>
+    </router>
+</nmea>

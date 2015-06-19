@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
            elementFormDefault="qualified" attributeFormDefault="unqualified">
-    <xs:element name="router" type="routerType"/>
-    <xs:complexType name="routerType">
+    <xs:element name="nmea" type="nmeaType"/>
+    <xs:complexType name="nmeaType">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
-            <xs:element name="broadcast" type="broadcastType"/>
-            <xs:element name="broadcast-nmea" type="broadcastNMEAType"/>
-            <xs:element name="datagram" type="datagramType"/>
-            <xs:element name="seatalk" type="seatalkType"/>
-            <xs:element name="nmea-hs" type="nmea-hsType"/>
-            <xs:element name="nmea" type="nmeaType"/>
-            <xs:element name="serial" type="serialType"/>
+            <xs:element name="sender" type="senderType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="router" type="routerType" minOccurs="0" maxOccurs="1"/>
         </xs:choice>
         <xs:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xs:attribute>
         <xs:attribute name="ctrlTcpPort" type="portType"/>
+    </xs:complexType>
+    <xs:complexType name="senderType">
+        <xs:choice>
+            <xs:element name="variation-source" type="variation-sourceType"/>
+        </xs:choice>
+    </xs:complexType>
+    <xs:complexType name="routerType">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="broadcast" type="broadcastType"/>
+            <xs:element name="broadcast-nmea-0183" type="broadcastNMEAType"/>
+            <xs:element name="datagram" type="datagramType"/>
+            <xs:element name="seatalk" type="seatalkType"/>
+            <xs:element name="nmea-0183-hs" type="nmea-0183-hsType"/>
+            <xs:element name="nmea-0183" type="nmea-0183Type"/>
+            <xs:element name="serial" type="serialType"/>
+        </xs:choice>
     </xs:complexType>
     <xs:complexType name="broadcastNMEAType">
         <xs:complexContent>
@@ -38,12 +49,12 @@
             <xs:extension base="serialType"/>
         </xs:complexContent>
     </xs:complexType>
-    <xs:complexType name="nmea-hsType">
+    <xs:complexType name="nmea-0183-hsType">
         <xs:complexContent>
             <xs:extension base="serialType"/>
         </xs:complexContent>
     </xs:complexType>
-    <xs:complexType name="nmeaType">
+    <xs:complexType name="nmea-0183Type">
         <xs:complexContent>
             <xs:extension base="serialType"/>
         </xs:complexContent>
@@ -68,6 +79,8 @@
     <xs:complexType name="routeType">
         <xs:attribute name="prefix" type="prefixType" use="required"/>
         <xs:attribute name="target" type="targetType" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="variation-sourceType">
     </xs:complexType>
     <xs:simpleType name="addressType">
         <xs:restriction base="xs:string">

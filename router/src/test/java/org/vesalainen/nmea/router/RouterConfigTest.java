@@ -24,8 +24,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.nmea.jaxb.router.BroadcastNMEAType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
-import org.vesalainen.nmea.jaxb.router.NmeaHsType;
-import org.vesalainen.nmea.jaxb.router.NmeaType;
+import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
+import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
 
@@ -46,6 +46,7 @@ public class RouterConfigTest
         try (InputStream is = RouterConfigTest.class.getClassLoader().getResourceAsStream("router.xml");)
         {
             RouterConfig rc = new RouterConfig(is);
+            assertFalse(rc.isVariationSource());
             List<EndpointType> endpoints = rc.getEndpoints();
             assertNotNull(endpoints);
             assertEquals(4, endpoints.size());
@@ -63,11 +64,11 @@ public class RouterConfigTest
             
             et = endpoints.get(1);
             assertEquals("Furuno", et.getName());
-            NmeaType nt = (NmeaType) et;
+            Nmea0183Type nt = (Nmea0183Type) et;
 
             et = endpoints.get(2);
             assertEquals("AIS", et.getName());
-            NmeaHsType hst = (NmeaHsType) et;
+            Nmea0183HsType hst = (Nmea0183HsType) et;
             
             et = endpoints.get(3);
             assertEquals("Net", et.getName());
