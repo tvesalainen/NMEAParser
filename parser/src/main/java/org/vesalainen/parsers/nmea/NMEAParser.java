@@ -42,7 +42,6 @@ import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
-import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
 
 /**
  * @author Timo Vesalainen
@@ -59,8 +58,8 @@ import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
     @Rule(left = "statement", value = "nmeaStatement"),
     @Rule(left = "nmeaStatement", value = "'\\$' talkerId nmeaSentence '[\\,]*\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType c proprietaryData '\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "aivdm aisPrefix ('[0-W`-w]' c)? '\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "aivdo aisPrefix ('[0-W`-w]' c)? '\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "aivdm aisPrefix ('[0-W`-w]+' c ('[0-5]')?)? '\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "aivdo aisPrefix ('[0-W`-w]+' c ('[0-5]')?)? '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaSentence", value = "aam c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
     @Rule(left = "nmeaSentence", value = "alm c totalNumberOfMessages c messageNumber c satellitePRNNumber c gpsWeekNumber c svHealth c eccentricity c almanacReferenceTime c inclinationAngle c rateOfRightAscension c rootOfSemiMajorAxis c argumentOfPerigee c longitudeOfAscensionNode c meanAnomaly c f0ClockParameter c f1ClockParameter"),
     @Rule(left = "nmeaSentence", value = "apa c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),
@@ -189,13 +188,19 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     @Rule("'!AIVDM'")
     protected void aivdm(@ParserContext("aisContext") AISContext aisContext)
     {
-        aisContext.setOwnMessage(false);
+        if (aisContext != null)
+        {
+            aisContext.setOwnMessage(false);
+        }
     }
 
     @Rule("'!AIVDO'")
     protected void aivdo(@ParserContext("aisContext") AISContext aisContext)
     {
-        aisContext.setOwnMessage(true);
+        if (aisContext != null)
+        {
+            aisContext.setOwnMessage(true);
+        }
     }
 
     @Rule("letter")
@@ -1311,8 +1316,6 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
         float degrees = (float) Math.floor(lat / 100);
         float minutes = lat - 100F * degrees;
         float latitude = degrees + minutes / 60F;
-        assert latitude >= 0;
-        assert latitude <= 90;
         return latitude;
     }
 
@@ -1322,8 +1325,6 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
         float degrees = (float) Math.floor(lat / 100);
         float minutes = lat - 100F * degrees;
         float longitude = degrees + minutes / 60F;
-        assert longitude >= 0;
-        assert longitude <= 180;
         return longitude;
     }
 
