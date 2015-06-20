@@ -59,8 +59,8 @@ import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
     @Rule(left = "statement", value = "nmeaStatement"),
     @Rule(left = "nmeaStatement", value = "'\\$' talkerId nmeaSentence '[\\,]*\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType c proprietaryData '\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "aivdm aisPrefix '\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "aivdo aisPrefix '\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "aivdm aisPrefix ('[0-W`-w]' c)? '\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "aivdo aisPrefix ('[0-W`-w]' c)? '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaSentence", value = "aam c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
     @Rule(left = "nmeaSentence", value = "alm c totalNumberOfMessages c messageNumber c satellitePRNNumber c gpsWeekNumber c svHealth c eccentricity c almanacReferenceTime c inclinationAngle c rateOfRightAscension c rootOfSemiMajorAxis c argumentOfPerigee c longitudeOfAscensionNode c meanAnomaly c f0ClockParameter c f1ClockParameter"),
     @Rule(left = "nmeaSentence", value = "apa c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),
@@ -400,13 +400,16 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException
     {
-        aisContext.startOfSentence(
-                input, 
-                numberOfSentences, 
-                sentenceNumber,
-                sequentialMessageID,
-                channel
-        );
+        if (aisContext != null)
+        {
+            aisContext.startOfSentence(
+                    input, 
+                    numberOfSentences, 
+                    sentenceNumber,
+                    sequentialMessageID,
+                    channel
+            );
+        }
     }
 
     @Rule("integer")
@@ -1281,7 +1284,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             String reason = input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
             data.rollback(reason);
             warning(reason);
-            if (aisContext.isAisMessage())
+            if (aisContext != null && aisContext.isAisMessage())
             {
                 aisContext.afterChecksum(false, reason);
             }
@@ -1291,12 +1294,15 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             clock.commit();
             String reason = input.getLineNumber()+": "+Integer.toHexString(sum);
             data.commit(reason);
-            if (aisContext.isAisMessage())
+            if (aisContext != null && aisContext.isAisMessage())
             {
                 aisContext.afterChecksum(true, reason);
             }
         }
-        aisContext.setAisMessage(false);
+        if (aisContext != null)
+        {
+            aisContext.setAisMessage(false);
+        }
     }
 
     @Terminal(expression = "[0-9]+\\.[0-9]+")
@@ -1395,7 +1401,7 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
         warning(reason);
         data.rollback(reason);
         reader.clear();
-        if (aisContext.isAisMessage())
+        if (aisContext != null && aisContext.isAisMessage())
         {
             aisContext.afterChecksum(false, reason);
         }
@@ -1414,16 +1420,16 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
         {
             data = new AbstractNMEAObserver();
         }
-        if (aisData == null)
-        {
-            aisData = new AbstractAISObserver();
-        }
         Clock clock = new GPSClock();
         data.setClock(clock);
         data.commit("Set clock");
-        aisData.setClock(clock);
-        aisData.commit("Set clock");
-        AISContext aisContext = new AISContext(aisData);
+        AISContext aisContext = null;
+        if (aisData != null)
+        {
+            aisData.setClock(clock);
+            aisData.commit("Set clock");
+            aisContext = new AISContext(aisData);
+        }
         try
         {
             if (input instanceof ScatteringByteChannel)
@@ -1462,7 +1468,10 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
         }
         finally
         {
-            aisContext.waitAndStopThreads();
+            if (aisContext != null)
+            {
+                aisContext.waitAndStopThreads();
+            }
         }
     }
     @ParseMethod(start = "statements", size = 1024, charSet = "US-ASCII",
