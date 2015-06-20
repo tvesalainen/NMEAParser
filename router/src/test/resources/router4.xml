@@ -5,7 +5,8 @@
     </sender>
     <router>
         <nmea-0183 name="Simrad1">
-            <route prefix="$AGRSA" target="Net"/>
+            <route prefix="$AGGLL" target=""/>
+            <route prefix="$AGRMC" target=""/>
         </nmea-0183>
         <nmea-0183 name="Simrad2">
         </nmea-0183>
@@ -14,15 +15,14 @@
         </nmea-0183>
         <nmea-0183-hs name="NAIS">
             <route prefix="$GPGLL" target="Net"/>
-            <route prefix="$GPRMC" target="Net"/>
+            <route prefix="$GPRMC" target="Net Simrad1"/>
             <route prefix="$GPGGA" target="Net"/>
-            <route prefix="$GPGLL" target="Net"/>
             <route prefix="!AIVDM" target="Net"/>
             <route prefix="!AIVDO" target="Net"/>
             <route prefix="$AITXT" target="Net"/>
         </nmea-0183-hs>
         <broadcast-nmea-0183 name="Net">
-            <route prefix="$INRMC" target="Airmar Simrad1"/>
+            <route prefix="$INRMC" target="Airmar"/>
             <route prefix="$??APB" target="Simrad1"/>
             <route prefix="$??BOD" target="Simrad1"/>
             <route prefix="$??BWW" target="Simrad1"/>

@@ -44,6 +44,7 @@ import static java.util.logging.Level.*;
 import java.util.logging.Logger;
 import java.util.logging.MemoryHandler;
 import java.util.logging.SocketHandler;
+import java.util.prefs.Preferences;
 import javax.xml.bind.JAXBException;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
@@ -70,8 +71,8 @@ import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.sender.Sender;
 import org.vesalainen.util.AutoCloseableList;
 import org.vesalainen.util.CmdArgs;
-import org.vesalainen.util.HashMapList;
-import org.vesalainen.util.MapList;
+import org.vesalainen.util.HashMapSet;
+import org.vesalainen.util.MapSet;
 import org.vesalainen.util.Matcher;
 import org.vesalainen.util.Matcher.Status;
 import org.vesalainen.util.OrMatcher;
@@ -90,24 +91,27 @@ public class Router extends JavaLogging
     private static final long RestartLimit = 300000;
     private static final String whiteSpace = "[ \r\n\t]+";
     private final RouterConfig config;
-    private static final long ResolvTimeout = 5000;
+    private static final long ResolvTimeout = 2000;
+    private static final long MaxResolvTimeout = 30000;
     private static final int BufferSize = 1024;
     private AutoCloseableList<AutoCloseable> autoCloseables;
     private MultiProviderSelector selector;
     private Set<SerialChannel> portPool = new ConcurrentArraySet<>();
     private Set<SerialEndpoint> resolvPool = new ConcurrentArraySet<>();
     private final Map<String,DataSource> targets = new HashMap<>();
-    private final MapList<String,DataSource> sources = new HashMapList<>();
+    private final MapSet<String,DataSource> sources = new HashMapSet<>();
     private int serialCount = 0;
     private int resolvCount = 0;
     private boolean canForce;
     private String proprietaryPrefix;
     private int ctrlTcpPort;
+    private final Preferences prefs;
 
     public Router(RouterConfig config, Logger rootLog)
     {
         super(rootLog);
         this.config = config;
+        this.prefs = Preferences.systemNodeForPackage(this.getClass());
     }
     
     private void run() throws IOException
@@ -184,6 +188,11 @@ public class Router extends JavaLogging
                 serialCount++;
             }
             configureChannel(endpoint, selector, false);
+        }
+        for (SelectionKey sk : selector.keys())
+        {
+            DataSource ds = (DataSource) sk.attachment();
+            ds.updateStatus();
         }
         if (serialCount == portCount)
         {
@@ -425,12 +434,14 @@ public class Router extends JavaLogging
         private long resolvStarted;
         private long resolvTimeout = ResolvTimeout;
         protected Set<SerialChannel> triedPorts = new HashSet<>();
+        protected String lastPort;
         protected String port;
         
         public SerialEndpoint(SerialType serialType)
         {
             super(serialType);
             init(serialType);
+            lastPort = prefs.get(name+".port", null);
         }
 
         protected Configuration createConfig()
@@ -471,6 +482,21 @@ public class Router extends JavaLogging
         @Override
         protected SelectableChannel configureChannel(boolean force) throws IOException
         {
+            if (lastPort != null)
+            {
+                Iterator<SerialChannel> iterator = portPool.iterator();
+                while (iterator.hasNext())
+                {
+                    SerialChannel serialChannel = iterator.next();
+                    if (lastPort.equals(serialChannel.getPort()))
+                    {
+                        info("using last matched port %s", lastPort);
+                        iterator.remove();
+                        lastPort = null;
+                        return configure(serialChannel, force);
+                    }
+                }
+            }
             Iterator<SerialChannel> iterator = portPool.iterator();
             while (iterator.hasNext())
             {
@@ -478,28 +504,39 @@ public class Router extends JavaLogging
                 if (!triedPorts.contains(serialChannel) || force)
                 {
                     iterator.remove();
-                    serialChannel.configure(configuration);
-                    if (force)
-                    {
-                        matched();
-                    }
-                    else
-                    {
-                        triedPorts.add(serialChannel);
-                        resolvStarted = System.currentTimeMillis();
-                    }
-                    info("%s: %s -> %s", name, serialChannel, configuration);
-                    channel = serialChannel;
-                    port = serialChannel.getPort();
-                    return serialChannel;
+                    return configure(serialChannel, force);
                 }
             }
-            resolvTimeout += ResolvTimeout;
-            triedPorts.clear();
-            info("set resolvTimeout=%d", resolvTimeout);
+            if (resolvTimeout < MaxResolvTimeout)
+            {
+                resolvTimeout += ResolvTimeout;
+            }
+            if (triedPorts.size() >= serialCount-resolvCount)
+            {
+                triedPorts.clear(); // try again
+            }
+            //info("set resolvTimeout=%d", resolvTimeout);
             return null;
         }
 
+        private SelectableChannel configure(SerialChannel serialChannel, boolean force) throws IOException
+        {
+            serialChannel.configure(configuration);
+            if (force)
+            {
+                matched();
+            }
+            else
+            {
+                triedPorts.add(serialChannel);
+                resolvStarted = System.currentTimeMillis();
+            }
+            info("%s: %s -> %s", name, serialChannel, configuration);
+            channel = serialChannel;
+            port = serialChannel.getPort();
+            return serialChannel;
+        }
+        
         @Override
         protected void attachedWrite(RingByteBuffer ring) throws IOException
         {
@@ -525,6 +562,7 @@ public class Router extends JavaLogging
         {
             super.matched();
             resolvCount++;
+            prefs.put(name+".port", port);
         }
 
         @Override
@@ -532,7 +570,7 @@ public class Router extends JavaLogging
         {
             return "SerialEndpoint{" + "name="+name+" port="+port+" configuration=" + configuration + '}';
         }
-        
+
     }
     private abstract class Endpoint extends DataSource
     {
@@ -541,8 +579,7 @@ public class Router extends JavaLogging
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean failed = true;
         private boolean mark = true;
-        private boolean isSink;
-        private boolean isSingleSink;
+        private int position = -1;
 
         public Endpoint(EndpointType endpointType)
         {
@@ -567,14 +604,43 @@ public class Router extends JavaLogging
         }
 
         @Override
+        protected void writePartial(RingByteBuffer ring) throws IOException
+        {
+            if (attached == null)
+            {
+                int cnt;
+                if (position == -1)
+                {
+                    cnt = ring.write((GatheringByteChannel)channel);
+                }
+                else
+                {
+                    cnt = ring.write((GatheringByteChannel)channel, position);
+                }
+                position = ring.getPosition();
+                finest("write %s = %d", ring, cnt);
+                writeCount++;
+                writeBytes += cnt;
+            }
+        }
+
+        @Override
         protected void write(RingByteBuffer ring) throws IOException
         {
             if (attached == null)
             {
-                int cnt = ring.write((GatheringByteChannel)channel);
-                finest("write %s = %d", ring, cnt);
-                writeCount++;
-                writeBytes += cnt;
+                if (position != -1)
+                {
+                    writePartial(ring);
+                    position = -1;
+                }
+                else
+                {
+                    int cnt = ring.write((GatheringByteChannel)channel);
+                    finest("write %s = %d", ring, cnt);
+                    writeCount++;
+                    writeBytes += cnt;
+                }
             }
         }
 
@@ -598,25 +664,11 @@ public class Router extends JavaLogging
         @Override
         protected void updateStatus()
         {
-            List<DataSource> list = sources.get(this);
-            isSink = list != null;
-            isSingleSink = isSink && list.size() == 1;
+            Set<DataSource> set = sources.get(name);
+            isSink = set != null && set.size() > 0;
+            isSingleSink = isSink && set.size() == 1;
         }
         
-        public boolean isSink()
-        {
-            return isSink;
-        }
-        /**
-         * Returns true if only one endpoint writes to target and matched 
-         * input is written to only one target.
-         * @return 
-         */
-        protected boolean isSingleSink()
-        {
-            return isSingleSink;
-        }
-
         @Override
         protected void handle(SelectionKey sk) throws IOException
         {   
@@ -657,7 +709,7 @@ public class Router extends JavaLogging
                             break;
                         case Match:
                             finer("read: %s", ring);
-                            write(matcher, ring);
+                            write(matcher, ring, false);
                             if (failed)
                             {
                                 matched();
@@ -666,11 +718,9 @@ public class Router extends JavaLogging
                             break;
                     }
                 }
-                if (match == Status.WillMatch && isSingleSink())
+                if (match == Status.WillMatch)
                 {
-                    finer("partial: %s", ring);
-                    write(matcher, ring);
-                    ring.mark();
+                    write(matcher, ring, true);
                 }
             }
         }
@@ -681,15 +731,26 @@ public class Router extends JavaLogging
             return "Endpoint{" + "name=" + name + '}';
         }
 
-        private void write(OrMatcher<String> matcher, RingByteBuffer ring) throws IOException
+        private void write(OrMatcher<String> matcher, RingByteBuffer ring, boolean partial) throws IOException
         {
             for (String target : matcher.getLastMatched())
             {
                 DataSource ds = targets.get(target);
                 if (ds != null)
                 {
-                    finest("writeto %s %s", target, ring);
-                    ds.write(ring);
+                    if (partial)
+                    {
+                        if (ds.isSingleSink())
+                        {
+                            finest("write partial to %s %s", target, ring);
+                            ds.writePartial(ring);
+                        }
+                    }
+                    else
+                    {
+                        finest("writeto %s %s", target, ring);
+                        ds.write(ring);
+                    }
                 }
             }
         }
@@ -704,11 +765,6 @@ public class Router extends JavaLogging
             failed = false;
             info("matched=%s", name);
             targets.put(name, this);
-            for (SelectionKey sk : selector.keys())
-            {
-                DataSource ds = (DataSource) sk.attachment();
-                ds.updateStatus();
-            }
         }
 
     }
@@ -1176,6 +1232,8 @@ public class Router extends JavaLogging
     {
         protected final String name;
         protected DataSource attached;
+        protected boolean isSink;
+        protected boolean isSingleSink;
         protected long readCount;
         protected long readBytes;
         protected long writeCount;
@@ -1193,8 +1251,26 @@ public class Router extends JavaLogging
 
         protected abstract void write(RingByteBuffer ring) throws IOException;
 
+        protected void writePartial(RingByteBuffer ring) throws IOException
+        {
+        }
+
         protected void attachedWrite(RingByteBuffer ring) throws IOException
         {
+        }
+
+        public boolean isSink()
+        {
+            return isSink;
+        }
+        /**
+         * Returns true if only one endpoint writes to target and matched 
+         * input is written to only one target.
+         * @return 
+         */
+        protected boolean isSingleSink()
+        {
+            return isSingleSink;
         }
 
         protected void attach(DataSource ds)

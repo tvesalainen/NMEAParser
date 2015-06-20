@@ -159,7 +159,7 @@ public class VariationSource extends JavaLogging implements PropertySetter, Tran
                 positionUpdated = true;
                 break;
             case "longitude":
-                latitude = arg;
+                longitude = arg;
                 break;
         }
     }
