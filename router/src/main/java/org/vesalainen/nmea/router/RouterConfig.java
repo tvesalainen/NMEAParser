@@ -22,8 +22,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.net.URL;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -49,6 +56,8 @@ public class RouterConfig
     protected static JAXBContext jaxbCtx;
     protected static ObjectFactory factory;
     protected static DatatypeFactory dtFactory;
+    protected Set<String> ambiguousPrefixes = new HashSet<>();
+    protected MessageDigest digest;
     
     protected JAXBElement<NmeaType> nmea;
     static
@@ -76,26 +85,33 @@ public class RouterConfig
     
     public RouterConfig(File file) throws IOException, JAXBException
     {
-        Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
-        try (FileInputStream fis = new FileInputStream(file))
-        {
-            nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(fis); //NOI18N
-        }
-        check();
+        this(new FileInputStream(file));
     }
 
     public RouterConfig(URL url) throws IOException, JAXBException
     {
-        Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
-        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(url);
-        check();
+        this(url.openStream());
     }
 
     public RouterConfig(InputStream is) throws IOException, JAXBException
     {
-        Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
-        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(is);
-        check();
+        try
+        {
+            digest = MessageDigest.getInstance("SHA-1");
+            DigestInputStream dis = new DigestInputStream(is, digest);
+            Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
+            nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(dis);
+            check();
+        }
+        catch (NoSuchAlgorithmException ex)
+        {
+            throw new IOException(ex);
+        }
+    }
+
+    public MessageDigest getDigest()
+    {
+        return digest;
     }
 
     public boolean isVariationSource()
@@ -149,7 +165,17 @@ public class RouterConfig
             throw new IOException(ex);
         }
     }
-
+    /**
+     * Return true is prefix is ambiguous. Ambiguous prefix cannot be used in 
+     * determining which port is which, 
+     * because messages prefixed with ambiguous prefixes are received from several ports.
+     * @param prefix
+     * @return 
+     */
+    public boolean isAmbiguousPrefix(String prefix)
+    {
+        return ambiguousPrefixes.contains(prefix);
+    }
     private void check()
     {
         MapList<String,String> prefixes = new HashMapList<>();
@@ -168,7 +194,7 @@ public class RouterConfig
                         {
                             if (matchesSame(prefix, pre))
                             {
-                                throw new IllegalArgumentException(key+"->"+pre+" and "+name+"->"+prefix+" both match the same");
+                                ambiguousPrefixes.add(pre);
                             }
                         }
                     }

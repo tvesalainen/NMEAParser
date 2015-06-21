@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<nmea>
-    <router proprietaryPrefix="IRS" ctrlTcpPort="10110">
+<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
+    <router>
         <seatalk name="SeaTalk">
             <route prefix="$??MTW" target="Net"/>
             <route prefix="$??DBT" target="Net"/>

@@ -29,7 +29,7 @@ public class NMEAMatcher implements Matcher
 {
     enum State {Prefix, Data, Checksum1, Checksum2, Cr, Lf};
     private State state = State.Prefix;
-    private final Matcher prefixMatcher;
+    private final SimpleMatcher prefixMatcher;
     private final Checksum checksum;
     private int cs;
     private float matches;
@@ -42,6 +42,10 @@ public class NMEAMatcher implements Matcher
         this.checksum = new NMEAChecksum();
     }
 
+    public String getPrefix()
+    {
+        return prefixMatcher.getExpression();
+    }
     public int getMatches()
     {
         return (int) matches;
@@ -55,14 +59,7 @@ public class NMEAMatcher implements Matcher
     {
         if (matches == 0)
         {
-            if (errors == 0)
-            {
-                return 0;
-            }
-            else
-            {
-                return 100;
-            }
+            return 0;
         }
         return 100*errors/matches;
     }
@@ -171,7 +168,7 @@ public class NMEAMatcher implements Matcher
             case 'F':
                 return cc-'A'+10;
             default:
-                throw new IllegalArgumentException((char)cc+" not hex");
+                return -1;
         }
     }
     @Override

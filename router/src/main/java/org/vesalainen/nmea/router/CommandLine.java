@@ -16,26 +16,27 @@
  */
 package org.vesalainen.nmea.router;
 
-import java.net.URL;
-import org.junit.Test;
+import java.io.File;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import org.vesalainen.util.CmdArgs;
 
 /**
  *
  * @author tkv
  */
-public class RouterT
+public class CommandLine extends CmdArgs
 {
-    
-    public RouterT()
-    {
-    }
 
-    @Test
-    public void test()
+    public CommandLine()
     {
-        URL url = RouterConfigTest.class.getClassLoader().getResource("router2.xml");
-        String filename = url.getFile();
-        Router.main("-ll", "FINEST", "-pl", "FINEST", filename);
+        addArgument(File.class, "configuration file");
+        addOption("-lp", "log pattern", "filelog", "%t/router%g.log");
+        addOption("-h", "host", "netlog", "localhost");
+        addOption("-p", "port", "netlog", 0);
+        addOption("-ll", "log level", null, INFO);
+        addOption("-pl", "push level", null, SEVERE);
+        addOption("-f", "force port resolv", null, Boolean.FALSE);
     }
     
 }

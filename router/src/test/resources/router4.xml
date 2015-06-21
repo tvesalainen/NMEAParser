@@ -7,18 +7,24 @@
         <nmea-0183 name="Simrad1">
             <route prefix="$AGGLL" target=""/>
             <route prefix="$AGRMC" target=""/>
+            <route prefix="$AGRSA" target="Net"/>
+            <route prefix="$AGHDT" target=""/>
+            <route prefix="$AGHDM" target=""/>
         </nmea-0183>
         <nmea-0183 name="Simrad2">
+            <route prefix="$AGRSA" target=""/>
+            <route prefix="$AGHDT" target=""/>
+            <route prefix="$AGHDM" target=""/>
         </nmea-0183>
         <nmea-0183 name="Airmar">
             <route prefix="$HCHDT" target="Net Simrad2"/>
         </nmea-0183>
         <nmea-0183-hs name="NAIS">
-            <route prefix="$GPGLL" target="Net"/>
+            <route prefix="$GPGLL" target="Net Simrad1"/>
             <route prefix="$GPRMC" target="Net Simrad1"/>
-            <route prefix="$GPGGA" target="Net"/>
-            <route prefix="!AIVDM" target="Net"/>
-            <route prefix="!AIVDO" target="Net"/>
+            <route prefix="$GPGGA" target="Net Simrad1"/>
+            <route prefix="!AIVDM" target="Net MT"/>
+            <route prefix="!AIVDO" target="Net MT"/>
             <route prefix="$AITXT" target="Net"/>
         </nmea-0183-hs>
         <broadcast-nmea-0183 name="Net">
@@ -31,5 +37,7 @@
             <route prefix="$??RMB" target="Simrad1"/>
             <route prefix="$??XTE" target="Simrad1"/>
         </broadcast-nmea-0183>
+        <broadcast name="MT" address="5.9.207.224" port="5321">
+        </broadcast>
     </router>
 </nmea>
