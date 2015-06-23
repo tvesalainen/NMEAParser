@@ -70,7 +70,6 @@ import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SenderType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.sender.Sender;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.util.AutoCloseableList;
 import org.vesalainen.util.CmdArgs;
 import org.vesalainen.util.HashMapSet;
@@ -159,7 +158,7 @@ public class Router extends JavaLogging
                         SelectionKey selectionKey = iterator.next();
                         iterator.remove();
                         DataSource dataSource = (DataSource) selectionKey.attachment();
-                        fine("handle %s", dataSource);
+                        fine("select %s %d", dataSource.name, selectionKey.readyOps());
                         dataSource.handle(selectionKey);
                     }
                 }
@@ -249,10 +248,12 @@ public class Router extends JavaLogging
                 if (ds != null && (ds instanceof SerialEndpoint))
                 {
                     SerialEndpoint endpoint = (SerialEndpoint) ds;
-                    endpoint.matched();
+                    if (!endpoint.matched)
+                    {
+                        endpoint.matched();
+                    }
                 }
             }
-            info("using previous config");
             return;
         }
         Iterator<SerialEndpoint> iterator = resolvPool.iterator();
@@ -309,6 +310,33 @@ public class Router extends JavaLogging
             return false;
         }
     }
+    public boolean kill(String target)
+    {
+        DataSource ds = targets.get(target);
+        if (ds == null)
+        {
+            return false;
+        }
+        for (SelectionKey sk : selector.keys())
+        {
+            if (ds.equals(sk.attachment()))
+            {
+                sk.cancel();
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean send(String to, ByteBuffer bb) throws IOException
+    {
+        DataSource ds = targets.get(to);
+        if (ds == null)
+        {
+            return false;
+        }
+        ds.write(bb);
+        return true;
+    }
     private Endpoint getInstance(EndpointType endpointType)
     {
         if (endpointType instanceof BroadcastNMEAType)
@@ -342,21 +370,21 @@ public class Router extends JavaLogging
         throw new IllegalArgumentException(endpointType+" unknown");
     }
 
-    private class BroadcastNMEAEndpoint extends BroadcastEndpoint
+    public class BroadcastNMEAEndpoint extends BroadcastEndpoint
     {
         public BroadcastNMEAEndpoint(BroadcastNMEAType broadcastNMEAType)
         {
             super(broadcastNMEAType);
         }
     }
-    private class BroadcastEndpoint extends DatagramEndpoint
+    public class BroadcastEndpoint extends DatagramEndpoint
     {
         public BroadcastEndpoint(BroadcastType broadcastType)
         {
             super(broadcastType);
         }
     }
-    private class DatagramEndpoint extends Endpoint
+    public class DatagramEndpoint extends Endpoint
     {
         protected String host = "255.255.255.255";
         protected int port = 10110;
@@ -415,7 +443,7 @@ public class Router extends JavaLogging
         }
 
     }
-    private class SeaTalkEndpoint extends SerialEndpoint
+    public class SeaTalkEndpoint extends SerialEndpoint
     {
         public SeaTalkEndpoint(SeatalkType seaTalkType)
         {
@@ -448,7 +476,7 @@ public class Router extends JavaLogging
         }
         
     }
-    private class NmeaHsEndpoint extends SerialEndpoint
+    public class NmeaHsEndpoint extends SerialEndpoint
     {
 
         public NmeaHsEndpoint(Nmea0183HsType nmeaHsType)
@@ -463,7 +491,7 @@ public class Router extends JavaLogging
                     .setSpeed(SerialChannel.Speed.B38400);
         }
     }
-    private class NmeaEndpoint extends SerialEndpoint
+    public class NmeaEndpoint extends SerialEndpoint
     {
 
         public NmeaEndpoint(Nmea0183Type nmeaType)
@@ -472,7 +500,7 @@ public class Router extends JavaLogging
         }
         
     }
-    private class SerialEndpoint extends Endpoint
+    public class SerialEndpoint extends Endpoint
     {
         protected Configuration configuration;
         private long resolvStarted;
@@ -487,6 +515,7 @@ public class Router extends JavaLogging
             super(serialType);
             init(serialType);
             lastPort = prefs.get(name+".port", null);
+            prefs.remove(name+".port");
         }
 
         protected Configuration createConfig()
@@ -595,6 +624,7 @@ public class Router extends JavaLogging
             serialChannel.configure(configuration);
             if (force)
             {
+                info("%s matched because it was last unresolved port", name);
                 matched();
             }
             else
@@ -645,18 +675,20 @@ public class Router extends JavaLogging
         }
 
     }
-    private abstract class Endpoint extends DataSource
+    public abstract class Endpoint extends DataSource
     {
         protected SelectableChannel channel;
         protected OrMatcher<String> matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean failed = true;
+        protected boolean matched;
         private boolean mark = true;
         private int position = -1;
 
         public Endpoint(EndpointType endpointType)
         {
             super(endpointType.getName());
+            config("started %s", endpointType.getName());
             init(endpointType);
         }
         private void init(EndpointType endpointType)
@@ -851,12 +883,13 @@ public class Router extends JavaLogging
         protected void matched()
         {
             failed = false;
+            matched = true;
             info("matched=%s", name);
             targets.put(name, this);
         }
 
     }
-    private class SocketSource extends DataSource
+    public class SocketSource extends DataSource
     {
 
         public SocketSource(int port) throws IOException
@@ -901,7 +934,7 @@ public class Router extends JavaLogging
         }
         
     }
-    private class Monitor extends DataSource
+    public class Monitor extends DataSource
     {
         private final SocketChannel channel;
         private final ByteBuffer bb = ByteBuffer.allocateDirect(4096);
@@ -1040,7 +1073,7 @@ public class Router extends JavaLogging
                         attach(ring);
                         break;
                     case "kill":
-                        kill(ring);
+                        killIt(ring);
                         break;
                     case "log":
                         log(ring);
@@ -1090,6 +1123,7 @@ public class Router extends JavaLogging
             out.println("selectors:");
             for (SelectionKey sk : selector.keys())
             {
+                out.print("iOps="+sk.interestOps()+" rOps="+sk.readyOps()+" ");
                 DataSource ds = (DataSource) sk.attachment();
                 out.println(ds);
             }
@@ -1199,7 +1233,7 @@ public class Router extends JavaLogging
             attached = ds;
         }
 
-        private void kill(RingByteBuffer ring)
+        private void killIt(RingByteBuffer ring)
         {
             String cmd = ring.getString();
             String[] arr = cmd.split(whiteSpace, 3);
@@ -1208,18 +1242,9 @@ public class Router extends JavaLogging
                 throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
-            DataSource ds = targets.get(target);
-            if (ds == null)
+            if (!kill(target))
             {
-                throw new BadInputException("no such target: "+target);
-            }
-            for (SelectionKey sk : selector.keys())
-            {
-                if (ds.equals(sk.attachment()))
-                {
-                    sk.cancel();
-                    break;
-                }
+                throw new BadInputException("kill failed: "+target);
             }
         }
 
@@ -1349,7 +1374,7 @@ public class Router extends JavaLogging
         }
 
     }
-    private abstract class DataSource extends JavaLogging
+    public abstract class DataSource extends JavaLogging
     {
         protected final String name;
         protected DataSource attached;

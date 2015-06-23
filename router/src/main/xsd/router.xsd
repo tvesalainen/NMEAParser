@@ -72,9 +72,15 @@
     </xs:complexType>
     <xs:complexType name="endpointType">
         <xs:sequence>
+            <xs:element name="onMatch" type="scriptType" maxOccurs="1"/>
             <xs:element name="route" type="routeType" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="name" type="nameType" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="scriptType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string"/>
+        </xs:simpleContent>
     </xs:complexType>
     <xs:complexType name="routeType">
         <xs:attribute name="prefix" type="prefixType" use="required"/>

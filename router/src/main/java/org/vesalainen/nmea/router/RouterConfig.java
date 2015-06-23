@@ -43,7 +43,9 @@ import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.RouterType;
+import org.vesalainen.nmea.jaxb.router.ScriptType;
 import org.vesalainen.nmea.jaxb.router.SenderType;
+import org.vesalainen.nmea.script.ScriptEngine;
 import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.MapList;
 
@@ -176,12 +178,18 @@ public class RouterConfig
     {
         return ambiguousPrefixes.contains(prefix);
     }
-    private void check()
+    private void check() throws IOException
     {
         MapList<String,String> prefixes = new HashMapList<>();
         for (EndpointType et : getEndpoints())
         {
             String name = et.getName();
+            ScriptType onMatch = et.getOnMatch();
+            if (onMatch != null)
+            {
+                ScriptEngine se = ScriptEngine.newInstance();
+                se.check(onMatch.getValue());
+            }
             for (RouteType rt : et.getRoute())
             {
                 String prefix = rt.getPrefix();

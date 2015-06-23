@@ -2,6 +2,7 @@
 <nmea>
     <router>
         <seatalk name="SeaTalk">
+            <onMatch>sleep(500);</onMatch>
             <route prefix="$??MTW" target="Net"/>
             <route prefix="$??DBT" target="Net"/>
         </seatalk>

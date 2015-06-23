@@ -16,9 +16,18 @@
             <route prefix="$AGHDT" target=""/>
             <route prefix="$AGHDM" target=""/>
         </nmea-0183>
-        <nmea-0183 name="Airmar">
+        <nmea-0183 name="Airmar4800">
+            <onMatch>
+                
+            </onMatch>
             <route prefix="$HCHDT" target="Net Simrad2"/>
         </nmea-0183>
+        <nmea-0183-hs name="Airmar">
+            <onMatch>
+                
+            </onMatch>
+            <route prefix="$HCHDT" target="Net Simrad2"/>
+        </nmea-0183-hs>
         <nmea-0183-hs name="NAIS">
             <route prefix="$GPGLL" target="Net Simrad1"/>
             <route prefix="$GPRMC" target="Net Simrad1"/>
