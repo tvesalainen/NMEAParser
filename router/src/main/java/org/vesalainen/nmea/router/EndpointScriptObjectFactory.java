@@ -55,9 +55,9 @@ public class EndpointScriptObjectFactory extends AbstractScriptObjectFactory<Boo
         return new Killer(target);
     }
 
-    private static class Killer implements ScriptStatement<Boolean>
+    private class Killer implements ScriptStatement<Boolean>
     {
-        private String target;
+        private final String target;
         public Killer(String target)
         {
             this.target = target;

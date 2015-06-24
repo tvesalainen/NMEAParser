@@ -102,8 +102,8 @@ public class Router extends JavaLogging
     private Set<SerialEndpoint> resolvPool = new ConcurrentArraySet<>();
     private final Map<String,DataSource> targets = new HashMap<>();
     private final MapSet<String,DataSource> sources = new HashMapSet<>();
-    private int serialCount = 0;
-    private int resolvCount = 0;
+    private final Set<String> allEndpoints = new HashSet<>();
+    private final Set<String> matchedEndpoints = new HashSet<>();
     private boolean canForce;
     private String proprietaryPrefix;
     private int ctrlTcpPort;
@@ -170,7 +170,7 @@ public class Router extends JavaLogging
                         return;
                     }
                 }
-                if (resolvCount < serialCount)
+                if (matchedEndpoints.size() !=  allEndpoints.size())
                 {
                     resolvPorts();
                 }
@@ -208,7 +208,7 @@ public class Router extends JavaLogging
             Endpoint endpoint = getInstance(et);
             if (endpoint instanceof SerialEndpoint)
             {
-                serialCount++;
+                allEndpoints.add(endpoint.name);
             }
             configureChannel(endpoint, selector, false);
         }
@@ -217,7 +217,7 @@ public class Router extends JavaLogging
             DataSource ds = (DataSource) sk.attachment();
             ds.updateStatus();
         }
-        if (serialCount == portCount)
+        if (allEndpoints.size() == portCount)
         {
             canForce = true;
         }
@@ -260,7 +260,7 @@ public class Router extends JavaLogging
         while (iterator.hasNext())
         {
             SerialEndpoint endpoint = iterator.next();
-            boolean success = configureChannel(endpoint, selector, canForce && serialCount-resolvCount==1);
+            boolean success = configureChannel(endpoint, selector, canForce && allEndpoints.size()-matchedEndpoints.size()==1);
             if (success)
             {
                 iterator.remove();
@@ -285,7 +285,7 @@ public class Router extends JavaLogging
                 }
             }
         }
-        if (resolvCount == serialCount)
+        if (matchedEndpoints.size() == allEndpoints.size())
         {   
             for (SerialChannel sc : portPool)
             {
@@ -611,7 +611,7 @@ public class Router extends JavaLogging
             {
                 resolvTimeout += ResolvTimeout;
             }
-            if (triedPorts.size() >= serialCount-resolvCount)
+            if (triedPorts.size() >= allEndpoints.size()-matchedEndpoints.size())
             {
                 triedPorts.clear(); // try again
             }
@@ -662,7 +662,7 @@ public class Router extends JavaLogging
         protected void matched()
         {
             super.matched();
-            resolvCount++;
+            matchedEndpoints.add(name);
             prefs.put(name+".port", port);
             matcher = realMatcher;
             realMatcher = null;
@@ -694,6 +694,7 @@ public class Router extends JavaLogging
         private void init(EndpointType endpointType)
         {
             matcher = createMatcher(endpointType);
+            endpointType.
         }
 
         protected OrMatcher createMatcher(EndpointType endpointType)
