@@ -17,15 +17,19 @@
             <route prefix="$AGHDM" target=""/>
         </nmea-0183>
         <nmea-0183 name="Airmar4800">
-            <onMatch>
-                
-            </onMatch>
+            <script>
+                loop(10)
+                {               
+                    send("$PAMTC,BAUD,38400")
+                    sleep(1000)
+                }
+            </script>
             <route prefix="$HCHDT" target="Net Simrad2"/>
         </nmea-0183>
         <nmea-0183-hs name="Airmar">
-            <onMatch>
-                
-            </onMatch>
+            <script>
+                kill(Airmar4800)
+            </script>
             <route prefix="$HCHDT" target="Net Simrad2"/>
         </nmea-0183-hs>
         <nmea-0183-hs name="NAIS">

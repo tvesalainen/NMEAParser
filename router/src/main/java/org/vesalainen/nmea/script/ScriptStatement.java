@@ -26,6 +26,6 @@ import java.io.IOException;
 public interface ScriptStatement<R>
 {
 
-    public R exec() throws IOException;
+    public R exec() throws IOException, InterruptedException;
     
 }

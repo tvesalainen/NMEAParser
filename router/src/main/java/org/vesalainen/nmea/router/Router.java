@@ -30,6 +30,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -50,6 +51,7 @@ import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialChannel.Configuration;
+import org.vesalainen.comm.channel.SerialChannel.Speed;
 import org.vesalainen.io.AppendablePrinter;
 import org.vesalainen.nio.RingBuffer;
 import org.vesalainen.nio.RingByteBuffer;
@@ -66,13 +68,16 @@ import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ParityType;
 import org.vesalainen.nmea.jaxb.router.RouteType;
+import org.vesalainen.nmea.jaxb.router.ScriptType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SenderType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.sender.Sender;
 import org.vesalainen.util.AutoCloseableList;
 import org.vesalainen.util.CmdArgs;
+import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.HashMapSet;
+import org.vesalainen.util.MapList;
 import org.vesalainen.util.MapSet;
 import org.vesalainen.util.Matcher;
 import org.vesalainen.util.Matcher.Status;
@@ -102,14 +107,15 @@ public class Router extends JavaLogging
     private Set<SerialEndpoint> resolvPool = new ConcurrentArraySet<>();
     private final Map<String,DataSource> targets = new HashMap<>();
     private final MapSet<String,DataSource> sources = new HashMapSet<>();
-    private final Set<String> allEndpoints = new HashSet<>();
-    private final Set<String> matchedEndpoints = new HashSet<>();
+    private final Set<String> allSerialEndpoints = new HashSet<>();
+    private final Set<String> matchedSerialEndpoints = new HashSet<>();
     private boolean canForce;
     private String proprietaryPrefix;
     private int ctrlTcpPort;
     private final Preferences prefs;
     private boolean configChanged=true;
     private final CommandLine commandLine;
+    private int portCount;
 
     public Router(RouterConfig config, Logger rootLog, CommandLine commandLine)
     {
@@ -170,7 +176,7 @@ public class Router extends JavaLogging
                         return;
                     }
                 }
-                if (matchedEndpoints.size() !=  allEndpoints.size())
+                if (matchedSerialEndpoints.size() !=  allSerialEndpoints.size())
                 {
                     resolvPorts();
                 }
@@ -189,7 +195,7 @@ public class Router extends JavaLogging
             autoCloseables.add(sc);
             portPool.add(sc);
         }
-        int portCount = portPool.size();
+        portCount = portPool.size();
         if (portPool.isEmpty())
         {
             throw new IOException("no ports");
@@ -202,24 +208,46 @@ public class Router extends JavaLogging
         {
             ctrlTcpPort = port;
         }
-
+        MapList<Speed,EndpointType> endPointMap = new HashMapList<>();
+        Map<SerialEndpoint,EndpointType> serialEndpointMap = new HashMap<>();
         for (EndpointType et : config.getEndpoints())
         {
             Endpoint endpoint = getInstance(et);
             if (endpoint instanceof SerialEndpoint)
             {
-                allEndpoints.add(endpoint.name);
+                SerialEndpoint se = (SerialEndpoint) endpoint;
+                endPointMap.add(se.getSpeed(), et);
+                serialEndpointMap.put(se, et);
             }
-            configureChannel(endpoint, selector, false);
+            else
+            {
+                configureChannel(endpoint, selector, false);
+            }
+        }
+        config.checkAmbiguos(endPointMap);
+        for (Entry<SerialEndpoint, EndpointType> e : serialEndpointMap.entrySet())
+        {
+            SerialEndpoint se = e.getKey();
+            allSerialEndpoints.add(se.name);
+            se.init2(e.getValue());
+            if (!configureChannel(se, selector, false))
+            {
+                info("add resolvPool -> %s", se);
+                resolvPool.add(se);
+            }
         }
         for (SelectionKey sk : selector.keys())
         {
             DataSource ds = (DataSource) sk.attachment();
             ds.updateStatus();
         }
-        if (allEndpoints.size() == portCount)
+        if (allSerialEndpoints.size() == portCount)
         {
             canForce = true;
+        }
+        else
+        {
+            configChanged = true;
         }
         SenderType senderType = config.getSenderType();
         if (senderType != null)
@@ -234,6 +262,7 @@ public class Router extends JavaLogging
     {
         if (ctrlTcpPort > 0)
         {
+            info("monitor listener at %d", ctrlTcpPort);
             SocketSource ss = new SocketSource(ctrlTcpPort);
         }
     }
@@ -250,6 +279,7 @@ public class Router extends JavaLogging
                     SerialEndpoint endpoint = (SerialEndpoint) ds;
                     if (!endpoint.matched)
                     {
+                        info("matched because the same config");
                         endpoint.matched();
                     }
                 }
@@ -260,7 +290,7 @@ public class Router extends JavaLogging
         while (iterator.hasNext())
         {
             SerialEndpoint endpoint = iterator.next();
-            boolean success = configureChannel(endpoint, selector, canForce && allEndpoints.size()-matchedEndpoints.size()==1);
+            boolean success = configureChannel(endpoint, selector, canForce && allSerialEndpoints.size()-matchedSerialEndpoints.size()==1);
             if (success)
             {
                 iterator.remove();
@@ -285,7 +315,7 @@ public class Router extends JavaLogging
                 }
             }
         }
-        if (matchedEndpoints.size() == allEndpoints.size())
+        if (matchedSerialEndpoints.size() == allSerialEndpoints.size())
         {   
             for (SerialChannel sc : portPool)
             {
@@ -323,6 +353,14 @@ public class Router extends JavaLogging
             {
                 sk.cancel();
                 return true;
+            }
+        }
+        if (ds instanceof Endpoint)
+        {
+            Endpoint ep = (Endpoint) ds;
+            if (ep.scriptEngine != null)
+            {
+                ep.scriptEngine.stop();
             }
         }
         return false;
@@ -518,6 +556,10 @@ public class Router extends JavaLogging
             prefs.remove(name+".port");
         }
 
+        public Speed getSpeed()
+        {
+            return configuration.getSpeed();
+        }
         protected Configuration createConfig()
         {
             return new Configuration().setSpeed(SerialChannel.Speed.B4800);
@@ -566,7 +608,7 @@ public class Router extends JavaLogging
                     List<String> targetList = rt.getTarget();
                     NMEAMatcher nmeaMatcher = new NMEAMatcher(rt.getPrefix());
                     realMatcher.add(nmeaMatcher, targetList);
-                    if (!config.isAmbiguousPrefix(rt.getPrefix()))
+                    if (!config.isAmbiguousPrefix(getSpeed(), rt.getPrefix()))
                     {
                         orm.add(nmeaMatcher, targetList);
                     }
@@ -611,7 +653,7 @@ public class Router extends JavaLogging
             {
                 resolvTimeout += ResolvTimeout;
             }
-            if (triedPorts.size() >= allEndpoints.size()-matchedEndpoints.size())
+            if (triedPorts.size() >= portCount)
             {
                 triedPorts.clear(); // try again
             }
@@ -649,20 +691,20 @@ public class Router extends JavaLogging
         @Override
         protected boolean failed()
         {
-            return failed && resolvStarted + resolvTimeout < System.currentTimeMillis();
+            return !matched && resolvStarted + resolvTimeout < System.currentTimeMillis();
         }
 
         @Override
         protected boolean resolving()
         {
-            return failed && resolvStarted + resolvTimeout > System.currentTimeMillis();
+            return !matched && resolvStarted + resolvTimeout > System.currentTimeMillis();
         }
 
         @Override
         protected void matched()
         {
             super.matched();
-            matchedEndpoints.add(name);
+            matchedSerialEndpoints.add(name);
             prefs.put(name+".port", port);
             matcher = realMatcher;
             realMatcher = null;
@@ -680,10 +722,10 @@ public class Router extends JavaLogging
         protected SelectableChannel channel;
         protected OrMatcher<String> matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
-        protected boolean failed = true;
         protected boolean matched;
         private boolean mark = true;
         private int position = -1;
+        private EndpointScriptEngine scriptEngine;
 
         public Endpoint(EndpointType endpointType)
         {
@@ -693,10 +735,17 @@ public class Router extends JavaLogging
         }
         private void init(EndpointType endpointType)
         {
-            matcher = createMatcher(endpointType);
-            endpointType.
+            ScriptType scriptType = endpointType.getScript();
+            if (scriptType != null)
+            {
+                scriptEngine = new EndpointScriptEngine(Router.this, this, scriptType.getValue());
+            }
         }
 
+        public void init2(EndpointType endpointType)
+        {
+            matcher = createMatcher(endpointType);
+        }
         protected OrMatcher createMatcher(EndpointType endpointType)
         {
             OrMatcher orm = new OrMatcher<>();
@@ -805,6 +854,10 @@ public class Router extends JavaLogging
             }
             readCount++;
             readBytes += count;
+            if (scriptEngine != null)
+            {
+                scriptEngine.read(ring);
+            }
             if (attached != null)
             {
                 ring.getAll(false);
@@ -831,7 +884,7 @@ public class Router extends JavaLogging
                         case Match:
                             finer("read: %s", ring);
                             write(matcher, ring, false);
-                            if (failed)
+                            if (!matched)
                             {
                                 matched();
                             }
@@ -883,10 +936,13 @@ public class Router extends JavaLogging
 
         protected void matched()
         {
-            failed = false;
             matched = true;
             info("matched=%s", name);
             targets.put(name, this);
+            if (scriptEngine != null)
+            {
+                scriptEngine.start();
+            }
         }
 
     }

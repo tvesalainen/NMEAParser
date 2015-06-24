@@ -61,7 +61,7 @@ public class RouterConfigTest
             List<String> target = r1.getTarget();
             assertEquals(1, target.size());
             assertEquals("Net", target.get(0));
-            assertEquals("sleep(500);", et.getOnMatch().getValue());
+            assertEquals("sleep(500)", et.getScript().getValue());
             
             et = endpoints.get(1);
             assertEquals("Furuno", et.getName());

@@ -16,42 +16,79 @@
  */
 package org.vesalainen.nmea.router;
 
-import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.router.Router.Endpoint;
-import org.vesalainen.nmea.script.ScriptEngine;
+import org.vesalainen.nmea.script.ScriptParser;
+import org.vesalainen.nmea.script.ScriptStatement;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author tkv
  */
-public class EndpointScriptEngine implements Runnable
+public class EndpointScriptEngine extends JavaLogging implements Runnable
 {
     private final Router router;
     private final Endpoint endpoint;
-    private final String script;
-    private final EndpointScriptObjectFactory factory;
+    private Thread thread;
+    private final String scriptName;
+    private final List<ScriptStatement<Boolean>> script;
 
     public EndpointScriptEngine(Router router, Endpoint endpoint, String script)
     {
+        setLogger(this.getClass(), endpoint.name);
         this.router = router;
         this.endpoint = endpoint;
-        this.script = script;
-        this.factory = new EndpointScriptObjectFactory(router, endpoint);
+        EndpointScriptObjectFactory factory = new EndpointScriptObjectFactory(router, endpoint);
+        ScriptParser<Boolean> engine = ScriptParser.newInstance();
+        this.script = engine.exec(script, factory);
+        scriptName = endpoint.name+".script";
     }
 
+    public void start()
+    {
+        if (thread != null)
+        {
+            throw new IllegalStateException("already started");
+        }
+        thread = new Thread(this, scriptName);
+        thread.start();
+        info("%s started", scriptName);
+    }
+    public void stop()
+    {
+        if (thread == null)
+        {
+            throw new IllegalStateException(scriptName+" not started");
+        }
+        thread.interrupt();
+    }
+    public void read(RingByteBuffer ring)
+    {
+        
+    }
     @Override
     public void run()
     {
         try
         {
-            ScriptEngine<Boolean> engine = ScriptEngine.newInstance();
-            engine.exec(script, factory);
+            info("script %s started", scriptName);
+            for (ScriptStatement<Boolean> statement : script)
+            {
+                fine("exec: %s", statement);
+                statement.exec();
+            }
+            info("script %s ended", scriptName);
         }
-        catch (IOException ex)
+        catch (InterruptedException ex)
         {
-            Logger.getLogger(EndpointScriptEngine.class.getName()).log(Level.SEVERE, null, ex);
+            info("script %s interrupted", scriptName);
+        }
+        catch (Exception ex)
+        {
+            log(Level.SEVERE, null, ex);
         }
     }
     

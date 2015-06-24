@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import org.vesalainen.nmea.router.Router.Endpoint;
 import org.vesalainen.nmea.script.AbstractScriptObjectFactory;
 import org.vesalainen.nmea.script.ScriptStatement;
+import org.vesalainen.parsers.nmea.NMEAChecksum;
 
 /**
  *
@@ -77,7 +78,17 @@ public class EndpointScriptObjectFactory extends AbstractScriptObjectFactory<Boo
         private Sender(String to, String msg)
         {
             this.to = to;
-            this.bb = ByteBuffer.wrap(msg.getBytes());
+            byte[] bytes = msg.getBytes();
+            if (bytes.length < 5)
+            {
+                throw new IllegalArgumentException(msg+" is too short");
+            }
+            NMEAChecksum cs = new NMEAChecksum();
+            cs.update(bytes, 0, bytes.length);
+            this.bb = ByteBuffer.allocate(bytes.length+5);
+            bb.put(bytes, 0, bytes.length);
+            cs.fillSuffix(bytes, 0, 5);
+            bb.put(bytes, 0, 5);
         }
 
         @Override
@@ -86,6 +97,14 @@ public class EndpointScriptObjectFactory extends AbstractScriptObjectFactory<Boo
             bb.clear();
             return router.send(to, bb);
         }
+
+        @Override
+        public String toString()
+        {
+            String m = new String(bb.array());
+            return "Sender{" + "to=" + to + ", msg=" + m + '}';
+        }
+        
     }
     
 }

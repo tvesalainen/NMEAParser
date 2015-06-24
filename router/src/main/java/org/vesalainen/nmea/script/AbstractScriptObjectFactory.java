@@ -18,10 +18,12 @@ package org.vesalainen.nmea.script;
 
 import java.io.IOException;
 import java.util.List;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author tkv
+ * @param <R>
  */
 public abstract class AbstractScriptObjectFactory<R> implements ScriptObjectFactory<R>
 {
@@ -47,21 +49,21 @@ public abstract class AbstractScriptObjectFactory<R> implements ScriptObjectFact
         }
 
         @Override
-        public synchronized R exec() throws IOException
+        public synchronized R exec() throws InterruptedException
         {
-            try
-            {
-                wait(millis);
-                return null;
-            }
-            catch (InterruptedException ex)
-            {
-                throw new IOException(ex);
-            }
+            wait(millis);
+            return null;
         }
+
+        @Override
+        public String toString()
+        {
+            return "sleep(" + millis + ");";
+        }
+        
     }
 
-    private static class Looper<R> implements ScriptStatement<R>
+    private static class Looper<R> extends JavaLogging implements ScriptStatement<R>
     {
         private final int times;
         private final List<ScriptStatement<R>> statements;
@@ -70,19 +72,28 @@ public abstract class AbstractScriptObjectFactory<R> implements ScriptObjectFact
         {
             this.times = times;
             this.statements = statements;
+            setLogger(this.getClass());
         }
         @Override
-        public R exec() throws IOException
+        public R exec() throws IOException, InterruptedException
         {
             for (int ii=0;ii<times;ii++)
             {
                 for (ScriptStatement ss : statements)
                 {
+                    fine("loop: %s", ss);
                     ss.exec();
                 }
             }
             return null;
         }
+
+        @Override
+        public String toString()
+        {
+            return "loop(" + times + ");";
+        }
+        
     }
     
 }
