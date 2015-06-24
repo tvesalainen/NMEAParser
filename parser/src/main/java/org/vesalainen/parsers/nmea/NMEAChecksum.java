@@ -69,4 +69,31 @@ public class NMEAChecksum implements Checksum
         value = 0;
     }
 
+    public void fillSuffix(byte[] arr)
+    {
+        fillSuffix(arr, 0, arr.length);
+    }
+    public void fillSuffix(byte[] arr, int offset, int length)
+    {
+        if (length != 5)
+        {
+            throw new IllegalArgumentException("NMEA suffix length must be 5");
+        }
+        arr[0] = '*';
+        arr[1] = toHex(value>>4);
+        arr[2] = toHex(value&0xf);
+        arr[3] = '\r';
+        arr[4] = '\n';
+    }
+    private byte toHex(int v)
+    {
+        if (v < 10)
+        {
+            return (byte) ('0'+v);
+        }
+        else
+        {
+            return (byte) ('A'+v-10);
+        }
+    }
 }
