@@ -30,7 +30,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.security.MessageDigest;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -103,12 +103,13 @@ public class Router extends JavaLogging
     private static final int BufferSize = 1024;
     private AutoCloseableList<AutoCloseable> autoCloseables;
     private MultiProviderSelector selector;
-    private Set<SerialChannel> portPool = new ConcurrentArraySet<>();
-    private Set<SerialEndpoint> resolvPool = new ConcurrentArraySet<>();
+    private Set<SerialChannel> portPool = new HashSet<>();
+    private Set<SerialEndpoint> resolvPool = new HashSet<>();
     private final Map<String,DataSource> targets = new HashMap<>();
     private final MapSet<String,DataSource> sources = new HashMapSet<>();
-    private final Set<String> allSerialEndpoints = new HashSet<>();
+    private final Map<String,SerialEndpoint> allSerialEndpoints = new HashMap<>();
     private final Set<String> matchedSerialEndpoints = new HashSet<>();
+    private final ReentrantLock lock = new ReentrantLock();
     private boolean canForce;
     private String proprietaryPrefix;
     private int ctrlTcpPort;
@@ -137,7 +138,7 @@ public class Router extends JavaLogging
                 if (oldDigest != null)
                 {
                     configChanged = !oldDigest.equals(newDigest);
-                    info("config file changed %b", configChanged);
+                    fine("config file changed %b", configChanged);
                 }
                 prefs.put(ConfigDigestKey, newDigest);
             }
@@ -221,6 +222,7 @@ public class Router extends JavaLogging
             }
             else
             {
+                endpoint.init2(et);
                 configureChannel(endpoint, selector, false);
             }
         }
@@ -228,11 +230,11 @@ public class Router extends JavaLogging
         for (Entry<SerialEndpoint, EndpointType> e : serialEndpointMap.entrySet())
         {
             SerialEndpoint se = e.getKey();
-            allSerialEndpoints.add(se.name);
+            allSerialEndpoints.put(se.name, se);
             se.init2(e.getValue());
             if (!configureChannel(se, selector, false))
             {
-                info("add resolvPool -> %s", se);
+                config("add resolvPool -> %s", se);
                 resolvPool.add(se);
             }
         }
@@ -262,108 +264,143 @@ public class Router extends JavaLogging
     {
         if (ctrlTcpPort > 0)
         {
-            info("monitor listener at %d", ctrlTcpPort);
+            config("monitor listener at %d", ctrlTcpPort);
             SocketSource ss = new SocketSource(ctrlTcpPort);
         }
     }
     
     private void resolvPorts() throws IOException
     {
-        if (!configChanged)
+        lock.lock();
+        try
         {
+            if (!configChanged)
+            {
+                for (SelectionKey sk : selector.keys())
+                {
+                    DataSource ds = (DataSource) sk.attachment();
+                    if (ds != null && (ds instanceof SerialEndpoint))
+                    {
+                        SerialEndpoint endpoint = (SerialEndpoint) ds;
+                        if (!endpoint.matched)
+                        {
+                            endpoint.matched("matched because the same config");
+                        }
+                    }
+                }
+                return;
+            }
+            Iterator<SerialEndpoint> iterator = resolvPool.iterator();
+            while (iterator.hasNext())
+            {
+                SerialEndpoint endpoint = iterator.next();
+                boolean success = configureChannel(endpoint, selector, canForce && allSerialEndpoints.size()-matchedSerialEndpoints.size()==1);
+                if (success)
+                {
+                    iterator.remove();
+                }
+            }
             for (SelectionKey sk : selector.keys())
             {
                 DataSource ds = (DataSource) sk.attachment();
                 if (ds != null && (ds instanceof SerialEndpoint))
                 {
                     SerialEndpoint endpoint = (SerialEndpoint) ds;
-                    if (!endpoint.matched)
+                    if (!endpoint.resolving() && endpoint.failed())
                     {
-                        info("matched because the same config");
-                        endpoint.matched();
+                        SerialChannel channel = (SerialChannel) sk.channel();
+                        assert (channel != null);
+                        config("%s: failed %s read cound=%d bytes=%d", ds.name, channel, ds.readCount, ds.readBytes);
+                        config("add portPool -> %s", channel);
+                        portPool.add(channel);
+                        config("add resolvPool -> %s", endpoint);
+                        resolvPool.add(endpoint);
+                        sk.cancel();
                     }
                 }
             }
-            return;
-        }
-        Iterator<SerialEndpoint> iterator = resolvPool.iterator();
-        while (iterator.hasNext())
-        {
-            SerialEndpoint endpoint = iterator.next();
-            boolean success = configureChannel(endpoint, selector, canForce && allSerialEndpoints.size()-matchedSerialEndpoints.size()==1);
-            if (success)
-            {
-                iterator.remove();
-            }
-        }
-        for (SelectionKey sk : selector.keys())
-        {
-            DataSource ds = (DataSource) sk.attachment();
-            if (ds != null && (ds instanceof SerialEndpoint))
-            {
-                SerialEndpoint endpoint = (SerialEndpoint) ds;
-                if (!endpoint.resolving() && endpoint.failed())
+            if (matchedSerialEndpoints.size() == allSerialEndpoints.size())
+            {   
+                for (SerialChannel sc : portPool)
                 {
-                    SerialChannel channel = (SerialChannel) sk.channel();
-                    assert (channel != null);
-                    info("%s: failed %s read cound=%d bytes=%d", ds.name, channel, ds.readCount, ds.readBytes);
-                    info("add portPool -> %s", channel);
-                    portPool.add(channel);
-                    info("add resolvPool -> %s", endpoint);
-                    resolvPool.add(endpoint);
-                    sk.cancel();
+                    sc.close();
+                    config("release extra port %s",sc);
                 }
+                portPool = null;
+                resolvPool = null;
             }
         }
-        if (matchedSerialEndpoints.size() == allSerialEndpoints.size())
-        {   
-            for (SerialChannel sc : portPool)
-            {
-                sc.close();
-                info("release extra port %s",sc);
-            }
-            portPool = null;
-            resolvPool = null;
+        finally
+        {
+            lock.unlock();
         }
     }
 
     private boolean configureChannel(Endpoint endpoint, MultiProviderSelector selector, boolean force) throws IOException
     {
-        SelectableChannel channel = endpoint.configureChannel(force);
-        if (channel != null)
+        lock.lock();
+        try
         {
-            channel.register(selector, OP_READ, endpoint);
-            return true;
+            SelectableChannel channel = endpoint.configureChannel(force);
+            if (channel != null)
+            {
+                channel.register(selector, OP_READ, endpoint);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
-        else
+        finally
         {
-            return false;
+            lock.unlock();
         }
     }
     public boolean kill(String target)
     {
-        DataSource ds = targets.get(target);
-        if (ds == null)
+        lock.lock();
+        try
         {
+            config("kill(%s)", target);
+            SerialEndpoint se = allSerialEndpoints.get(target);
+            if (se == null)
+            {
+                config("kill target %s not found", target);
+                return false;
+            }
+            if (!resolvPool.contains(se))
+            {
+                // endpoint is active
+                config("add portPool -> %s", se.channel);
+                portPool.add((SerialChannel) se.channel);
+            }
+            resolvPool.remove(se);
+            targets.remove(target);
+            sources.remove(target);
+            allSerialEndpoints.remove(target);
+            matchedSerialEndpoints.remove(se);
+            for (SelectionKey sk : selector.keys())
+            {
+                if (se.equals(sk.attachment()))
+                {
+                    sk.cancel();
+                }
+            }
+            if (se.scriptEngine != null)
+            {
+                se.scriptEngine.stop();
+            }
+            if (allSerialEndpoints.size() == portCount)
+            {
+                canForce = true;
+            }
             return false;
         }
-        for (SelectionKey sk : selector.keys())
+        finally
         {
-            if (ds.equals(sk.attachment()))
-            {
-                sk.cancel();
-                return true;
-            }
+            lock.unlock();
         }
-        if (ds instanceof Endpoint)
-        {
-            Endpoint ep = (Endpoint) ds;
-            if (ep.scriptEngine != null)
-            {
-                ep.scriptEngine.stop();
-            }
-        }
-        return false;
     }
     public boolean send(String to, ByteBuffer bb) throws IOException
     {
@@ -450,7 +487,7 @@ public class Router extends JavaLogging
         @Override
         protected SelectableChannel configureChannel(boolean force) throws IOException
         {
-            matched();
+            matched("because is datagram");
             channel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, isSource());
             channel.configureBlocking(false);
             return channel;
@@ -653,8 +690,9 @@ public class Router extends JavaLogging
             {
                 resolvTimeout += ResolvTimeout;
             }
-            if (triedPorts.size() >= portCount)
+            if (triedPorts.size() >= portCount-matchedSerialEndpoints.size())
             {
+                config("starting again because tried all ports already");
                 triedPorts.clear(); // try again
             }
             //info("set resolvTimeout=%d", resolvTimeout);
@@ -666,8 +704,7 @@ public class Router extends JavaLogging
             serialChannel.configure(configuration);
             if (force)
             {
-                info("%s matched because it was last unresolved port", name);
-                matched();
+                matched("matched because it was last unresolved port");
             }
             else
             {
@@ -701,9 +738,11 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected void matched()
+        protected void matched(CharSequence reason)
         {
-            super.matched();
+            long elapsed = System.currentTimeMillis()-resolvStarted;
+            super.matched(reason);
+            config("matching took %d millis", elapsed);
             matchedSerialEndpoints.add(name);
             prefs.put(name+".port", port);
             matcher = realMatcher;
@@ -725,7 +764,7 @@ public class Router extends JavaLogging
         protected boolean matched;
         private boolean mark = true;
         private int position = -1;
-        private EndpointScriptEngine scriptEngine;
+        protected EndpointScriptEngine scriptEngine;
 
         public Endpoint(EndpointType endpointType)
         {
@@ -886,7 +925,7 @@ public class Router extends JavaLogging
                             write(matcher, ring, false);
                             if (!matched)
                             {
-                                matched();
+                                matched(ring);
                             }
                             mark = true;
                             break;
@@ -934,10 +973,10 @@ public class Router extends JavaLogging
 
         protected abstract boolean resolving();
 
-        protected void matched()
+        protected void matched(CharSequence reason)
         {
             matched = true;
-            info("matched=%s", name);
+            info("matched=%s: %s", name, reason);
             targets.put(name, this);
             if (scriptEngine != null)
             {
@@ -1546,9 +1585,8 @@ public class Router extends JavaLogging
         }
         MinimalFormatter minimalFormatter = new MinimalFormatter();
         handler.setFormatter(minimalFormatter);
-        MemoryHandler memoryHandler = new MemoryHandler(handler, 256, Level.SEVERE);
+        MemoryHandler memoryHandler = new MemoryHandler(handler, 256, (Level) cmdArgs.getOption("-pl"));
         memoryHandler.setFormatter(minimalFormatter);
-        memoryHandler.setPushLevel((Level) cmdArgs.getOption("-pl"));
         log.addHandler(memoryHandler);
         while (true)
         {

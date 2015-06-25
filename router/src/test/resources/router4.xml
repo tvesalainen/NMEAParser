@@ -23,6 +23,7 @@
                     send("$PAMTC,BAUD,38400")
                     sleep(1000)
                 }
+                kill(Airmar4800)
             </script>
             <route prefix="$HCHDT" target="Net Simrad2"/>
         </nmea-0183>

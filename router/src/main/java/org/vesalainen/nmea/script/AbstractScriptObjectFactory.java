@@ -81,7 +81,7 @@ public abstract class AbstractScriptObjectFactory<R> implements ScriptObjectFact
             {
                 for (ScriptStatement ss : statements)
                 {
-                    fine("loop: %s", ss);
+                    config("loop: %s", ss);
                     ss.exec();
                 }
             }

@@ -59,11 +59,10 @@ public class EndpointScriptEngine extends JavaLogging implements Runnable
     }
     public void stop()
     {
-        if (thread == null)
+        if (thread != null)
         {
-            throw new IllegalStateException(scriptName+" not started");
+            thread.interrupt();
         }
-        thread.interrupt();
     }
     public void read(RingByteBuffer ring)
     {
@@ -77,14 +76,14 @@ public class EndpointScriptEngine extends JavaLogging implements Runnable
             info("script %s started", scriptName);
             for (ScriptStatement<Boolean> statement : script)
             {
-                fine("exec: %s", statement);
+                config("exec: %s", statement);
                 statement.exec();
             }
-            info("script %s ended", scriptName);
+            config("script %s ended", scriptName);
         }
         catch (InterruptedException ex)
         {
-            info("script %s interrupted", scriptName);
+            config("script %s interrupted", scriptName);
         }
         catch (Exception ex)
         {
