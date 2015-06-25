@@ -18,93 +18,42 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import org.vesalainen.nmea.router.Router.Endpoint;
-import org.vesalainen.nmea.script.AbstractScriptObjectFactory;
 import org.vesalainen.nmea.script.ScriptStatement;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
 
 /**
  *
  * @author tkv
  */
-public class EndpointScriptObjectFactory extends AbstractScriptObjectFactory<Boolean>
+public class EndpointScriptObjectFactory extends AbstractEndpointScriptObjectFactory<EndpointScriptEngine>
 {
-    private final Router router;
-    private final Endpoint endpoint;
 
-    public EndpointScriptObjectFactory(Router router, Endpoint endpoint)
+    public EndpointScriptObjectFactory(Router router, Router.Endpoint endpoint)
     {
-        this.router = router;
-        this.endpoint = endpoint;
+        super(router, endpoint);
     }
     
     @Override
-    public ScriptStatement<Boolean> createSender(String msg)
+    public ScriptStatement<Boolean,EndpointScriptEngine> createWaiter(long millis, String msg)
     {
-        return new Sender(endpoint.name, msg);
+        return new Waiter(millis, msg);
     }
 
-    @Override
-    public ScriptStatement<Boolean> createSender(String to, String msg)
+    private static class Waiter implements ScriptStatement<Boolean,EndpointScriptEngine>
     {
-        return new Sender(to, msg);
-    }
+        private final long millis;
+        private final String msg;
 
-    @Override
-    public ScriptStatement<Boolean> createKiller(String target)
-    {
-        return new Killer(target);
-    }
-
-    private class Killer implements ScriptStatement<Boolean>
-    {
-        private final String target;
-        public Killer(String target)
+        public Waiter(long millis, String msg)
         {
-            this.target = target;
+            this.millis = millis;
+            this.msg = msg;
         }
 
         @Override
-        public Boolean exec() throws IOException
+        public Boolean exec(EndpointScriptEngine engine) throws IOException, InterruptedException
         {
-            return router.kill(target);
+            return engine.startWait(millis, msg);
         }
     }
 
-    private class Sender implements ScriptStatement<Boolean>
-    {
-        private final String to;
-        private final ByteBuffer bb;
-        private Sender(String to, String msg)
-        {
-            this.to = to;
-            byte[] bytes = msg.getBytes();
-            if (bytes.length < 5)
-            {
-                throw new IllegalArgumentException(msg+" is too short");
-            }
-            NMEAChecksum cs = new NMEAChecksum();
-            cs.update(bytes, 0, bytes.length);
-            this.bb = ByteBuffer.allocate(bytes.length+5);
-            bb.put(bytes, 0, bytes.length);
-            cs.fillSuffix(bytes, 0, 5);
-            bb.put(bytes, 0, 5);
-        }
-
-        @Override
-        public Boolean exec() throws IOException
-        {
-            bb.clear();
-            return router.send(to, bb);
-        }
-
-        @Override
-        public String toString()
-        {
-            String m = new String(bb.array());
-            return "Sender{" + "to=" + to + ", msg=" + m + '}';
-        }
-        
-    }
-    
 }

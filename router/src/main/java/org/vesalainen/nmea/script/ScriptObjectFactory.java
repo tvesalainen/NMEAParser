@@ -21,16 +21,27 @@ import java.util.List;
 /**
  *
  * @author tkv
+ * @param <E>
  */
-public interface ScriptObjectFactory<R>
+public interface ScriptObjectFactory<E>
 {
-    public ScriptStatement<R> createSender(String msg);
+    public ScriptStatement<Integer,E> createSender(String msg);
 
-    public ScriptStatement<R> createSender(String to, String msg);
+    public ScriptStatement<Integer,E> createSender(String to, String msg);
 
-    public ScriptStatement<R> createSleeper(long longValue);
+    public ScriptStatement<Void,E> createSleeper(long millis);
 
-    public ScriptStatement<R> createLooper(int intValue, List<ScriptStatement<R>> sList);
+    public ScriptStatement<Boolean,E> createKiller(String target);
 
-    public ScriptStatement<R> createKiller(String target);
+    public ScriptStatement<Void,E> createIf(ScriptStatement<Boolean,E> expr, ScriptStatement<?,E> successStat, ScriptStatement<?,E> elseStat);
+
+    public ScriptStatement<Void,E> createWhile(ScriptStatement<Boolean,E> expr, ScriptStatement<?,E> stat);
+
+    public ScriptStatement<Void,E> createBlock(List<ScriptStatement<?,E>> sList);
+
+    public ScriptStatement<Void,E> createLooper(int times, ScriptStatement stat);
+
+    public ScriptStatement<Boolean,E> createWaiter(long millis, String msg);
+
+    public ScriptStatement<Void,E> createRestarter();
 }

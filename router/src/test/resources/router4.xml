@@ -30,6 +30,8 @@
         <nmea-0183-hs name="Airmar">
             <script>
                 kill(Airmar4800)
+                while(waitfor(1000, "$HCHDT")){}
+                restart()
             </script>
             <route prefix="$HCHDT" target="Net Simrad2"/>
         </nmea-0183-hs>

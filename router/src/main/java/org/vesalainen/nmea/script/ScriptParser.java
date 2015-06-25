@@ -26,6 +26,7 @@ import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
+import org.vesalainen.parser.annotation.ReservedWords;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
@@ -35,75 +36,123 @@ import org.vesalainen.regex.Regex;
 /**
  *
  * @author tkv
- * @param <R>
+ * @param 
  */
 @GenClassname("org.vesalainen.nmea.script.ScriptParserImpl")
 @GrammarDef
-public abstract class ScriptParser<R>
+public abstract class ScriptParser<E>
 {
-    
+    @ReservedWords({"if", "else"})
+    protected void reservedWords()
+    {
+        
+    }
     @Rule(left = "statements", value = "statement*")
-    protected List<ScriptStatement<R>> statements(List<ScriptStatement<R>> list)
+    protected List<ScriptStatement<?,E>> statements(List<ScriptStatement<?,E>> list)
     {
         return list;
     }
     @Rules({
+        @Rule("ifst"),
+        @Rule("whilest"),
+        @Rule("block"),
         @Rule("send"),
         @Rule("sleep"),
         @Rule("kill"),
+        @Rule("restart"),
+        @Rule("waitfor"),
         @Rule("loop")
     })
-    protected ScriptStatement<R> statement(ScriptStatement<R> ss)
+    protected ScriptStatement<?,E> statement(ScriptStatement<?,E> ss)
     {
         return ss;
     }
-    @Rule("'loop' '\\(' integer '\\)' '\\{' statements '\\}'")
-    protected ScriptStatement<R> loop(Number times, List<ScriptStatement<R>> sList, @ParserContext("factory") ScriptObjectFactory<R> factory) throws IOException, InterruptedException
+    @Rule("'if' '\\(' statement '\\)' block ( 'else' block )?")
+    protected ScriptStatement<Void,E> ifst(
+            ScriptStatement<?,E> expr, 
+            ScriptStatement<?,E> successStat, 
+            ScriptStatement<?,E> elseStat, 
+            @ParserContext("factory") ScriptObjectFactory factory
+    ) throws IOException, InterruptedException
     {
-        ScriptStatement<R> looper = factory.createLooper(times.intValue(), sList);
+        ScriptStatement<Void,E> ifst = factory.createIf(ensureType(Boolean.class, expr), successStat, elseStat);
+        return ifst;
+    }
+    @Rule("'while' '\\(' statement '\\)' block ")
+    protected ScriptStatement<Void,E> whilest(
+            ScriptStatement<?,E> expr, 
+            ScriptStatement<?,E> stat, 
+            @ParserContext("factory") ScriptObjectFactory factory
+    ) throws IOException, InterruptedException
+    {
+        ScriptStatement<Void,E> whilest = factory.createWhile(ensureType(Boolean.class, expr), stat);
+        return whilest;
+    }
+    @Rule("'\\{' statements '\\}'")
+    protected ScriptStatement<Void,E> block(List<ScriptStatement<?,E>> sList, @ParserContext("factory") ScriptObjectFactory factory) throws IOException, InterruptedException
+    {
+        ScriptStatement<Void,E> block = factory.createBlock(sList);
+        return block;
+    }
+    @Rule("'loop' '\\(' integer '\\)' block")
+    protected ScriptStatement<Void,E> loop(Number times, ScriptStatement stat, @ParserContext("factory") ScriptObjectFactory factory) throws IOException, InterruptedException
+    {
+        ScriptStatement looper = factory.createLooper(times.intValue(), stat);
         return looper;
     }
     @Rule("'kill' '\\(' identifier '\\)'")
-    protected ScriptStatement<R> kill(String target, @ParserContext("factory") ScriptObjectFactory<R> factory) throws IOException, InterruptedException
+    protected ScriptStatement<Boolean,E> kill(String target, @ParserContext("factory") ScriptObjectFactory factory) throws IOException, InterruptedException
     {
-        ScriptStatement<R> killer = factory.createKiller(target);
+        ScriptStatement<Boolean,E> killer = factory.createKiller(target);
         return killer;
     }
-    @Rule("'sleep' '\\(' integer '\\)'")
-    protected ScriptStatement<R> sleep(Number millis, @ParserContext("factory") ScriptObjectFactory<R> factory) throws IOException, InterruptedException
+    @Rule("'restart' '\\(' '\\)'")
+    protected ScriptStatement<Void,E> restart(@ParserContext("factory") ScriptObjectFactory factory) throws IOException, InterruptedException
     {
-        ScriptStatement<R> sleeper = factory.createSleeper(millis.longValue());
+        ScriptStatement<Void,E> restarter = factory.createRestarter();
+        return restarter;
+    }
+    @Rule("'sleep' '\\(' integer '\\)'")
+    protected ScriptStatement<Void,E> sleep(Number millis, @ParserContext("factory") ScriptObjectFactory factory) throws IOException, InterruptedException
+    {
+        ScriptStatement<Void,E> sleeper = factory.createSleeper(millis.longValue());
         return sleeper;
     }
-    @Rule("'send' '\\(' string '\\)'")
-    protected ScriptStatement<R> send(String msg, @ParserContext("factory") ScriptObjectFactory<R> factory) throws IOException, InterruptedException
+    @Rule("'waitfor' '\\(' integer '\\,' string '\\)'")
+    protected ScriptStatement<Boolean,E> waitfor(Number millis, String msg, @ParserContext("factory") ScriptObjectFactory factory) throws IOException, InterruptedException
     {
-        ScriptStatement<R> sender = factory.createSender(msg);
+        ScriptStatement<Boolean,E> waiter = factory.createWaiter(millis.longValue(), msg);
+        return waiter;
+    }
+    @Rule("'send' '\\(' string '\\)'")
+    protected ScriptStatement<Integer,E> send(String msg, @ParserContext("factory") ScriptObjectFactory factory) throws IOException, InterruptedException
+    {
+        ScriptStatement<Integer,E> sender = factory.createSender(msg);
         return sender;
     }
     @Rule("'send' '\\(' identifier '\\,' string '\\)'")
-    protected ScriptStatement<R> send(String to, String msg, @ParserContext("factory") ScriptObjectFactory<R> factory) throws IOException, InterruptedException
+    protected ScriptStatement<Integer,E> send(String to, String msg, @ParserContext("factory") ScriptObjectFactory factory) throws IOException, InterruptedException
     {
-        ScriptStatement<R> sender = factory.createSender(to, msg);
+        ScriptStatement<Integer,E> sender = factory.createSender(to, msg);
         return sender;
     }
-    public static <R> ScriptParser<R> newInstance()
+    public static  ScriptParser newInstance()
     {
-        return (ScriptParser<R>) GenClassFactory.loadGenInstance(ScriptParser.class);
+        return (ScriptParser) GenClassFactory.loadGenInstance(ScriptParser.class);
     }
     @ParseMethod(
             start = "statements", 
             features = {SingleThread},
             whiteSpace = {"whiteSpace", "doubleSlashComment", "hashComment", "cComment"}
     )
-    public abstract List<ScriptStatement<R>> exec(String script, @ParserContext("factory") ScriptObjectFactory<R> factory);
+    public abstract List<ScriptStatement> exec(String script, @ParserContext("factory") ScriptObjectFactory factory);
     
     @ParseMethod(
             start = "statements", 
             features = {SyntaxOnly, SingleThread},
             whiteSpace = {"whiteSpace", "doubleSlashComment", "hashComment", "cComment"}
     )
-    public abstract List<ScriptStatement<R>> check(String script);
+    public abstract List<ScriptStatement> check(String script);
     
     @Terminal(expression = "[a-zA-z][a-zA-z0-9_]*")
     protected abstract String identifier(String value);
@@ -151,5 +200,16 @@ public abstract class ScriptParser<R>
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader
             )
     {
+    }
+    private <T> ScriptStatement<T,E> ensureType(Class<T> expected, Object checked)
+    {
+        try
+        {
+            return (ScriptStatement<T,E>) checked;
+        }
+        catch (ClassCastException ex)
+        {
+            throw new IllegalArgumentException(checked+" is not ScriptStatement<"+expected+">");
+        }
     }
 }

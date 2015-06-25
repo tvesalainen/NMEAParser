@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/,E>.
  */
 package org.vesalainen.nmea.script;
 
@@ -23,24 +23,41 @@ import org.vesalainen.util.logging.JavaLogging;
 /**
  *
  * @author tkv
- * @param <R>
- */
-public abstract class AbstractScriptObjectFactory<R> implements ScriptObjectFactory<R>
+ * @param <E> */
+public abstract class AbstractScriptObjectFactory<E> implements ScriptObjectFactory<E>
 {
 
     @Override
-    public ScriptStatement<R> createSleeper(long millis)
+    public ScriptStatement<Void,E> createIf(ScriptStatement<Boolean,E> expr, ScriptStatement<?,E> successStat, ScriptStatement<?,E> elseStat)
     {
-        return new Sleeper<>(millis);
+        return new If(expr, successStat, elseStat);
     }
 
     @Override
-    public ScriptStatement<R> createLooper(int times, List<ScriptStatement<R>> sList)
+    public ScriptStatement<Void, E> createWhile(ScriptStatement<Boolean, E> expr, ScriptStatement<?, E> stat)
     {
-        return new Looper<>(times, sList);
+        return new While(expr, stat);
     }
 
-    private static class Sleeper<R> implements ScriptStatement<R>
+    @Override
+    public ScriptStatement<Void,E> createBlock(List<ScriptStatement<?,E>> sList)
+    {
+        return new Block(sList);
+    }
+
+    @Override
+    public ScriptStatement<Void,E> createSleeper(long millis)
+    {
+        return new Sleeper(millis);
+    }
+
+    @Override
+    public ScriptStatement<Void,E> createLooper(int times, ScriptStatement stat)
+    {
+        return new Looper(times, stat);
+    }
+
+    private static class Sleeper<E> implements ScriptStatement<Void,E>
     {
         private final long millis;
         public Sleeper(long millis)
@@ -49,7 +66,7 @@ public abstract class AbstractScriptObjectFactory<R> implements ScriptObjectFact
         }
 
         @Override
-        public synchronized R exec() throws InterruptedException
+        public synchronized Void exec(E engine) throws InterruptedException
         {
             wait(millis);
             return null;
@@ -63,27 +80,24 @@ public abstract class AbstractScriptObjectFactory<R> implements ScriptObjectFact
         
     }
 
-    private static class Looper<R> extends JavaLogging implements ScriptStatement<R>
+    private static class Looper<E> extends JavaLogging implements ScriptStatement<Void,E>
     {
         private final int times;
-        private final List<ScriptStatement<R>> statements;
+        private final ScriptStatement statement;
 
-        public Looper(int times, List<ScriptStatement<R>> statements)
+        public Looper(int times, ScriptStatement statement)
         {
             this.times = times;
-            this.statements = statements;
+            this.statement = statement;
             setLogger(this.getClass());
         }
         @Override
-        public R exec() throws IOException, InterruptedException
+        public Void exec(E engine) throws IOException, InterruptedException
         {
+            config("loop: %d", times);
             for (int ii=0;ii<times;ii++)
             {
-                for (ScriptStatement ss : statements)
-                {
-                    config("loop: %s", ss);
-                    ss.exec();
-                }
+                statement.exec(engine);
             }
             return null;
         }
@@ -94,6 +108,81 @@ public abstract class AbstractScriptObjectFactory<R> implements ScriptObjectFact
             return "loop(" + times + ");";
         }
         
+    }
+
+    private static class Block<E> implements ScriptStatement<Void,E>
+    {
+        private final List<ScriptStatement<?,E>> sList;
+
+        public Block(List<ScriptStatement<?,E>> sList)
+        {
+            this.sList = sList;
+        }
+
+        @Override
+        public Void exec(E engine) throws IOException, InterruptedException
+        {
+            for (ScriptStatement<?,E> s : sList)
+            {
+                s.exec(engine);
+            }
+            return null;
+        }
+    }
+
+    private static class If<E> implements ScriptStatement<Void,E>
+    {
+        private final ScriptStatement<Boolean,E> expr;
+        private final ScriptStatement<?,E> successStat;
+        private final ScriptStatement<?,E> elseStat;
+
+        public If(ScriptStatement<Boolean,E> expr, ScriptStatement<?,E> successStat, ScriptStatement<?,E> elseStat)
+        {
+            this.expr = expr;
+            this.successStat = successStat;
+            this.elseStat = elseStat;
+        }
+
+        @Override
+        public Void exec(E engine) throws IOException, InterruptedException
+        {
+            Boolean success = expr.exec(engine);
+            if (success)
+            {
+                successStat.exec(engine);
+            }
+            else
+            {
+                if (elseStat != null)
+                {
+                    elseStat.exec(engine);
+                }
+            }
+            return null;
+        }
+    }
+
+    private static class While<E> implements ScriptStatement<Void, E>
+    {
+        private final ScriptStatement<Boolean,E> expr;
+        private final ScriptStatement<?,E> stat;
+
+        public While(ScriptStatement<Boolean, E> expr, ScriptStatement<?, E> stat)
+        {
+            this.expr = expr;
+            this.stat = stat;
+        }
+
+        @Override
+        public Void exec(E engine) throws IOException, InterruptedException
+        {
+            while (expr.exec(engine))
+            {
+                stat.exec(engine);
+            }
+            return null;
+        }
+
     }
     
 }

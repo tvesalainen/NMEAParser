@@ -14,19 +14,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.script;
-
-import java.io.IOException;
+package org.vesalainen.nmea.router;
 
 /**
  *
  * @author tkv
- * @param <R> Return type
- * @param <E> Engine type
  */
-public interface ScriptStatement<R,E>
+public class RouterThreadGroup extends ThreadGroup
 {
+    private Throwable throwable;
 
-    public R exec(E engine) throws IOException, InterruptedException;
+    public RouterThreadGroup(String name)
+    {
+        super(name);
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e)
+    {
+        throwable = e;
+    }
+
+    public Throwable getThrowable()
+    {
+        try
+        {
+            return throwable;
+        }
+        finally
+        {
+            throwable = null;
+        }
+    }
+    
     
 }

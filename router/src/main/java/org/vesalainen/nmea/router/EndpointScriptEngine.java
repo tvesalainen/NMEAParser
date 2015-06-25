@@ -16,8 +16,14 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.router.Router.Endpoint;
 import org.vesalainen.nmea.script.ScriptParser;
@@ -31,18 +37,23 @@ import org.vesalainen.util.logging.JavaLogging;
 public class EndpointScriptEngine extends JavaLogging implements Runnable
 {
     private final Router router;
+    private final ThreadGroup threadGroup;
     private final Endpoint endpoint;
     private Thread thread;
     private final String scriptName;
-    private final List<ScriptStatement<Boolean>> script;
+    private final List<ScriptStatement> script;
+    private ReentrantLock lock = new ReentrantLock();
+    private Semaphore semaphore;
+    private String waitMsg;
 
-    public EndpointScriptEngine(Router router, Endpoint endpoint, String script)
+    public EndpointScriptEngine(Router router, ThreadGroup threadGroup, Endpoint endpoint, String script)
     {
         setLogger(this.getClass(), endpoint.name);
         this.router = router;
+        this.threadGroup = threadGroup;
         this.endpoint = endpoint;
         EndpointScriptObjectFactory factory = new EndpointScriptObjectFactory(router, endpoint);
-        ScriptParser<Boolean> engine = ScriptParser.newInstance();
+        ScriptParser<EndpointScriptEngine> engine = ScriptParser.newInstance();
         this.script = engine.exec(script, factory);
         scriptName = endpoint.name+".script";
     }
@@ -53,7 +64,7 @@ public class EndpointScriptEngine extends JavaLogging implements Runnable
         {
             throw new IllegalStateException("already started");
         }
-        thread = new Thread(this, scriptName);
+        thread = new Thread(threadGroup, this, scriptName);
         thread.start();
         info("%s started", scriptName);
     }
@@ -64,20 +75,60 @@ public class EndpointScriptEngine extends JavaLogging implements Runnable
             thread.interrupt();
         }
     }
-    public void read(RingByteBuffer ring)
+    public boolean startWait(long millis, String msg) throws InterruptedException
     {
-        
+        waitMsg = msg;
+        semaphore = new Semaphore(0);
+        boolean result = semaphore.tryAcquire(millis, TimeUnit.MILLISECONDS);
+        lock.lock();
+        try
+        {
+            waitMsg = null;
+            semaphore = null;
+            return result;
+        }
+        finally
+        {
+            lock.unlock();
+        }
     }
+    public void write(RingByteBuffer ring)
+    {
+        lock.lock();
+        try
+        {
+            if (semaphore != null)
+            {
+                int length = waitMsg.length();
+                if (ring.length() >= length)
+                {
+                    for (int ii=0;ii<length;ii++)
+                    {
+                        if (ring.charAt(ii) != waitMsg.charAt(ii))
+                        {
+                            return;
+                        }
+                    }
+                    semaphore.release();
+                }
+            }
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
+    
     @Override
     public void run()
     {
         try
         {
             info("script %s started", scriptName);
-            for (ScriptStatement<Boolean> statement : script)
+            for (ScriptStatement statement : script)
             {
                 config("exec: %s", statement);
-                statement.exec();
+                statement.exec(this);
             }
             config("script %s ended", scriptName);
         }
@@ -85,10 +136,10 @@ public class EndpointScriptEngine extends JavaLogging implements Runnable
         {
             config("script %s interrupted", scriptName);
         }
-        catch (Exception ex)
+        catch (IOException ex)
         {
             log(Level.SEVERE, null, ex);
         }
     }
-    
+
 }

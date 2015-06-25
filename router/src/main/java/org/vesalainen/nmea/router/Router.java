@@ -19,6 +19,7 @@ package org.vesalainen.nmea.router;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
@@ -83,7 +84,6 @@ import org.vesalainen.util.Matcher;
 import org.vesalainen.util.Matcher.Status;
 import org.vesalainen.util.OrMatcher;
 import org.vesalainen.util.SimpleMatcher;
-import org.vesalainen.util.concurrent.ConcurrentArraySet;
 import org.vesalainen.util.logging.ChannelHandler;
 import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.logging.MinimalFormatter;
@@ -117,6 +117,7 @@ public class Router extends JavaLogging
     private boolean configChanged=true;
     private final CommandLine commandLine;
     private int portCount;
+    private final RouterThreadGroup routerThreadGroup = new RouterThreadGroup("script");
 
     public Router(RouterConfig config, Logger rootLog, CommandLine commandLine)
     {
@@ -145,7 +146,7 @@ public class Router extends JavaLogging
         }
     }
     
-    private void run() throws IOException
+    private void run() throws Throwable
     {
         info(Version.getVersion());
         
@@ -180,6 +181,11 @@ public class Router extends JavaLogging
                 if (matchedSerialEndpoints.size() !=  allSerialEndpoints.size())
                 {
                     resolvPorts();
+                }
+                Throwable throwable = routerThreadGroup.getThrowable();
+                if (throwable != null)
+                {
+                    throw throwable;
                 }
             }
         }
@@ -255,7 +261,7 @@ public class Router extends JavaLogging
         if (senderType != null)
         {
             Sender sender = new Sender(senderType);
-            Thread thread = new Thread(sender, "sender");
+            Thread thread = new Thread(routerThreadGroup, sender, "sender");
             thread.start();
         }
     }
@@ -402,15 +408,14 @@ public class Router extends JavaLogging
             lock.unlock();
         }
     }
-    public boolean send(String to, ByteBuffer bb) throws IOException
+    public int send(String to, ByteBuffer bb) throws IOException
     {
         DataSource ds = targets.get(to);
         if (ds == null)
         {
-            return false;
+            return 0;
         }
-        ds.write(bb);
-        return true;
+        return ds.write(bb);
     }
     private Endpoint getInstance(EndpointType endpointType)
     {
@@ -718,11 +723,12 @@ public class Router extends JavaLogging
         }
         
         @Override
-        protected void attachedWrite(RingByteBuffer ring) throws IOException
+        protected int attachedWrite(RingByteBuffer ring) throws IOException
         {
             int cnt = ring.write((GatheringByteChannel)channel);
             writeCount++;
             writeBytes += cnt;
+            return cnt;
         }
 
         @Override
@@ -777,7 +783,7 @@ public class Router extends JavaLogging
             ScriptType scriptType = endpointType.getScript();
             if (scriptType != null)
             {
-                scriptEngine = new EndpointScriptEngine(Router.this, this, scriptType.getValue());
+                scriptEngine = new EndpointScriptEngine(Router.this, routerThreadGroup, this, scriptType.getValue());
             }
         }
 
@@ -804,11 +810,11 @@ public class Router extends JavaLogging
             return orm;
         }
         @Override
-        protected void writePartial(RingByteBuffer ring) throws IOException
+        protected int writePartial(RingByteBuffer ring) throws IOException
         {
+            int cnt = 0;
             if (attached == null)
             {
-                int cnt;
                 if (position == -1)
                 {
                     cnt = ring.write((GatheringByteChannel)channel);
@@ -822,47 +828,53 @@ public class Router extends JavaLogging
                 writeCount++;
                 writeBytes += cnt;
             }
+            return cnt;
         }
 
         @Override
-        protected void write(RingByteBuffer ring) throws IOException
+        protected int write(RingByteBuffer ring) throws IOException
         {
+            int cnt = 0;
             if (attached == null)
             {
                 if (position != -1)
                 {
-                    writePartial(ring);
+                    cnt = writePartial(ring);
                     position = -1;
                 }
                 else
                 {
-                    int cnt = ring.write((GatheringByteChannel)channel);
+                    cnt = ring.write((GatheringByteChannel)channel);
                     finest("write %s = %d", ring, cnt);
                     writeCount++;
                     writeBytes += cnt;
                 }
             }
+            return cnt;
         }
 
         @Override
-        protected void write(ByteBuffer bb) throws IOException
+        protected int write(ByteBuffer bb) throws IOException
         {
+            int cnt = 0;
             if (attached == null)
             {
-                int cnt = ((WritableByteChannel)channel).write(bb);
+                cnt = ((WritableByteChannel)channel).write(bb);
                 finest("write %s = %d", bb, cnt);
                 writeCount++;
                 writeBytes += cnt;
             }
+            return cnt;
         }
 
         @Override
-        protected void attachedWrite(RingByteBuffer ring) throws IOException
+        protected int attachedWrite(RingByteBuffer ring) throws IOException
         {
             int cnt = ring.write((GatheringByteChannel)channel);
             finest("write %s = %d", ring, cnt);
             writeCount++;
             writeBytes += cnt;
+            return cnt;
         }
 
         public boolean isSource()
@@ -893,10 +905,6 @@ public class Router extends JavaLogging
             }
             readCount++;
             readBytes += count;
-            if (scriptEngine != null)
-            {
-                scriptEngine.read(ring);
-            }
             if (attached != null)
             {
                 ring.getAll(false);
@@ -963,6 +971,10 @@ public class Router extends JavaLogging
                     {
                         finest("writeto %s %s", target, ring);
                         ds.write(ring);
+                        if (scriptEngine != null)
+                        {
+                            scriptEngine.write(ring);
+                        }
                     }
                 }
             }
@@ -993,6 +1005,7 @@ public class Router extends JavaLogging
             super("SocketSource("+port+")");
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             autoCloseables.add(serverSocketChannel);
+            serverSocketChannel.setOption(SO_REUSEADDR, true);
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.bind(new InetSocketAddress(port));
             serverSocketChannel.register(selector, OP_ACCEPT, this);
@@ -1018,13 +1031,13 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected void write(ByteBuffer readBuffer) throws IOException
+        protected int write(ByteBuffer readBuffer) throws IOException
         {
             throw new UnsupportedOperationException("Not supported.");
         }
 
         @Override
-        protected void write(RingByteBuffer ring) throws IOException
+        protected int write(RingByteBuffer ring) throws IOException
         {
             throw new UnsupportedOperationException("Not supported.");
         }
@@ -1452,21 +1465,23 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected void write(ByteBuffer src) throws IOException
+        protected int write(ByteBuffer src) throws IOException
         {
             finest("write %s", src);
             int cnt = channel.write(src);
             writeCount++;
             writeBytes += cnt;
+            return cnt;
         }
 
         @Override
-        protected void write(RingByteBuffer ring) throws IOException
+        protected int write(RingByteBuffer ring) throws IOException
         {
             finest("write %s", ring);
             int cnt = ring.write(channel);
             writeCount++;
             writeBytes += cnt;
+            return cnt;
         }
 
     }
@@ -1489,16 +1504,18 @@ public class Router extends JavaLogging
         
         protected abstract void handle(SelectionKey sk) throws IOException;
 
-        protected abstract void write(ByteBuffer readBuffer) throws IOException;
+        protected abstract int write(ByteBuffer readBuffer) throws IOException;
 
-        protected abstract void write(RingByteBuffer ring) throws IOException;
+        protected abstract int write(RingByteBuffer ring) throws IOException;
 
-        protected void writePartial(RingByteBuffer ring) throws IOException
+        protected int writePartial(RingByteBuffer ring) throws IOException
         {
+            return 0;
         }
 
-        protected void attachedWrite(RingByteBuffer ring) throws IOException
+        protected int attachedWrite(RingByteBuffer ring) throws IOException
         {
+            return 0;
         }
 
         public boolean isSink()
@@ -1605,7 +1622,7 @@ public class Router extends JavaLogging
                 log.info("shutdown by "+ex.getMessage());
                 return;
             }
-            catch (Exception ex)
+            catch (Throwable ex)
             {
                 log.log(Level.SEVERE, ex.getMessage(), ex);
                 long elapsed = System.currentTimeMillis()-started;
