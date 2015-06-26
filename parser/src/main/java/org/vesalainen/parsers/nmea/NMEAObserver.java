@@ -581,5 +581,44 @@ public interface NMEAObserver extends Transactional
     public void setReferenceTarget(String referenceTarget);
 
     public void setMessageType(MessageType messageType);
+    /**
+     * Pitch: oscillation of vessel about its latitudinal axis. Bow moving up is
+     * positive. Value reported to the nearest 0.1 degree.
+     * @param value 
+     */
+    public void setPitch(float value);
+    /**
+     * Roll: oscillation of vessel about its longitudinal axis. Roll to the
+     * starboard is positive. Value reported to the nearest 0.1 degree.
+     * @param value 
+     */
+    public void setRoll(float value);
+    /**
+     * X-Acceleration. Unit is gravity.
+     * @param value 
+     */
+    public void setXAcceleration(float value);
+    /**
+     * Y-Acceleration. Unit is gravity.
+     * @param value 
+     */
+    public void setYAcceleration(float value);
+    /**
+     * Z-Acceleration. Unit is gravity.
+     * @param value 
+     */
+    public void setZAcceleration(float value);
+
+    public void setRRat(float value);
+
+    public void setPRat(float value);
+
+    public void setYRat(float value);
+
+    public void setRRtr(float value);
+
+    public void setPRtr(float value);
+
+    public void setYRtr(float value);
 
 }

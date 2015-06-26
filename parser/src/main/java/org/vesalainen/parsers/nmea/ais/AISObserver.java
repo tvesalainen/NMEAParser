@@ -16,18 +16,12 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.util.Transactional;
 
 /**
  * AISObserver is observer class for AIS data. AISParser calls methods of this 
  * interface.
- * 
- * <p>User of AISParser is probably only interested in a small subset of the data.
- * For this reason creation of Strings is avoided because of performance and GC
- * overhead. Use InputReader getString(fieldRef) to create strings. Use fieldRefs
- * before commit.
  * 
  * <p>It is mostly easier to derive your class from AbstractAISObserver class.
  * AbstractAISObserver has empty methods for all AISObserver methods.

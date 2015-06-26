@@ -99,9 +99,21 @@ import org.vesalainen.parsers.nmea.ais.AISObserver;
     @Rule(left = "nmeaSentence", value = "wcv' c velocityToWaypoint c waypoint"),
     @Rule(left = "nmeaSentence", value = "wnc c distanceToWaypoint c distanceToWaypoint c waypointToWaypoint"),
     @Rule(left = "nmeaSentence", value = "wpl c destinationWaypointLocation c waypoint"),
+    @Rule(left = "nmeaSentence", value = "xdr xdrGroup+"),
     @Rule(left = "nmeaSentence", value = "xte c status c status2 c crossTrackError faaModeIndicator"),
     @Rule(left = "nmeaSentence", value = "xtr c crossTrackError"),
     @Rule(left = "nmeaSentence", value = "zda c utc c day c month c year c localZoneHours c localZoneMinutes"),
+    @Rule(left = "xdrGroup", value = "ptch"),
+    @Rule(left = "xdrGroup", value = "roll"),
+    @Rule(left = "xdrGroup", value = "xacc"),
+    @Rule(left = "xdrGroup", value = "yacc"),
+    @Rule(left = "xdrGroup", value = "zacc"),
+    @Rule(left = "xdrGroup", value = "rrat"),
+    @Rule(left = "xdrGroup", value = "prat"),
+    @Rule(left = "xdrGroup", value = "yrat"),
+    @Rule(left = "xdrGroup", value = "rrtr"),
+    @Rule(left = "xdrGroup", value = "prtr"),
+    @Rule(left = "xdrGroup", value = "yrtr"),
     @Rule(left = "rateOfTurn"),
     @Rule(left = "waterTemperature"),
     @Rule(left = "heading"),
@@ -182,9 +194,119 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
 
     public NMEAParser()
     {
-        this.setLogger(this.getClass());
+        setLogger(this.getClass());
     }
     
+    @Rule("c letter c decimal c letter c 'PTCH'")
+    protected void ptch(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setPitch(value);
+    }
+    @Rule("c letter c decimal c letter c 'ROLL'")
+    protected void roll(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setRoll(value);
+    }
+    @Rule("c letter c decimal c letter c 'XACC'")
+    protected void xacc(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setXAcceleration(value);
+    }
+    @Rule("c letter c decimal c letter c 'YACC'")
+    protected void yacc(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setYAcceleration(value);
+    }
+    @Rule("c letter c decimal c letter c 'ZACC'")
+    protected void zacc(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setZAcceleration(value);
+    }
+    @Rule("c letter c decimal c letter c 'RRAT'")
+    protected void rrat(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setRRat(value);
+    }
+    @Rule("c letter c decimal c letter c 'PRAT'")
+    protected void prat(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setPRat(value);
+    }
+    @Rule("c letter c decimal c letter c 'YRAT'")
+    protected void yrat(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setYRat(value);
+    }
+    @Rule("c letter c decimal c letter c 'RRTR'")
+    protected void rrtr(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setRRtr(value);
+    }
+    @Rule("c letter c decimal c letter c 'PRTR'")
+    protected void prtr(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setPRtr(value);
+    }
+    @Rule("c letter c decimal c letter c 'YRTR'")
+    protected void yrtr(
+            char type,
+            float value,
+            char unit,
+            @ParserContext("data") NMEAObserver data
+    )
+    {
+        data.setYRtr(value);
+    }
     @Rule("'!AIVDM'")
     protected void aivdm(@ParserContext("aisContext") AISContext aisContext)
     {
