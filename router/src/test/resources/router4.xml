@@ -29,11 +29,15 @@
         </nmea-0183>
         <nmea-0183-hs name="Airmar">
             <script>
+                send("$PAMTC,EN,ALL,1,1")
                 kill(Airmar4800)
                 while(waitfor(1000, "$HCHDT")){}
-                restart()
+                # restart()
             </script>
             <route prefix="$HCHDT" target="Net Simrad2"/>
+            <route prefix="$HCHDG" target="Net"/>
+            <route prefix="$TIROT" target="Net"/>
+            <route prefix="$YXXDR" target="Net"/>
         </nmea-0183-hs>
         <nmea-0183-hs name="NAIS">
             <route prefix="$GPGLL" target="Net Simrad1"/>

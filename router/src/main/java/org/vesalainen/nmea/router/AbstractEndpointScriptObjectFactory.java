@@ -90,6 +90,13 @@ public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScr
         {
             throw new RestartException("restarted by script");
         }
+        
+        @Override
+        public String toString()
+        {
+            return "restart()";
+        }
+
     }
 
     private class Killer<E> implements ScriptStatement<Boolean,E>
@@ -105,6 +112,13 @@ public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScr
         {
             return router.kill(target);
         }
+        
+        @Override
+        public String toString()
+        {
+            return "kill(" + target + ')';
+        }
+
     }
 
     private class Sender<E> implements ScriptStatement<Integer,E>
@@ -128,7 +142,7 @@ public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScr
         public String toString()
         {
             String m = new String(bb.array());
-            return "Sender{" + "to=" + to + ", msg=" + m + '}';
+            return "send(" + to + ", " + m + ')';
         }
 
     }

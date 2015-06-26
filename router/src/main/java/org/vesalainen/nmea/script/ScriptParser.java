@@ -143,14 +143,14 @@ public abstract class ScriptParser<E>
     @ParseMethod(
             start = "statements", 
             features = {SingleThread},
-            whiteSpace = {"whiteSpace", "doubleSlashComment", "hashComment", "cComment"}
+            whiteSpace = {"whiteSpace", "hashComment", "cComment"}
     )
     public abstract List<ScriptStatement> exec(String script, @ParserContext("factory") ScriptObjectFactory factory);
     
     @ParseMethod(
             start = "statements", 
             features = {SyntaxOnly, SingleThread},
-            whiteSpace = {"whiteSpace", "doubleSlashComment", "hashComment", "cComment"}
+            whiteSpace = {"whiteSpace", "hashComment", "cComment"}
     )
     public abstract List<ScriptStatement> check(String script);
     
@@ -177,13 +177,6 @@ public abstract class ScriptParser<E>
 
     @Terminal(expression = "[ \t\r\n]+")
     protected abstract void whiteSpace();
-
-    @Terminal(expression = "\\-\\-[^\n]*\n")
-    protected void doubleSlashComment(
-            @ParserContext(ParserConstants.INPUTREADER) InputReader reader
-            )
-    {
-    }
 
     @Terminal(expression = "#[^\n]*\n")
     protected void hashComment(

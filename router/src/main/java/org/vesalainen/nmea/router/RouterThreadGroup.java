@@ -20,7 +20,7 @@ package org.vesalainen.nmea.router;
  *
  * @author tkv
  */
-public class RouterThreadGroup extends ThreadGroup
+public class RouterThreadGroup extends ThreadGroup implements AutoCloseable
 {
     private Throwable throwable;
 
@@ -45,6 +45,12 @@ public class RouterThreadGroup extends ThreadGroup
         {
             throwable = null;
         }
+    }
+
+    @Override
+    public void close() throws Exception
+    {
+        interrupt();
     }
     
     

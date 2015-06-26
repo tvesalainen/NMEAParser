@@ -33,7 +33,7 @@ public class NMEAMatcher implements Matcher
     private final Checksum checksum;
     private int cs;
     private float matches;
-    private boolean parsing = true;
+    private boolean parsing;
     private float errors;
 
     public NMEAMatcher(String prefix)
@@ -75,6 +75,7 @@ public class NMEAMatcher implements Matcher
                 {
                     case Match:
                         state = State.Data;
+                        parsing = true;
                         return Status.WillMatch;
                     case Error:
                         return error();
@@ -121,7 +122,6 @@ public class NMEAMatcher implements Matcher
                 }
                 clear();
                 matches++;
-                parsing = true;
                 return Status.Match;
             default:
                 throw new IllegalArgumentException(state+" unknown");

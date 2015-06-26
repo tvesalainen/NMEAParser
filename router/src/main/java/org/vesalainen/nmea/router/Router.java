@@ -18,9 +18,11 @@ package org.vesalainen.nmea.router;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
+import java.nio.channels.AlreadyBoundException;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
@@ -117,7 +119,7 @@ public class Router extends JavaLogging
     private boolean configChanged=true;
     private final CommandLine commandLine;
     private int portCount;
-    private final RouterThreadGroup routerThreadGroup = new RouterThreadGroup("script");
+    private RouterThreadGroup routerThreadGroup;
 
     public Router(RouterConfig config, Logger rootLog, CommandLine commandLine)
     {
@@ -192,6 +194,8 @@ public class Router extends JavaLogging
     }
     private void initialize() throws IOException
     {
+        routerThreadGroup = new RouterThreadGroup("router");
+        autoCloseables.add(routerThreadGroup);
         selector = new MultiProviderSelector();
         autoCloseables.add(selector);
         Builder builder = new SerialChannel.Builder("", SerialChannel.Speed.B4800)
@@ -266,7 +270,7 @@ public class Router extends JavaLogging
         }
     }
 
-    private void startSocketServer() throws IOException
+    private synchronized void startSocketServer() throws IOException, InterruptedException
     {
         if (ctrlTcpPort > 0)
         {
@@ -312,7 +316,7 @@ public class Router extends JavaLogging
                 if (ds != null && (ds instanceof SerialEndpoint))
                 {
                     SerialEndpoint endpoint = (SerialEndpoint) ds;
-                    if (!endpoint.resolving() && endpoint.failed())
+                    if (endpoint.failed())
                     {
                         SerialChannel channel = (SerialChannel) sk.channel();
                         assert (channel != null);
@@ -386,17 +390,11 @@ public class Router extends JavaLogging
             sources.remove(target);
             allSerialEndpoints.remove(target);
             matchedSerialEndpoints.remove(se);
-            for (SelectionKey sk : selector.keys())
-            {
-                if (se.equals(sk.attachment()))
-                {
-                    sk.cancel();
-                }
-            }
             if (se.scriptEngine != null)
             {
                 se.scriptEngine.stop();
             }
+            prefs.remove(se.name+".port");
             if (allSerialEndpoints.size() == portCount)
             {
                 canForce = true;
@@ -496,18 +494,6 @@ public class Router extends JavaLogging
             channel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, isSource());
             channel.configureBlocking(false);
             return channel;
-        }
-
-        @Override
-        protected boolean failed()
-        {
-            return false;
-        }
-
-        @Override
-        protected boolean resolving()
-        {
-            return false;
         }
 
         @Override
@@ -676,6 +662,7 @@ public class Router extends JavaLogging
                         info("using last matched port %s", lastPort);
                         iterator.remove();
                         lastPort = null;
+                        resolvTimeout = MaxResolvTimeout;
                         return configure(serialChannel, force);
                     }
                 }
@@ -709,6 +696,9 @@ public class Router extends JavaLogging
             serialChannel.configure(configuration);
             if (force)
             {
+                config("all     %s", allSerialEndpoints);
+                config("matched %s", matchedSerialEndpoints);
+                config("ports   %d", portCount);
                 matched("matched because it was last unresolved port");
             }
             else
@@ -731,16 +721,9 @@ public class Router extends JavaLogging
             return cnt;
         }
 
-        @Override
         protected boolean failed()
         {
             return !matched && resolvStarted + resolvTimeout < System.currentTimeMillis();
-        }
-
-        @Override
-        protected boolean resolving()
-        {
-            return !matched && resolvStarted + resolvTimeout > System.currentTimeMillis();
         }
 
         @Override
@@ -771,6 +754,8 @@ public class Router extends JavaLogging
         private boolean mark = true;
         private int position = -1;
         protected EndpointScriptEngine scriptEngine;
+        private long lastRead;
+        private long nowRead;
 
         public Endpoint(EndpointType endpointType)
         {
@@ -893,15 +878,20 @@ public class Router extends JavaLogging
         @Override
         protected void handle(SelectionKey sk) throws IOException
         {   
+            lastRead = nowRead;
+            nowRead = System.currentTimeMillis();
             int count = ring.read((ScatteringByteChannel)channel);
             if (count == -1)
             {
                 warning("eof(%s)", name);
                 return;
             }
+            boolean full = false;
             if (ring.isFull())
             {
-                warning("buffer not big enough (%s)", name);
+                long elapsed = System.currentTimeMillis()-lastRead;
+                full = true;
+                warning("buffer not big enough (%s) time from last read %d millis", name, elapsed);
             }
             readCount++;
             readBytes += count;
@@ -981,14 +971,10 @@ public class Router extends JavaLogging
         }
         protected abstract SelectableChannel configureChannel(boolean force) throws IOException;
 
-        protected abstract boolean failed();
-
-        protected abstract boolean resolving();
-
         protected void matched(CharSequence reason)
         {
             matched = true;
-            info("matched=%s: %s", name, reason);
+            config("matched=%s: %s", name, reason);
             targets.put(name, this);
             if (scriptEngine != null)
             {
@@ -1000,14 +986,35 @@ public class Router extends JavaLogging
     public class SocketSource extends DataSource
     {
 
-        public SocketSource(int port) throws IOException
+        public SocketSource(int port) throws IOException, InterruptedException
         {
             super("SocketSource("+port+")");
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             autoCloseables.add(serverSocketChannel);
             serverSocketChannel.setOption(SO_REUSEADDR, true);
             serverSocketChannel.configureBlocking(false);
-            serverSocketChannel.bind(new InetSocketAddress(port));
+            boolean bound = false;
+            for (int ii=0;ii<100;ii++)
+            {
+                synchronized(this)
+                {
+                    try
+                    {
+                        serverSocketChannel.bind(new InetSocketAddress(port));
+                        bound = true;
+                        break;
+                    }
+                    catch (AlreadyBoundException | BindException ex)
+                    {
+                        config("rebound %s", serverSocketChannel);
+                        wait(100);
+                    }
+                }
+            }
+            if (!bound)
+            {
+                throw new IllegalArgumentException("could not bound server socket");
+            }
             serverSocketChannel.register(selector, OP_ACCEPT, this);
         }
 
@@ -1293,6 +1300,7 @@ public class Router extends JavaLogging
                         out.print(nm.getMatches()+"\t");
                         out.print(nm.getErrors()+"\t");
                         out.print(String.format("%.1f", nm.getErrorPrecent()));
+                        out.println();
                     }
                     out.println();
                 }
@@ -1592,6 +1600,7 @@ public class Router extends JavaLogging
                     break;
                 }
             }
+            handler.setLevel((Level) cmdArgs.getOption("-ll"));
             File configfile = (File) cmdArgs.getArgument("configuration file");
             config = new RouterConfig(configfile);
         }
@@ -1605,37 +1614,22 @@ public class Router extends JavaLogging
         MemoryHandler memoryHandler = new MemoryHandler(handler, 256, (Level) cmdArgs.getOption("-pl"));
         memoryHandler.setFormatter(minimalFormatter);
         log.addHandler(memoryHandler);
-        while (true)
+        try
         {
-            long started = System.currentTimeMillis();
-            try
-            {
-                Router router = new Router(config, log, cmdArgs);
-                router.run();
-            }
-            catch (RestartException ex)
-            {
-                log.info("restarted by "+ex.getMessage());
-            }
-            catch (ShutdownException ex)
-            {
-                log.info("shutdown by "+ex.getMessage());
-                return;
-            }
-            catch (Throwable ex)
-            {
-                log.log(Level.SEVERE, ex.getMessage(), ex);
-                long elapsed = System.currentTimeMillis()-started;
-                if (elapsed > RestartLimit)
-                {
-                    log.info("recovering...");
-                }
-                else
-                {
-                    log.info("stopped because failing too often...");
-                    return;
-                }
-            }
+            Router router = new Router(config, log, cmdArgs);
+            router.run();
+        }
+        catch (RestartException ex)
+        {
+            log.info("restarted by "+ex.getMessage());
+        }
+        catch (ShutdownException ex)
+        {
+            log.info("shutdown by "+ex.getMessage());
+        }
+        catch (Throwable ex)
+        {
+            log.log(Level.SEVERE, "recovering...", ex);
         }
     }
 }

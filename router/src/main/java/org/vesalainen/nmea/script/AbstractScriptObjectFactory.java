@@ -160,6 +160,12 @@ public abstract class AbstractScriptObjectFactory<E> implements ScriptObjectFact
             }
             return null;
         }
+        @Override
+        public String toString()
+        {
+            return "if()";
+        }
+
     }
 
     private static class While<E> implements ScriptStatement<Void, E>
@@ -181,6 +187,12 @@ public abstract class AbstractScriptObjectFactory<E> implements ScriptObjectFact
                 stat.exec(engine);
             }
             return null;
+        }
+        
+        @Override
+        public String toString()
+        {
+            return "while()";
         }
 
     }
