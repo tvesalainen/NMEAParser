@@ -1551,7 +1551,6 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             cc = reader.read();
         }
         String reason = "skipping " + sb+"\nexpected:"+expected;
-        warning(reason);
         data.rollback(reason);
         reader.clear();
         if (aisContext != null && aisContext.isAisMessage())
