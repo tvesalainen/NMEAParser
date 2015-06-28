@@ -92,17 +92,21 @@ public class NMEAMatcher implements Matcher
                     case '\n':
                     return error();
                     default:
+                        if (cc < ' ' || cc > '~')
+                        {
+                            return error();
+                        }
                         return Status.WillMatch;
                 }
             case Checksum1:
-                if ((cs>>4) != parseHex(cc))
+                if ((cs>>4) != Character.digit(cc, 16))
                 {
                     return error();
                 }
                 state = State.Checksum2;
                 return Status.WillMatch;
             case Checksum2:
-                if ((cs&0xf) != parseHex(cc))
+                if ((cs&0xf) != Character.digit(cc, 16))
                 {
                     return error();
                 }
@@ -138,39 +142,6 @@ public class NMEAMatcher implements Matcher
         return Status.Error;
     }
     
-    private final int parseHex(int cc)
-    {
-        switch (cc)
-        {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                return cc-'0';
-            case 'a':
-            case 'b':
-            case 'c':
-            case 'd':
-            case 'e':
-            case 'f':
-                return cc-'a'+10;
-            case 'A':
-            case 'B':
-            case 'C':
-            case 'D':
-            case 'E':
-            case 'F':
-                return cc-'A'+10;
-            default:
-                return -1;
-        }
-    }
     @Override
     public void clear()
     {
