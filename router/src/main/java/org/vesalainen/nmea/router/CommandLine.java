@@ -25,7 +25,7 @@ import org.vesalainen.util.CmdArgs;
  *
  * @author tkv
  */
-public class CommandLine extends CmdArgs
+public class CommandLine extends CmdArgs<Router>
 {
 
     public CommandLine()
@@ -37,6 +37,7 @@ public class CommandLine extends CmdArgs
         addOption("-ll", "log level", null, INFO);
         addOption("-pl", "push level", null, SEVERE);
         addOption("-f", "force port resolv", null, Boolean.FALSE);
+        addOption("-rt", "resolv timeout", null, 2000L);
     }
     
 }

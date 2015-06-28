@@ -6,15 +6,20 @@
     <router>
         <nmea-0183 name="Simrad1">
             <route prefix="$AGGLL" target=""/>
+            <route prefix="$AGBWW" target=""/>
+            <route prefix="$AGBWC" target=""/>
             <route prefix="$AGRMC" target=""/>
+            <route prefix="$AGRMB" target=""/>
             <route prefix="$AGRSA" target="Net"/>
             <route prefix="$AGHDT" target=""/>
             <route prefix="$AGHDM" target=""/>
+            <route prefix="$AGHDG" target=""/>
         </nmea-0183>
         <nmea-0183 name="Simrad2">
             <route prefix="$AGRSA" target=""/>
             <route prefix="$AGHDT" target=""/>
             <route prefix="$AGHDM" target=""/>
+            <route prefix="$AGHDG" target=""/>
         </nmea-0183>
         <nmea-0183 name="Airmar4800">
             <script>
@@ -38,6 +43,7 @@
             <route prefix="$HCHDG" target="Net"/>
             <route prefix="$TIROT" target="Net"/>
             <route prefix="$YXXDR" target="Net"/>
+            <route prefix="$HCTHS" target="Net"/>
         </nmea-0183-hs>
         <nmea-0183-hs name="NAIS">
             <route prefix="$GPGLL" target="Net Simrad1"/>

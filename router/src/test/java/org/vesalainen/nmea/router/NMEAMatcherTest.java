@@ -51,7 +51,7 @@ public class NMEAMatcherTest
     @Test
     public void test2()
     {
-        String sentence = "$IJHDG,171,,,06,E*13\r\n$IIHDG,171,,,06,E*13\r\n$IJHDG,171,,,06,E*13\r\n";
+        String sentence = "$IIHDG,171,,,06,E*23\r\n$IIHDG,171,,,06,E*13\r\n$IIHDG,171,,,06,E*14\r\n";
         NMEAMatcher nm = new NMEAMatcher("$IIHDG");
         for (int ii=0;ii<sentence.length();ii++)
         {

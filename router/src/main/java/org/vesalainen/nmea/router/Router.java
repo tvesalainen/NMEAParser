@@ -76,8 +76,10 @@ import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SenderType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.sender.Sender;
+import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.AutoCloseableList;
 import org.vesalainen.util.CmdArgs;
+import org.vesalainen.util.CmdArgsException;
 import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.HashMapSet;
 import org.vesalainen.util.MapList;
@@ -97,11 +99,9 @@ import org.vesalainen.util.logging.MinimalFormatter;
 public class Router extends JavaLogging
 {
     private static final String ConfigDigestKey = "config.digest";
-    private static final long RestartLimit = 300000;
     private static final String whiteSpace = "[ \r\n\t]+";
     private final RouterConfig config;
-    private static final long ResolvTimeout = 2000;
-    private static final long MaxResolvTimeout = 30000;
+    private long ResolvTimeout = 2000;
     private static final int BufferSize = 1024;
     private AutoCloseableList<AutoCloseable> autoCloseables;
     private MultiProviderSelector selector;
@@ -120,6 +120,7 @@ public class Router extends JavaLogging
     private final CommandLine commandLine;
     private int portCount;
     private RouterThreadGroup routerThreadGroup;
+    private boolean forcePortConfig;
 
     public Router(RouterConfig config, Logger rootLog, CommandLine commandLine)
     {
@@ -128,24 +129,17 @@ public class Router extends JavaLogging
         this.commandLine = commandLine;
         this.prefs = Preferences.userNodeForPackage(this.getClass());
         
-        Boolean forcePortConfig = commandLine.getOption("-f");
-        if (!forcePortConfig)
-        {
-            MessageDigest digest = config.getDigest();
-            if (digest != null)
-            {
-                byte[] db = digest.digest();
-                HexBinaryAdapter hba = new HexBinaryAdapter();
-                String newDigest = hba.marshal(db);
-                String oldDigest = prefs.get(ConfigDigestKey, null);
-                if (oldDigest != null)
-                {
-                    configChanged = !oldDigest.equals(newDigest);
-                    fine("config file changed %b", configChanged);
-                }
-                prefs.put(ConfigDigestKey, newDigest);
-            }
-        }
+    }
+    @Setting("-f")
+    public void setForcePortConfig(boolean forcePortConfig)
+    {
+        this.forcePortConfig = forcePortConfig;
+    }
+    
+    @Setting("-rt")
+    public void setResolvTimeout(long ResolvTimeout)
+    {
+        this.ResolvTimeout = ResolvTimeout;
     }
     
     private void run() throws Throwable
@@ -194,6 +188,23 @@ public class Router extends JavaLogging
     }
     private void initialize() throws IOException
     {
+        if (!forcePortConfig)
+        {
+            MessageDigest digest = config.getDigest();
+            if (digest != null)
+            {
+                byte[] db = digest.digest();
+                HexBinaryAdapter hba = new HexBinaryAdapter();
+                String newDigest = hba.marshal(db);
+                String oldDigest = prefs.get(ConfigDigestKey, null);
+                if (oldDigest != null)
+                {
+                    configChanged = !oldDigest.equals(newDigest);
+                    fine("config file changed %b", configChanged);
+                }
+                prefs.put(ConfigDigestKey, newDigest);
+            }
+        }
         routerThreadGroup = new RouterThreadGroup("router");
         autoCloseables.add(routerThreadGroup);
         selector = new MultiProviderSelector();
@@ -662,7 +673,6 @@ public class Router extends JavaLogging
                         info("using last matched port %s", lastPort);
                         iterator.remove();
                         lastPort = null;
-                        resolvTimeout = MaxResolvTimeout;
                         return configure(serialChannel, force);
                     }
                 }
@@ -677,10 +687,6 @@ public class Router extends JavaLogging
                     iterator.remove();
                     return configure(serialChannel, force);
                 }
-            }
-            if (resolvTimeout < MaxResolvTimeout)
-            {
-                resolvTimeout += ResolvTimeout;
             }
             if (triedPorts.size() >= portCount-matchedSerialEndpoints.size())
             {
@@ -1568,7 +1574,7 @@ public class Router extends JavaLogging
         {
             cmdArgs.setArgs(args);
         }
-        catch (CmdArgs.CmdArgsException ex)
+        catch (CmdArgsException ex)
         {
             Logger logger = Logger.getLogger(Router.class.getName());
             logger.log(Level.SEVERE, null, ex);
@@ -1617,6 +1623,7 @@ public class Router extends JavaLogging
         try
         {
             Router router = new Router(config, log, cmdArgs);
+            cmdArgs.attach(router);
             router.run();
         }
         catch (RestartException ex)
