@@ -1512,4 +1512,36 @@ public class NMEAParserTest
         }
     }
 
+    @Test
+    public void escape()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$GPTXT,01,01,TARG1,H^D6LM^D6*37\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.TXT, ss.getProperty("messageType"));
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals('G', ss.getProperty("talkerId1"));
+                assertEquals('P', ss.getProperty("talkerId2"));
+                assertEquals(nch.getInt(1), ss.getProperty("totalNumberOfMessages"));
+                assertEquals(nch.getInt(2), ss.getProperty("messageNumber"));
+                assertEquals(nch.getString(3), ss.getProperty("targetName"));
+                assertEquals("HÖLMÖ", ss.getProperty("message"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
 }

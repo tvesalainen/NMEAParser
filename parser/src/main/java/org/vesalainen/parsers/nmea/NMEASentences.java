@@ -408,6 +408,11 @@ public class NMEASentences extends JavaLogging
     {
         data.setMessageType(MessageType.TFI);
     }
+    @Rule("'THS'")
+    protected void ths(@ParserContext("data") NMEAObserver data)
+    {
+        data.setMessageType(MessageType.THS);
+    }
     @Rule("'TLB'")
     protected void tlb(@ParserContext("data") NMEAObserver data)
     {

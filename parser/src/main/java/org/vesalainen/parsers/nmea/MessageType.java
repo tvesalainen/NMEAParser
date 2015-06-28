@@ -99,6 +99,7 @@ public enum MessageType
     STN("Multiple Data ID"),
     TDS("Trawl Door Spread Distance"),
     TFI("Trawl Filling Indicator"),
+    THS("True Heading"),
     TLB("Target Label"),
     TPC("Trawl Position Cartesian Coordinates"),
     TPR("Trawl Position Relative Vessel"),

@@ -131,8 +131,9 @@ public class NMEAGen
     private static void putChecksum(CheckedOutputStream out) throws IOException
     {
         put(out, '*');
-        int cs = (int) out.getChecksum().getValue();
-        put(out, String.format(Locale.US, "%02X", cs));
+        long cs = out.getChecksum().getValue();
+        put(out, Character.forDigit((int) (cs>>4), 16));
+        put(out, Character.forDigit((int) (cs&0xf), 16));
     }
     private static void put(CheckedOutputStream out, double d) throws IOException
     {
@@ -140,7 +141,7 @@ public class NMEAGen
     }
     private static void put(CheckedOutputStream out, String s) throws IOException
     {
-        out.write(s.getBytes(StandardCharsets.US_ASCII));
+        out.write(s.getBytes("NMEA"));
     }
     private static void put(CheckedOutputStream out, char c) throws IOException
     {

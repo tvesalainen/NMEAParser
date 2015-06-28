@@ -90,6 +90,7 @@ import org.vesalainen.parsers.nmea.ais.AISObserver;
     @Rule(left = "nmeaSentence", value = "rpm c rpmSource c rpmSourceNumber c rpm c propellerPitch c status"),
     @Rule(left = "nmeaSentence", value = "rsa c starboardRudderSensor c status c portRudderSensor c status2"),
     @Rule(left = "nmeaSentence", value = "rte c totalNumberOfMessages c messageNumber c messageMode c route c waypoints"),
+    @Rule(left = "nmeaSentence", value = "ths c trueHeading c status"),
     @Rule(left = "nmeaSentence", value = "tll c targetNumber c destinationWaypointLocation c targetName c targetTime c targetStatus c referenceTarget"),
     @Rule(left = "nmeaSentence", value = "txt c totalNumberOfMessages c messageNumber c targetName c message"),
     @Rule(left = "nmeaSentence", value = "vhw c waterHeading c waterHeading c waterSpeed c waterSpeed"),
@@ -735,6 +736,14 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
             default:
                 throw new IllegalArgumentException(unit+ "expected T/M");
         }
+    }
+
+    @Rule("decimal")
+    protected void trueHeading(
+            float heading,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTrueHeading(heading);
     }
 
     @Rule("decimal")
@@ -1474,10 +1483,31 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     @Terminal(expression = "[0-9A-Fa-f]")
     protected abstract char hexAlpha(char x);
 
-    @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)]+")
-    protected String string(String input)
+    @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)\\^]+")
+    protected String string(CharSequence seq)
     {
-        return input;
+        StringBuilder sb = new StringBuilder();
+        int len = seq.length();
+        for (int ii=0;ii<len;ii++)
+        {
+            char cc = seq.charAt(ii);
+            if (cc == '^')
+            {
+                if (len-ii < 3)
+                {
+                    throw new IllegalArgumentException("illegal escape");
+                }
+                int d1 = Character.digit(seq.charAt(ii+1), 16);
+                int d2 = Character.digit(seq.charAt(ii+2), 16);
+                sb.append((char)((d1<<4)+d2));
+                ii+=2;
+            }
+            else
+            {
+                sb.append(cc);
+            }
+        }
+        return sb.toString();
     }
 
     @Terminal(expression = "[\\+\\-]?[0-9]+")
