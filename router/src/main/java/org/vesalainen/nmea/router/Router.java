@@ -78,8 +78,9 @@ import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.sender.Sender;
 import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.AutoCloseableList;
-import org.vesalainen.util.CmdArgs;
+import org.vesalainen.util.Bijection;
 import org.vesalainen.util.CmdArgsException;
+import org.vesalainen.util.HashBijection;
 import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.HashMapSet;
 import org.vesalainen.util.MapList;
@@ -121,7 +122,8 @@ public class Router extends JavaLogging
     private int portCount;
     private RouterThreadGroup routerThreadGroup;
     private boolean forcePortConfig;
-
+    private NMEAMatcherManager matcherManager;
+    
     public Router(RouterConfig config, Logger rootLog, CommandLine commandLine)
     {
         super(rootLog);
@@ -231,7 +233,7 @@ public class Router extends JavaLogging
             ctrlTcpPort = port;
         }
         MapList<Speed,EndpointType> endPointMap = new HashMapList<>();
-        Map<SerialEndpoint,EndpointType> serialEndpointMap = new HashMap<>();
+        Bijection<SerialEndpoint,EndpointType> serialEndpointMap = new HashBijection<>();
         for (EndpointType et : config.getEndpoints())
         {
             Endpoint endpoint = getInstance(et);
@@ -247,7 +249,7 @@ public class Router extends JavaLogging
                 configureChannel(endpoint, selector, false);
             }
         }
-        config.checkAmbiguos(endPointMap);
+        matcherManager = new NMEAMatcherManager(serialEndpointMap, endPointMap);
         for (Entry<SerialEndpoint, EndpointType> e : serialEndpointMap.entrySet())
         {
             SerialEndpoint se = e.getKey();
@@ -585,7 +587,6 @@ public class Router extends JavaLogging
         protected Set<SerialChannel> triedPorts = new HashSet<>();
         protected String lastPort;
         protected String port;
-        protected OrMatcher realMatcher;
         
         public SerialEndpoint(SerialType serialType)
         {
@@ -635,33 +636,25 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected OrMatcher createMatcher(EndpointType endpointType)
+        protected Matcher<List<String>> createMatcher(EndpointType endpointType)
         {
-            OrMatcher orm = new OrMatcher<>();
-            realMatcher = new OrMatcher<>();
             List<RouteType> route = endpointType.getRoute();
-            if (!endpointType.getRoute().isEmpty())
+            for (RouteType rt : route)
             {
-                for (RouteType rt : route)
+                for (String trg : rt.getTarget())
                 {
-                    List<String> targetList = rt.getTarget();
-                    NMEAMatcher nmeaMatcher = new NMEAMatcher(rt.getPrefix());
-                    realMatcher.add(nmeaMatcher, targetList);
-                    if (!config.isAmbiguousPrefix(getSpeed(), rt.getPrefix()))
-                    {
-                        orm.add(nmeaMatcher, targetList);
-                    }
-                    for (String trg : targetList)
-                    {
-                        sources.add(trg, this);
-                    }
+                    sources.add(trg, this);
                 }
             }
-            return orm;
+            return null;
         }
         @Override
         protected SelectableChannel configureChannel(boolean force) throws IOException
         {
+            if (matcher == null)
+            {
+                return null;
+            }
             if (lastPort != null)
             {
                 Iterator<SerialChannel> iterator = portPool.iterator();
@@ -740,8 +733,7 @@ public class Router extends JavaLogging
             config("matching took %d millis", elapsed);
             matchedSerialEndpoints.add(name);
             prefs.put(name+".port", port);
-            matcher = realMatcher;
-            realMatcher = null;
+            matcherManager.match(this);
         }
 
         @Override
@@ -754,7 +746,7 @@ public class Router extends JavaLogging
     public abstract class Endpoint extends DataSource
     {
         protected SelectableChannel channel;
-        protected OrMatcher<String> matcher;
+        protected Matcher<List<String>> matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean matched;
         private boolean mark = true;
@@ -782,23 +774,28 @@ public class Router extends JavaLogging
         {
             matcher = createMatcher(endpointType);
         }
-        protected OrMatcher createMatcher(EndpointType endpointType)
+        void setMatcher(Matcher<List<String>> matcher)
         {
-            OrMatcher orm = new OrMatcher<>();
+            this.matcher = matcher;
+        }
+        protected Matcher<List<String>> createMatcher(EndpointType endpointType)
+        {
+            NMEAMatcher<List<String>> wm = new NMEAMatcher<>();
             List<RouteType> route = endpointType.getRoute();
             if (!endpointType.getRoute().isEmpty())
             {
                 for (RouteType rt : route)
                 {
                     List<String> targetList = rt.getTarget();
-                    orm.add(new NMEAMatcher(rt.getPrefix()), targetList);
+                    wm.addExpression(rt.getPrefix(), targetList);
                     for (String trg : targetList)
                     {
                         sources.add(trg, this);
                     }
                 }
             }
-            return orm;
+            wm.compile();
+            return wm;
         }
         @Override
         protected int writePartial(RingByteBuffer ring) throws IOException
@@ -870,7 +867,7 @@ public class Router extends JavaLogging
 
         public boolean isSource()
         {
-            return matcher != null && !matcher.isEmpty();
+            return matcher != null;
         }
 
         @Override
@@ -948,9 +945,9 @@ public class Router extends JavaLogging
             return "Endpoint{" + "name=" + name + '}';
         }
 
-        private void write(OrMatcher<String> matcher, RingByteBuffer ring, boolean partial) throws IOException
+        private void write(Matcher<List<String>> matcher, RingByteBuffer ring, boolean partial) throws IOException
         {
-            for (String target : matcher.getLastMatched())
+            for (String target : matcher.getMatched())
             {
                 DataSource ds = targets.get(target);
                 if (ds != null)
@@ -1285,7 +1282,7 @@ public class Router extends JavaLogging
         }
         private void errors() throws IOException
         {
-            out.println("Name\tPrefix\tMatches\tErrors\t%");
+            out.println("Name\tMatches\tErrors\t%");
             for (Entry<String,DataSource> entry :targets.entrySet())
             {
                 DataSource ds = entry.getValue();
@@ -1294,20 +1291,10 @@ public class Router extends JavaLogging
                     Endpoint ep = (Endpoint) ds;
                     out.print(entry.getKey()+"\t");
                     boolean first = true;
-                    for (Matcher m : ep.matcher)
-                    {
-                        if (!first)
-                        {
-                            out.print("\t");
-                        }
-                        first = false;
-                        NMEAMatcher nm = (NMEAMatcher) m;
-                        out.print(nm.getPrefix()+"\t");
-                        out.print(nm.getMatches()+"\t");
-                        out.print(nm.getErrors()+"\t");
-                        out.print(String.format("%.1f", nm.getErrorPrecent()));
-                        out.println();
-                    }
+                    NMEAMatcher m = (NMEAMatcher) ep.matcher;
+                    out.print(m.getMatches()+"\t");
+                    out.print(m.getErrors()+"\t");
+                    out.print(String.format("%.1f", m.getErrorPrecent()));
                     out.println();
                 }
             }

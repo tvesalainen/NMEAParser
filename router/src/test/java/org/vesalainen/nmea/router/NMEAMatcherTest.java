@@ -35,7 +35,9 @@ public class NMEAMatcherTest
     public void test1()
     {
         String sentence = "$IIHDG,171,,,06,E*13\r\n";
-        NMEAMatcher nm = new NMEAMatcher("$IIHDG");
+        NMEAMatcher nm = new NMEAMatcher();
+        nm.addExpression("$IIHDG", this);
+        nm.compile();
         Status status = null;
         for (int ii=0;ii<sentence.length();ii++)
         {
@@ -52,7 +54,9 @@ public class NMEAMatcherTest
     public void test2()
     {
         String sentence = "$IIHDG,171,,,06,E*23\r\n$IIHDG,171,,,06,E*13\r\n$IIHDG,171,,,06,E*14\r\n";
-        NMEAMatcher nm = new NMEAMatcher("$IIHDG");
+        NMEAMatcher nm = new NMEAMatcher();
+        nm.addExpression("$IIHDG", this);
+        nm.compile();
         for (int ii=0;ii<sentence.length();ii++)
         {
             nm.match(sentence.charAt(ii));

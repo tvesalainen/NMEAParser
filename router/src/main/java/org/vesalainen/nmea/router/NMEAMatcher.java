@@ -18,34 +18,27 @@ package org.vesalainen.nmea.router;
 
 import java.util.zip.Checksum;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
-import org.vesalainen.util.Matcher;
-import org.vesalainen.util.SimpleMatcher;
+import org.vesalainen.regex.WildcardMatcher;
 
 /**
  *
  * @author tkv
  */
-public class NMEAMatcher implements Matcher
+public class NMEAMatcher<T> extends WildcardMatcher<T>
 {
     enum State {Prefix, Data, Checksum1, Checksum2, Cr, Lf};
     private State state = State.Prefix;
-    private final SimpleMatcher prefixMatcher;
     private final Checksum checksum;
     private int cs;
     private float matches;
     private boolean parsing;
     private float errors;
 
-    public NMEAMatcher(String prefix)
+    public NMEAMatcher()
     {
-        this.prefixMatcher = new SimpleMatcher(prefix);
         this.checksum = new NMEAChecksum();
     }
 
-    public String getPrefix()
-    {
-        return prefixMatcher.getExpression();
-    }
     public int getMatches()
     {
         return (int) matches;
@@ -70,7 +63,7 @@ public class NMEAMatcher implements Matcher
         switch (state)
         {
             case Prefix:
-                Status status = prefixMatcher.match(cc);
+                Status status = super.match(cc);
                 switch (status)
                 {
                     case Match:
@@ -145,7 +138,7 @@ public class NMEAMatcher implements Matcher
     @Override
     public void clear()
     {
-        prefixMatcher.clear();
+        super.clear();
         state = State.Prefix;
         parsing = false;
     }

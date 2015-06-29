@@ -25,10 +25,7 @@ import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -36,19 +33,15 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
-import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Speed;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
-import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.ScriptType;
 import org.vesalainen.nmea.jaxb.router.SenderType;
 import org.vesalainen.nmea.script.ScriptParser;
-import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.HashMapSet;
-import org.vesalainen.util.MapList;
 import org.vesalainen.util.MapSet;
 
 /**
@@ -60,7 +53,6 @@ public class RouterConfig
     protected static JAXBContext jaxbCtx;
     protected static ObjectFactory factory;
     protected static DatatypeFactory dtFactory;
-    protected MapSet<Speed,String> ambiguousPrefixes = new HashMapSet<>();
     protected MessageDigest digest;
     
     protected JAXBElement<NmeaType> nmea;
@@ -88,6 +80,7 @@ public class RouterConfig
     }
     
     public RouterConfig(File file) throws IOException, JAXBException
+
     {
         this(new FileInputStream(file));
     }
@@ -105,6 +98,7 @@ public class RouterConfig
             DigestInputStream dis = new DigestInputStream(is, digest);
             Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
             nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(dis);
+            check();
         }
         catch (NoSuchAlgorithmException ex)
         {
@@ -168,73 +162,18 @@ public class RouterConfig
             throw new IOException(ex);
         }
     }
-    /**
-     * Return true is prefix is ambiguous. Ambiguous prefix cannot be used in 
-     * determining which port is which, 
-     * because messages prefixed with ambiguous prefixes are received from several ports.
-     * @param prefix
-     * @return 
-     */
-    public boolean isAmbiguousPrefix(Speed speed, String prefix)
-    {
-        Set<String> set = ambiguousPrefixes.get(speed);
-        if (set != null)
-        {
-            return set.contains(prefix);
-        }
-        return false;
-    }
-    public void checkAmbiguos(MapList<Speed, EndpointType> endpointMap) throws IOException
-    {
-        MapList<String,String> prefixes = new HashMapList<>();
-        for (Speed speed : endpointMap.keySet())
-        {
-            for (EndpointType et : endpointMap.get(speed))
-            {
-                String name = et.getName();
-                ScriptType scriptType = et.getScript();
-                if (scriptType != null)
-                {
-                    ScriptParser se = ScriptParser.newInstance();
-                    se.check(scriptType.getValue());
-                }
-                for (RouteType rt : et.getRoute())
-                {
-                    String prefix = rt.getPrefix();
-                    for (Entry<String,List<String>> e : prefixes.entrySet())
-                    {
-                        String key = e.getKey();
-                        if (!name.equals(key))
-                        {
-                            for (String pre : e.getValue())
-                            {
-                                if (matchesSame(prefix, pre))
-                                {
-                                    ambiguousPrefixes.add(speed, pre);
-                                }
-                            }
-                        }
-                    }
-                    prefixes.add(name, prefix);
-                }
-            }
-            prefixes.clear();
-        }
-    }
 
-    private boolean matchesSame(String p1, String p2)
+    private void check()
     {
-        int len = Math.min(p1.length(), p2.length());
-        for (int ii=0;ii<len;ii++)
+        for (EndpointType et : getEndpoints())
         {
-            char c1 = p1.charAt(ii);
-            char c2 = p2.charAt(ii);
-            if (!((c1=='?' || c2=='?') || c1 == c2))
+            String name = et.getName();
+            ScriptType scriptType = et.getScript();
+            if (scriptType != null)
             {
-                return false;
+                ScriptParser se = ScriptParser.newInstance();
+                se.check(scriptType.getValue());
             }
         }
-        return true;
     }
-
 }
