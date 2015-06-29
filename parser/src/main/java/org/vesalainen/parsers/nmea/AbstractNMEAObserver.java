@@ -85,18 +85,11 @@ public class AbstractNMEAObserver implements NMEAObserver
         return (double) Math.cos(Math.toRadians((lat2+lat1)/2));
     }
 
-
     @Override
-    public void setTalkerId1(char talkerId)
+    public void setTalkerId(TalkerId talkerId)
     {
-        
     }
 
-    @Override
-    public void setTalkerId2(char talkerId)
-    {
-        
-    }
 
     @Override
     public void setLatitude(float latitude)

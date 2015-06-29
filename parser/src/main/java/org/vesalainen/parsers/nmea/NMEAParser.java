@@ -189,7 +189,7 @@ import org.vesalainen.parsers.nmea.ais.AISObserver;
     @Rule(left = "speed", value = "c skip?"),
     @Rule(left = "windAngle")
 })
-public abstract class NMEAParser extends NMEASentences implements ParserInfo, ChecksumProvider
+public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, ChecksumProvider
 {
     private static final LocalNMEAChecksum localChecksum = new LocalNMEAChecksum();
 
@@ -1395,13 +1395,6 @@ public abstract class NMEAParser extends NMEASentences implements ParserInfo, Ch
     {
         data.setDestinationWaypointLatitude(ns * latitude);
         data.setDestinationWaypointLongitude(ew * longitude);
-    }
-
-    @Rule("letterNotP letter")
-    protected void talkerId(char c1, char c2, @ParserContext("data") NMEAObserver data)
-    {
-        data.setTalkerId1(c1);
-        data.setTalkerId2(c2);
     }
 
     @Rule("hex")

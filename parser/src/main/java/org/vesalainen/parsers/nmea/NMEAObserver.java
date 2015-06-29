@@ -47,15 +47,11 @@ public interface NMEAObserver extends Transactional
      */
     void setClock(Clock clock);
     /**
-     * Talker Id of sending device.
-     * @param talkerId
+     * Set taker id of sentence
+     * @param talkerId 
      */
-    void setTalkerId1(char talkerId);
-    /**
-     * Talker Id of sending device.
-     * @param talkerId
-     */
-    void setTalkerId2(char talkerId);
+    public void setTalkerId(TalkerId talkerId);
+
     /**
      * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
@@ -620,5 +616,4 @@ public interface NMEAObserver extends Transactional
     public void setPRtr(float value);
 
     public void setYRtr(float value);
-
 }
