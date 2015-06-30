@@ -55,10 +55,32 @@ public final class NMEAMatcherManager
     public void match(SerialEndpoint serialEndpoint)
     {
         Speed speed = serialEndpoint.getSpeed();
-        speedMap.get(speed).remove(serialEndpoint);
-        serialEndpoint.setMatcher(serialEndpoint.createMatcher(endpointMap.getSecond(serialEndpoint)));
+        EndpointType endpointType = endpointMap.getSecond(serialEndpoint);
+        speedMap.get(speed).remove(endpointType);
+        NMEAMatcher<List<String>> wm = null;
+        for (RouteType rt : endpointType.getRoute())
+        {
+            List<String> targetList = rt.getTarget();
+            if (wm == null)
+            {
+                wm = new NMEAMatcher<>();
+            }
+            wm.addExpression(rt.getPrefix(), targetList);
+        }
+        if (wm != null)
+        {
+            wm.compile();
+        }
+        serialEndpoint.setMatcher(wm);
         setMatchers(speed);
     }
+    public void kill(SerialEndpoint se)
+    {
+        EndpointType et = endpointMap.getSecond(se);
+        endpointMap.removeFirst(et);
+        speedMap.get(se.getSpeed()).remove(et);
+    }
+
     private void setMatchers(Speed speed)
     {
         update(speed);
@@ -81,8 +103,12 @@ public final class NMEAMatcherManager
                     }
                 }
             }
-            SerialEndpoint serialEndpoint = endpointMap.getFirst(endpointType);
-            serialEndpoint.setMatcher(wm);
+            if (wm != null)
+            {
+                wm.compile();
+                SerialEndpoint serialEndpoint = endpointMap.getFirst(endpointType);
+                serialEndpoint.setMatcher(wm);
+            }
         }
     }
     /**

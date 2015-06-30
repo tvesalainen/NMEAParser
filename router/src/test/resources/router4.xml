@@ -14,6 +14,8 @@
             <route prefix="$AGHDT" target=""/>
             <route prefix="$AGHDM" target=""/>
             <route prefix="$AGHDG" target=""/>
+            <route prefix="$AGHSC" target=""/>
+            <route prefix="$AGXTE" target=""/>
         </nmea-0183>
         <nmea-0183 name="Simrad2">
             <route prefix="$AGRSA" target=""/>
@@ -36,7 +38,7 @@
             <script>
                 send("$PAMTC,EN,ALL,1,1")
                 kill(Airmar4800)
-                while(waitfor(1000, "$HCHDT")){}
+                # while(waitfor(1000, "$HCHDT")){}
                 # restart()
             </script>
             <route prefix="$HCHDT" target="Net Simrad2"/>

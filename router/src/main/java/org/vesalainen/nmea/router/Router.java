@@ -113,7 +113,6 @@ public class Router extends JavaLogging
     private final Map<String,SerialEndpoint> allSerialEndpoints = new HashMap<>();
     private final Set<String> matchedSerialEndpoints = new HashSet<>();
     private final ReentrantLock lock = new ReentrantLock();
-    private boolean canForce;
     private String proprietaryPrefix;
     private int ctrlTcpPort;
     private final Preferences prefs;
@@ -123,6 +122,7 @@ public class Router extends JavaLogging
     private RouterThreadGroup routerThreadGroup;
     private boolean forcePortConfig;
     private NMEAMatcherManager matcherManager;
+    private boolean allMatched;
     
     public Router(RouterConfig config, Logger rootLog, CommandLine commandLine)
     {
@@ -176,7 +176,7 @@ public class Router extends JavaLogging
                         return;
                     }
                 }
-                if (matchedSerialEndpoints.size() !=  allSerialEndpoints.size())
+                if (!allMatched)
                 {
                     resolvPorts();
                 }
@@ -213,8 +213,10 @@ public class Router extends JavaLogging
         autoCloseables.add(selector);
         Builder builder = new SerialChannel.Builder("", SerialChannel.Speed.B4800)
                 .setBlocking(false);
+        config("free ports:");
         for (String port : SerialChannel.getFreePorts())
         {
+            config("%s", port);
             SerialChannel sc = builder.setPort(port).get();
             autoCloseables.add(sc);
             portPool.add(sc);
@@ -246,7 +248,7 @@ public class Router extends JavaLogging
             else
             {
                 endpoint.init2(et);
-                configureChannel(endpoint, selector, false);
+                configureChannel(endpoint, selector);
             }
         }
         matcherManager = new NMEAMatcherManager(serialEndpointMap, endPointMap);
@@ -255,7 +257,7 @@ public class Router extends JavaLogging
             SerialEndpoint se = e.getKey();
             allSerialEndpoints.put(se.name, se);
             se.init2(e.getValue());
-            if (!configureChannel(se, selector, false))
+            if (!configureChannel(se, selector))
             {
                 config("add resolvPool -> %s", se);
                 resolvPool.add(se);
@@ -265,14 +267,6 @@ public class Router extends JavaLogging
         {
             DataSource ds = (DataSource) sk.attachment();
             ds.updateStatus();
-        }
-        if (allSerialEndpoints.size() == portCount)
-        {
-            canForce = true;
-        }
-        else
-        {
-            configChanged = true;
         }
         SenderType senderType = config.getSenderType();
         if (senderType != null)
@@ -297,27 +291,11 @@ public class Router extends JavaLogging
         lock.lock();
         try
         {
-            if (!configChanged)
-            {
-                for (SelectionKey sk : selector.keys())
-                {
-                    DataSource ds = (DataSource) sk.attachment();
-                    if (ds != null && (ds instanceof SerialEndpoint))
-                    {
-                        SerialEndpoint endpoint = (SerialEndpoint) ds;
-                        if (!endpoint.matched)
-                        {
-                            endpoint.matched("matched because the same config");
-                        }
-                    }
-                }
-                return;
-            }
             Iterator<SerialEndpoint> iterator = resolvPool.iterator();
             while (iterator.hasNext())
             {
                 SerialEndpoint endpoint = iterator.next();
-                boolean success = configureChannel(endpoint, selector, canForce && allSerialEndpoints.size()-matchedSerialEndpoints.size()==1);
+                boolean success = configureChannel(endpoint, selector);
                 if (success)
                 {
                     iterator.remove();
@@ -336,14 +314,23 @@ public class Router extends JavaLogging
                         config("%s: failed %s read cound=%d bytes=%d", ds.name, channel, ds.readCount, ds.readBytes);
                         config("add portPool -> %s", channel);
                         portPool.add(channel);
-                        config("add resolvPool -> %s", endpoint);
-                        resolvPool.add(endpoint);
+                        if (allSerialEndpoints.containsKey(endpoint.name))
+                        {
+                            config("add resolvPool -> %s", endpoint);
+                            resolvPool.add(endpoint);
+                        }
+                        else
+                        {
+                            config("killed %s", endpoint);
+                        }
                         sk.cancel();
                     }
                 }
             }
             if (matchedSerialEndpoints.size() == allSerialEndpoints.size())
             {   
+                allMatched = true;
+                config("all ports matched");
                 for (SerialChannel sc : portPool)
                 {
                     sc.close();
@@ -351,6 +338,7 @@ public class Router extends JavaLogging
                 }
                 portPool = null;
                 resolvPool = null;
+                matcherManager = null;
             }
         }
         finally
@@ -359,12 +347,12 @@ public class Router extends JavaLogging
         }
     }
 
-    private boolean configureChannel(Endpoint endpoint, MultiProviderSelector selector, boolean force) throws IOException
+    private boolean configureChannel(Endpoint endpoint, MultiProviderSelector selector) throws IOException
     {
         lock.lock();
         try
         {
-            SelectableChannel channel = endpoint.configureChannel(force);
+            SelectableChannel channel = endpoint.configureChannel();
             if (channel != null)
             {
                 channel.register(selector, OP_READ, endpoint);
@@ -408,11 +396,8 @@ public class Router extends JavaLogging
                 se.scriptEngine.stop();
             }
             prefs.remove(se.name+".port");
-            if (allSerialEndpoints.size() == portCount)
-            {
-                canForce = true;
-            }
-            return false;
+            matcherManager.kill(se);
+            return true;
         }
         finally
         {
@@ -501,7 +486,7 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected SelectableChannel configureChannel(boolean force) throws IOException
+        protected SelectableChannel configureChannel() throws IOException
         {
             matched("because is datagram");
             channel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, isSource());
@@ -539,9 +524,9 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected SelectableChannel configureChannel(boolean force) throws IOException
+        protected SelectableChannel configureChannel() throws IOException
         {
-            SerialChannel serialChannel = (SerialChannel) super.configureChannel(force);
+            SerialChannel serialChannel = (SerialChannel) super.configureChannel();
             if (serialChannel != null)
             {
                 channel = new SeaTalkChannel(serialChannel);
@@ -646,10 +631,10 @@ public class Router extends JavaLogging
                     sources.add(trg, this);
                 }
             }
-            return null;
+            return matcher; // doesn't change it
         }
         @Override
-        protected SelectableChannel configureChannel(boolean force) throws IOException
+        protected SelectableChannel configureChannel() throws IOException
         {
             if (matcher == null)
             {
@@ -666,7 +651,7 @@ public class Router extends JavaLogging
                         info("using last matched port %s", lastPort);
                         iterator.remove();
                         lastPort = null;
-                        return configure(serialChannel, force);
+                        return configure(serialChannel);
                     }
                 }
                 configChanged = true;
@@ -675,10 +660,10 @@ public class Router extends JavaLogging
             while (iterator.hasNext())
             {
                 SerialChannel serialChannel = iterator.next();
-                if (!triedPorts.contains(serialChannel) || force)
+                if (!triedPorts.contains(serialChannel))
                 {
                     iterator.remove();
-                    return configure(serialChannel, force);
+                    return configure(serialChannel);
                 }
             }
             if (triedPorts.size() >= portCount-matchedSerialEndpoints.size())
@@ -690,21 +675,11 @@ public class Router extends JavaLogging
             return null;
         }
 
-        private SelectableChannel configure(SerialChannel serialChannel, boolean force) throws IOException
+        private SelectableChannel configure(SerialChannel serialChannel) throws IOException
         {
             serialChannel.configure(configuration);
-            if (force)
-            {
-                config("all     %s", allSerialEndpoints);
-                config("matched %s", matchedSerialEndpoints);
-                config("ports   %d", portCount);
-                matched("matched because it was last unresolved port");
-            }
-            else
-            {
-                triedPorts.add(serialChannel);
-                resolvStarted = System.currentTimeMillis();
-            }
+            triedPorts.add(serialChannel);
+            resolvStarted = System.currentTimeMillis();
             info("%s: %s -> %s", name, serialChannel, configuration);
             channel = serialChannel;
             port = serialChannel.getPort();
@@ -733,6 +708,7 @@ public class Router extends JavaLogging
             config("matching took %d millis", elapsed);
             matchedSerialEndpoints.add(name);
             prefs.put(name+".port", port);
+            config("%d/%d", matchedSerialEndpoints.size(), allSerialEndpoints.size());
             matcherManager.match(this);
         }
 
@@ -780,21 +756,32 @@ public class Router extends JavaLogging
         }
         protected Matcher<List<String>> createMatcher(EndpointType endpointType)
         {
-            NMEAMatcher<List<String>> wm = new NMEAMatcher<>();
+            NMEAMatcher<List<String>> wm = null;
             List<RouteType> route = endpointType.getRoute();
             if (!endpointType.getRoute().isEmpty())
             {
                 for (RouteType rt : route)
                 {
                     List<String> targetList = rt.getTarget();
-                    wm.addExpression(rt.getPrefix(), targetList);
+                    String prefix = rt.getPrefix();
+                    if (prefix != null && !prefix.isEmpty())
+                    {
+                        if (wm == null)
+                        {
+                            wm = new NMEAMatcher<>();
+                        }
+                        wm.addExpression(prefix, targetList);
+                    }
                     for (String trg : targetList)
                     {
                         sources.add(trg, this);
                     }
                 }
             }
-            wm.compile();
+            if (wm != null)
+            {
+                wm.compile();
+            }
             return wm;
         }
         @Override
@@ -972,7 +959,7 @@ public class Router extends JavaLogging
                 }
             }
         }
-        protected abstract SelectableChannel configureChannel(boolean force) throws IOException;
+        protected abstract SelectableChannel configureChannel() throws IOException;
 
         protected void matched(CharSequence reason)
         {
@@ -1292,9 +1279,12 @@ public class Router extends JavaLogging
                     out.print(entry.getKey()+"\t");
                     boolean first = true;
                     NMEAMatcher m = (NMEAMatcher) ep.matcher;
-                    out.print(m.getMatches()+"\t");
-                    out.print(m.getErrors()+"\t");
-                    out.print(String.format("%.1f", m.getErrorPrecent()));
+                    if (m != null)
+                    {
+                        out.print(m.getMatches()+"\t");
+                        out.print(m.getErrors()+"\t");
+                        out.print(String.format("%.1f", m.getErrorPrecent()));
+                    }
                     out.println();
                 }
             }

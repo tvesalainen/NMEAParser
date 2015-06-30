@@ -33,6 +33,7 @@ public class NMEAMatcher<T> extends WildcardMatcher<T>
     private float matches;
     private boolean parsing;
     private float errors;
+    private T matched;
 
     public NMEAMatcher()
     {
@@ -67,6 +68,7 @@ public class NMEAMatcher<T> extends WildcardMatcher<T>
                 switch (status)
                 {
                     case Match:
+                        matched = super.getMatched();
                         state = State.Data;
                         parsing = true;
                         return Status.WillMatch;
@@ -123,6 +125,12 @@ public class NMEAMatcher<T> extends WildcardMatcher<T>
             default:
                 throw new IllegalArgumentException(state+" unknown");
         }
+    }
+
+    @Override
+    public T getMatched()
+    {
+        return matched;
     }
 
     private Status error()
