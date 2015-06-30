@@ -115,6 +115,7 @@ import org.vesalainen.parsers.nmea.ais.AISObserver;
     @Rule(left = "xdrGroup", value = "rrtr"),
     @Rule(left = "xdrGroup", value = "prtr"),
     @Rule(left = "xdrGroup", value = "yrtr"),
+    @Rule(left = "trueHeading"),
     @Rule(left = "rateOfTurn"),
     @Rule(left = "waterTemperature"),
     @Rule(left = "heading"),
