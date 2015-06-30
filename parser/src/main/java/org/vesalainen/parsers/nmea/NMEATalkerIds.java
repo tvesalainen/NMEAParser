@@ -44,6 +44,12 @@ public class NMEATalkerIds extends NMEASentences
         data.setTalkerId(TalkerId.AG);
     }
 
+    @Rule(left = "talkerId", value = "'AI'")
+    protected void ai(@ParserContext("data") NMEAObserver data)
+    {
+        data.setTalkerId(TalkerId.AI);
+    }
+
     @Rule(left = "talkerId", value = "'AP'")
     protected void ap(@ParserContext("data") NMEAObserver data)
     {

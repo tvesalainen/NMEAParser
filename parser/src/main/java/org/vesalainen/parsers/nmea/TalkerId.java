@@ -34,6 +34,7 @@ public enum TalkerId
      * Autopilot - General
      */
     AG("Autopilot - General"),
+    AI("AIS"),
     /**
      * Autopilot - Magnetic
      */
