@@ -33,7 +33,7 @@ public class RouterT
     @Test
     public void test()
     {
-        URL url = RouterConfigTest.class.getClassLoader().getResource("router4.xml");
+        URL url = RouterConfigTest.class.getClassLoader().getResource("router2.xml");
         String filename = url.getFile();
         Router.main("-ll", "CONFIG", "-pl", "INFO", filename);
     }
