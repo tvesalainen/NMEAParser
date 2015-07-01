@@ -3,12 +3,11 @@
     <parent>
         <groupId>org.vesalainen.nmea</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.vesalainen.nmea</groupId>
     <artifactId>router</artifactId>
-    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>NMEA Router</name>
