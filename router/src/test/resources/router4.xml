@@ -65,7 +65,7 @@
             <route prefix="$??RMB" target="Simrad1"/>
             <route prefix="$??XTE" target="Simrad1"/>
         </broadcast-nmea-0183>
-        <broadcast name="MT" address="5.9.207.224" port="5321">
-        </broadcast>
+        <datagram name="MT" address="5.9.207.224" port="5321">
+        </datagram>
     </router>
 </nmea>
