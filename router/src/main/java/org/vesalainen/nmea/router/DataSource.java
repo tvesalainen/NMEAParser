@@ -19,6 +19,10 @@ package org.vesalainen.nmea.router;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.util.logging.JavaLogging;
@@ -29,6 +33,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public abstract class DataSource extends JavaLogging
 {
+    private static final Map<String,DataSource> map = new HashMap<>();
     protected final String name;
     protected DataSource attached;
     protected boolean isSink;
@@ -41,9 +46,18 @@ public abstract class DataSource extends JavaLogging
     public DataSource(String name)
     {
         this.name = name;
+        DataSource old = map.put(name, this);
+        if (old != null)
+        {
+            throw new IllegalArgumentException(name+" DataSource exists already");
+        }
         setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.') + "." + name));
     }
 
+    public static DataSource get(String name)
+    {
+        return map.get(name);
+    }
     protected abstract void handle(SelectionKey sk) throws IOException;
 
     protected abstract int write(ByteBuffer readBuffer) throws IOException;
@@ -96,6 +110,11 @@ public abstract class DataSource extends JavaLogging
 
     protected void updateStatus()
     {
+    }
+
+    public static Collection<DataSource> getDataSources()
+    {
+        return map.values();
     }
     
 }

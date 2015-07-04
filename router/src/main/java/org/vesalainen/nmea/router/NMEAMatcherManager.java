@@ -57,7 +57,7 @@ public final class NMEAMatcherManager
         Speed speed = serialEndpoint.getSpeed();
         EndpointType endpointType = endpointMap.getSecond(serialEndpoint);
         speedMap.get(speed).remove(endpointType);
-        NMEAMatcher<List<String>> wm = null;
+        NMEAMatcher<Route> wm = null;
         for (RouteType rt : endpointType.getRoute())
         {
             List<String> targetList = rt.getTarget();
@@ -65,7 +65,8 @@ public final class NMEAMatcherManager
             {
                 wm = new NMEAMatcher<>();
             }
-            wm.addExpression(rt.getPrefix(), targetList);
+            String prefix = rt.getPrefix();
+            wm.addExpression(prefix, new Route(prefix, targetList));
         }
         if (wm != null)
         {
@@ -86,7 +87,7 @@ public final class NMEAMatcherManager
         update(speed);
         for (EndpointType endpointType : speedMap.get(speed))
         {
-            NMEAMatcher<List<String>> wm = null;
+            NMEAMatcher<Route> wm = null;
             List<RouteType> route = endpointType.getRoute();
             if (!endpointType.getRoute().isEmpty())
             {
@@ -99,7 +100,8 @@ public final class NMEAMatcherManager
                         {
                             wm = new NMEAMatcher<>();
                         }
-                        wm.addExpression(rt.getPrefix(), targetList);
+                        String prefix = rt.getPrefix();
+                        wm.addExpression(prefix, new Route(prefix, targetList));
                     }
                 }
             }
@@ -127,21 +129,6 @@ public final class NMEAMatcherManager
         }
         return false;
     }
-    private boolean matchesSame(String p1, String p2)
-    {
-        int len = Math.min(p1.length(), p2.length());
-        for (int ii=0;ii<len;ii++)
-        {
-            char c1 = p1.charAt(ii);
-            char c2 = p2.charAt(ii);
-            if (!((c1=='?' || c2=='?') || c1 == c2))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private void update(Speed speed)
     {
         ambiguousPrefixes.remove(speed);
@@ -159,7 +146,7 @@ public final class NMEAMatcherManager
                     {
                         for (String pre : e.getValue())
                         {
-                            if (matchesSame(prefix, pre))
+                            if (NMEAPrefix.matchesSame(prefix, pre))
                             {
                                 ambiguousPrefixes.add(speed, pre);
                             }
