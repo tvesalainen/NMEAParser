@@ -76,6 +76,7 @@ import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SenderType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.sender.Sender;
+import org.vesalainen.regex.WildcardMatcher;
 import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.AutoCloseableList;
 import org.vesalainen.util.Bijection;
@@ -1047,8 +1048,8 @@ public class Router extends JavaLogging
         private final AppendablePrinter out;
         private final AppendableByteChannel outChannel;
         private final RingByteBuffer ring = new RingByteBuffer(100, true);
-        private final OrMatcher<String> matcher = new OrMatcher<>();
-        private final OrMatcher<String> nmeaMatcher = new OrMatcher<>();
+        private final WildcardMatcher<String> matcher = new WildcardMatcher<>();
+        private final WildcardMatcher<String> nmeaMatcher = new WildcardMatcher<>();
         private boolean mark = true;
         private final String help;
         private ChannelHandler logHandler;
@@ -1066,33 +1067,33 @@ public class Router extends JavaLogging
             outChannel.flush();
             
             StringBuilder sb = new StringBuilder();
-            matcher.add(new SimpleMatcher("h*\n"), "help");
+            matcher.addExpression("h*\n", "help");
             sb.append("h[elp] - Prints help\r\n");
-            matcher.add(new SimpleMatcher("i*\n"), "info");
+            matcher.addExpression("i*\n", "info");
             sb.append("i[nfo] - prints router info\r\n");
-            matcher.add(new SimpleMatcher("se*\n"), "send");
+            matcher.addExpression("se*\n", "send");
             sb.append("se[nd] <target> ... - Send a string to target\r\n");
-            matcher.add(new SimpleMatcher("a*\n"), "attach");
+            matcher.addExpression("a*\n", "attach");
             sb.append("a[ttach] <target> - Attach target \r\n");
-            matcher.add(new SimpleMatcher("kill*\n"), "kill");
+            matcher.addExpression("kill*\n", "kill");
             sb.append("kill <target> - Kill target \r\n");
-            matcher.add(new SimpleMatcher("l*\n"), "log");
+            matcher.addExpression("l*\n", "log");
             sb.append("l[og] [target] [level] - Log\r\n");
-            matcher.add(new SimpleMatcher("sho*\n"), "logs");
+            matcher.addExpression("sho*\n", "logs");
             sb.append("sho[w logs] - Show available logs\r\n");
-            matcher.add(new SimpleMatcher("st*\n"), "statistics");
+            matcher.addExpression("st*\n", "statistics");
             sb.append("st[atistics] - Print statistics\r\n");
-            matcher.add(new SimpleMatcher("e*\n"), "errors");
+            matcher.addExpression("e*\n", "errors");
             sb.append("e[rrors] - Print errors\r\n");
-            matcher.add(new SimpleMatcher("exit*\n"), "exit");
+            matcher.addExpression("exit*\n", "exit");
             sb.append("exit - Exits the session\r\n");
-            matcher.add(new SimpleMatcher("shutdown*\n"), "shutdown");
+            matcher.addExpression("shutdown*\n", "shutdown");
             sb.append("shutdown - Shutdown the router\r\n");
-            matcher.add(new SimpleMatcher("restart*\n"), "restart");
+            matcher.addExpression("restart*\n", "restart");
             sb.append("restart - Restarts the router\r\n");
             help = sb.toString();
             
-            nmeaMatcher.add(new SimpleMatcher("$*\n"));
+            nmeaMatcher.addExpression("$*\n", null);
         }
         
         @Override
@@ -1146,12 +1147,10 @@ public class Router extends JavaLogging
                             mark = false;
                             break;
                         case Match:
-                            for (String act : matcher.getLastMatched())
+                            String act = matcher.getMatched();
+                            if (!action(ring, act))
                             {
-                                if (!action(ring, act))
-                                {
-                                    return;
-                                }
+                                return;
                             }
                             mark = true;
                             break;
