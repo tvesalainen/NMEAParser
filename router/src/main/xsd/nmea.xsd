@@ -84,7 +84,8 @@
     </xs:complexType>
     <xs:complexType name="routeType">
         <xs:attribute name="prefix" type="prefixType" use="required"/>
-        <xs:attribute name="target" type="targetType" use="required"/>
+        <xs:attribute name="target" type="targetType"/>
+        <xs:attribute name="backup" type="backupType"/>
     </xs:complexType>
     <xs:complexType name="variation-sourceType">
     </xs:complexType>
@@ -108,6 +109,9 @@
         <xs:restriction base="xs:string">
             <xs:pattern value="[A-Z]([A-Z0-9])*"/>
         </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="backupType">
+        <xs:restriction base="xs:boolean"/>
     </xs:simpleType>
     <xs:simpleType name="targetType">
         <xs:list itemType="nameType"/>

@@ -16,13 +16,16 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Speed;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.RouteType;
+import org.vesalainen.nmea.router.Router.Endpoint;
 import org.vesalainen.nmea.router.Router.SerialEndpoint;
 import org.vesalainen.util.Bijection;
 import org.vesalainen.util.HashMapList;
@@ -39,11 +42,11 @@ public final class NMEAMatcherManager
     private final MapSet<SerialChannel.Speed,String> ambiguousPrefixes = new HashMapSet<>();
     private final MapList<Speed, EndpointType> speedMap;
     private final MapList<String,String> prefixes = new HashMapList<>();
-    private final Bijection<SerialEndpoint, EndpointType> endpointMap;
+    private final Bijection<Endpoint, EndpointType> endpointBijection;
 
-    public NMEAMatcherManager(Bijection<SerialEndpoint,EndpointType> endpointMap, MapList<Speed, EndpointType> speedMap)
+    public NMEAMatcherManager(Bijection<Endpoint,EndpointType> endpointMap, MapList<Speed, EndpointType> speedMap)
     {
-        this.endpointMap = endpointMap;
+        this.endpointBijection = endpointMap;
         this.speedMap = speedMap;
         
         for (SerialChannel.Speed speed : speedMap.keySet())
@@ -55,18 +58,18 @@ public final class NMEAMatcherManager
     public void match(SerialEndpoint serialEndpoint)
     {
         Speed speed = serialEndpoint.getSpeed();
-        EndpointType endpointType = endpointMap.getSecond(serialEndpoint);
+        EndpointType endpointType = endpointBijection.getSecond(serialEndpoint);
         speedMap.get(speed).remove(endpointType);
-        NMEAMatcher<Route> wm = null;
+        NMEAMatcher wm = null;
         for (RouteType rt : endpointType.getRoute())
         {
             List<String> targetList = rt.getTarget();
             if (wm == null)
             {
-                wm = new NMEAMatcher<>();
+                wm = new NMEAMatcher();
             }
             String prefix = rt.getPrefix();
-            wm.addExpression(prefix, new Route(prefix, targetList));
+            wm.addExpression(prefix, new Route(rt));
         }
         if (wm != null)
         {
@@ -77,8 +80,8 @@ public final class NMEAMatcherManager
     }
     public void kill(SerialEndpoint se)
     {
-        EndpointType et = endpointMap.getSecond(se);
-        endpointMap.removeFirst(et);
+        EndpointType et = endpointBijection.getSecond(se);
+        endpointBijection.removeFirst(et);
         speedMap.get(se.getSpeed()).remove(et);
     }
 
@@ -87,28 +90,27 @@ public final class NMEAMatcherManager
         update(speed);
         for (EndpointType endpointType : speedMap.get(speed))
         {
-            NMEAMatcher<Route> wm = null;
+            NMEAMatcher wm = null;
             List<RouteType> route = endpointType.getRoute();
             if (!endpointType.getRoute().isEmpty())
             {
                 for (RouteType rt : route)
                 {
-                    List<String> targetList = rt.getTarget();
                     if (!isAmbiguousPrefix(speed, rt.getPrefix()))
                     {
                         if (wm == null)
                         {
-                            wm = new NMEAMatcher<>();
+                            wm = new NMEAMatcher();
                         }
                         String prefix = rt.getPrefix();
-                        wm.addExpression(prefix, new Route(prefix, targetList));
+                        wm.addExpression(prefix, new Route(rt));
                     }
                 }
             }
             if (wm != null)
             {
                 wm.compile();
-                SerialEndpoint serialEndpoint = endpointMap.getFirst(endpointType);
+                SerialEndpoint serialEndpoint = (SerialEndpoint) endpointBijection.getFirst(endpointType);
                 serialEndpoint.setMatcher(wm);
             }
         }
@@ -155,6 +157,36 @@ public final class NMEAMatcherManager
                 }
                 prefixes.add(name, prefix);
             }
+        }
+    }
+
+    public void allMatched()
+    {
+        MapList<NMEAPrefix,Route> mapList = new HashMapList<>();
+        List<Route> backups = new ArrayList<>();
+        for (Entry<Endpoint, EndpointType> entry : endpointBijection.entrySet())
+        {
+            Endpoint ep = entry.getKey();
+            NMEAMatcher matcher = ep.matcher;
+            if (matcher != null)
+            {
+                for (Route route : matcher.getRoutes())
+                {
+                    if (route.isBackup())
+                    {
+                        backups.add(route);
+                    }
+                    else
+                    {
+                        mapList.add(route.getPrefix(), route);
+                    }
+                }
+            }
+        }
+        for (Route route : backups)
+        {
+            NMEAPrefix prefix = route.getPrefix();
+            route.setPrimarySources(mapList.get(prefix));
         }
     }
 

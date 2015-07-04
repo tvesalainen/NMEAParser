@@ -224,15 +224,15 @@ public class Router extends JavaLogging
             ctrlTcpPort = port;
         }
         MapList<Speed,EndpointType> endPointMap = new HashMapList<>();
-        Bijection<SerialEndpoint,EndpointType> serialEndpointMap = new HashBijection<>();
+        Bijection<Endpoint,EndpointType> endpointBijection = new HashBijection<>();
         for (EndpointType et : config.getEndpoints())
         {
             Endpoint endpoint = getInstance(et);
+            endpointBijection.put(endpoint, et);
             if (endpoint instanceof SerialEndpoint)
             {
                 SerialEndpoint se = (SerialEndpoint) endpoint;
                 endPointMap.add(se.getSpeed(), et);
-                serialEndpointMap.put(se, et);
             }
             else
             {
@@ -240,16 +240,20 @@ public class Router extends JavaLogging
                 configureChannel(endpoint, selector);
             }
         }
-        matcherManager = new NMEAMatcherManager(serialEndpointMap, endPointMap);
-        for (Entry<SerialEndpoint, EndpointType> e : serialEndpointMap.entrySet())
+        matcherManager = new NMEAMatcherManager(endpointBijection, endPointMap);
+        for (Entry<Endpoint, EndpointType> e : endpointBijection.entrySet())
         {
-            SerialEndpoint se = e.getKey();
-            allSerialEndpoints.put(se.name, se);
-            se.init2(e.getValue());
-            if (!configureChannel(se, selector))
+            Endpoint ep = e.getKey();
+            if (ep instanceof SerialEndpoint)
             {
-                config("add resolvPool -> %s", se);
-                resolvPool.add(se);
+                SerialEndpoint se = (SerialEndpoint) ep;
+                allSerialEndpoints.put(se.name, se);
+                se.init2(e.getValue());
+                if (!configureChannel(se, selector))
+                {
+                    config("add resolvPool -> %s", se);
+                    resolvPool.add(se);
+                }
             }
         }
         for (SelectionKey sk : selector.keys())
@@ -319,6 +323,7 @@ public class Router extends JavaLogging
             if (matchedSerialEndpoints.size() == allSerialEndpoints.size())
             {   
                 allMatched = true;
+                matcherManager.allMatched();
                 config("all ports matched");
                 for (SerialChannel sc : portPool)
                 {
@@ -609,7 +614,7 @@ public class Router extends JavaLogging
         }
 
         @Override
-        protected Matcher<Route> createMatcher(EndpointType endpointType)
+        protected NMEAMatcher createMatcher(EndpointType endpointType)
         {
             List<RouteType> route = endpointType.getRoute();
             for (RouteType rt : route)
@@ -710,7 +715,7 @@ public class Router extends JavaLogging
     public abstract class Endpoint extends DataSource
     {
         protected SelectableChannel channel;
-        protected Matcher<Route> matcher;
+        protected NMEAMatcher matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean matched;
         private boolean mark = true;
@@ -738,13 +743,13 @@ public class Router extends JavaLogging
         {
             matcher = createMatcher(endpointType);
         }
-        void setMatcher(Matcher<Route> matcher)
+        void setMatcher(NMEAMatcher matcher)
         {
             this.matcher = matcher;
         }
-        protected Matcher<Route> createMatcher(EndpointType endpointType)
+        protected NMEAMatcher createMatcher(EndpointType endpointType)
         {
-            NMEAMatcher<Route> wm = null;
+            NMEAMatcher wm = null;
             List<RouteType> route = endpointType.getRoute();
             if (!endpointType.getRoute().isEmpty())
             {
@@ -756,9 +761,9 @@ public class Router extends JavaLogging
                     {
                         if (wm == null)
                         {
-                            wm = new NMEAMatcher<>();
+                            wm = new NMEAMatcher();
                         }
-                        wm.addExpression(prefix, new Route(prefix, targetList));
+                        wm.addExpression(prefix, new Route(rt));
                     }
                     for (String trg : targetList)
                     {

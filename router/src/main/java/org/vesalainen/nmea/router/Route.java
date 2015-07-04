@@ -17,11 +17,9 @@
 package org.vesalainen.nmea.router;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import org.vesalainen.nio.RingByteBuffer;
-import org.vesalainen.util.concurrent.ConcurrentArraySet;
+import org.vesalainen.nmea.jaxb.router.RouteType;
 
 /**
  *
@@ -30,38 +28,100 @@ import org.vesalainen.util.concurrent.ConcurrentArraySet;
 public final class Route
 {
     private final NMEAPrefix prefix;
-    private final Set<DataSource> targets = new ConcurrentArraySet<>();
+    private final DataSource[] targets;
+    private boolean backup;
+    private long lastWrote;
+    private List<Route> primaries;
+    private static long PassiveTime = 3000;
     
-    public Route(String prefix, List<String> targets)
+    public Route(RouteType routeType)
     {
-        this.prefix = new NMEAPrefix(prefix);
-        for (String target : targets)
+        this.prefix = new NMEAPrefix(routeType.getPrefix());
+        List<String> targets = routeType.getTarget();
+        if (targets != null)
         {
-            DataSource ds = DataSource.get(target);
-            if (ds == null)
+            this.targets = new DataSource[targets.size()];
+            int index = 0;
+            for (String target : targets)
             {
-                throw new IllegalArgumentException(target+" not found");
+                DataSource ds = DataSource.get(target);
+                if (ds == null)
+                {
+                    throw new IllegalArgumentException(target+" not found");
+                }
+                this.targets[index++] = ds;
             }
-            this.targets.add(ds);
         }
+        else
+        {
+            this.targets = new DataSource[0];
+        }
+        Boolean b = routeType.isBackup();
+        if (b != null)
+        {
+            backup = b;
+        }
+    }
+
+    public NMEAPrefix getPrefix()
+    {
+        return prefix;
+    }
+
+    public boolean isBackup()
+    {
+        return backup;
     }
     
     public final void write(RingByteBuffer ring, boolean partial) throws IOException
     {
-        for (DataSource dataSource : targets)
+        lastWrote = System.currentTimeMillis();
+        if (canWrite())
         {
-            if (partial)
+            for (DataSource dataSource : targets)
             {
-                if (dataSource.isSingleSink())
+                if (partial)
                 {
-                   dataSource.writePartial(ring);
+                    if (dataSource.isSingleSink())
+                    {
+                       dataSource.writePartial(ring);
+                    }
+                }
+                else
+                {
+                    dataSource.write(ring);
                 }
             }
-            else
-            {
-                dataSource.write(ring);
-            }
         }
+    }
+
+    private boolean canWrite()
+    {
+        if (primaries != null && !primaries.isEmpty())
+        {
+            boolean active = false;
+            for (Route p : primaries)
+            {
+                if (p.isActive())
+                {
+                    active = true;
+                    break;
+                }
+            }
+            return !active;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    private boolean isActive()
+    {
+        return System.currentTimeMillis()-lastWrote < PassiveTime;
+    }
+    void setPrimarySources(List<Route> list)
+    {
+        this.primaries = list;
     }
     
 }

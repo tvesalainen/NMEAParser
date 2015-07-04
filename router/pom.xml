@@ -40,7 +40,7 @@
                             </descriptorRefs>
                             <archive>
                                 <manifest>
-                                    <mainClass>org.vesalainen.nmea.router.Router</mainClass>
+                                    <mainClass>org.vesalainen.nmea.router.CommandLine</mainClass>
                                 </manifest>
                             </archive>
                         </configuration>

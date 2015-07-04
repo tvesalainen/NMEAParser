@@ -16,15 +16,18 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.Checksum;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
+import org.vesalainen.regex.Regex;
 import org.vesalainen.regex.WildcardMatcher;
 
 /**
  *
  * @author tkv
  */
-public class NMEAMatcher<T> extends WildcardMatcher<T>
+public class NMEAMatcher extends WildcardMatcher<Route>
 {
     enum State {Prefix, Data, Checksum1, Checksum2, Cr, Lf};
     private State state = State.Prefix;
@@ -33,13 +36,26 @@ public class NMEAMatcher<T> extends WildcardMatcher<T>
     private float matches;
     private boolean parsing;
     private float errors;
-    private T matched;
+    private Route matched;
+    private List<Route> routes = new ArrayList<>();
 
     public NMEAMatcher()
     {
         this.checksum = new NMEAChecksum();
     }
 
+    @Override
+    public void addExpression(String expr, Route attach, Regex.Option... options)
+    {
+        super.addExpression(expr, attach, options);
+        routes.add(attach);
+    }
+
+    public List<Route> getRoutes()
+    {
+        return routes;
+    }
+    
     public int getMatches()
     {
         return (int) matches;
@@ -128,7 +144,7 @@ public class NMEAMatcher<T> extends WildcardMatcher<T>
     }
 
     @Override
-    public T getMatched()
+    public Route getMatched()
     {
         return matched;
     }
