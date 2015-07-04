@@ -1043,7 +1043,7 @@ public class Router extends JavaLogging
     }
     public class Monitor extends DataSource
     {
-        private final SocketChannel channel;
+        final SocketChannel channel;
         private final ByteBuffer bb = ByteBuffer.allocateDirect(4096);
         private final AppendablePrinter out;
         private final AppendableByteChannel outChannel;
@@ -1474,74 +1474,6 @@ public class Router extends JavaLogging
             return cnt;
         }
 
-    }
-    public abstract class DataSource extends JavaLogging
-    {
-        protected final String name;
-        protected DataSource attached;
-        protected boolean isSink;
-        protected boolean isSingleSink;
-        protected long readCount;
-        protected long readBytes;
-        protected long writeCount;
-        protected long writeBytes;
-
-        public DataSource(String name)
-        {
-            this.name = name;
-            setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.')+"."+name));
-        }
-        
-        protected abstract void handle(SelectionKey sk) throws IOException;
-
-        protected abstract int write(ByteBuffer readBuffer) throws IOException;
-
-        protected abstract int write(RingByteBuffer ring) throws IOException;
-
-        protected int writePartial(RingByteBuffer ring) throws IOException
-        {
-            return 0;
-        }
-
-        protected int attachedWrite(RingByteBuffer ring) throws IOException
-        {
-            return 0;
-        }
-
-        public boolean isSink()
-        {
-            return isSink;
-        }
-        /**
-         * Returns true if only one endpoint writes to target and matched 
-         * input is written to only one target.
-         * @return 
-         */
-        protected boolean isSingleSink()
-        {
-            return isSingleSink;
-        }
-
-        protected void attach(DataSource ds)
-        {
-            if (attached != null)
-            {
-                throw new BadInputException(name+" is already attached");
-            }
-            attached = ds;
-        }
-        protected void detach()
-        {
-            attached = null;
-        }
-        protected boolean isAttached()
-        {
-            return attached != null;
-        }
-
-        protected void updateStatus()
-        {
-        }
     }
     public static void main(String... args)
     {
