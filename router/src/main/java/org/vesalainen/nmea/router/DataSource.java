@@ -21,8 +21,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.util.logging.JavaLogging;
@@ -33,7 +33,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public abstract class DataSource extends JavaLogging
 {
-    private static final Map<String,DataSource> map = new HashMap<>();
+    private static final Map<String,DataSource> map = new WeakHashMap<>();
     protected final String name;
     protected DataSource attached;
     protected boolean isSink;

@@ -98,7 +98,6 @@ public class Router extends JavaLogging
     private MultiProviderSelector selector;
     private Set<SerialChannel> portPool = new HashSet<>();
     private Set<SerialEndpoint> resolvPool = new HashSet<>();
-    private final Map<String,DataSource> targets = new HashMap<>();
     private final MapSet<String,DataSource> sources = new HashMapSet<>();
     private final Map<String,SerialEndpoint> allSerialEndpoints = new HashMap<>();
     private final Set<String> matchedSerialEndpoints = new HashSet<>();
@@ -377,7 +376,6 @@ public class Router extends JavaLogging
                 portPool.add((SerialChannel) se.channel);
             }
             resolvPool.remove(se);
-            targets.remove(target);
             sources.remove(target);
             allSerialEndpoints.remove(target);
             matchedSerialEndpoints.remove(se);
@@ -396,7 +394,7 @@ public class Router extends JavaLogging
     }
     public int send(String to, ByteBuffer bb) throws IOException
     {
-        DataSource ds = targets.get(to);
+        DataSource ds = DataSource.get(to);
         if (ds == null)
         {
             return 0;
@@ -938,7 +936,6 @@ public class Router extends JavaLogging
         {
             matched = true;
             config("matched=%s: %s", name, reason);
-            targets.put(name, this);
             if (scriptEngine != null)
             {
                 scriptEngine.start();
@@ -1207,49 +1204,50 @@ public class Router extends JavaLogging
                 out.println(ds);
             }
             out.println("targets:");
-            for (Entry<String,DataSource> entry :targets.entrySet())
+            for (DataSource ds :DataSource.getDataSources())
             {
-                out.println(entry.getValue());
+                out.println(ds);
             }
         }
 
         private void statistics() throws IOException
         {
             out.println("Name\tReads\tBytes\tMean\tWrites\tBytes\tMean");
-            for (Entry<String,DataSource> entry :targets.entrySet())
+            for (DataSource d :DataSource.getDataSources())
             {
-                DataSource d = entry.getValue();
-                String readMean = "N/A";
-                if (d.readCount > 0)
+                if (d instanceof Endpoint)
                 {
-                    readMean = String.valueOf(d.readBytes/d.readCount);
+                    String readMean = "N/A";
+                    if (d.readCount > 0)
+                    {
+                        readMean = String.valueOf(d.readBytes/d.readCount);
+                    }
+                    String writeMean = "N/A";
+                    if (d.writeCount > 0)
+                    {
+                        writeMean = String.valueOf(d.writeBytes/d.writeCount);
+                    }
+                    out.println(
+                            d.name+"\t"+
+                            d.readCount+"\t"+
+                            d.readBytes+"\t"+
+                            readMean+"\t"+
+                            d.writeCount+"\t"+
+                            d.writeBytes+"\t"+
+                            writeMean+"\t"
+                    );
                 }
-                String writeMean = "N/A";
-                if (d.writeCount > 0)
-                {
-                    writeMean = String.valueOf(d.writeBytes/d.writeCount);
-                }
-                out.println(
-                        entry.getKey()+"\t"+
-                        d.readCount+"\t"+
-                        d.readBytes+"\t"+
-                        readMean+"\t"+
-                        d.writeCount+"\t"+
-                        d.writeBytes+"\t"+
-                        writeMean+"\t"
-                );
             }
         }
         private void errors() throws IOException
         {
             out.println("Name\tMatches\tErrors\t%");
-            for (Entry<String,DataSource> entry :targets.entrySet())
+            for (DataSource ds :DataSource.getDataSources())
             {
-                DataSource ds = entry.getValue();
                 if (ds instanceof Endpoint)
                 {
                     Endpoint ep = (Endpoint) ds;
-                    out.print(entry.getKey()+"\t");
+                    out.print(ds.name+"\t");
                     boolean first = true;
                     NMEAMatcher m = (NMEAMatcher) ep.matcher;
                     if (m != null)
@@ -1271,7 +1269,7 @@ public class Router extends JavaLogging
                 throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
-            DataSource ds = targets.get(target);
+            DataSource ds = DataSource.get(target);
             if (ds == null)
             {
                 throw new BadInputException("no such target: "+target);
@@ -1295,7 +1293,7 @@ public class Router extends JavaLogging
                 throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
-            DataSource ds = targets.get(target);
+            DataSource ds = DataSource.get(target);
             if (ds == null)
             {
                 throw new BadInputException("no such target: "+target);
@@ -1381,7 +1379,7 @@ public class Router extends JavaLogging
         }
         private Logger getLogger(String s)
         {
-            DataSource ds = targets.get(s);
+            DataSource ds = DataSource.get(s);
             if (ds != null)
             {
                 return ds.getLogger();
