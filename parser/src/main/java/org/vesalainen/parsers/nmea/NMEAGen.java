@@ -19,7 +19,6 @@ package org.vesalainen.parsers.nmea;
 import d3.env.TSAGeoMag;
 import java.io.IOException;
 import java.util.zip.CheckedOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import static org.vesalainen.parsers.nmea.Converter.Celcius;
@@ -38,14 +37,8 @@ import org.vesalainen.util.navi.Meters;
  */
 public class NMEAGen
 {
-    private static TSAGeoMag geoMag;
-    public static void rmc(CheckedOutputStream out, float latitude, float longitude, GregorianCalendar calendar) throws IOException
+    public static void rmc(CheckedOutputStream out, double declination) throws IOException
     {
-        if (geoMag == null)
-        {
-            geoMag = new TSAGeoMag();
-        }
-        double declination = geoMag.getDeclination(latitude, longitude, geoMag.decimalYear(calendar), 0);
         String variation = String.format(Locale.US, "%.1f", Math.abs(declination));
         char ew = declination > 0 ? 'E' : 'W';
         
