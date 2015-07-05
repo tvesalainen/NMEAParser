@@ -31,8 +31,16 @@ public final class Route
     private final DataSource[] targets;
     private boolean backup;
     private long lastWrote;
-    private List<Route> primaries;
-    private static long PassiveTime = 3000;
+    private List<Route> backupSources;
+    private long expireTime = 1500;
+    private int count;
+    private int backupCount;
+
+    Route() // for test
+    {
+        this.prefix = null;
+        this.targets = null;
+    }
     
     public Route(RouteType routeType)
     {
@@ -60,6 +68,11 @@ public final class Route
         if (b != null)
         {
             backup = b;
+        }
+        Long expire = routeType.getExpire();
+        if (expire != null)
+        {
+            expireTime = expire;
         }
     }
 
@@ -92,15 +105,20 @@ public final class Route
                     dataSource.write(ring);
                 }
             }
+            count++;
+        }
+        else
+        {
+            backupCount++;
         }
     }
 
     private boolean canWrite()
     {
-        if (primaries != null && !primaries.isEmpty())
+        if (backupSources != null && !backupSources.isEmpty())
         {
             boolean active = false;
-            for (Route p : primaries)
+            for (Route p : backupSources)
             {
                 if (p.isActive())
                 {
@@ -117,11 +135,11 @@ public final class Route
     }
     private boolean isActive()
     {
-        return System.currentTimeMillis()-lastWrote < PassiveTime;
+        return System.currentTimeMillis()-lastWrote < expireTime;
     }
-    void setPrimarySources(List<Route> list)
+    void setBackupSources(List<Route> list)
     {
-        this.primaries = list;
+        this.backupSources = list;
     }
     
 }

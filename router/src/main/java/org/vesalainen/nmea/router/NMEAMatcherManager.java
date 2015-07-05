@@ -186,7 +186,7 @@ public final class NMEAMatcherManager
         for (Route route : backups)
         {
             NMEAPrefix prefix = route.getPrefix();
-            route.setPrimarySources(mapList.get(prefix));
+            route.setBackupSources(mapList.get(prefix));
         }
     }
 

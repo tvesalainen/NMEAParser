@@ -86,8 +86,10 @@
         <xs:attribute name="prefix" type="prefixType" use="required"/>
         <xs:attribute name="target" type="targetType"/>
         <xs:attribute name="backup" type="backupType"/>
+        <xs:attribute name="expire" type="millisType"/>
     </xs:complexType>
     <xs:complexType name="variation-sourceType">
+        <xs:attribute name="period" type="millisType"/>
     </xs:complexType>
     <xs:simpleType name="addressType">
         <xs:restriction base="xs:string">
@@ -95,10 +97,7 @@
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="portType">
-        <xs:restriction base="xs:integer">
-            <xs:minInclusive value="0"/>
-            <xs:maxInclusive value="65535"/>
-        </xs:restriction>
+        <xs:restriction base="xs:unsignedShort"/>
     </xs:simpleType>
     <xs:simpleType name="prefixType">
         <xs:restriction base="xs:string">
@@ -109,6 +108,9 @@
         <xs:restriction base="xs:string">
             <xs:pattern value="[A-Z]([A-Z0-9])*"/>
         </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="millisType">
+        <xs:restriction base="xs:unsignedInt"/>
     </xs:simpleType>
     <xs:simpleType name="backupType">
         <xs:restriction base="xs:boolean"/>

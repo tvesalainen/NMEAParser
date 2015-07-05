@@ -7,16 +7,19 @@
             <route prefix="$??VHW" target="Net"/>
         </seatalk>
         <nmea-0183 name="Furuno">
-            <route prefix="$??RMB" target="Net"/>
-            <route prefix="$??RMC" target="Net"/>
+            <route prefix="$GPRMC" backup="true" target="Net"/>
+            <route prefix="$GPGLL" backup="true" target="Net"/>
+            <route prefix="$GPGGA" backup="true" target="Net"/>
+            <route prefix="$GPRMB" target="Net"/>
             <route prefix="$??BWC" target="Net"/>
-            <route prefix="$??GLL" target="Net"/>
-            <route prefix="$??GAA" target="Net"/>
             <route prefix="$??VTG" target="Net"/>
             <route prefix="$??ZDA" target="Net"/>
         </nmea-0183>
         <broadcast-nmea-0183 name="Net">
             <route prefix="$PIRS,ST,LAMP" target="SeaTalk"/>
+            <route prefix="$GPRMC" expire="1500"/>
+            <route prefix="$GPGLL" expire="1500"/>
+            <route prefix="$GPGGA" expire="1500"/>
         </broadcast-nmea-0183>
     </router>
 </nmea>
