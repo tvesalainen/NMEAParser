@@ -15,11 +15,11 @@
             <route prefix="$??VTG" target="Net"/>
             <route prefix="$??ZDA" target="Net"/>
         </nmea-0183>
-        <broadcast-nmea-0183 name="Net">
+        <multicast-nmea-0183 name="Net" address="224.0.0.3">
             <route prefix="$PIRS,ST,LAMP" target="SeaTalk"/>
             <route prefix="$GPRMC" expire="1500"/>
             <route prefix="$GPGLL" expire="1500"/>
             <route prefix="$GPGGA" expire="1500"/>
-        </broadcast-nmea-0183>
+        </multicast-nmea-0183>
     </router>
 </nmea>

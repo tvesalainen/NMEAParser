@@ -17,6 +17,8 @@
     </xs:complexType>
     <xs:complexType name="routerType">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="multicast" type="multicastType"/>
+            <xs:element name="multicast-nmea-0183" type="multicastNMEAType"/>
             <xs:element name="broadcast" type="broadcastType"/>
             <xs:element name="broadcast-nmea-0183" type="broadcastNMEAType"/>
             <xs:element name="datagram" type="datagramType"/>
@@ -26,21 +28,38 @@
             <xs:element name="serial" type="serialType"/>
         </xs:choice>
     </xs:complexType>
+    <xs:complexType name="multicastNMEAType">
+        <xs:complexContent>
+            <xs:extension base="endpointType">
+                <xs:attribute name="address" type="addressType" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="multicastType">
+        <xs:complexContent>
+            <xs:extension base="endpointType">
+                <xs:attribute name="address" type="addressType" use="required"/>
+                <xs:attribute name="port" type="portType" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
     <xs:complexType name="broadcastNMEAType">
         <xs:complexContent>
-            <xs:extension base="broadcastType"/>
+            <xs:extension base="endpointType"/>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="broadcastType">
         <xs:complexContent>
-            <xs:extension base="datagramType"/>
+            <xs:extension base="endpointType">
+                <xs:attribute name="port" type="portType" use="required"/>
+            </xs:extension>
         </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="datagramType">
         <xs:complexContent>
             <xs:extension base="endpointType">
-                <xs:attribute name="address" type="addressType"/>
-                <xs:attribute name="port" type="portType"/>
+                <xs:attribute name="address" type="addressType" use="required"/>
+                <xs:attribute name="port" type="portType" use="required"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

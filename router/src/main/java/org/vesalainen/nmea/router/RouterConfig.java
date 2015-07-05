@@ -139,7 +139,7 @@ public class RouterConfig
             if (ob instanceof RouterType)
             {
                 RouterType rt = (RouterType) ob;
-                return rt.getBroadcastOrBroadcastNmea0183OrDatagram();
+                return rt.getMulticastOrMulticastNmea0183OrBroadcast();
             }
         }
         return null;

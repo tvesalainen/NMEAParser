@@ -18,10 +18,14 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.net.BindException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.StandardProtocolFamily;
 import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.AlreadyBoundException;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
@@ -32,6 +36,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.security.MessageDigest;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -59,6 +64,8 @@ import org.vesalainen.nmea.jaxb.router.BroadcastType;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.FlowControlType;
+import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
+import org.vesalainen.nmea.jaxb.router.MulticastType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.NmeaType;
@@ -408,6 +415,14 @@ public class Router extends JavaLogging
     }
     private Endpoint getInstance(EndpointType endpointType)
     {
+        if (endpointType instanceof MulticastNMEAType)
+        {
+            return new MulticastNMEAEndpoint((MulticastNMEAType) endpointType);
+        }
+        if (endpointType instanceof MulticastType)
+        {
+            return new MulticastEndpoint((MulticastType) endpointType);
+        }
         if (endpointType instanceof BroadcastNMEAType)
         {
             return new BroadcastNMEAEndpoint((BroadcastNMEAType) endpointType);
@@ -439,24 +454,81 @@ public class Router extends JavaLogging
         throw new IllegalArgumentException(endpointType+" unknown");
     }
 
-    public class BroadcastNMEAEndpoint extends BroadcastEndpoint
+    public class MulticastNMEAEndpoint extends Endpoint<UnconnectedDatagramChannel>
+    {
+        protected String address;
+        public MulticastNMEAEndpoint(MulticastNMEAType multicastNMEAType)
+        {
+            super(multicastNMEAType);
+            address = multicastNMEAType.getAddress();
+        }
+        @Override
+        protected UnconnectedDatagramChannel configureChannel() throws IOException
+        {
+            matched("because is datagram");
+            channel = UnconnectedDatagramChannel.open(address, 10110, BufferSize, true, isSource());
+            channel.configureBlocking(false);
+            return channel;
+        }
+        
+    }
+    public class MulticastEndpoint extends Endpoint<UnconnectedDatagramChannel>
+    {
+        protected int port;
+        protected String address;
+        public MulticastEndpoint(MulticastType multicastType)
+        {
+            super(multicastType);
+            address = multicastType.getAddress();
+            port = multicastType.getPort();
+        }
+
+        @Override
+        protected UnconnectedDatagramChannel configureChannel() throws IOException
+        {
+            matched("because is datagram");
+            channel = UnconnectedDatagramChannel.open(address, port, BufferSize, true, isSource());
+            channel.configureBlocking(false);
+            return channel;
+        }
+    }
+    public class BroadcastNMEAEndpoint extends Endpoint<UnconnectedDatagramChannel>
     {
         public BroadcastNMEAEndpoint(BroadcastNMEAType broadcastNMEAType)
         {
             super(broadcastNMEAType);
         }
+        @Override
+        protected UnconnectedDatagramChannel configureChannel() throws IOException
+        {
+            matched("because is datagram");
+            channel = UnconnectedDatagramChannel.open("255.255.255.255", 10110, BufferSize, true, isSource());
+            channel.configureBlocking(false);
+            return channel;
+        }
     }
-    public class BroadcastEndpoint extends DatagramEndpoint
+    public class BroadcastEndpoint extends Endpoint<UnconnectedDatagramChannel>
     {
+        protected int port;
         public BroadcastEndpoint(BroadcastType broadcastType)
         {
             super(broadcastType);
+            port = broadcastType.getPort();
+        }
+
+        @Override
+        protected UnconnectedDatagramChannel configureChannel() throws IOException
+        {
+            matched("because is datagram");
+            channel = UnconnectedDatagramChannel.open("255.255.255.255", port, BufferSize, true, isSource());
+            channel.configureBlocking(false);
+            return channel;
         }
     }
-    public class DatagramEndpoint extends Endpoint
+    public class DatagramEndpoint extends Endpoint<UnconnectedDatagramChannel>
     {
-        protected String host = "255.255.255.255";
-        protected int port = 10110;
+        protected String host;
+        protected int port;
         
         public DatagramEndpoint(DatagramType datagramType)
         {
@@ -466,20 +538,12 @@ public class Router extends JavaLogging
 
         private void init(DatagramType datagramType)
         {
-            String address = datagramType.getAddress();
-            if (address != null)
-            {
-                this.host = address;
-            }
-            Integer p = datagramType.getPort();
-            if (p != null)
-            {
-                this.port = p;
-            }
+            this.host = datagramType.getAddress();
+            this.port = datagramType.getPort();
         }
 
         @Override
-        protected SelectableChannel configureChannel() throws IOException
+        protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
             channel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, isSource());
@@ -557,7 +621,7 @@ public class Router extends JavaLogging
         }
         
     }
-    public class SerialEndpoint extends Endpoint
+    public class SerialEndpoint extends Endpoint<SelectableChannel>
     {
         protected Configuration configuration;
         private long resolvStarted;
@@ -668,7 +732,7 @@ public class Router extends JavaLogging
             return null;
         }
 
-        private SelectableChannel configure(SerialChannel serialChannel) throws IOException
+        private SerialChannel configure(SerialChannel serialChannel) throws IOException
         {
             serialChannel.configure(configuration);
             triedPorts.add(serialChannel);
@@ -712,9 +776,9 @@ public class Router extends JavaLogging
         }
 
     }
-    public abstract class Endpoint extends DataSource
+    public abstract class Endpoint<T extends SelectableChannel> extends DataSource
     {
-        protected SelectableChannel channel;
+        protected T channel;
         protected NMEAMatcher matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean matched;
@@ -861,13 +925,19 @@ public class Router extends JavaLogging
             isSink = set != null && set.size() > 0;
             isSingleSink = isSink && set.size() == 1;
         }
+
+        @Override
+        protected int read(RingByteBuffer ring) throws IOException
+        {
+            return ring.read((ScatteringByteChannel)channel);
+        }
         
         @Override
         protected void handle(SelectionKey sk) throws IOException
         {   
             lastRead = nowRead;
             nowRead = System.currentTimeMillis();
-            int count = ring.read((ScatteringByteChannel)channel);
+            int count = read(ring);
             if (count == -1)
             {
                 warning("eof(%s)", name);
@@ -935,7 +1005,7 @@ public class Router extends JavaLogging
                 scriptEngine.write(ring);
             }
         }
-        protected abstract SelectableChannel configureChannel() throws IOException;
+        protected abstract T configureChannel() throws IOException;
 
         protected void matched(CharSequence reason)
         {
@@ -981,6 +1051,12 @@ public class Router extends JavaLogging
                 throw new IllegalArgumentException("could not bound server socket");
             }
             serverSocketChannel.register(selector, OP_ACCEPT, this);
+        }
+
+        @Override
+        protected int read(RingByteBuffer ring) throws IOException
+        {
+            return 0;
         }
 
         @Override
@@ -1071,11 +1147,17 @@ public class Router extends JavaLogging
             nmeaMatcher.addExpression("$*\n", "");
             nmeaMatcher.compile();
         }
+
+        @Override
+        protected int read(RingByteBuffer ring) throws IOException
+        {
+            return ring.read(channel);
+        }
         
         @Override
         protected void handle(SelectionKey sk) throws IOException
         {
-            int count = ring.read(channel);
+            int count = read(ring);
             if (count == -1)
             {
                 return;

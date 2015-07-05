@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Logger;
@@ -58,6 +57,8 @@ public abstract class DataSource extends JavaLogging
     {
         return map.get(name);
     }
+    protected abstract int read(RingByteBuffer ring) throws IOException;
+
     protected abstract void handle(SelectionKey sk) throws IOException;
 
     protected abstract int write(ByteBuffer readBuffer) throws IOException;
