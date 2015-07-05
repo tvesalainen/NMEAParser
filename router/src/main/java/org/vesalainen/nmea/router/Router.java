@@ -1068,7 +1068,7 @@ public class Router extends JavaLogging
             help = sb.toString();
             matcher.compile();
             
-            nmeaMatcher.addExpression("$*\n", null);
+            nmeaMatcher.addExpression("$*\n", "");
             nmeaMatcher.compile();
         }
         

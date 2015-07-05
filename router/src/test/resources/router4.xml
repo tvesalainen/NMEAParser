@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
     <sender>
-        <variation-source/>
+        <variation-source period="1000"/>
     </sender>
     <router>
         <nmea-0183 name="Simrad1">
-            <route prefix="$AGGLL" target=""/>
-            <route prefix="$AGBWW" target=""/>
-            <route prefix="$AGBWC" target=""/>
-            <route prefix="$AGRMC" target=""/>
-            <route prefix="$AGRMB" target=""/>
+            <route prefix="$AGGLL"/>
+            <route prefix="$AGBWW"/>
+            <route prefix="$AGBWC"/>
+            <route prefix="$AGRMC"/>
+            <route prefix="$AGRMB"/>
             <route prefix="$AGRSA" target="Net"/>
-            <route prefix="$AGHDT" target=""/>
-            <route prefix="$AGHDM" target=""/>
-            <route prefix="$AGHDG" target=""/>
-            <route prefix="$AGHSC" target=""/>
-            <route prefix="$AGXTE" target=""/>
+            <route prefix="$AGHDT"/>
+            <route prefix="$AGHDM"/>
+            <route prefix="$AGHDG"/>
+            <route prefix="$AGHSC"/>
+            <route prefix="$AGXTE"/>
         </nmea-0183>
         <nmea-0183 name="Simrad2">
-            <route prefix="$AGRSA" target=""/>
-            <route prefix="$AGHDT" target=""/>
-            <route prefix="$AGHDM" target=""/>
-            <route prefix="$AGHDG" target=""/>
+            <route prefix="$AGRSA"/>
+            <route prefix="$AGHDT"/>
+            <route prefix="$AGHDM"/>
+            <route prefix="$AGHDG"/>
         </nmea-0183>
         <nmea-0183 name="Airmar4800">
             <script>

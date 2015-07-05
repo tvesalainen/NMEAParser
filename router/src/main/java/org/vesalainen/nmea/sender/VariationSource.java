@@ -16,11 +16,14 @@
  */
 package org.vesalainen.nmea.sender;
 
+import d3.env.TSAGeoMag;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.GregorianCalendar;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.prefs.Preferences;
 import java.util.zip.CheckedOutputStream;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
@@ -36,7 +39,7 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class VariationSource extends JavaLogging implements PropertySetter, Transactional
+public class VariationSource extends TimerTask implements PropertySetter, Transactional
 {
     private static final String[] Prefixes = new String[]{
         "latitude",
@@ -44,22 +47,38 @@ public class VariationSource extends JavaLogging implements PropertySetter, Tran
         "clock"
             };
     private UnconnectedDatagramChannel channel;
-    private float trackMadeGood;
-    private float speedOverGround;
     private float longitude;
     private float latitude;
+    private long lastUpdate;
     private boolean positionUpdated;
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
     private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
     private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
     private GregorianCalendar calendar;
-    private final VariationSourceType variationSourceType;
+    private long period = 1000;
+    private final Preferences prefs;
+    private TSAGeoMag geoMag = new TSAGeoMag();
+    private double declination;
+    private Timer timer;
+    private JavaLogging log = new JavaLogging();
 
     public VariationSource(UnconnectedDatagramChannel channel, VariationSourceType variationSourceType)
     {
-        setLogger(this.getClass());
+        log.setLogger(this.getClass());
         this.channel = channel;
-        this.variationSourceType = variationSourceType;
+        Long per = variationSourceType.getPeriod();
+        if (per != null)
+        {
+            period = per;
+        }
+        this.prefs = Preferences.userNodeForPackage(this.getClass());
+        this.declination = prefs.getDouble("declination", Double.NaN);
+        if (!Double.isNaN(declination))
+        {
+            log.config("timer started by preference period=%d declination=%f", period, declination);
+            timer = new Timer();
+            timer.scheduleAtFixedRate(this, 0, period);
+        }
     }
     
     @Override
@@ -71,30 +90,51 @@ public class VariationSource extends JavaLogging implements PropertySetter, Tran
     @Override
     public void rollback(String reason)
     {
-        warning("rollback(%s)", reason);
+        log.warning("rollback(%s)", reason);
     }
 
     @Override
     public void commit(String reason)
     {
-        if (positionUpdated)
+        long now = System.currentTimeMillis();
+        if (positionUpdated && now-lastUpdate > 10000)
         {
-            bb.clear();
-            try
+            log.fine("location %f %f", latitude, longitude);
+            declination = geoMag.getDeclination(latitude, longitude, geoMag.decimalYear(calendar), 0);
+            if (timer  == null)
             {
-                fine("location %f %f", latitude, longitude);
-                NMEAGen.rmc(cout, latitude, longitude, calendar);
-                bb.flip();
-                channel.write(bb);
+                log.config("timer started by first update period=%d declination=%f", period, declination);
+                timer = new Timer();
+                timer.scheduleAtFixedRate(this, 0, period);
             }
-            catch (IOException ex)
-            {
-                Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            positionUpdated = false;
+            lastUpdate = now;
         }
     }
     
+    @Override
+    public void run()
+    {
+        bb.clear();
+        try
+        {
+            NMEAGen.rmc(cout, declination);
+            bb.flip();
+            channel.write(bb);
+            log.finest("send RMC declination=%f", declination);
+        }
+        catch (IOException ex)
+        {
+            log.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        super.finalize();
+        prefs.putDouble("declination", declination);
+    }
+
     @Override
     public void set(String property, boolean arg)
     {
