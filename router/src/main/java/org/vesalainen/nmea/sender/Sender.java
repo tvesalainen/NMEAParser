@@ -65,6 +65,7 @@ public class Sender extends JavaLogging implements Runnable
         {
             log(Level.SEVERE, "", ex);
         }
+        log(Level.SEVERE, "Sender dies!!!");
     }
 
 }
