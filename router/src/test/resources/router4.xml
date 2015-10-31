@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
     <sender>
-        <variation-source period="1000"/>
+        <variation-source/>
     </sender>
     <router>
         <nmea-0183 name="Simrad1">
-            <route prefix="$AGGLL"/>
-            <route prefix="$AGBWW"/>
-            <route prefix="$AGBWC"/>
-            <route prefix="$AGRMC"/>
-            <route prefix="$AGRMB"/>
+            <route prefix="$AGGLL" target=""/>
+            <route prefix="$AGBWW" target=""/>
+            <route prefix="$AGBWC" target=""/>
+            <route prefix="$AGRMC" target=""/>
+            <route prefix="$AGRMB" target=""/>
             <route prefix="$AGRSA" target="Net"/>
-            <route prefix="$AGHDT"/>
-            <route prefix="$AGHDM"/>
-            <route prefix="$AGHDG"/>
-            <route prefix="$AGHSC"/>
-            <route prefix="$AGXTE"/>
+            <route prefix="$AGHDT" target=""/>
+            <route prefix="$AGHDM" target=""/>
+            <route prefix="$AGHDG" target=""/>
+            <route prefix="$AGHSC" target=""/>
+            <route prefix="$AGXTE" target=""/>
         </nmea-0183>
         <nmea-0183 name="Simrad2">
-            <route prefix="$AGRSA"/>
-            <route prefix="$AGHDT"/>
-            <route prefix="$AGHDM"/>
-            <route prefix="$AGHDG"/>
+            <route prefix="$AGRSA" target=""/>
+            <route prefix="$AGHDT" target=""/>
+            <route prefix="$AGHDM" target=""/>
+            <route prefix="$AGHDG" target=""/>
         </nmea-0183>
         <nmea-0183 name="Airmar4800">
             <script>
@@ -40,6 +40,7 @@
                 kill(Airmar4800)
                 # while(waitfor(1000, "$HCHDT")){}
                 # restart()
+                send("PAMTC,ATTOFF,SET,9.0,,")
             </script>
             <route prefix="$HCHDT" target="Net Simrad2"/>
             <route prefix="$HCHDG" target="Net"/>
@@ -65,7 +66,7 @@
             <route prefix="$??RMB" target="Simrad1"/>
             <route prefix="$??XTE" target="Simrad1"/>
         </broadcast-nmea-0183>
-        <datagram name="MT" address="5.9.207.224" port="5321">
-        </datagram>
+        <broadcast name="MT" address="5.9.207.224" port="5321">
+        </broadcast>
     </router>
 </nmea>
