@@ -43,6 +43,8 @@ public class CommandLine extends CmdArgs<Router>
     {
         addArgument(File.class, "configuration file");
         addOption("-lp", "log pattern", "filelog", "%t/router%g.log");
+        addOption("-l", "log limit", "filelog", 409600);
+        addOption("-c", "log count", "filelog", 16);
         addOption("-h", "host", "netlog", "localhost");
         addOption("-p", "port", "netlog", 0);
         addOption("-ll", "log level", null, INFO);
@@ -83,7 +85,7 @@ public class CommandLine extends CmdArgs<Router>
                 {
                 case "filelog":
                     
-                    handler = new FileHandler((String) cmdArgs.getOption("-lp"), 4096000, 1024, true);
+                    handler = new FileHandler((String) cmdArgs.getOption("-lp"), (int) cmdArgs.getOption("-l"), (int) cmdArgs.getOption("-c"), true);
                     break;
                 case "netlog":
                     handler = new SocketHandler((String) cmdArgs.getOption("-h"), (int) cmdArgs.getOption("p"));
