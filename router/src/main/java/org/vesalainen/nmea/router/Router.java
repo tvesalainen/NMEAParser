@@ -18,14 +18,10 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.net.BindException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.StandardProtocolFamily;
 import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.AlreadyBoundException;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
@@ -36,7 +32,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.security.MessageDigest;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -356,7 +351,15 @@ public class Router extends JavaLogging
             SelectableChannel channel = endpoint.configureChannel();
             if (channel != null)
             {
-                channel.register(selector, OP_READ, endpoint);
+                if (endpoint.isSource())
+                {
+                    config("register "+endpoint);
+                    channel.register(selector, OP_READ, endpoint);
+                }
+                else
+                {
+                    config(endpoint+" not registered because it is not source");
+                }
                 return true;
             }
             else
@@ -935,6 +938,10 @@ public class Router extends JavaLogging
         @Override
         protected void handle(SelectionKey sk) throws IOException
         {   
+            if (matcher == null)
+            {
+                throw new IOException("receive without matcher for "+name);
+            }
             lastRead = nowRead;
             nowRead = System.currentTimeMillis();
             int count = read(ring);
