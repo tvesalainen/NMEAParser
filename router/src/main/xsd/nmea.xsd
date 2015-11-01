@@ -14,6 +14,8 @@
         <xs:choice>
             <xs:element name="variation-source" type="variation-sourceType"/>
         </xs:choice>
+        <xs:attribute name="address" type="addressType" use="required"/>
+        <xs:attribute name="port" type="portType"/>
     </xs:complexType>
     <xs:complexType name="routerType">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -112,7 +114,6 @@
     </xs:complexType>
     <xs:simpleType name="addressType">
         <xs:restriction base="xs:string">
-            
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="portType">

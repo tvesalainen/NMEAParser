@@ -32,13 +32,21 @@ import org.vesalainen.util.logging.JavaLogging;
 public class Sender extends JavaLogging implements Runnable
 {
     private UnconnectedDatagramChannel channel;
-    private SenderType senderType;
+    private final SenderType senderType;
     private final NMEADispatcher observer = NMEADispatcher.getInstance(NMEADispatcher.class);
+    private final String address;
+    private int port = 10110;
 
     public Sender(SenderType senderType) throws IOException
     {
         this.senderType = senderType;
         setLogger(this.getClass());
+        address = senderType.getAddress();
+        Integer p = senderType.getPort();
+        if (p != null)
+        {
+            port = p;
+        }
     }
     
     public void add(PropertySetter propertySetter)
@@ -48,7 +56,8 @@ public class Sender extends JavaLogging implements Runnable
     @Override
     public void run()
     {
-        try (UnconnectedDatagramChannel ch = UnconnectedDatagramChannel.open("255.255.255.255", 10110, 100, true, false))
+        config("open sender channel %s %d", address, port);
+        try (UnconnectedDatagramChannel ch = UnconnectedDatagramChannel.open(address, port, 100, true, false))
         {
             channel = ch;
             VariationSourceType vst = senderType.getVariationSource();
