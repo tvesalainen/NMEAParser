@@ -57,7 +57,7 @@ public class Sender extends JavaLogging implements Runnable
     public void run()
     {
         config("open sender channel %s %d", address, port);
-        try (UnconnectedDatagramChannel ch = UnconnectedDatagramChannel.open(address, port, 100, true, false))
+        try (UnconnectedDatagramChannel ch = UnconnectedDatagramChannel.open(address, port, 100, true, true))
         {
             channel = ch;
             VariationSourceType vst = senderType.getVariationSource();
