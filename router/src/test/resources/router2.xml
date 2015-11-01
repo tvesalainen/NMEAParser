@@ -4,22 +4,22 @@
         <seatalk name="SeaTalk">
             <route prefix="$??MTW" target="Net"/>
             <route prefix="$??DBT" target="Net"/>
-            <route prefix="$??VHW" target="Net"/>
+            <route prefix="$??VHW" target="Net Tacktick"/>
         </seatalk>
         <nmea-0183 name="Furuno">
-            <route prefix="$GPRMC" backup="true" target="Net"/>
-            <route prefix="$GPGLL" backup="true" target="Net"/>
-            <route prefix="$GPGGA" backup="true" target="Net"/>
+            <route prefix="$GPRMC" target="Net"/>
+            <route prefix="$GPGLL" target="Net"/>
+            <route prefix="$GPGGA" target="Net"/>
             <route prefix="$GPRMB" target="Net"/>
             <route prefix="$??BWC" target="Net"/>
             <route prefix="$??VTG" target="Net"/>
             <route prefix="$??ZDA" target="Net"/>
         </nmea-0183>
+        <nmea-0183 name="Tacktick">
+            <route prefix="$??MWV" target="Net"/>
+        </nmea-0183>
         <multicast-nmea-0183 name="Net" address="224.0.0.3">
             <route prefix="$PIRS,ST,LAMP" target="SeaTalk"/>
-            <route prefix="$GPRMC" expire="1500"/>
-            <route prefix="$GPGLL" expire="1500"/>
-            <route prefix="$GPGGA" expire="1500"/>
         </multicast-nmea-0183>
     </router>
 </nmea>
