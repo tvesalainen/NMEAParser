@@ -488,7 +488,7 @@ public class Router extends JavaLogging
             if (matched && attached == null)
             {
                 cnt = ring.write(writeTarget);
-                finest("write %s = %d", ring, cnt);
+                finer("write %s = %d", ring, cnt);
                 writeCount++;
                 writeBytes += cnt;
             }
@@ -502,7 +502,7 @@ public class Router extends JavaLogging
             if (matched && attached == null)
             {
                 cnt = (writeTarget).write(bb);
-                finest("write %s = %d", bb, cnt);
+                finer("write %s = %d", bb, cnt);
                 writeCount++;
                 writeBytes += cnt;
             }
@@ -948,7 +948,7 @@ public class Router extends JavaLogging
                 else
                 {
                     cnt = ring.write((GatheringByteChannel)channel);
-                    finest("write %s = %d", ring, cnt);
+                    finer("write %s = %d", ring, cnt);
                     writeCount++;
                     writeBytes += cnt;
                 }
@@ -1075,6 +1075,7 @@ public class Router extends JavaLogging
         private void write(Matcher<Route> matcher, RingByteBuffer ring, boolean partial) throws IOException
         {
             matcher.getMatched().write(ring, partial);
+            finer("write: %s", ring);
             if (scriptEngine != null)
             {
                 scriptEngine.write(ring);
