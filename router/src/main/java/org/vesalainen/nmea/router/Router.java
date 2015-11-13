@@ -68,9 +68,9 @@ import org.vesalainen.nmea.jaxb.router.ParityType;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.ScriptType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
-import org.vesalainen.nmea.jaxb.router.SenderType;
+import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
-import org.vesalainen.nmea.sender.Sender;
+import org.vesalainen.nmea.processor.Processor;
 import org.vesalainen.regex.WildcardMatcher;
 import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.AutoCloseableList;
@@ -263,10 +263,10 @@ public class Router extends JavaLogging
             DataSource ds = (DataSource) sk.attachment();
             ds.updateStatus();
         }
-        SenderType senderType = config.getSenderType();
-        if (senderType != null)
+        ProcessorType processorType = config.getProcessorType();
+        if (processorType != null)
         {
-            Sender sender = new Sender(senderType);
+            Processor sender = new Processor(processorType);
             Thread thread = new Thread(routerThreadGroup, sender, "sender");
             thread.start();
         }

@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.sender;
+package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
 import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
-import org.vesalainen.nmea.jaxb.router.SenderType;
+import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.util.logging.JavaLogging;
@@ -29,20 +29,20 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class Sender extends JavaLogging implements Runnable
+public class Processor extends JavaLogging implements Runnable
 {
     private UnconnectedDatagramChannel channel;
-    private final SenderType senderType;
+    private final ProcessorType processorType;
     private final NMEADispatcher observer = NMEADispatcher.getInstance(NMEADispatcher.class);
     private final String address;
     private int port = 10110;
 
-    public Sender(SenderType senderType) throws IOException
+    public Processor(ProcessorType processorType) throws IOException
     {
-        this.senderType = senderType;
+        this.processorType = processorType;
         setLogger(this.getClass());
-        address = senderType.getAddress();
-        Integer p = senderType.getPort();
+        address = processorType.getAddress();
+        Integer p = processorType.getPort();
         if (p != null)
         {
             port = p;
@@ -60,7 +60,7 @@ public class Sender extends JavaLogging implements Runnable
         try (UnconnectedDatagramChannel ch = UnconnectedDatagramChannel.open(address, port, 100, true, true))
         {
             channel = ch;
-            VariationSourceType vst = senderType.getVariationSource();
+            VariationSourceType vst = processorType.getVariationSource();
             if (vst != null)
             {
                 info("add VariationSource");

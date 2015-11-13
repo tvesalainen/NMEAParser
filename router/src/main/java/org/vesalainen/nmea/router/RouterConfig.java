@@ -39,7 +39,7 @@ import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
 import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.ScriptType;
-import org.vesalainen.nmea.jaxb.router.SenderType;
+import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.script.ScriptParser;
 import org.vesalainen.util.HashMapSet;
 import org.vesalainen.util.MapSet;
@@ -113,20 +113,20 @@ public class RouterConfig
 
     public boolean isVariationSource()
     {
-        SenderType senderType = getSenderType();
+        ProcessorType senderType = getProcessorType();
         if (senderType != null)
         {
             return senderType.getVariationSource() != null;
         }
         return false;
     }
-    public SenderType getSenderType()
+    public ProcessorType getProcessorType()
     {
-        for (Object ob : nmea.getValue().getSenderOrRouter())
+        for (Object ob : nmea.getValue().getProcessorOrRouter())
         {
-            if (ob instanceof SenderType)
+            if (ob instanceof ProcessorType)
             {
-                return (SenderType) ob;
+                return (ProcessorType) ob;
             }
         }
         return null;
@@ -134,7 +134,7 @@ public class RouterConfig
     
     public List<EndpointType> getEndpoints()
     {
-        for (Object ob : nmea.getValue().getSenderOrRouter())
+        for (Object ob : nmea.getValue().getProcessorOrRouter())
         {
             if (ob instanceof RouterType)
             {
