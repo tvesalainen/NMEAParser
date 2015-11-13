@@ -18,6 +18,7 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static org.junit.Assert.*;
@@ -43,9 +44,10 @@ public class UDPRMCT
             {
                 bb.clear();
                 ch.read(bb);
-                if (bb.limit() > 10 && equals(RMC, buffer))
+                //if (bb.limit() > 10 && equals(RMC, buffer))
                 {
-                    String sentence = new String(buffer, bb.limit());
+                    String sentence = new String(buffer, 0, bb.position());
+                    System.err.print(new Date());
                     System.err.println(sentence);
                 }
             }
