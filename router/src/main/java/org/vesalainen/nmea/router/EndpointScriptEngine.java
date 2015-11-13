@@ -17,13 +17,11 @@
 package org.vesalainen.nmea.router;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.router.Router.Endpoint;
 import org.vesalainen.nmea.script.ScriptParser;
