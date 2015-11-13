@@ -19,6 +19,7 @@ package org.vesalainen.nmea.processor;
 import d3.env.TSAGeoMag;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.GatheringByteChannel;
 import java.util.GregorianCalendar;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -46,7 +47,7 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
         "longitude",
         "clock"
             };
-    private UnconnectedDatagramChannel channel;
+    private final GatheringByteChannel channel;
     private float longitude;
     private float latitude;
     private long lastUpdate;
@@ -62,7 +63,7 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
     private Timer timer;
     private JavaLogging log = new JavaLogging();
 
-    public VariationSource(UnconnectedDatagramChannel channel, VariationSourceType variationSourceType)
+    public VariationSource(GatheringByteChannel channel, VariationSourceType variationSourceType)
     {
         log.setLogger(this.getClass());
         this.channel = channel;

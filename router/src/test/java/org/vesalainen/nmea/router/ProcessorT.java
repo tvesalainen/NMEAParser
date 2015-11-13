@@ -14,23 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.router;
 
-import org.vesalainen.code.PropertyDispatcher;
-import org.vesalainen.code.PropertyDispatcherClass;
-import org.vesalainen.parsers.nmea.NMEAObserver;
+import java.net.URL;
+import org.junit.Test;
 
 /**
  *
  * @author tkv
  */
-@PropertyDispatcherClass("org.vesalainen.nmea.processor.ValueDispatcherImpl")
-public abstract class NMEADispatcher extends PropertyDispatcher implements NMEAObserver
+public class ProcessorT
 {
-
-    public NMEADispatcher(int[] sizes)
+    
+    public ProcessorT()
     {
-        super(sizes);
+    }
+
+    @Test
+    public void test()
+    {
+        URL url = RouterConfigTest.class.getClassLoader().getResource("processor.xml");
+        String filename = url.getFile();
+        CommandLine.main("-ll", "FINE", "-pl", "FINE", filename);
     }
     
 }

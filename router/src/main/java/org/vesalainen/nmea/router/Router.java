@@ -23,6 +23,8 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.AlreadyBoundException;
 import java.nio.channels.GatheringByteChannel;
+import java.nio.channels.Pipe;
+import java.nio.channels.Pipe.SourceChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -213,10 +215,6 @@ public class Router extends JavaLogging
             portPool.add(sc);
         }
         portCount = portPool.size();
-        if (portPool.isEmpty())
-        {
-            throw new IOException("no ports");
-        }
 
         NmeaType nmeaType = config.getNmeaType();
         proprietaryPrefix = nmeaType.getProprietaryPrefix();
@@ -236,19 +234,14 @@ public class Router extends JavaLogging
                 SerialEndpoint se = (SerialEndpoint) endpoint;
                 endPointMap.add(se.getSpeed(), et);
             }
-            else
-            {
-                endpoint.init2(et);
-                configureChannel(endpoint, selector);
-            }
         }
         matcherManager = new NMEAMatcherManager(endpointBijection, endPointMap);
         for (Entry<Endpoint, EndpointType> e : endpointBijection.entrySet())
         {
-            Endpoint ep = e.getKey();
-            if (ep instanceof SerialEndpoint)
+            Endpoint endpoint = e.getKey();
+            if (endpoint instanceof SerialEndpoint)
             {
-                SerialEndpoint se = (SerialEndpoint) ep;
+                SerialEndpoint se = (SerialEndpoint) endpoint;
                 allSerialEndpoints.put(se.name, se);
                 se.init2(e.getValue());
                 if (!configureChannel(se, selector))
@@ -257,18 +250,16 @@ public class Router extends JavaLogging
                     resolvPool.add(se);
                 }
             }
+            else
+            {
+                endpoint.init2(e.getValue());
+                configureChannel(endpoint, selector);
+            }
         }
         for (SelectionKey sk : selector.keys())
         {
             DataSource ds = (DataSource) sk.attachment();
             ds.updateStatus();
-        }
-        ProcessorType processorType = config.getProcessorType();
-        if (processorType != null)
-        {
-            Processor sender = new Processor(processorType);
-            Thread thread = new Thread(routerThreadGroup, sender, "sender");
-            thread.start();
         }
     }
 
@@ -418,6 +409,10 @@ public class Router extends JavaLogging
     }
     private Endpoint getInstance(EndpointType endpointType)
     {
+        if (endpointType instanceof ProcessorType)
+        {
+            return new ProcessorEndpoint((ProcessorType) endpointType);
+        }
         if (endpointType instanceof MulticastNMEAType)
         {
             return new MulticastNMEAEndpoint((MulticastNMEAType) endpointType);
@@ -457,6 +452,79 @@ public class Router extends JavaLogging
         throw new IllegalArgumentException(endpointType+" unknown");
     }
 
+    public class ProcessorEndpoint extends Endpoint<SourceChannel>
+    {
+        protected Pipe in;
+        protected Pipe out;
+        protected GatheringByteChannel writeTarget;
+        private final ProcessorType processorType;
+        private Processor processor;
+        private Thread thread;
+        public ProcessorEndpoint(ProcessorType processorType)
+        {
+            super(processorType);
+            this.processorType = processorType;
+        }
+        
+        @Override
+        protected SourceChannel configureChannel() throws IOException
+        {
+            matched("because is processor");
+            in = Pipe.open();
+            out = Pipe.open();
+            channel = out.source();
+            channel.configureBlocking(false);
+            writeTarget = in.sink();
+            processor = new Processor(processorType, in.source(), out.sink());
+            thread = new Thread(processor);
+            thread.start();
+            return channel;
+        }
+
+        @Override
+        protected int write(RingByteBuffer ring) throws IOException
+        {
+            int cnt = 0;
+            if (matched && attached == null)
+            {
+                cnt = ring.write(writeTarget);
+                finest("write %s = %d", ring, cnt);
+                writeCount++;
+                writeBytes += cnt;
+            }
+            return cnt;
+        }
+
+        @Override
+        protected int write(ByteBuffer bb) throws IOException
+        {
+            int cnt = 0;
+            if (matched && attached == null)
+            {
+                cnt = (writeTarget).write(bb);
+                finest("write %s = %d", bb, cnt);
+                writeCount++;
+                writeBytes += cnt;
+            }
+            return cnt;
+        }
+
+        @Override
+        protected int attachedWrite(RingByteBuffer ring) throws IOException
+        {
+            if (matched)
+            {
+                int cnt = ring.write(writeTarget);
+                finest("write %s = %d", ring, cnt);
+                writeCount++;
+                writeBytes += cnt;
+                return cnt;
+            }
+            return 0;
+        }
+
+        
+    }
     public class MulticastNMEAEndpoint extends Endpoint<UnconnectedDatagramChannel>
     {
         protected String address;
@@ -469,7 +537,7 @@ public class Router extends JavaLogging
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open(address, 10110, BufferSize, true, isSource());
+            channel = UnconnectedDatagramChannel.open(address, 10110, BufferSize, true, false);
             channel.configureBlocking(false);
             return channel;
         }
@@ -490,7 +558,7 @@ public class Router extends JavaLogging
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open(address, port, BufferSize, true, isSource());
+            channel = UnconnectedDatagramChannel.open(address, port, BufferSize, true, false);
             channel.configureBlocking(false);
             return channel;
         }
@@ -505,7 +573,7 @@ public class Router extends JavaLogging
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open("255.255.255.255", 10110, BufferSize, true, isSource());
+            channel = UnconnectedDatagramChannel.open("255.255.255.255", 10110, BufferSize, true, false);
             channel.configureBlocking(false);
             return channel;
         }
@@ -523,7 +591,7 @@ public class Router extends JavaLogging
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open("255.255.255.255", port, BufferSize, true, isSource());
+            channel = UnconnectedDatagramChannel.open("255.255.255.255", port, BufferSize, true, false);
             channel.configureBlocking(false);
             return channel;
         }
@@ -549,7 +617,7 @@ public class Router extends JavaLogging
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, isSource());
+            channel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, false);
             channel.configureBlocking(false);
             return channel;
         }

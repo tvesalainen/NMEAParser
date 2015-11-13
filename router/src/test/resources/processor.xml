@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
+    <router>
+        <processor name="Proc">
+            <variation-source/>
+            <route prefix="$INRMC" target="Net"/>
+        </processor>
+        <multicast-nmea-0183 name="Net" address="224.0.0.3">
+            <route prefix="$GPRMC" target="Proc"/>
+        </multicast-nmea-0183>
+    </router>
+</nmea>

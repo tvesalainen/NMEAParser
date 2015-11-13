@@ -56,7 +56,7 @@
             <route prefix="!AIVDO" target="Net MT"/>
             <route prefix="$AITXT" target="Net"/>
         </nmea-0183-hs>
-        <broadcast-nmea-0183 name="Net">
+        <broadcast-nmea-0183>
             <route prefix="$INRMC" target="Airmar"/>
             <route prefix="$??APB" target="Simrad1"/>
             <route prefix="$??BOD" target="Simrad1"/>

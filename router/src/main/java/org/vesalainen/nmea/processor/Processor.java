@@ -17,9 +17,10 @@
 package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
+import java.nio.channels.GatheringByteChannel;
+import java.nio.channels.ScatteringByteChannel;
 import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
-import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.parsers.nmea.NMEAParser;
@@ -31,50 +32,46 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class Processor extends JavaLogging implements Runnable
 {
-    private UnconnectedDatagramChannel channel;
+    private final ScatteringByteChannel in;
+    private final GatheringByteChannel out;
     private final ProcessorType processorType;
     private final NMEADispatcher observer = NMEADispatcher.getInstance(NMEADispatcher.class);
-    private final String address;
-    private int port = 10110;
 
-    public Processor(ProcessorType processorType) throws IOException
+    public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out) throws IOException
     {
         this.processorType = processorType;
         setLogger(this.getClass());
-        address = processorType.getAddress();
-        Integer p = processorType.getPort();
-        if (p != null)
-        {
-            port = p;
-        }
+        this.in = in;
+        this.out = out;
     }
     
     public void add(PropertySetter propertySetter)
     {
         observer.addObserver(propertySetter, propertySetter.getPrefixes());
     }
+    
     @Override
     public void run()
     {
-        config("open sender channel %s %d", address, port);
-        try (UnconnectedDatagramChannel ch = UnconnectedDatagramChannel.open(address, port, 100, true, true))
+        try
         {
-            channel = ch;
-            VariationSourceType vst = processorType.getVariationSource();
-            if (vst != null)
+            for (VariationSourceType vst : processorType.getVariationSource())
             {
-                info("add VariationSource");
-                VariationSource vs = new VariationSource(channel, vst);
-                add(vs);
+                if (vst instanceof VariationSourceType)
+                {
+                    info("add VariationSource");
+                    VariationSource vs = new VariationSource(out, vst);
+                    add(vs);
+                }
             }
             NMEAParser parser = NMEAParser.newInstance();
-            parser.parse(channel, observer, null);
+            parser.parse(in, observer, null);
         }
         catch (IOException ex)
         {
             log(Level.SEVERE, "", ex);
         }
-        log(Level.SEVERE, "Sender dies!!!");
+        log(Level.SEVERE, "Processor dies!!!");
     }
 
 }

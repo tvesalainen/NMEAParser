@@ -111,35 +111,14 @@ public class RouterConfig
         return digest;
     }
 
-    public boolean isVariationSource()
-    {
-        ProcessorType senderType = getProcessorType();
-        if (senderType != null)
-        {
-            return senderType.getVariationSource() != null;
-        }
-        return false;
-    }
-    public ProcessorType getProcessorType()
-    {
-        for (Object ob : nmea.getValue().getProcessorOrRouter())
-        {
-            if (ob instanceof ProcessorType)
-            {
-                return (ProcessorType) ob;
-            }
-        }
-        return null;
-    }
-    
     public List<EndpointType> getEndpoints()
     {
-        for (Object ob : nmea.getValue().getProcessorOrRouter())
+        for (Object ob : nmea.getValue().getRouter())
         {
             if (ob instanceof RouterType)
             {
                 RouterType rt = (RouterType) ob;
-                return rt.getMulticastOrMulticastNmea0183OrBroadcast();
+                return rt.getProcessorOrMulticastOrMulticastNmea0183();
             }
         }
         return null;
