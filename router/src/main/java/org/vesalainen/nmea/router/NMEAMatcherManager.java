@@ -32,12 +32,13 @@ import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.HashMapSet;
 import org.vesalainen.util.MapList;
 import org.vesalainen.util.MapSet;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author tkv
  */
-public final class NMEAMatcherManager
+public final class NMEAMatcherManager extends JavaLogging
 {
     private final MapSet<SerialChannel.Speed,String> ambiguousPrefixes = new HashMapSet<>();
     private final MapList<Speed, EndpointType> speedMap;
@@ -46,6 +47,7 @@ public final class NMEAMatcherManager
 
     public NMEAMatcherManager(Bijection<Endpoint,EndpointType> endpointMap, MapList<Speed, EndpointType> speedMap)
     {
+        setLogger(this.getClass());
         this.endpointBijection = endpointMap;
         this.speedMap = speedMap;
         
@@ -63,7 +65,6 @@ public final class NMEAMatcherManager
         NMEAMatcher wm = null;
         for (RouteType rt : endpointType.getRoute())
         {
-            List<String> targetList = rt.getTarget();
             if (wm == null)
             {
                 wm = new NMEAMatcher();
@@ -162,6 +163,7 @@ public final class NMEAMatcherManager
 
     public void allMatched()
     {
+        config("allMatched()");
         MapList<NMEAPrefix,Route> mapList = new HashMapList<>();
         List<Route> backups = new ArrayList<>();
         for (Entry<Endpoint, EndpointType> entry : endpointBijection.entrySet())
@@ -172,13 +174,15 @@ public final class NMEAMatcherManager
             {
                 for (Route route : matcher.getRoutes())
                 {
+                    NMEAPrefix prefix = route.getPrefix();
                     if (route.isBackup())
                     {
+                        config("add backup %s", prefix);
                         backups.add(route);
                     }
                     else
                     {
-                        mapList.add(route.getPrefix(), route);
+                        mapList.add(prefix, route);
                     }
                 }
             }
@@ -186,7 +190,16 @@ public final class NMEAMatcherManager
         for (Route route : backups)
         {
             NMEAPrefix prefix = route.getPrefix();
-            route.setBackupSources(mapList.get(prefix));
+            List<Route> list = mapList.get(prefix);
+            if (list != null)
+            {
+                config("add %d sources to %s", list.size(), prefix);
+                route.setBackupSources(list);
+            }
+            else
+            {
+                warning("no sources for %s", prefix);
+            }
         }
     }
 
