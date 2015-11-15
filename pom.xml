@@ -3,12 +3,12 @@
     <parent>
         <groupId>org.vesalainen</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.7</version>
+        <version>1.0.8</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.vesalainen.nmea</groupId>
     <artifactId>parent</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>pom</packaging>
     <modules>
         <module>parser</module>
