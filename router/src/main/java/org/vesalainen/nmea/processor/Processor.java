@@ -22,6 +22,7 @@ import java.nio.channels.ScatteringByteChannel;
 import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
+import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.util.logging.JavaLogging;
@@ -55,13 +56,21 @@ public class Processor extends JavaLogging implements Runnable
     {
         try
         {
-            for (VariationSourceType vst : processorType.getVariationSource())
+            for (Object ob : processorType.getVariationSourceOrTracker())
             {
-                if (vst instanceof VariationSourceType)
+                if (ob instanceof VariationSourceType)
                 {
+                    VariationSourceType vst = (VariationSourceType) ob;
                     info("add VariationSource");
                     VariationSource vs = new VariationSource(out, vst);
                     add(vs);
+                }
+                if (ob instanceof TrackerType)
+                {
+                    TrackerType tt = (TrackerType) ob;
+                    info("add Tracker");
+                    Tracker tracker = new Tracker(out, tt);
+                    add(tracker);
                 }
             }
             NMEAParser parser = NMEAParser.newInstance();

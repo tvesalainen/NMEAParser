@@ -16,22 +16,19 @@
  */
 package org.vesalainen.nmea.processor;
 
-import d3.env.TSAGeoMag;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
 import java.util.GregorianCalendar;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.logging.Level;
-import java.util.prefs.Preferences;
-import java.util.zip.CheckedOutputStream;
 import org.vesalainen.code.PropertySetter;
-import org.vesalainen.nio.channels.ByteBufferOutputStream;
-import org.vesalainen.nmea.jaxb.router.VariationSourceType;
+import org.vesalainen.io.CompressedOutput;
+import org.vesalainen.nmea.jaxb.router.TrackerType;
+import org.vesalainen.nmea.util.TrackFilter;
+import org.vesalainen.nmea.util.TrackLocation;
 import org.vesalainen.parsers.nmea.Clock;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
-import org.vesalainen.parsers.nmea.NMEAGen;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -39,46 +36,52 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class VariationSource extends TimerTask implements PropertySetter, Transactional
+public class Tracker implements PropertySetter, Transactional
 {
     private static final String[] Prefixes = new String[]{
         "latitude",
         "longitude",
         "clock"
             };
+    private GregorianCalendar calendar;
     private final GatheringByteChannel channel;
+    private double bearingTolerance = 3;
+    private double minDistance = 0.1;
+    private double maxSpeed = 10;
     private float longitude;
     private float latitude;
     private long lastUpdate;
     private boolean positionUpdated;
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
-    private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
-    private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
-    private GregorianCalendar calendar;
-    private long period = 1000;
-    private final Preferences prefs;
-    private TSAGeoMag geoMag = new TSAGeoMag();
-    private double declination;
-    private Timer timer;
-    private JavaLogging log = new JavaLogging();
+    private final JavaLogging log = new JavaLogging();
+    private final Filter filter;
+    private final TrackLocation location;
+    private final CompressedOutput compressor;
+    private final FileOutputStream fileOut;
 
-    public VariationSource(GatheringByteChannel channel, VariationSourceType variationSourceType)
+    public Tracker(GatheringByteChannel channel, TrackerType trackerType) throws FileNotFoundException, IOException
     {
         log.setLogger(this.getClass());
         this.channel = channel;
-        Long per = variationSourceType.getPeriod();
-        if (per != null)
+        Long bt = trackerType.getBearingTolerance();
+        if (bt != null)
         {
-            period = per;
+            bearingTolerance = bt;
         }
-        this.prefs = Preferences.userNodeForPackage(this.getClass());
-        this.declination = prefs.getDouble("declination", Double.NaN);
-        if (!Double.isNaN(declination))
+        BigDecimal md = trackerType.getMinDistance();
+        if (md != null)
         {
-            log.config("timer started by preference period=%d declination=%f", period, declination);
-            timer = new Timer();
-            timer.scheduleAtFixedRate(this, 0, period);
+            minDistance = md.doubleValue();
         }
+        BigDecimal ms = trackerType.getMaxSpeed();
+        if (ms != null)
+        {
+            maxSpeed = ms.doubleValue();
+        }
+        filter = new Filter(bearingTolerance, minDistance, maxSpeed);
+        fileOut = new FileOutputStream(trackerType.getFilePattern());
+        location = new TrackLocation();
+        compressor = new CompressedOutput(fileOut, location);
     }
     
     @Override
@@ -96,45 +99,20 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
     @Override
     public void commit(String reason)
     {
-        long now = System.currentTimeMillis();
-        if (positionUpdated && now-lastUpdate > 10000)
+        if (positionUpdated)
         {
             log.fine("location %f %f", latitude, longitude);
-            declination = geoMag.getDeclination(latitude, longitude, geoMag.decimalYear(calendar), 0);
-            if (timer  == null)
+            try
             {
-                log.config("timer started by first update period=%d declination=%f", period, declination);
-                timer = new Timer();
-                timer.scheduleAtFixedRate(this, 0, period);
+                filter.input(calendar.getTimeInMillis(), latitude, longitude);
             }
-            lastUpdate = now;
+            catch (IOException ex)
+            {
+                throw new IllegalArgumentException(ex);
+            }
         }
     }
     
-    @Override
-    public void run()
-    {
-        bb.clear();
-        try
-        {
-            NMEAGen.rmc(cout, declination);
-            bb.flip();
-            channel.write(bb);
-            log.finest("send RMC declination=%f", declination);
-        }
-        catch (IOException ex)
-        {
-            log.log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable
-    {
-        super.finalize();
-        prefs.putDouble("declination", declination);
-    }
-
     @Override
     public void set(String property, boolean arg)
     {
@@ -225,4 +203,22 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
         }
     }
 
+    private class Filter extends TrackFilter
+    {
+
+        public Filter(double bearingTolerance, double minDistance, double maxSpeed)
+        {
+            super(bearingTolerance, minDistance, maxSpeed);
+        }
+
+        @Override
+        public void output(long time, float latitude, float longitude) throws IOException
+        {
+            location.time = time;
+            location.latitude = latitude;
+            location.longitude = longitude;
+            compressor.write();
+        }
+        
+    }
 }

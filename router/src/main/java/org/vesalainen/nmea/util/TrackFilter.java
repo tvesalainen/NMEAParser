@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.util;
 
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -47,7 +48,7 @@ public abstract class TrackFilter
         this.maxSpeed = maxSpeed;
     }
 
-    public void input(long time, float latitude, float longitude)
+    public void input(long time, float latitude, float longitude) throws IOException
     {
         WayPoint wp = create(time, latitude, longitude);
         switch (buffer.size())
@@ -90,7 +91,7 @@ public abstract class TrackFilter
                 break;
         }
     }
-    private void doInput(WayPoint wp)
+    private void doInput(WayPoint wp) throws IOException
     {
         if (last == null)
         {
@@ -146,7 +147,7 @@ public abstract class TrackFilter
     {
 
     }
-    public abstract void output(long time, float latitude, float longitude);
+    public abstract void output(long time, float latitude, float longitude) throws IOException;
 
     private static double departure(WayPoint loc1, WayPoint loc2)
     {

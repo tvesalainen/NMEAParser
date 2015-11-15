@@ -28,6 +28,7 @@
             <xs:extension base="endpointType">
                 <xs:choice minOccurs="0" maxOccurs="unbounded">
                     <xs:element name="variation-source" type="variation-sourceType"/>
+                    <xs:element name="tracker" type="trackerType"/>
                 </xs:choice>
             </xs:extension>
         </xs:complexContent>
@@ -110,6 +111,12 @@
         <xs:attribute name="target" type="targetType"/>
         <xs:attribute name="backup" type="backupType"/>
         <xs:attribute name="expire" type="millisType"/>
+    </xs:complexType>
+    <xs:complexType name="trackerType">
+        <xs:attribute name="filePattern" type="xs:string" use="required"/>
+        <xs:attribute name="bearingTolerance" type="xs:unsignedInt"/>
+        <xs:attribute name="minDistance" type="xs:decimal"/>
+        <xs:attribute name="maxSpeed" type="xs:decimal"/>
     </xs:complexType>
     <xs:complexType name="variation-sourceType">
         <xs:attribute name="period" type="millisType"/>
