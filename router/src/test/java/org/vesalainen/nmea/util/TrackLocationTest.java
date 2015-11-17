@@ -19,10 +19,16 @@ package org.vesalainen.nmea.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.io.CompressedInput;
 import org.vesalainen.io.PushbackReadable;
+import org.vesalainen.util.navi.Degree;
+import org.vesalainen.util.navi.Knots;
+import org.vesalainen.util.navi.Location;
+import org.vesalainen.util.navi.TimeSpan;
+import org.vesalainen.util.navi.Velocity;
 
 /**
  *
@@ -49,6 +55,23 @@ public class TrackLocationTest
         catch (IOException ex)
         {
             
+        }
+    }
+    @Test
+    public void test2()
+    {
+        long time = System.currentTimeMillis();
+        Location loc = new Location(28, -16);
+        Velocity kn5 = new Knots(5.0);
+        TimeSpan span = new TimeSpan(1000, TimeUnit.MILLISECONDS);
+        Degree sw = new Degree(225);
+        for (int ii=0;ii<1000;ii++)
+        {
+            System.err.println(time);
+            System.err.println(loc.getLatitude());
+            System.err.println(loc.getLongitude());
+            loc = loc.move(sw, kn5, span);
+            time += 1000;
         }
     }
     

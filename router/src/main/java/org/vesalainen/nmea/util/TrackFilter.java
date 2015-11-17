@@ -35,17 +35,21 @@ public abstract class TrackFilter
     private WayPoint last;
     private final List<WayPoint> buffer = new ArrayList<>();
     private final Deque<WayPoint> pool = new ArrayDeque<>();
+    private boolean open;
+    private long active;
+    private final long maxPassive;
     /**
      * 
      * @param bearingTolerance
      * @param minDistance
      * @param maxSpeed Knots. If waypoints distance implies greater speed the waypoint is dropped.
      */
-    public TrackFilter(double bearingTolerance, double minDistance, double maxSpeed)
+    public TrackFilter(double bearingTolerance, double minDistance, double maxSpeed, long maxPassive)
     {
         this.bearingTolerance = bearingTolerance;
         this.minDistance = minDistance;
         this.maxSpeed = maxSpeed;
+        this.maxPassive = maxPassive;
     }
 
     public void input(long time, float latitude, float longitude) throws IOException
@@ -61,7 +65,7 @@ public abstract class TrackFilter
                 {
                     doInput(buffer.get(0));
                     doInput(wp);
-                    recycle(buffer);
+                    buffer.clear();
                 }
                 else
                 {
@@ -73,7 +77,8 @@ public abstract class TrackFilter
                 {
                     doInput(buffer.get(0));
                     doInput(wp);
-                    recycle(buffer);
+                    recycle(buffer.get(1));
+                    buffer.clear();
                 }
                 else
                 {
@@ -81,10 +86,12 @@ public abstract class TrackFilter
                     {
                         doInput(buffer.get(1));
                         doInput(wp);
-                        recycle(buffer);
+                        recycle(buffer.get(0));
+                        buffer.clear();
                     }
                     else
                     {
+                        recycle(wp);
                         recycle(buffer);
                     }
                 }
@@ -96,14 +103,13 @@ public abstract class TrackFilter
         if (last == null)
         {
             last = wp;
-            output(wp.time, (float)wp.latitude, (float)wp.longitude);
         }
         else
         {
             if (Double.isNaN(lastBearing))
             {
                 lastBearing = bearing(last, wp);
-                output(wp.time, (float)wp.latitude, (float)wp.longitude);
+                recycle(wp);
             }
             else
             {
@@ -114,9 +120,25 @@ public abstract class TrackFilter
                         distance > minDistance
                         )
                 {
+                    recycle(last);
                     last = wp;
                     lastBearing = bearing;
+                    if (!open)
+                    {
+                        open();
+                        open = true;
+                    }
                     output(wp.time, (float)wp.latitude, (float)wp.longitude);
+                    active = wp.time;
+                }
+                else
+                {
+                    if (open && (active + maxPassive) < wp.time)
+                    {
+                        close();
+                        open = false;
+                    }
+                    recycle(wp);
                 }
             }
         }
@@ -138,15 +160,25 @@ public abstract class TrackFilter
         wp.longitude = longitude;
         return wp;
     }
+    private void recycle(WayPoint wp)
+    {
+        assert(!pool.contains(wp));
+        pool.add(wp);
+    }
     private void recycle(List<WayPoint> buf)
     {
-        pool.addAll(buf);
+        for (WayPoint wp : buf)
+        {
+            recycle(wp);
+        }
         buf.clear();
     }
     protected void flush()
     {
 
     }
+    public abstract void open(long time) throws IOException;
+    public abstract void close() throws IOException;
     public abstract void output(long time, float latitude, float longitude) throws IOException;
 
     private static double departure(WayPoint loc1, WayPoint loc2)

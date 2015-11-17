@@ -113,10 +113,11 @@
         <xs:attribute name="expire" type="millisType"/>
     </xs:complexType>
     <xs:complexType name="trackerType">
-        <xs:attribute name="filePattern" type="xs:string" use="required"/>
+        <xs:attribute name="directory" type="xs:string" use="required"/>
         <xs:attribute name="bearingTolerance" type="xs:unsignedInt"/>
         <xs:attribute name="minDistance" type="xs:decimal"/>
         <xs:attribute name="maxSpeed" type="xs:decimal"/>
+        <xs:attribute name="maxPassive" type="xs:unsignedInt"/>
     </xs:complexType>
     <xs:complexType name="variation-sourceType">
         <xs:attribute name="period" type="millisType"/>

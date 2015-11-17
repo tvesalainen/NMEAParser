@@ -19,6 +19,8 @@ package org.vesalainen.nmea.processor;
 import java.io.IOException;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
@@ -31,12 +33,13 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class Processor extends JavaLogging implements Runnable
+public class Processor extends JavaLogging implements Runnable, AutoCloseable
 {
     private final ScatteringByteChannel in;
     private final GatheringByteChannel out;
     private final ProcessorType processorType;
     private final NMEADispatcher observer = NMEADispatcher.getInstance(NMEADispatcher.class);
+    private final List<AutoCloseable> autoCloseables = new ArrayList<>();
 
     public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out) throws IOException
     {
@@ -49,6 +52,11 @@ public class Processor extends JavaLogging implements Runnable
     public void add(PropertySetter propertySetter)
     {
         observer.addObserver(propertySetter, propertySetter.getPrefixes());
+        if (propertySetter instanceof AutoCloseable)
+        {
+            AutoCloseable ac = (AutoCloseable) propertySetter;
+            autoCloseables.add(ac);
+        }
     }
     
     @Override
@@ -69,7 +77,7 @@ public class Processor extends JavaLogging implements Runnable
                 {
                     TrackerType tt = (TrackerType) ob;
                     info("add Tracker");
-                    Tracker tracker = new Tracker(out, tt);
+                    Tracker tracker = new Tracker(tt);
                     add(tracker);
                 }
             }
@@ -81,6 +89,15 @@ public class Processor extends JavaLogging implements Runnable
             log(Level.SEVERE, "", ex);
         }
         log(Level.SEVERE, "Processor dies!!!");
+    }
+
+    @Override
+    public void close() throws Exception
+    {
+        for (AutoCloseable ac : autoCloseables)
+        {
+            ac.close();
+        }
     }
 
 }

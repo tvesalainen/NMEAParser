@@ -16,13 +16,17 @@
  */
 package org.vesalainen.nmea.processor;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.nio.channels.GatheringByteChannel;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.concurrent.TimeUnit;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.io.CompressedOutput;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
@@ -33,10 +37,10 @@ import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
- *
+ * TODO file rotation & flush
  * @author tkv
  */
-public class Tracker implements PropertySetter, Transactional
+public class Tracker implements PropertySetter, Transactional, AutoCloseable
 {
     private static final String[] Prefixes = new String[]{
         "latitude",
@@ -44,10 +48,11 @@ public class Tracker implements PropertySetter, Transactional
         "clock"
             };
     private GregorianCalendar calendar;
-    private final GatheringByteChannel channel;
     private double bearingTolerance = 3;
     private double minDistance = 0.1;
     private double maxSpeed = 10;
+    private long maxPassive = TimeUnit.MINUTES.toMillis(15);
+    private File directory;
     private float longitude;
     private float latitude;
     private long lastUpdate;
@@ -56,13 +61,23 @@ public class Tracker implements PropertySetter, Transactional
     private final JavaLogging log = new JavaLogging();
     private final Filter filter;
     private final TrackLocation location;
-    private final CompressedOutput compressor;
-    private final FileOutputStream fileOut;
+    private CompressedOutput compressor;
+    /**
+     * This is for testing
+     * @param out
+     * @throws IOException 
+     */
+    Tracker(String directory) throws IOException
+    {
+        this.directory = new File(directory);
+        log.setLogger(this.getClass());
+        filter = new Filter(bearingTolerance, minDistance, maxSpeed, maxPassive);
+        location = new TrackLocation();
+    }
 
-    public Tracker(GatheringByteChannel channel, TrackerType trackerType) throws FileNotFoundException, IOException
+    public Tracker(TrackerType trackerType) throws FileNotFoundException, IOException
     {
         log.setLogger(this.getClass());
-        this.channel = channel;
         Long bt = trackerType.getBearingTolerance();
         if (bt != null)
         {
@@ -78,10 +93,9 @@ public class Tracker implements PropertySetter, Transactional
         {
             maxSpeed = ms.doubleValue();
         }
-        filter = new Filter(bearingTolerance, minDistance, maxSpeed);
-        fileOut = new FileOutputStream(trackerType.getFilePattern());
+        this.directory = new File(trackerType.getDirectory());
+        filter = new Filter(bearingTolerance, minDistance, maxSpeed, maxPassive);
         location = new TrackLocation();
-        compressor = new CompressedOutput(fileOut, location);
     }
     
     @Override
@@ -101,6 +115,7 @@ public class Tracker implements PropertySetter, Transactional
     {
         if (positionUpdated)
         {
+            positionUpdated = false;
             log.fine("location %f %f", latitude, longitude);
             try
             {
@@ -203,12 +218,21 @@ public class Tracker implements PropertySetter, Transactional
         }
     }
 
+    @Override
+    public void close() throws Exception
+    {
+        if (compressor != null)
+        {
+            compressor.close();
+        }
+    }
+
     private class Filter extends TrackFilter
     {
 
-        public Filter(double bearingTolerance, double minDistance, double maxSpeed)
+        public Filter(double bearingTolerance, double minDistance, double maxSpeed, long maxPassive)
         {
-            super(bearingTolerance, minDistance, maxSpeed);
+            super(bearingTolerance, minDistance, maxSpeed, maxPassive);
         }
 
         @Override
@@ -218,6 +242,22 @@ public class Tracker implements PropertySetter, Transactional
             location.latitude = latitude;
             location.longitude = longitude;
             compressor.write();
+        }
+
+        @Override
+        public void open(long time) throws IOException
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+            String dstr = sdf.format(new Date(time));
+            FileOutputStream out = new FileOutputStream(dstr+".trc");
+            compressor = new CompressedOutput<>(out, location);
+        }
+
+        @Override
+        public void close() throws IOException
+        {
+            compressor.close();
+            compressor = null;
         }
         
     }

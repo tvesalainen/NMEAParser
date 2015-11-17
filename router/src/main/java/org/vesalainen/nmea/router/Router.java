@@ -476,6 +476,7 @@ public class Router extends JavaLogging
             channel.configureBlocking(false);
             writeTarget = in.sink();
             processor = new Processor(processorType, in.source(), out.sink());
+            autoCloseables.add(processor);
             thread = new Thread(processor);
             thread.start();
             return channel;
