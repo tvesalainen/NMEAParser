@@ -32,6 +32,12 @@ public class GPSClock implements Clock
     private final GregorianCalendar calendar = (GregorianCalendar) Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.UK);
     private long offset;
     private boolean committed;
+    /**
+     * Returns last nmea time updated with system clock. Use getCalendar to
+     * get nmea time
+     * @return 
+     * @see org.vesalainen.parsers.nmea.GPSClock#getCalendar() 
+     */
     @Override
     public long getTime()
     {
