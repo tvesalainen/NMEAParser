@@ -28,28 +28,43 @@ import java.util.List;
  */
 public abstract class TrackFilter
 {
-    private final double bearingTolerance;
-    private final double minDistance;
-    private final double maxSpeed;
+    private double bearingTolerance;
+    private double minDistance;
+    private double maxSpeed;
+    private long maxPassive;
     private double lastBearing = Double.NaN;
     private WayPoint last;
     private final List<WayPoint> buffer = new ArrayList<>();
     private final Deque<WayPoint> pool = new ArrayDeque<>();
     private boolean open;
     private long active;
-    private final long maxPassive;
-    /**
-     * 
-     * @param bearingTolerance
-     * @param minDistance
-     * @param maxSpeed Knots. If waypoints distance implies greater speed the waypoint is dropped.
-     */
-    public TrackFilter(double bearingTolerance, double minDistance, double maxSpeed, long maxPassive)
+
+    public TrackFilter setBearingTolerance(double bearingTolerance)
     {
         this.bearingTolerance = bearingTolerance;
+        return this;
+    }
+
+    public TrackFilter setMinDistance(double minDistance)
+    {
         this.minDistance = minDistance;
+        return this;
+    }
+    /**
+     * 
+     * @param maxSpeed Knots. If waypoints distance implies greater speed the waypoint is dropped.
+     * @return 
+     */
+    public TrackFilter setMaxSpeed(double maxSpeed)
+    {
         this.maxSpeed = maxSpeed;
+        return this;
+    }
+
+    public TrackFilter setMaxPassive(long maxPassive)
+    {
         this.maxPassive = maxPassive;
+        return this;
     }
 
     public void input(long time, float latitude, float longitude) throws IOException
@@ -120,21 +135,23 @@ public abstract class TrackFilter
                         distance > minDistance
                         )
                 {
+                    if (!open)
+                    {
+                        open(last.time);
+                        open = true;
+                        output(last.time, (float)last.latitude, (float)last.longitude);
+                    }
                     recycle(last);
                     last = wp;
                     lastBearing = bearing;
-                    if (!open)
-                    {
-                        open();
-                        open = true;
-                    }
                     output(wp.time, (float)wp.latitude, (float)wp.longitude);
                     active = wp.time;
                 }
                 else
                 {
-                    if (open && (active + maxPassive) < wp.time)
+                    if (open && distance < minDistance && (active + maxPassive) < wp.time)
                     {
+                        output(wp.time, (float)wp.latitude, (float)wp.longitude);
                         close();
                         open = false;
                     }
@@ -177,9 +194,9 @@ public abstract class TrackFilter
     {
 
     }
-    public abstract void open(long time) throws IOException;
+    protected abstract void open(long time) throws IOException;
     public abstract void close() throws IOException;
-    public abstract void output(long time, float latitude, float longitude) throws IOException;
+    protected abstract void output(long time, float latitude, float longitude) throws IOException;
 
     private static double departure(WayPoint loc1, WayPoint loc2)
     {
@@ -229,8 +246,8 @@ public abstract class TrackFilter
     private class WayPoint
     {
         private long time;
-        private double latitude;
-        private double longitude;
+        private float latitude;
+        private float longitude;
         
     }
 }

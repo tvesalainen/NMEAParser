@@ -20,9 +20,10 @@ package org.vesalainen.nmea.util;
  *
  * @author tkv
  */
-public class TrackLocation
+public class TrackPoint
 {
     public long time;
     public float latitude;
     public float longitude;
+    
 }

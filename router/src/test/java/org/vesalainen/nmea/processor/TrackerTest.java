@@ -17,18 +17,18 @@
 package org.vesalainen.nmea.processor;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.nio.channels.ReadableByteChannelFactory;
+import org.vesalainen.nmea.util.TrackInput;
 import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
@@ -37,7 +37,7 @@ import org.vesalainen.parsers.nmea.NMEAParser;
  */
 public class TrackerTest
 {
-    
+    static final float Epsilon = 1e-10F;
     public TrackerTest()
     {
     }
@@ -49,11 +49,10 @@ public class TrackerTest
         {
             NMEADispatcher observer = NMEADispatcher.getInstance(NMEADispatcher.class);
             File file = new File("../parser/src/test/resources/sample.nmea");
-            FileOutputStream fis = new FileOutputStream("src/test/resources/sample.trc");
-            Tracker tracker = new Tracker(fis);
-            observer.addObserver(tracker, tracker.getPrefixes());
-            try (ReadableByteChannel rbc = ReadableByteChannelFactory.getInstance(file))
+            try (ReadableByteChannel rbc = ReadableByteChannelFactory.getInstance(file);
+                    Tracker tracker = new Tracker(".");)
             {
+                observer.addObserver(tracker, tracker.getPrefixes());
                 NMEAParser parser = NMEAParser.newInstance();
                 parser.parse(rbc, observer, null);
             }
@@ -62,12 +61,38 @@ public class TrackerTest
                 fail(ex.getMessage());
                 Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
             }
+            try (TrackInput trackInput = new TrackInput("20100515070534.trc"))
+            {
+                boolean rc = trackInput.read();
+                assertTrue(rc);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                assertEquals("20100515070534", sdf.format(new Date(trackInput.getTime())));
+                assertEquals(toFloat(60, 09.2031F), trackInput.getLatitude(), Epsilon);
+                assertEquals(toFloat(24, 53.6519F), trackInput.getLongitude(), Epsilon);
+                while (trackInput.read())
+                {
+                    
+                }
+                assertEquals("20100515120656", sdf.format(new Date(trackInput.getTime())));
+                //assertEquals(toFloat(60, 09.2038F), trackInput.getLatitude(), Epsilon);
+                assertEquals(toFloat(24, 53.6586F), trackInput.getLongitude(), Epsilon);
+            }
+            catch (IOException ex)
+            {
+                fail(ex.getMessage());
+                Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             fail(ex.getMessage());
             Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
+    private float toFloat(int deg, float min)
+    {
+        return deg+min/60.0F;
+    }
 }

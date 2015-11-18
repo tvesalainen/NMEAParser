@@ -1,0 +1,88 @@
+/*
+ * Copyright (C) 2015 tkv
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.vesalainen.nmea.util;
+
+import java.io.BufferedInputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import org.vesalainen.io.CompressedInput;
+
+/**
+ *
+ * @author tkv
+ */
+public class TrackInput implements AutoCloseable
+{
+    private final TrackPoint trackPoint = new TrackPoint();
+    private CompressedInput<TrackPoint> input;
+
+    public TrackInput(String filename) throws IOException
+    {
+        this(new File(filename));
+    }
+    public TrackInput(File file) throws IOException
+    {
+        this(new FileInputStream(file));
+    }
+    public TrackInput(InputStream is) throws IOException
+    {
+        if (!(is instanceof BufferedInputStream))
+        {
+            is = new BufferedInputStream(is);
+        }
+        input = new CompressedInput<>(is, trackPoint);
+    }
+    /**
+     * Reads a new position
+     * @return True if read succeeded. False if eof.
+     * @throws IOException 
+     */
+    public boolean read() throws IOException
+    {
+        try
+        {
+            input.read();
+            return true;
+        }
+        catch (EOFException ex)
+        {
+            return false;
+        }
+    }
+    
+    public long getTime()
+    {
+        return trackPoint.time;
+    }
+    public float getLatitude()
+    {
+        return trackPoint.latitude;
+    }
+    public float getLongitude()
+    {
+        return trackPoint.longitude;
+    }
+
+    @Override
+    public void close() throws IOException
+    {
+        input.close();
+    }
+}

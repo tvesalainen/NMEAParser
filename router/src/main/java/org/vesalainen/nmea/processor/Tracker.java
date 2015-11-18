@@ -18,26 +18,19 @@ package org.vesalainen.nmea.processor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.code.PropertySetter;
-import org.vesalainen.io.CompressedOutput;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
-import org.vesalainen.nmea.util.TrackFilter;
-import org.vesalainen.nmea.util.TrackLocation;
+import org.vesalainen.nmea.util.TrackOutput;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
- * TODO file rotation & flush
  * @author tkv
  */
 public class Tracker implements PropertySetter, Transactional, AutoCloseable
@@ -55,24 +48,24 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
     private File directory;
     private float longitude;
     private float latitude;
-    private long lastUpdate;
     private boolean positionUpdated;
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
     private final JavaLogging log = new JavaLogging();
-    private final Filter filter;
-    private final TrackLocation location;
-    private CompressedOutput compressor;
+    private final TrackOutput track;
     /**
      * This is for testing
      * @param out
      * @throws IOException 
      */
-    Tracker(String directory) throws IOException
+    Tracker(String dirStr) throws IOException
     {
-        this.directory = new File(directory);
+        this.directory = new File(dirStr);
         log.setLogger(this.getClass());
-        filter = new Filter(bearingTolerance, minDistance, maxSpeed, maxPassive);
-        location = new TrackLocation();
+        track = new TrackOutput(directory)
+                .setBearingTolerance(bearingTolerance)
+                .setMinDistance(minDistance)
+                .setMaxSpeed(maxSpeed)
+                .setMaxPassive(maxPassive);
     }
 
     public Tracker(TrackerType trackerType) throws FileNotFoundException, IOException
@@ -94,8 +87,11 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
             maxSpeed = ms.doubleValue();
         }
         this.directory = new File(trackerType.getDirectory());
-        filter = new Filter(bearingTolerance, minDistance, maxSpeed, maxPassive);
-        location = new TrackLocation();
+        track = new TrackOutput(directory)
+                .setBearingTolerance(bearingTolerance)
+                .setMinDistance(minDistance)
+                .setMaxSpeed(maxSpeed)
+                .setMaxPassive(maxPassive);
     }
     
     @Override
@@ -119,7 +115,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
             log.fine("location %f %f", latitude, longitude);
             try
             {
-                filter.input(calendar.getTimeInMillis(), latitude, longitude);
+                track.input(calendar.getTimeInMillis(), latitude, longitude);
             }
             catch (IOException ex)
             {
@@ -221,44 +217,10 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
     @Override
     public void close() throws Exception
     {
-        if (compressor != null)
+        if (track != null)
         {
-            compressor.close();
+            track.close();
         }
     }
 
-    private class Filter extends TrackFilter
-    {
-
-        public Filter(double bearingTolerance, double minDistance, double maxSpeed, long maxPassive)
-        {
-            super(bearingTolerance, minDistance, maxSpeed, maxPassive);
-        }
-
-        @Override
-        public void output(long time, float latitude, float longitude) throws IOException
-        {
-            location.time = time;
-            location.latitude = latitude;
-            location.longitude = longitude;
-            compressor.write();
-        }
-
-        @Override
-        public void open(long time) throws IOException
-        {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-            String dstr = sdf.format(new Date(time));
-            FileOutputStream out = new FileOutputStream(dstr+".trc");
-            compressor = new CompressedOutput<>(out, location);
-        }
-
-        @Override
-        public void close() throws IOException
-        {
-            compressor.close();
-            compressor = null;
-        }
-        
-    }
 }
