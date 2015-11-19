@@ -1374,7 +1374,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         data.setSpeedOverGround(toKnots(speed, 'K'));
     }
 
-    @Rule("latitude c ns c longitude c ew")
+    @Rule("coordinate c ns c coordinate c ew")
     protected void location(
             float latitude,
             int ns,
@@ -1386,7 +1386,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         data.setLongitude(ew * longitude);
     }
 
-    @Rule("latitude c ns c longitude c ew")
+    @Rule("coordinate c ns c coordinate c ew")
     protected void destinationWaypointLocation(
             float latitude,
             int ns,
@@ -1436,21 +1436,12 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     }
 
     @Terminal(expression = "[0-9]+\\.[0-9]+")
-    protected float latitude(float lat)
+    protected float coordinate(double lat)
     {
-        float degrees = (float) Math.floor(lat / 100);
-        float minutes = lat - 100F * degrees;
-        float latitude = degrees + minutes / 60F;
-        return latitude;
-    }
-
-    @Terminal(expression = "[0-9]+\\.[0-9]+")
-    protected float longitude(float lat)
-    {
-        float degrees = (float) Math.floor(lat / 100);
-        float minutes = lat - 100F * degrees;
-        float longitude = degrees + minutes / 60F;
-        return longitude;
+        double degrees = Math.floor(lat / 100);
+        double minutes = lat - 100.0 * degrees;
+        double latitude = degrees + minutes / 60.0;
+        return (float) latitude;
     }
 
     @Terminal(expression = "[NS]")
