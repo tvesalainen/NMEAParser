@@ -86,6 +86,11 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         {
             maxSpeed = ms.doubleValue();
         }
+        Long mp = trackerType.getMaxPassive();
+        if (mp != null)
+        {
+            maxPassive = mp.longValue();
+        }
         this.directory = new File(trackerType.getDirectory());
         track = new TrackOutput(directory)
                 .setBearingTolerance(bearingTolerance)

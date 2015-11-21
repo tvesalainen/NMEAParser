@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.vesalainen.nmea</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.vesalainen.nmea</groupId>
@@ -73,6 +73,11 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.vesalainen.gpx</groupId>
+            <artifactId>GPX11</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -27,8 +29,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.vesalainen.gpx.GPX;
+import org.vesalainen.gpx.TrackHandler;
 import org.vesalainen.nio.channels.ReadableByteChannelFactory;
 import org.vesalainen.nmea.util.TrackInput;
+import org.vesalainen.parsers.nmea.GPSClock;
 import org.vesalainen.parsers.nmea.NMEAParser;
 
 /**
@@ -37,7 +42,7 @@ import org.vesalainen.parsers.nmea.NMEAParser;
  */
 public class TrackerTest
 {
-    static final float Epsilon = 1e-10F;
+    static final float Epsilon = 1e-5F;
     public TrackerTest()
     {
     }
@@ -68,15 +73,15 @@ public class TrackerTest
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
                 sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                 assertEquals("20100515070534", sdf.format(new Date(trackInput.getTime())));
-                assertEquals(toFloat(60, 09.2031F), trackInput.getLatitude(), Epsilon);
-                assertEquals(toFloat(24, 53.6519F), trackInput.getLongitude(), Epsilon);
+                assertEquals(toFloat(6009.2031), trackInput.getLatitude(), Epsilon);
+                assertEquals(toFloat(2453.6519), trackInput.getLongitude(), Epsilon);
                 while (trackInput.read())
                 {
                     
                 }
                 assertEquals("20100515120656", sdf.format(new Date(trackInput.getTime())));
-                //assertEquals(toFloat(60, 09.2038F), trackInput.getLatitude(), Epsilon);
-                assertEquals(toFloat(24, 53.6586F), trackInput.getLongitude(), Epsilon);
+                assertEquals(toFloat(6009.2038), trackInput.getLatitude(), Epsilon);
+                assertEquals(toFloat(2453.6586), trackInput.getLongitude(), Epsilon);
             }
             catch (IOException ex)
             {
@@ -90,9 +95,89 @@ public class TrackerTest
             Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    private float toFloat(int deg, float min)
+
+    @Test
+    public void test2()
     {
-        return deg+min/60.0F;
+        try
+        {
+            File file = new File("../../MailBlog/src/test/resources/laspalmas-lasgalletas.gpx");//new File("src/test/resources/gomera-galletas.gpx");
+            GPX gpx = new GPX(file);
+            TH th = new TH();
+            gpx.browse(3, 0.1, 10, th);
+        }
+        catch (Exception ex)
+        {
+            fail(ex.getMessage());
+            Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    protected String toString(float c)
+    {
+        return String.format("%s %f", (int)c, 60F*(c-(int)c));
+    }
+    protected float toFloat(double lat)
+    {
+        double degrees = Math.floor(lat / 100);
+        double minutes = lat - 100.0 * degrees;
+        double latitude = degrees + minutes / 60.0;
+        return (float) latitude;
+    }
+
+    private class TH implements TrackHandler
+    {
+        private Tracker tracker;
+        private final GPSClock clock = new GPSClock();
+        private Calendar calendar = clock.getCalendar();
+        
+        @Override
+        public boolean startTrack(String name, Collection<Object> extensions)
+        {
+            try
+            {
+                tracker = new Tracker(".");
+                tracker.set("clock", clock);
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return true;
+        }
+
+        @Override
+        public void endTrack()
+        {
+            try
+            {
+                tracker.close();
+                tracker = null;
+            }
+            catch (Exception ex)
+            {
+                Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        @Override
+        public void startTrackSeq()
+        {
+        }
+
+        @Override
+        public void endTrackSeq()
+        {
+        }
+
+        @Override
+        public void trackPoint(double latitude, double longitude, long time)
+        {
+            calendar.setTimeInMillis(time);
+            tracker.set("latitude", (float)latitude);
+            tracker.set("longitude", (float)longitude);
+            tracker.commit("");
+        }
+        
     }
 }

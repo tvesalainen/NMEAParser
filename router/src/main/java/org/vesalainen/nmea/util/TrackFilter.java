@@ -139,19 +139,19 @@ public abstract class TrackFilter
                     {
                         open(last.time);
                         open = true;
-                        output(last.time, (float)last.latitude, (float)last.longitude);
+                        output(last.time, last.latitude, last.longitude);
                     }
                     recycle(last);
                     last = wp;
                     lastBearing = bearing;
-                    output(wp.time, (float)wp.latitude, (float)wp.longitude);
+                    output(wp.time, wp.latitude, wp.longitude);
                     active = wp.time;
                 }
                 else
                 {
                     if (open && distance < minDistance && (active + maxPassive) < wp.time)
                     {
-                        output(wp.time, (float)wp.latitude, (float)wp.longitude);
+                        output(wp.time, wp.latitude, wp.longitude);
                         close();
                         open = false;
                     }
