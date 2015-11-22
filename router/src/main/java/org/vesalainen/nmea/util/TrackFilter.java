@@ -138,7 +138,6 @@ public abstract class TrackFilter
                     if (!open)
                     {
                         open(last.time);
-                        open = true;
                         output(last.time, last.latitude, last.longitude);
                     }
                     recycle(last);
@@ -153,7 +152,6 @@ public abstract class TrackFilter
                     {
                         output(wp.time, wp.latitude, wp.longitude);
                         close();
-                        open = false;
                     }
                     recycle(wp);
                 }
@@ -194,8 +192,14 @@ public abstract class TrackFilter
     {
 
     }
-    protected abstract void open(long time) throws IOException;
-    public abstract void close() throws IOException;
+    protected void open(long time) throws IOException
+    {
+        open = true;
+    }
+    public void close() throws IOException
+    {
+        open = false;
+    }
     protected abstract void output(long time, float latitude, float longitude) throws IOException;
 
     private static double departure(WayPoint loc1, WayPoint loc2)

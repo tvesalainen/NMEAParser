@@ -101,10 +101,10 @@ public class TrackerTest
     {
         try
         {
-            File file = new File("../../MailBlog/src/test/resources/laspalmas-lasgalletas.gpx");//new File("src/test/resources/gomera-galletas.gpx");
+            File file = new File("src/test/resources/Brest - La Coruna.gpx");//new File("src/test/resources/gomera-galletas.gpx");
             GPX gpx = new GPX(file);
             TH th = new TH();
-            gpx.browse(3, 0.1, 10, th);
+            gpx.browse(0.00003, 0.00001, 10, th);
         }
         catch (Exception ex)
         {

@@ -68,6 +68,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
     @Override
     protected void open(long time) throws IOException
     {
+        super.open(time);
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String dstr = sdf.format(new Date(time));
@@ -80,6 +81,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
     @Override
     public void close() throws IOException
     {
+        super.close();
         if (compressor != null)
         {
             compressor.close();

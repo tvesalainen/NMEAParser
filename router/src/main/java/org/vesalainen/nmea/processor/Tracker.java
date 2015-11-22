@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.code.PropertySetter;
@@ -41,6 +42,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         "clock"
             };
     private GregorianCalendar calendar;
+    private int dayOfMonth;
     private double bearingTolerance = 3;
     private double minDistance = 0.1;
     private double maxSpeed = 10;
@@ -120,6 +122,19 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
             log.fine("location %f %f", latitude, longitude);
             try
             {
+                if (dayOfMonth == 0)
+                {
+                    dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+                }
+                else
+                {
+                    int dom = calendar.get(Calendar.DAY_OF_MONTH);
+                    if (dayOfMonth != dom)
+                    {
+                        track.close();
+                        dayOfMonth = dom;
+                    }
+                }
                 track.input(calendar.getTimeInMillis(), latitude, longitude);
             }
             catch (IOException ex)
