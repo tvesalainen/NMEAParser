@@ -29,6 +29,7 @@
                 <xs:choice minOccurs="0" maxOccurs="unbounded">
                     <xs:element name="variation-source" type="variation-sourceType"/>
                     <xs:element name="tracker" type="trackerType"/>
+                    <xs:element name="sntp-broadcaster" type="sntp-broadcasterType"/>
                 </xs:choice>
             </xs:extension>
         </xs:complexContent>
@@ -119,9 +120,18 @@
         <xs:attribute name="maxSpeed" type="xs:decimal"/>
         <xs:attribute name="maxPassive" type="xs:unsignedInt"/>
     </xs:complexType>
+    <xs:complexType name="sntp-broadcasterType">
+        <xs:attribute name="pollInterval" type="pollIntervalType"/>
+    </xs:complexType>
     <xs:complexType name="variation-sourceType">
         <xs:attribute name="period" type="millisType"/>
     </xs:complexType>
+    <xs:simpleType name="pollIntervalType">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="4"/>
+            <xs:maxInclusive value="17"/>
+        </xs:restriction>
+    </xs:simpleType>
     <xs:simpleType name="addressType">
         <xs:restriction base="xs:string">
         </xs:restriction>

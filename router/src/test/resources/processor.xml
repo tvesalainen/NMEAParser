@@ -3,8 +3,9 @@
     <router>
         <processor name="Proc">
             <variation-source/>
-            <tracker filePattern="nmea.trc">
+            <tracker directory=".">
             </tracker>
+            <sntp-broadcaster pollInterval="4"/>
             <route prefix="$INRMC" target="Net"/>
         </processor>
         <multicast-nmea-0183 name="Net" address="224.0.0.3">

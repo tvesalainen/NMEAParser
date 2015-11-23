@@ -35,7 +35,7 @@ public class ProcessorT
     {
         URL url = RouterConfigTest.class.getClassLoader().getResource("processor.xml");
         String filename = url.getFile();
-        CommandLine.main("-ll", "FINE", "-pl", "FINE", filename);
+        CommandLine.main("-ll", "CONFIG", "-pl", "CONFIG", filename);
     }
     
 }
