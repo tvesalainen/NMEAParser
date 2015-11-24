@@ -124,7 +124,7 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
         }
         catch (IOException ex)
         {
-            log.log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
 

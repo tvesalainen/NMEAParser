@@ -136,7 +136,7 @@ public class EndpointScriptEngine extends JavaLogging implements Runnable
         }
         catch (IOException ex)
         {
-            log(Level.SEVERE, null, ex);
+            log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
 

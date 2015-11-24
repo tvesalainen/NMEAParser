@@ -39,7 +39,7 @@ public class Version
         }
         catch (IOException ex)
         {
-            Logger.getGlobal().log(Level.SEVERE, null, ex);
+            Logger.getGlobal().log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
     public static String getVersion()

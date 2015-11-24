@@ -16,23 +16,19 @@
  */
 package org.vesalainen.nmea.processor;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.GregorianCalendar;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
+import org.apache.commons.net.ntp.NtpV3Packet;
 import static org.apache.commons.net.ntp.NtpV3Packet.*;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.net.sntp.NtpV4Impl;
 import org.vesalainen.net.sntp.ReferenceIdentifier;
-import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
+import org.vesalainen.nmea.jaxb.router.SntpServerType;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
@@ -41,39 +37,21 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class SNTPBroadcaster extends TimerTask implements PropertySetter, Transactional
+public class SNTPServer implements PropertySetter, Transactional, Runnable
 {
     private static final String[] Prefixes = new String[]{
         "clock"
             };
-    private boolean updated;
     private GregorianCalendar calendar;
-    private long period = 64000;
-    private Timer timer;
-    private JavaLogging log = new JavaLogging();
+    private final JavaLogging log = new JavaLogging();
     private Clock clock;
-    private final DatagramSocket socket;
-    private final NtpV4Impl ntpMessage;
+    private DatagramSocket socket;
+    private NtpV4Impl ntpMessage;
+    private Thread thread;
 
-    public SNTPBroadcaster(SntpBroadcasterType sntpBroadcasterType) throws SocketException, UnknownHostException
+    public SNTPServer(SntpServerType sntpServerType) throws SocketException, UnknownHostException
     {
         log.setLogger(this.getClass());
-        int pollInterval = 6;
-        Integer interval = sntpBroadcasterType.getPollInterval();
-        if (interval != null)
-        {
-            pollInterval = interval;
-        }
-        period = (long) Math.pow(2, pollInterval)*1000;
-        socket = new DatagramSocket();
-        socket.setBroadcast(true);
-        ntpMessage = new NtpV4Impl();
-        ntpMessage.setMode(MODE_BROADCAST);
-        ntpMessage.setPoll(pollInterval);
-        ntpMessage.setPrecision(-6);
-        ntpMessage.setStratum(1);
-        ntpMessage.setReferenceId(ReferenceIdentifier.GPS);
-        
     }
     
     @Override
@@ -91,11 +69,11 @@ public class SNTPBroadcaster extends TimerTask implements PropertySetter, Transa
     @Override
     public void commit(String reason)
     {
-        if (timer  == null)
+        if (thread == null && clock != null && clock.isCommitted())
         {
-            log.config("SNTPBroadcaster started period=%d", period);
-            timer = new Timer();
-            timer.scheduleAtFixedRate(this, 0, period);
+            log.config("SNTPServer started");
+            thread = new Thread(this);
+            thread.start();
         }
     }
     
@@ -104,16 +82,35 @@ public class SNTPBroadcaster extends TimerTask implements PropertySetter, Transa
     {
         try
         {
-            
-            ntpMessage.setReferenceTime(new TimeStamp(calendar.getTimeInMillis()));
-            ntpMessage.setTransmitTime(new TimeStamp(clock.getTime()));
+            socket = new DatagramSocket(NTP_PORT);
+            ntpMessage = new NtpV4Impl();
             DatagramPacket datagramPacket = ntpMessage.getDatagramPacket();
-            datagramPacket.setAddress(InetAddress.getByName("255.255.255.255"));
-            socket.send(datagramPacket);
+            
+            while (true)
+            {
+                socket.receive(datagramPacket);
+                log.info("NTP: received %s from %s %d", ntpMessage, datagramPacket.getAddress(), datagramPacket.getPort());
+                TimeStamp transmitTimeStamp = ntpMessage.getTransmitTimeStamp();
+                ntpMessage.setLeapIndicator(LI_NO_WARNING);
+                ntpMessage.setMode(MODE_SERVER);
+                ntpMessage.setStratum(1);
+                ntpMessage.setPrecision(-20);
+                ntpMessage.setRootDelay(0);
+                ntpMessage.setRootDispersion(0);
+                ntpMessage.setReferenceId(ReferenceIdentifier.GPS);
+                ntpMessage.setReferenceTime(TimeStamp.getNtpTime(calendar.getTimeInMillis()));
+                ntpMessage.setOriginateTimeStamp(transmitTimeStamp);
+                long time = clock.getTime();
+                TimeStamp timeStamp = TimeStamp.getNtpTime(time);
+                ntpMessage.setReceiveTimeStamp(timeStamp);
+                ntpMessage.setTransmitTime(timeStamp);
+                socket.send(datagramPacket);
+                log.info("NTP: sent %s to %s %d diff=%d", ntpMessage, datagramPacket.getAddress(), datagramPacket.getPort(), time-transmitTimeStamp.getTime());
+            }
         }
         catch (Exception ex)
         {
-            log.log(Level.SEVERE, ex.getMessage(), ex);
+            log.log(Level.SEVERE, ex, "");
         }
     }
 

@@ -30,6 +30,7 @@
                     <xs:element name="variation-source" type="variation-sourceType"/>
                     <xs:element name="tracker" type="trackerType"/>
                     <xs:element name="sntp-broadcaster" type="sntp-broadcasterType"/>
+                    <xs:element name="sntp-server" type="sntp-serverType"/>
                 </xs:choice>
             </xs:extension>
         </xs:complexContent>
@@ -122,6 +123,8 @@
     </xs:complexType>
     <xs:complexType name="sntp-broadcasterType">
         <xs:attribute name="pollInterval" type="pollIntervalType"/>
+    </xs:complexType>
+    <xs:complexType name="sntp-serverType">
     </xs:complexType>
     <xs:complexType name="variation-sourceType">
         <xs:attribute name="period" type="millisType"/>

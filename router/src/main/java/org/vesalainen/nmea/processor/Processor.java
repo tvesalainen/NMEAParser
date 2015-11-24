@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
+import org.vesalainen.nmea.jaxb.router.SntpServerType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.parsers.nmea.NMEAParser;
@@ -87,6 +88,13 @@ public class Processor extends JavaLogging implements Runnable, AutoCloseable
                     info("add SNTPBroadcaster");
                     SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
                     add(broadcaster);
+                }
+                if (ob instanceof SntpServerType)
+                {
+                    SntpServerType sntpServerType = (SntpServerType) ob;
+                    info("add SNTPServer");
+                    SNTPServer server = new SNTPServer(sntpServerType);
+                    add(server);
                 }
             }
             NMEAParser parser = NMEAParser.newInstance();

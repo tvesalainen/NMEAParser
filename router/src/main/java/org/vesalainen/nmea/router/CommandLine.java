@@ -63,7 +63,7 @@ public class CommandLine extends CmdArgs<Router>
         catch (CmdArgsException ex)
         {
             Logger logger = Logger.getLogger(Router.class.getName());
-            logger.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, ex.getMessage(), ex);
             logger.log(Level.SEVERE, ex.usage());
             System.exit(-1);
         }
