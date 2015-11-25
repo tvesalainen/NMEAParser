@@ -16,43 +16,61 @@
  */
 package org.vesalainen.nmea.processor;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
-import org.apache.commons.net.ntp.NtpV3Packet;
-import static org.apache.commons.net.ntp.NtpV3Packet.*;
-import org.apache.commons.net.ntp.TimeStamp;
 import org.vesalainen.code.PropertySetter;
-import org.vesalainen.net.sntp.NtpV4Impl;
-import org.vesalainen.net.sntp.ReferenceIdentifier;
-import org.vesalainen.nmea.jaxb.router.SntpServerType;
+import org.vesalainen.nmea.jaxb.router.TimeSetterType;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
- *
+ * A class for setting system time using configurable command
  * @author tkv
  */
-public class SNTPServer implements PropertySetter, Transactional, Runnable
+public class TimeSetter extends TimerTask implements PropertySetter, Transactional
 {
     private static final String[] Prefixes = new String[]{
         "clock"
             };
     private GregorianCalendar calendar;
-    private final JavaLogging log = new JavaLogging();
+    private long period = 4000;
+    private Timer timer;
+    private JavaLogging log = new JavaLogging();
     private Clock clock;
-    private DatagramSocket socket;
-    private NtpV4Impl ntpMessage;
-    private Thread thread;
+    private SimpleDateFormat format;
+    private long maxDelta = 1000;   // max time difference
 
-    public SNTPServer(SntpServerType sntpServerType) throws SocketException, UnknownHostException
+    public TimeSetter(TimeSetterType timeSetterType) throws IOException
     {
         log.setLogger(this.getClass());
+        String cmd = timeSetterType.getCmd();
+        if (cmd == null)
+        {
+            throw new IOException("cmd attribute not set");
+        }
+        format = new SimpleDateFormat(cmd);
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        log.info("time setting command = %s", cmd);
+        int pollInterval = 6;
+        Integer interval = timeSetterType.getPollInterval();
+        if (interval != null)
+        {
+            pollInterval = interval;
+        }
+        period = (long) Math.pow(2, pollInterval)*1000;
+        Long md = timeSetterType.getMaxDelta();
+        if (md != null)
+        {
+            maxDelta = md;
+        }
     }
     
     @Override
@@ -70,11 +88,11 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
     @Override
     public void commit(String reason)
     {
-        if (thread == null && clock != null && clock.isCommitted())
+        if (timer == null)
         {
-            log.config("SNTPServer started");
-            thread = new Thread(this);
-            thread.start();
+            log.config("TimeSetter started period=%d", period);
+            timer = new Timer();
+            timer.scheduleAtFixedRate(this, 0, period);
         }
     }
     
@@ -83,38 +101,41 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
     {
         try
         {
-            socket = new DatagramSocket(NTP_PORT    );
-            ntpMessage = new NtpV4Impl();
-            DatagramPacket datagramPacket = ntpMessage.getDatagramPacket();
-            
-            while (true)
+            long delta = Math.abs(clock.getOffset());
+            if (delta > maxDelta)
             {
-                socket.receive(datagramPacket);
-                log.info("NTP: received %s from %s %d", ntpMessage, datagramPacket.getAddress(), datagramPacket.getPort());
-                TimeStamp transmitTimeStamp = ntpMessage.getTransmitTimeStamp();
-                ntpMessage.setLeapIndicator(LI_NO_WARNING);
-                ntpMessage.setMode(MODE_SERVER);
-                ntpMessage.setStratum(1);
-                ntpMessage.setPrecision(-20);
-                ntpMessage.setRootDelay(0);
-                ntpMessage.setRootDispersion(0);
-                ntpMessage.setReferenceId(ReferenceIdentifier.GPS);
-                ntpMessage.setReferenceTime(TimeStamp.getNtpTime(calendar.getTimeInMillis()));
-                ntpMessage.setOriginateTimeStamp(transmitTimeStamp);
-                long time = clock.getTime();
-                TimeStamp timeStamp = TimeStamp.getNtpTime(time);
-                ntpMessage.setReceiveTimeStamp(timeStamp);
-                ntpMessage.setTransmitTime(timeStamp);
-                socket.send(datagramPacket);
-                log.info("NTP: sent %s to %s %d diff=%d", ntpMessage, datagramPacket.getAddress(), datagramPacket.getPort(), time-transmitTimeStamp.getTime());
+                String cmd = format.format(new Date(clock.getTime()));
+                log.info("cmd=%s", cmd);
+                Process proc = Runtime.getRuntime().exec(cmd);
+                int exitValue = proc.waitFor();
+                if (exitValue != 0)
+                {
+                    String err = getString(proc.getErrorStream());
+                    log.warning("cmd %s returned %d\n%s", cmd, exitValue, err);
+                }
+            }
+            else
+            {
+                log.info("Time not updated. Delta = %dms", delta);
             }
         }
         catch (Exception ex)
         {
-            log.log(Level.SEVERE, ex, "");
+            log.log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
 
+    private String getString(InputStream is) throws IOException
+    {
+        StringBuilder sb = new StringBuilder();
+        int cc = is.read();
+        while (cc != -1)
+        {
+            sb.append((char)cc);
+            cc = is.read();
+        }
+        return sb.toString();
+    }
     @Override
     public void set(String property, boolean arg)
     {

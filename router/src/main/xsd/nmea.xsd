@@ -30,7 +30,9 @@
                     <xs:element name="variation-source" type="variation-sourceType"/>
                     <xs:element name="tracker" type="trackerType"/>
                     <xs:element name="sntp-broadcaster" type="sntp-broadcasterType"/>
+                    <xs:element name="sntp-multicaster" type="sntp-multicasterType"/>
                     <xs:element name="sntp-server" type="sntp-serverType"/>
+                    <xs:element name="time-setter" type="timeSetterType"/>
                 </xs:choice>
             </xs:extension>
         </xs:complexContent>
@@ -121,7 +123,15 @@
         <xs:attribute name="maxSpeed" type="xs:decimal"/>
         <xs:attribute name="maxPassive" type="xs:unsignedInt"/>
     </xs:complexType>
+    <xs:complexType name="timeSetterType">
+        <xs:attribute name="cmd" type="xs:string" use="required"/>
+        <xs:attribute name="pollInterval" type="pollIntervalType"/>
+        <xs:attribute name="maxDelta" type="millisType"/>
+    </xs:complexType>
     <xs:complexType name="sntp-broadcasterType">
+        <xs:attribute name="pollInterval" type="pollIntervalType"/>
+    </xs:complexType>
+    <xs:complexType name="sntp-multicasterType">
         <xs:attribute name="pollInterval" type="pollIntervalType"/>
     </xs:complexType>
     <xs:complexType name="sntp-serverType">

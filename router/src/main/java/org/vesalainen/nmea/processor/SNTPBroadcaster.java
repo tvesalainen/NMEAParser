@@ -16,11 +16,9 @@
  */
 package org.vesalainen.nmea.processor;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.GregorianCalendar;
@@ -38,7 +36,7 @@ import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
- *
+ * Experimental
  * @author tkv
  */
 public class SNTPBroadcaster extends TimerTask implements PropertySetter, Transactional

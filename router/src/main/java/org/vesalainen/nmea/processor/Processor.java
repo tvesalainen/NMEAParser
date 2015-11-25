@@ -25,7 +25,9 @@ import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
+import org.vesalainen.nmea.jaxb.router.SntpMulticasterType;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
+import org.vesalainen.nmea.jaxb.router.TimeSetterType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.parsers.nmea.NMEAParser;
@@ -88,6 +90,20 @@ public class Processor extends JavaLogging implements Runnable, AutoCloseable
                     info("add SNTPBroadcaster");
                     SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
                     add(broadcaster);
+                }
+                if (ob instanceof SntpMulticasterType)
+                {
+                    SntpMulticasterType sntpMulticasterType = (SntpMulticasterType) ob;
+                    info("add SNTPMulticaster");
+                    SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
+                    add(multicaster);
+                }
+                if (ob instanceof TimeSetterType)
+                {
+                    TimeSetterType timeSetterType = (TimeSetterType) ob;
+                    info("add TimeSetterType");
+                    TimeSetter timeSetter = new TimeSetter(timeSetterType);
+                    add(timeSetter);
                 }
                 if (ob instanceof SntpServerType)
                 {
