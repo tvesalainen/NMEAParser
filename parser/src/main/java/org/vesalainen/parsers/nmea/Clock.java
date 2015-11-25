@@ -36,6 +36,11 @@ public interface Clock
      */
     long getTime();
     /**
+     * Returns NMEA time - system time
+     * @return 
+     */
+    long getOffset();
+    /**
      * Set utc time
      * @param hour 0 - 23
      * @param minute 0 - 59

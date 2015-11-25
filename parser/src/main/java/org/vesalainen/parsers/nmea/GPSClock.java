@@ -45,6 +45,12 @@ public class GPSClock implements Clock
     }
 
     @Override
+    public long getOffset()
+    {
+        return offset;
+    }
+
+    @Override
     public void setTime(int hour, int minute, float second)
     {
         wc.set(Calendar.HOUR_OF_DAY, hour);
