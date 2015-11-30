@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.vesalainen</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.8</version>
+        <version>1.0.9</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.vesalainen.nmea</groupId>
@@ -13,6 +13,7 @@
     <modules>
         <module>parser</module>
         <module>router</module>
+        <module>IcomManager</module>
     </modules>
     <name>NMEA Utilities</name>
     <description>

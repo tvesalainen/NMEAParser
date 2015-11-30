@@ -5,3 +5,4 @@ dist/
 *.jasm
 doc-files/
 /target/
+/IcomManager/target/
