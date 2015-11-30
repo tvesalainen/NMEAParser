@@ -57,7 +57,7 @@ import org.vesalainen.parsers.nmea.ais.AISObserver;
     @Rule(left = "statements", value = "statement*"),
     @Rule(left = "statement", value = "nmeaStatement"),
     @Rule(left = "nmeaStatement", value = "'\\$' talkerId nmeaSentence '[\\,]*\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType c proprietaryData '\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType c proprietaryData '[\\,]*\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "aivdm aisPrefix ('[0-W`-w]+' c ('[0-5]')?)? '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "aivdo aisPrefix ('[0-W`-w]+' c ('[0-5]')?)? '\\*' checksum '\r\n'"),
     @Rule(left = "nmeaSentence", value = "aam c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),

@@ -16,10 +16,8 @@
  */
 package org.vesalainen.parsers.nmea;
 
-import d3.env.TSAGeoMag;
 import java.io.IOException;
 import java.util.zip.CheckedOutputStream;
-import java.util.GregorianCalendar;
 import java.util.Locale;
 import static org.vesalainen.parsers.nmea.Converter.Celcius;
 import static org.vesalainen.parsers.nmea.Converter.Fath;
@@ -121,22 +119,26 @@ public class NMEAGen
         put(out, "\r\n");
     }
 
-    private static void putChecksum(CheckedOutputStream out) throws IOException
+    protected static void putChecksum(CheckedOutputStream out) throws IOException
     {
         put(out, '*');
         long cs = out.getChecksum().getValue();
         put(out, Character.forDigit((int) (cs>>4), 16));
         put(out, Character.forDigit((int) (cs&0xf), 16));
     }
-    private static void put(CheckedOutputStream out, double d) throws IOException
+    protected static void put(CheckedOutputStream out, double d) throws IOException
     {
         put(out, String.format(Locale.US, "%.1f", d));
     }
-    private static void put(CheckedOutputStream out, String s) throws IOException
+    protected static void put(CheckedOutputStream out, int i) throws IOException
+    {
+        put(out, String.format(Locale.US, "%d", i));
+    }
+    protected static void put(CheckedOutputStream out, String s) throws IOException
     {
         out.write(s.getBytes("NMEA"));
     }
-    private static void put(CheckedOutputStream out, char c) throws IOException
+    protected static void put(CheckedOutputStream out, char c) throws IOException
     {
         out.write((byte)c);
     }

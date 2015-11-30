@@ -1075,6 +1075,33 @@ public class NMEAParserTest
     }
 
     @Test
+    public void picoa()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$PICOA,08,90,TXF,*1F\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals("ICOA", ss.getProperty("proprietaryType"));
+                assertEquals(nch.getList(1, 3), ss.getProperty("proprietaryData"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void rot()
     {
         try
