@@ -119,7 +119,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         if (positionUpdated)
         {
             positionUpdated = false;
-            log.fine("location %f %f", latitude, longitude);
+            log.finest("location %f %f", latitude, longitude);
             try
             {
                 if (dayOfMonth == 0)
