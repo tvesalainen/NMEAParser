@@ -136,6 +136,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
                     }
                 }
                 track.input(calendar.getTimeInMillis(), latitude, longitude);
+                log.finest("input %d %f %f", calendar.getTimeInMillis(), latitude, longitude);
             }
             catch (IOException ex)
             {

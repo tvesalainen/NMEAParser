@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import org.vesalainen.io.CompressedOutput;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -35,6 +36,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
     private final File directory;
     private String format;
     private CompressedOutput<TrackPoint> compressor;
+    private final JavaLogging log = new JavaLogging();
     /**
      * Creates a TrackOutput for writing compressed track file. Filename is 
      * comprised of track starting date
@@ -54,6 +56,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
     {
         this.directory = directory;
         this.format = format;
+        log.setLogger(this.getClass());
     }
 
     @Override
@@ -63,6 +66,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
         trackPoint.latitude = latitude;
         trackPoint.longitude = longitude;
         compressor.write();
+        log.finer("input %d %f %f", time, latitude, longitude);
     }
 
     @Override
@@ -73,6 +77,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String dstr = sdf.format(new Date(time));
         File file = new File(directory, dstr);
+        log.fine("open %s", file);
         FileOutputStream out = new FileOutputStream(file);
         BufferedOutputStream bos = new BufferedOutputStream(out);
         compressor = new CompressedOutput<>(bos, trackPoint);
@@ -87,6 +92,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
             compressor.close();
             compressor = null;
         }
+        log.fine("close tracker file");
     }
 
     @Override
