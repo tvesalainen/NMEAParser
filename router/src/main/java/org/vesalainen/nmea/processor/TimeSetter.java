@@ -104,8 +104,9 @@ public class TimeSetter extends TimerTask implements PropertySetter, Transaction
             long delta = Math.abs(clock.getOffset());
             if (delta > maxDelta)
             {
-                String cmd = format.format(new Date(clock.getTime()));
-                log.info("cmd=%s", cmd);
+                Date time = calendar.getTime();
+                String cmd = format.format(time);
+                log.info("cmd=%s %s", cmd, time);
                 Process proc = Runtime.getRuntime().exec(cmd);
                 int exitValue = proc.waitFor();
                 if (exitValue != 0)
