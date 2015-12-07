@@ -110,7 +110,7 @@ public class CommandLine extends CmdArgs<Router>
         {
             Router router = new Router(config, log, cmdArgs);
             cmdArgs.attach(router);
-            router.run();
+            router.loop();
         }
         catch (RestartException ex)
         {

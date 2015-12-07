@@ -91,7 +91,7 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class Router extends JavaLogging
+public class Router extends JavaLogging implements Runnable
 {
     private static final String ConfigDigestKey = "config.digest";
     private static final String whiteSpace = "[ \r\n\t]+";
@@ -137,7 +137,7 @@ public class Router extends JavaLogging
         this.ResolvTimeout = ResolvTimeout;
     }
     
-    void run() throws Throwable
+    void loop() throws Throwable
     {
         info(Version.getVersion());
         
@@ -146,6 +146,7 @@ public class Router extends JavaLogging
             autoCloseables = ac;
             initialize();
             startSocketServer();
+            Runtime.getRuntime().addShutdownHook(new Thread(this));
             while (true)
             {
                 int count = selector.select(ResolvTimeout);
@@ -450,6 +451,20 @@ public class Router extends JavaLogging
             return new SerialEndpoint((SerialType) endpointType);
         }
         throw new IllegalArgumentException(endpointType+" unknown");
+    }
+
+    @Override
+    public void run()
+    {
+        try
+        {
+            severe("shutdown");
+            autoCloseables.close();
+        }
+        catch (IOException ex)
+        {
+            Logger.getLogger(Router.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public class ProcessorEndpoint extends Endpoint<SourceChannel>
