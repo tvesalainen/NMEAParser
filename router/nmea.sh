@@ -17,6 +17,7 @@
 #
 VERSION=1.0.5
 JAR=/home/pi/router-$VERSION-jar-with-dependencies.jar
+OPTS="-lp /var/log/nmea%g.log"
 CONFIG=/home/pi/router2.xml
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
@@ -24,7 +25,7 @@ DESC="NMEA Router"
 NAME=java
 PNAME="NMEA Router"
 DAEMON=/usr/bin/$NAME
-DAEMON_ARGS="-jar $JAR $CONFIG"
+DAEMON_ARGS="-jar $JAR $OPTS $CONFIG"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
