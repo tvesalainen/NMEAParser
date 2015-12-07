@@ -1,11 +1,11 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          nmea router
+# Provides:          nmea-router
 # Required-Start:    
 # Required-Stop:     
-# Default-Start:     2
-# Default-Stop:      0
-# Short-Description: initscript of NMEA Router
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: NMEA Router initscript
 # Description:       Starts NMEA Router
 #                    
 ### END INIT INFO
@@ -14,13 +14,15 @@
 #
 # Do NOT "set -e"
 
+#
 VERSION=1.0.5
 JAR=/home/pi/router-$VERSION-jar-with-dependencies.jar
 CONFIG=/home/pi/router2.xml
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
-PATH=/usr/sbin:/usr/bin
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="NMEA Router"
 NAME=java
+PNAME="NMEA Router"
 DAEMON=/usr/bin/$NAME
 DAEMON_ARGS="-jar $JAR $CONFIG"
 PIDFILE=/var/run/$NAME.pid
@@ -116,7 +118,7 @@ case "$1" in
 	esac
 	;;
   status)
-	status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+	status_of_proc "$DAEMON" "$PNAME" && exit 0 || exit $?
 	;;
   #reload|force-reload)
 	#
