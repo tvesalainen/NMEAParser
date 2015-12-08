@@ -39,7 +39,6 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
 
     private String format;
     private CompressedOutput<TrackPoint> compressor;
-    private final JavaLogging log = new JavaLogging();
     private File file;
     /**
      * Creates a TrackOutput for writing compressed track file. Filename is 
@@ -60,7 +59,6 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
     {
         this.directory = directory;
         this.format = format;
-        log.setLogger(this.getClass());
     }
 
     @Override
