@@ -122,6 +122,7 @@
         <xs:attribute name="minDistance" type="xs:decimal"/>
         <xs:attribute name="maxSpeed" type="xs:decimal"/>
         <xs:attribute name="maxPassive" type="xs:unsignedInt"/>
+        <xs:attribute name="buffered" type="xs:boolean"/>
     </xs:complexType>
     <xs:complexType name="timeSetterType">
         <xs:attribute name="cmd" type="xs:string" use="required"/>

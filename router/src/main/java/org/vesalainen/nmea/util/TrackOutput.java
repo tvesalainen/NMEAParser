@@ -20,6 +20,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -34,6 +35,8 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
 {
     private final TrackPoint trackPoint = new TrackPoint();
     private final File directory;
+    private boolean buffered;
+
     private String format;
     private CompressedOutput<TrackPoint> compressor;
     private final JavaLogging log = new JavaLogging();
@@ -78,9 +81,12 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
         String dstr = sdf.format(new Date(time));
         File file = new File(directory, dstr);
         log.fine("open %s", file);
-        FileOutputStream out = new FileOutputStream(file);
-        BufferedOutputStream bos = new BufferedOutputStream(out);
-        compressor = new CompressedOutput<>(bos, trackPoint);
+        OutputStream out = new FileOutputStream(file);
+        if (buffered)
+        {
+            out = new BufferedOutputStream(out);
+        }
+        compressor = new CompressedOutput<>(out, trackPoint);
     }
 
     @Override
@@ -95,6 +101,12 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
         log.fine("close tracker file");
     }
 
+    public TrackOutput setBuffered(boolean buffered)
+    {
+        this.buffered = buffered;
+        return this;
+    }
+    
     @Override
     public TrackOutput setMaxPassive(long maxPassive)
     {

@@ -47,6 +47,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
     private double minDistance = 0.1;
     private double maxSpeed = 10;
     private long maxPassive = TimeUnit.MINUTES.toMillis(15);
+    private boolean buffered;
     private File directory;
     private float longitude;
     private float latitude;
@@ -67,7 +68,8 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
                 .setBearingTolerance(bearingTolerance)
                 .setMinDistance(minDistance)
                 .setMaxSpeed(maxSpeed)
-                .setMaxPassive(maxPassive);
+                .setMaxPassive(maxPassive)
+                .setBuffered(buffered);
     }
 
     public Tracker(TrackerType trackerType) throws FileNotFoundException, IOException
@@ -93,12 +95,18 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         {
             maxPassive = mp.longValue();
         }
+        Boolean isBuffered = trackerType.isBuffered();
+        if (isBuffered != null)
+        {
+            buffered = isBuffered;
+        }
         this.directory = new File(trackerType.getDirectory());
         track = new TrackOutput(directory)
                 .setBearingTolerance(bearingTolerance)
                 .setMinDistance(minDistance)
                 .setMaxSpeed(maxSpeed)
-                .setMaxPassive(maxPassive);
+                .setMaxPassive(maxPassive)
+                .setBuffered(buffered);
     }
     
     @Override
