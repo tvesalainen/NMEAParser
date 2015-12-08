@@ -40,6 +40,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
     private String format;
     private CompressedOutput<TrackPoint> compressor;
     private final JavaLogging log = new JavaLogging();
+    private File file;
     /**
      * Creates a TrackOutput for writing compressed track file. Filename is 
      * comprised of track starting date
@@ -79,7 +80,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String dstr = sdf.format(new Date(time));
-        File file = new File(directory, dstr);
+        file = new File(directory, dstr);
         log.fine("open %s", file);
         OutputStream out = new FileOutputStream(file);
         if (buffered)
@@ -96,6 +97,10 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
         if (compressor != null)
         {
             compressor.close();
+            if (!compressor.hasData())
+            {
+                file.delete();
+            }
             compressor = null;
         }
         log.fine("close tracker file");
