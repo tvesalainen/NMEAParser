@@ -21,6 +21,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.logging.Level;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -38,6 +40,12 @@ public abstract class TrackFilter
     private final Deque<WayPoint> pool = new ArrayDeque<>();
     private boolean open;
     private long active;
+    protected final JavaLogging log = new JavaLogging();
+
+    public TrackFilter()
+    {
+        log.setLogger(this.getClass());
+    }
 
     public TrackFilter setBearingTolerance(double bearingTolerance)
     {
@@ -84,6 +92,7 @@ public abstract class TrackFilter
                 }
                 else
                 {
+                    log.finest("%s skipped because of speed", buffer.get(0));
                     buffer.add(wp);
                 }
                 break;
@@ -97,6 +106,7 @@ public abstract class TrackFilter
                 }
                 else
                 {
+                    log.finest("%s skipped because of speed", buffer.get(0));
                     if (speed(buffer.get(1), wp) <= maxSpeed)
                     {
                         doInput(buffer.get(1));
@@ -106,6 +116,7 @@ public abstract class TrackFilter
                     }
                     else
                     {
+                        log.finest("%s skipped because of speed", buffer.get(1));
                         recycle(wp);
                         recycle(buffer);
                     }
@@ -148,6 +159,17 @@ public abstract class TrackFilter
                 }
                 else
                 {
+                    if (log.isLoggable(Level.FINEST))
+                    {
+                        if (Math.abs(bearing-lastBearing) <= bearingTolerance)
+                        {
+                            log.finest("%s skipped because of bearing", wp);
+                        }
+                        if (distance <= minDistance)
+                        {
+                            log.finest("%s skipped because of distance", wp);
+                        }
+                    }
                     if (open && distance < minDistance && (active + maxPassive) < wp.time)
                     {
                         output(wp.time, wp.latitude, wp.longitude);
@@ -252,6 +274,12 @@ public abstract class TrackFilter
         private long time;
         private float latitude;
         private float longitude;
+
+        @Override
+        public String toString()
+        {
+            return "WayPoint{" + "time=" + time + ", latitude=" + latitude + ", longitude=" + longitude + '}';
+        }
         
     }
 }
