@@ -19,7 +19,6 @@ package org.vesalainen.parsers.nmea;
 
 import org.vesalainen.util.Transactional;
 import java.util.List;
-import org.vesalainen.parser.util.InputReader;
 
 /**
  * NMEAObserver is observer class for NMEA data. NMEAParser calls methods of this 
@@ -27,8 +26,8 @@ import org.vesalainen.parser.util.InputReader;
  * 
  * <p>User of NMEAParser is probably only interested in a small subset of the data.
  * For this reason creation of Strings is avoided because of performance and GC
- * overhead. Use InputReader getString(fieldRef) to create strings. Use fieldRefs
- * before commit.
+ * overhead. CharSequence arguments should not be stored. There are mostly valid
+ * only during the observer method call. Use toString method to convert to string.
  * 
  * <p>It is mostly easier to derive your class from AbstractNMEAObserver class.
  * AbstractNMEAObserver has empty methods for all NMEAObserver methods.
@@ -87,12 +86,12 @@ public interface NMEAObserver extends Transactional
      * BOD, BWW, RMB, WNC
      * @param toWaypoint 
      */
-    void setToWaypoint(String toWaypoint);
+    void setToWaypoint(CharSequence toWaypoint);
     /**
      * BOD, BWW, RMB, WNC
      * @param fromWaypoint 
      */
-    void setFromWaypoint(String fromWaypoint);
+    void setFromWaypoint(CharSequence fromWaypoint);
     /**
      * RMB, WPL
      * @param latitude 
@@ -187,7 +186,7 @@ public interface NMEAObserver extends Transactional
      * AAM, APA, APB, BWC, BWR, R00, WCV, WPL
      * @param waypoint 
      */
-    void setWaypoint(String waypoint);
+    void setWaypoint(CharSequence waypoint);
     /**
      * ALM, RTE
      * @param totalNumberOfMessages 
@@ -312,7 +311,7 @@ public interface NMEAObserver extends Transactional
      * R00, RTE
      * @param list 
      */
-    void setWaypoints(List<String> list);
+    void setWaypoints(List<CharSequence> list);
     /**
      * BWC, BWR WNC
      * @param nm
@@ -465,23 +464,23 @@ public interface NMEAObserver extends Transactional
      * TXT
      * @param name Target name
      */
-    void setTargetName(String name);
+    void setTargetName(CharSequence name);
     /**
      * TXT
      * @param message 
      */
-    void setMessage(String message);
+    void setMessage(CharSequence message);
     /**
      * Proprietary sentences start with $P. Proprietary type is the string
      * following that prefix. E.g. $PGRMI,... GRMI is the type.
      * @param type
      */
-    void setProprietaryType(String type);
+    void setProprietaryType(CharSequence type);
     /**
      * Proprietary data. Comma separated proprietary data fields.
      * @param data
      */
-    void setProprietaryData(List<String> data);
+    void setProprietaryData(List<CharSequence> data);
     /**
      * GSA
      * Selection mode: M=Manual, forced to operate in 2D or 3D, A=Automatic, 3D/2D
@@ -561,7 +560,7 @@ public interface NMEAObserver extends Transactional
      * Route id
      * @param route 
      */
-    public void setRoute(String route);
+    public void setRoute(CharSequence route);
 
     public void setTargetNumber(int target);
 
@@ -574,7 +573,7 @@ public interface NMEAObserver extends Transactional
      */
     public void setTargetStatus(char status);
 
-    public void setReferenceTarget(String referenceTarget);
+    public void setReferenceTarget(CharSequence referenceTarget);
 
     public void setMessageType(MessageType messageType);
     /**
