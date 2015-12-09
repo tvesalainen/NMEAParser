@@ -450,9 +450,11 @@ public interface NMEAObserver extends Transactional
      */
     void setWaterSpeed(float knots);
     /**
+     * @deprecated This method will no longer be called. Use setRelativeWindAngle.
      * VWR
      * Relative wind angle - = left + = right
      * @param windDirection Wind direction magnitude in degrees
+     * @see org.vesalainen.parsers.nmea.NMEAObserver#setRelativeWindAngle(float) 
      */
     void setWindDirection(float windDirection);
     /**

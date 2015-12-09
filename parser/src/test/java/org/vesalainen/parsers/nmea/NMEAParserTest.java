@@ -833,6 +833,44 @@ public class NMEAParserTest
     }
 
     @Test
+    public void vwr()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$IIVWR,133,L,09.2,N,,,,*75\r\n",
+                "$IIVWR,133,R,09.2,N,,,,*6B\r\n",
+                "$IIVWR,141,L,07.8,N,,,,*74\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.VWR, ss.getProperty("messageType"));
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals(TalkerId.II, ss.getProperty("talkerId"));
+                if ('L' == nch.getChar(2))
+                {
+                    assertEquals(nch.getFloat(1)+180, ss.getFloat("relativeWindAngle"), Epsilon);
+                }
+                else
+                {
+                    assertEquals(nch.getFloat(1), ss.getFloat("relativeWindAngle"), Epsilon);
+                }
+                assertEquals(Knots.toMetersPerSecond(nch.getFloat(3)), ss.getFloat("windSpeed"), Epsilon);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void r00()
     {
         try

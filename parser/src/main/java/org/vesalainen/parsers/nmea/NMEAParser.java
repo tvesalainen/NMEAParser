@@ -468,7 +468,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     }
     @Rule("stringList")
     protected void proprietaryData(
-            List<String> pdata,
+            List<CharSequence> pdata,
             @ParserContext("data") NMEAObserver data)
     {
         data.setProprietaryData(pdata);
@@ -596,7 +596,15 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWindDirection(leftOrRight(windDirection, unit));
+        float wd = leftOrRight(windDirection, unit);
+        if (wd >= 0)
+        {
+            data.setRelativeWindAngle(wd);
+        }
+        else
+        {
+            data.setRelativeWindAngle(-wd+180);
+        }
     }
 
     @Rule("decimal c letter")
@@ -776,7 +784,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
 
     @Rule("stringList")
     protected void waypoints(
-            List<String> list,
+            List<CharSequence> list,
             @ParserContext("data") NMEAObserver data)
     {
         data.setWaypoints(list);

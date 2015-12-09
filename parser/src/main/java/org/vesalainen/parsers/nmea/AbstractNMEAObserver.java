@@ -236,7 +236,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaypoint(String waypoint)
+    public void setWaypoint(CharSequence waypoint)
     {
         
     }
@@ -350,7 +350,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWaypoints(List<String> list)
+    public void setWaypoints(List<CharSequence> list)
     {
         
     }
@@ -458,32 +458,32 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setTargetName(String name)
+    public void setTargetName(CharSequence name)
     {
     }
 
     @Override
-    public void setMessage(String message)
+    public void setMessage(CharSequence message)
     {
     }
 
     @Override
-    public void setProprietaryType(String type)
+    public void setProprietaryType(CharSequence type)
     {
     }
 
     @Override
-    public void setProprietaryData(List<String> data)
+    public void setProprietaryData(List<CharSequence> data)
     {
     }
 
     @Override
-    public void setToWaypoint(String toWaypoint)
+    public void setToWaypoint(CharSequence toWaypoint)
     {
     }
 
     @Override
-    public void setFromWaypoint(String fromWaypoint)
+    public void setFromWaypoint(CharSequence fromWaypoint)
     {
     }
 
@@ -703,7 +703,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setRoute(String route)
+    public void setRoute(CharSequence route)
     {
     }
 
@@ -718,7 +718,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setReferenceTarget(String referenceTarget)
+    public void setReferenceTarget(CharSequence referenceTarget)
     {
     }
 
