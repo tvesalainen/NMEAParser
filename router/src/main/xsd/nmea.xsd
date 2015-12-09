@@ -28,6 +28,7 @@
             <xs:extension base="endpointType">
                 <xs:choice minOccurs="0" maxOccurs="unbounded">
                     <xs:element name="variation-source" type="variation-sourceType"/>
+                    <xs:element name="true-wind-source" type="true-wind-sourceType"/>
                     <xs:element name="tracker" type="trackerType"/>
                     <xs:element name="sntp-broadcaster" type="sntp-broadcasterType"/>
                     <xs:element name="sntp-multicaster" type="sntp-multicasterType"/>
@@ -139,6 +140,8 @@
     </xs:complexType>
     <xs:complexType name="variation-sourceType">
         <xs:attribute name="period" type="millisType"/>
+    </xs:complexType>
+    <xs:complexType name="true-wind-sourceType">
     </xs:complexType>
     <xs:simpleType name="pollIntervalType">
         <xs:restriction base="xs:integer">

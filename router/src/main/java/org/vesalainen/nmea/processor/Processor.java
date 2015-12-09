@@ -29,6 +29,7 @@ import org.vesalainen.nmea.jaxb.router.SntpMulticasterType;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
 import org.vesalainen.nmea.jaxb.router.TimeSetterType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
+import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.util.logging.JavaLogging;
@@ -68,13 +69,20 @@ public class Processor extends JavaLogging implements Runnable, AutoCloseable
     {
         try
         {
-            for (Object ob : processorType.getVariationSourceOrTrackerOrSntpBroadcaster())
+            for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
             {
                 if (ob instanceof VariationSourceType)
                 {
                     VariationSourceType vst = (VariationSourceType) ob;
                     info("add VariationSource");
                     VariationSource vs = new VariationSource(out, vst);
+                    add(vs);
+                }
+                if (ob instanceof TrueWindSourceType)
+                {
+                    TrueWindSourceType vst = (TrueWindSourceType) ob;
+                    info("add TrueWindSource");
+                    TrueWindSource vs = new TrueWindSource(out, vst);
                     add(vs);
                 }
                 if (ob instanceof TrackerType)

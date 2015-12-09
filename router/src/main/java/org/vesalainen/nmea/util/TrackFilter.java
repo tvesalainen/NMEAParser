@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.logging.Level;
+import static org.vesalainen.nmea.util.Navis.*;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -35,9 +36,9 @@ public abstract class TrackFilter
     private double maxSpeed;
     private long maxPassive;
     private double lastBearing = Double.NaN;
-    private WayPoint last;
-    private final List<WayPoint> buffer = new ArrayList<>();
-    private final Deque<WayPoint> pool = new ArrayDeque<>();
+    private WP last;
+    private final List<WP> buffer = new ArrayList<>();
+    private final Deque<WP> pool = new ArrayDeque<>();
     private boolean open;
     private long active;
     protected final JavaLogging log = new JavaLogging();
@@ -77,7 +78,7 @@ public abstract class TrackFilter
 
     public void input(long time, float latitude, float longitude) throws IOException
     {
-        WayPoint wp = create(time, latitude, longitude);
+        WP wp = create(time, latitude, longitude);
         switch (buffer.size())
         {
             case 0:
@@ -124,7 +125,7 @@ public abstract class TrackFilter
                 break;
         }
     }
-    private void doInput(WayPoint wp) throws IOException
+    private void doInput(WP wp) throws IOException
     {
         if (last == null)
         {
@@ -181,30 +182,27 @@ public abstract class TrackFilter
         }
     }
 
-    private WayPoint create(long time, float latitude, float longitude)
+    private WP create(long time, float latitude, float longitude)
     {
-        WayPoint wp;
+        WP wp;
         if (pool.isEmpty())
         {
-            wp = new WayPoint();
+            wp = new WP(time, latitude, longitude);
         }
         else
         {
             wp = pool.pop();
         }
-        wp.time = time;
-        wp.latitude = latitude;
-        wp.longitude = longitude;
         return wp;
     }
-    private void recycle(WayPoint wp)
+    private void recycle(WP wp)
     {
         assert(!pool.contains(wp));
         pool.add(wp);
     }
-    private void recycle(List<WayPoint> buf)
+    private void recycle(List<WP> buf)
     {
-        for (WayPoint wp : buf)
+        for (WP wp : buf)
         {
             recycle(wp);
         }
@@ -224,56 +222,36 @@ public abstract class TrackFilter
     }
     protected abstract void output(long time, float latitude, float longitude) throws IOException;
 
-    private static double departure(WayPoint loc1, WayPoint loc2)
+    private class WP implements WayPoint
     {
-        return Math.cos(Math.toRadians((loc2.latitude+loc1.latitude)/2));
-    }
-    /**
-     * Return bearing from wp1 to wp2 in degrees
-     * @param wp1
-     * @param wp2
-     * @return 
-     */
-    private static double bearing(WayPoint wp1, WayPoint wp2)
-    {
-        double dep = departure(wp1, wp2);
-        double aa = dep*(wp2.longitude-wp1.longitude);
-        double bb = wp2.latitude-wp1.latitude;
-        double dd = Math.atan2(aa, bb);
-        if (dd < 0)
+        private final long time;
+        private final float latitude;
+        private final float longitude;
+
+        public WP(long time, float latitude, float longitude)
         {
-            dd += 2*Math.PI;
+            this.time = time;
+            this.latitude = latitude;
+            this.longitude = longitude;
         }
-        return Math.toDegrees(dd);
-    }
-    /**
-     * Return distance between wp1 and wp2 in NM
-     * @param wp1
-     * @param wp2
-     * @return 
-     */
-    private static double distance(WayPoint wp1, WayPoint wp2)
-    {
-        double dep = departure(wp1, wp2);
-        return 60*Math.hypot(
-                wp1.latitude-wp2.latitude,
-                dep*(wp1.longitude-wp2.longitude)
-                );
-    }
-    private static double speed(WayPoint wp1, WayPoint wp2)
-    {
-        double distance = distance(wp1, wp2);
-        double duration = wp2.time-wp1.time;
-        double hours = duration/3600000.0;
-        double speed = distance/hours;
-        return speed;
-    }
-    
-    private class WayPoint
-    {
-        private long time;
-        private float latitude;
-        private float longitude;
+
+        @Override
+        public long getTime()
+        {
+            return time;
+        }
+
+        @Override
+        public double getLatitude()
+        {
+            return latitude;
+        }
+
+        @Override
+        public double getLongitude()
+        {
+            return longitude;
+        }
 
         @Override
         public String toString()
