@@ -19,13 +19,7 @@ package org.vesalainen.parsers.nmea;
 import java.io.IOException;
 import java.util.zip.CheckedOutputStream;
 import java.util.Locale;
-import static org.vesalainen.parsers.nmea.Converter.Celcius;
-import static org.vesalainen.parsers.nmea.Converter.Fath;
-import static org.vesalainen.parsers.nmea.Converter.Ft;
-import static org.vesalainen.parsers.nmea.Converter.KMH;
-import static org.vesalainen.parsers.nmea.Converter.Kts;
-import static org.vesalainen.parsers.nmea.Converter.M;
-import static org.vesalainen.parsers.nmea.Converter.toMeters;
+import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.util.navi.Knots;
 import org.vesalainen.util.navi.Meters;
 
@@ -90,6 +84,29 @@ public class NMEAGen
         put(out, Knots.toKiloMetersInHour(knots));
         put(out, ',');
         put(out, KMH);
+        putChecksum(out);
+        put(out, "\r\n");
+    }
+
+    public static void mwv(CheckedOutputStream out, int windAngle, float windSpeed, boolean trueWind) throws IOException
+    {
+        put(out, '$');
+        put(out, "YC");
+        put(out, "MWV,");
+        put(out, windAngle);
+        put(out, ',');
+        if (trueWind)
+        {
+            put(out, 'T');
+        }
+        else
+        {
+            put(out, 'R');
+        }
+        put(out, ',');
+        put(out, windSpeed);
+        put(out, ',');
+        put(out, Kts);
         putChecksum(out);
         put(out, "\r\n");
     }
