@@ -388,6 +388,9 @@ public interface NMEAObserver extends Transactional
      */
     void setTrueWindAngle(float windAngle);
     /**
+     * Returns the wind speed.
+     * <p>Note! Is it relative or true depends on which setXXXWindAngle was called
+     * in same transaction. (before commit)
      * MWV, VWR
      * @param metersInSecond
      */
