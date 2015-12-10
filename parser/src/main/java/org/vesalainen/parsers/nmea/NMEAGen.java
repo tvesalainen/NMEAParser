@@ -91,7 +91,7 @@ public class NMEAGen
     public static void mwv(CheckedOutputStream out, int windAngle, float windSpeed, boolean trueWind) throws IOException
     {
         put(out, '$');
-        put(out, "YC");
+        put(out, "UP");
         put(out, "MWV,");
         put(out, windAngle);
         put(out, ',');
@@ -107,6 +107,7 @@ public class NMEAGen
         put(out, windSpeed);
         put(out, ',');
         put(out, Kts);
+        put(out, ",A");
         putChecksum(out);
         put(out, "\r\n");
     }
