@@ -28,7 +28,7 @@ import org.vesalainen.nmea.jaxb.router.RouteType;
 public final class Route
 {
     private final NMEAPrefix prefix;
-    private final DataSource[] targets;
+    private final String[] targetList;
     private boolean backup;
     private long lastWrote;
     private List<Route> backupSources;
@@ -39,7 +39,7 @@ public final class Route
     Route() // for test
     {
         this.prefix = null;
-        this.targets = null;
+        this.targetList = null;
     }
     
     public Route(RouteType routeType)
@@ -48,21 +48,16 @@ public final class Route
         List<String> targets = routeType.getTarget();
         if (targets != null)
         {
-            this.targets = new DataSource[targets.size()];
+            targetList = new String[targets.size()];
             int index = 0;
             for (String target : targets)
             {
-                DataSource ds = DataSource.get(target);
-                if (ds == null)
-                {
-                    throw new IllegalArgumentException(target+" not found");
-                }
-                this.targets[index++] = ds;
+                this.targetList[index++] = target;
             }
         }
         else
         {
-            this.targets = new DataSource[0];
+            this.targetList = new String[0];
         }
         Boolean b = routeType.isBackup();
         if (b != null)
@@ -91,8 +86,13 @@ public final class Route
         lastWrote = System.currentTimeMillis();
         if (canWrite())
         {
-            for (DataSource dataSource : targets)
+            for (String target : targetList)
             {
+                DataSource dataSource = DataSource.get(target);
+                if (dataSource == null)
+                {
+                    throw new IllegalArgumentException(target+" not found");
+                }
                 if (partial)
                 {
                     if (dataSource.isSingleSink())

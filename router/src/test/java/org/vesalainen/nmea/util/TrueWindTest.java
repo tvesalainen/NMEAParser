@@ -42,6 +42,66 @@ public class TrueWindTest
     }
     
     @Test
+    public void test01()
+    {
+        TrueWind tw = new TrueWind();
+        tw.setBoatSpeed(0);
+        tw.setRelativeSpeed(5);
+        tw.setRelativeAngle(45);
+        tw.calc();
+        assertEquals(45, tw.getTrueAngle(), Epsilon);
+        assertEquals(5, tw.getTrueSpeed(), Epsilon);
+    }
+    
+    @Test
+    public void test02()
+    {
+        TrueWind tw = new TrueWind();
+        tw.setBoatSpeed(0);
+        tw.setRelativeSpeed(5);
+        tw.setRelativeAngle(75);
+        tw.calc();
+        assertEquals(75, tw.getTrueAngle(), Epsilon);
+        assertEquals(5, tw.getTrueSpeed(), Epsilon);
+    }
+    
+    @Test
+    public void test03()
+    {
+        TrueWind tw = new TrueWind();
+        tw.setBoatSpeed(0);
+        tw.setRelativeSpeed(5);
+        tw.setRelativeAngle(195);
+        tw.calc();
+        assertEquals(195, tw.getTrueAngle(), Epsilon);
+        assertEquals(5, tw.getTrueSpeed(), Epsilon);
+    }
+    
+    @Test
+    public void test04()
+    {
+        TrueWind tw = new TrueWind();
+        tw.setBoatSpeed(0);
+        tw.setRelativeSpeed(5);
+        tw.setRelativeAngle(285);
+        tw.calc();
+        assertEquals(285, tw.getTrueAngle(), Epsilon);
+        assertEquals(5, tw.getTrueSpeed(), Epsilon);
+    }
+    
+    @Test
+    public void test05()
+    {
+        TrueWind tw = new TrueWind();
+        tw.setBoatSpeed(0);
+        tw.setRelativeSpeed(5);
+        tw.setRelativeAngle(0);
+        tw.calc();
+        assertEquals(0, tw.getTrueAngle(), Epsilon);
+        assertEquals(5, tw.getTrueSpeed(), Epsilon);
+    }
+    
+    @Test
     public void test1()
     {
         TrueWind tw = new TrueWind();

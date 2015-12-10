@@ -53,6 +53,7 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
     private final TrueWind trueWind = new TrueWind();
     private WayPointImpl prev;
     private final WayPointImpl current = new WayPointImpl();
+    private boolean positionUpdated;
     private boolean relativeUpdated;
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
     private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
@@ -81,10 +82,14 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
     @Override
     public void commit(String reason)
     {
+        if (positionUpdated)
+        {
+            positionUpdated = false;
+            current.setTime(calendar.getTimeInMillis());
+        }
         if (relativeUpdated)
         {
             relativeUpdated = false;
-            current.setTime(calendar.getTimeInMillis());
             if (prev != null)
             {
                 bb.clear();
@@ -104,7 +109,7 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
                     log.log(Level.SEVERE, ex.getMessage(), ex);
                 }
             }
-            else
+            if (prev == null)
             {
                 prev = new WayPointImpl();
             }
@@ -126,6 +131,7 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
                 break;
             case "latitude":
                 current.setLatitude(arg);
+                positionUpdated = true;
                 break;
             case "longitude":
                 current.setLongitude(arg);
