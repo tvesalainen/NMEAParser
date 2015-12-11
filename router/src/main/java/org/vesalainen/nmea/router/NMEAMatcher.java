@@ -37,7 +37,7 @@ public class NMEAMatcher extends WildcardMatcher<Route>
     private boolean parsing;
     private float errors;
     private Route matched;
-    private List<Route> routes = new ArrayList<>();
+    private final List<Route> routes = new ArrayList<>();
 
     public NMEAMatcher()
     {

@@ -34,6 +34,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -60,6 +61,7 @@ import org.vesalainen.nmea.jaxb.router.BroadcastNMEAType;
 import org.vesalainen.nmea.jaxb.router.BroadcastType;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
+import org.vesalainen.nmea.jaxb.router.FilterType;
 import org.vesalainen.nmea.jaxb.router.FlowControlType;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
 import org.vesalainen.nmea.jaxb.router.MulticastType;
@@ -874,6 +876,7 @@ public class Router extends JavaLogging implements Runnable
         protected EndpointScriptEngine scriptEngine;
         private long lastRead;
         private long nowRead;
+        protected List<MessageFilter> filterList;
 
         public Endpoint(EndpointType endpointType)
         {
@@ -887,6 +890,32 @@ public class Router extends JavaLogging implements Runnable
             if (scriptType != null)
             {
                 scriptEngine = new EndpointScriptEngine(Router.this, routerThreadGroup, this, scriptType.getValue());
+            }
+            List<FilterType> filters = endpointType.getFilter();
+            if (filters != null && !filters.isEmpty())
+            {
+                filterList = new ArrayList<>();
+                for (FilterType filterType : filters)
+                {
+                    String classname = filterType.getValue();
+                    try
+                    {
+                        Class<?> cls = Class.forName(classname);
+                        if (MessageFilter.class.isAssignableFrom(cls))
+                        {
+                            MessageFilter filterInstance = (MessageFilter) cls.newInstance();
+                            filterList.add(filterInstance);
+                        }
+                        else
+                        {
+                            throw new IllegalArgumentException(cls+" not subclass of "+MessageFilter.class);
+                        }
+                    }
+                    catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex)
+                    {
+                        throw new IllegalArgumentException(ex);
+                    }
+                }
             }
         }
 
@@ -953,6 +982,16 @@ public class Router extends JavaLogging implements Runnable
         @Override
         protected int write(RingByteBuffer ring) throws IOException
         {
+            if (filterList != null)
+            {
+                for (MessageFilter filter : filterList)
+                {
+                    if (!filter.accept(ring))
+                    {
+                        return 0;
+                    }
+                }
+            }
             int cnt = 0;
             if (matched && attached == null)
             {
