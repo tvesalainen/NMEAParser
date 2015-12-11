@@ -1049,7 +1049,7 @@ public class Router extends JavaLogging implements Runnable
         {
             Set<DataSource> set = sources.get(name);
             isSink = set != null && set.size() > 0;
-            isSingleSink = isSink && set.size() == 1;
+            isSingleSink = isSink && set.size() == 1 && filterList == null;
         }
 
         @Override
