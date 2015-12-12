@@ -70,6 +70,7 @@ public class RMCFilter extends AbstractNMEAFilter
                         {
                             reset();
                         }
+                        log.warning("latitude %f differs too much from %f rejected", latitude, value);
                         return Cond.Reject;
                     }
                 }
@@ -94,6 +95,7 @@ public class RMCFilter extends AbstractNMEAFilter
                         {
                             reset();
                         }
+                        log.warning("longitude %f differs too much from %f rejected", longitude, value);
                         return Cond.Reject;
                     }
                 }
