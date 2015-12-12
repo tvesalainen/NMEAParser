@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -28,13 +29,17 @@ public class RMCFilterTest
     
     public RMCFilterTest()
     {
+        System.err.println(TimeUnit.DAYS.convert(Integer.MAX_VALUE, TimeUnit.SECONDS));
     }
 
     @Test
     public void test1()
     {
         RMCFilter filter = new RMCFilter();
-        assertTrue(filter.accept("$GPRMC,062457,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*7D\r\n"));
+        assertFalse(filter.accept("$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*72\r\n"));
+        assertFalse(filter.accept("$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62\r\n"));
+        assertFalse(filter.accept("$GPRMC,062457,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*7D\r\n"));
+        assertTrue(filter.accept("$GPAAM,A,A,0.10,N,WPTNME*32\r\n"));
         assertTrue(filter.accept("$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*72\r\n"));
         assertFalse(filter.accept("$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62\r\n"));
         assertTrue(filter.accept("$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*72\r\n"));

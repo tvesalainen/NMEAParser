@@ -27,16 +27,24 @@ public class RMCFilter extends AbstractNMEAFilter
     private float latitude = Float.NaN;
     private float longitude = Float.NaN;
     private float value;
+    private int count;
     
+    private void reset()
+    {
+        latitude = Float.NaN;
+        longitude = Float.NaN;
+        value = 0;
+        count = 0;
+    }
     @Override
-    protected boolean acceptField(CharSequence cs, int index, int begin, int end)
+    protected Cond acceptField(CharSequence cs, int index, int begin, int end)
     {
         switch (index)
         {
             case 0:
                 if (!equals("$GPRMC", cs, begin, end))
                 {
-                    return false;
+                    return Cond.Accept;
                 }
                 break;
             case 3:
@@ -52,13 +60,17 @@ public class RMCFilter extends AbstractNMEAFilter
                         value *= -1;
                         break;
                     default:
-                        return false;
+                        return Cond.Reject;
                 }
                 if (!Float.isNaN(latitude))
                 {
                     if (Math.abs(latitude-value) > 0.1)
                     {
-                        return false;
+                        if (count < 2)
+                        {
+                            reset();
+                        }
+                        return Cond.Reject;
                     }
                 }
                 latitude = value;
@@ -72,19 +84,33 @@ public class RMCFilter extends AbstractNMEAFilter
                         value *= -1;
                         break;
                     default:
-                        return false;
+                        return Cond.Reject;
                 }
                 if (!Float.isNaN(longitude))
                 {
                     if (Math.abs(longitude-value) > 0.1)
                     {
-                        return false;
+                        if (count < 2)
+                        {
+                            reset();
+                        }
+                        return Cond.Reject;
                     }
                 }
                 longitude = value;
                 break;
+            case 12:
+                if (count < 10)
+                {
+                    count++;
+                }
+                if (count < 2)
+                {
+                    return Cond.Reject;
+                }
+                break;
         }
-        return true;
+        return Cond.GoOn;
     }
     private boolean equals(String str, CharSequence cs, int begin, int end)
     {

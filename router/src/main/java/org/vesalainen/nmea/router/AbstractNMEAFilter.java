@@ -22,6 +22,7 @@ package org.vesalainen.nmea.router;
  */
 public abstract class AbstractNMEAFilter implements MessageFilter
 {
+    protected enum Cond {Accept, Reject, GoOn};
 
     @Override
     public boolean accept(CharSequence cs)
@@ -34,10 +35,13 @@ public abstract class AbstractNMEAFilter implements MessageFilter
             int cc = cs.charAt(ii);
             if (cc == ',' || cc == '*')
             {
-                boolean ok = acceptField(cs, count++, prev, ii);
-                if (!ok)
+                Cond cond = acceptField(cs, count++, prev, ii);
+                switch (cond)
                 {
-                    return false;
+                    case Accept:
+                        return true;
+                    case Reject:
+                        return false;
                 }
                 prev = ii+1;
             }
@@ -45,6 +49,6 @@ public abstract class AbstractNMEAFilter implements MessageFilter
         return true;
     }
 
-    protected abstract boolean acceptField(CharSequence cs, int index, int begin, int end);
+    protected abstract Cond acceptField(CharSequence cs, int index, int begin, int end);
     
 }
