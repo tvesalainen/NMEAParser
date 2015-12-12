@@ -29,7 +29,6 @@ import org.vesalainen.nmea.util.Navis;
 import org.vesalainen.nmea.util.TrueWind;
 import org.vesalainen.nmea.util.WayPoint;
 import org.vesalainen.parsers.nmea.Clock;
-import org.vesalainen.parsers.nmea.Converter;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
 import org.vesalainen.util.Transactional;
