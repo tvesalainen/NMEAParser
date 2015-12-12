@@ -16,13 +16,21 @@
  */
 package org.vesalainen.nmea.router;
 
+import org.vesalainen.util.logging.JavaLogging;
+
 /**
  *
  * @author tkv
  */
 public abstract class AbstractNMEAFilter implements MessageFilter
 {
+    protected final JavaLogging log = new JavaLogging();
     protected enum Cond {Accept, Reject, GoOn};
+
+    public AbstractNMEAFilter()
+    {
+        log.setLogger(this.getClass());
+    }
 
     @Override
     public boolean accept(CharSequence cs)
