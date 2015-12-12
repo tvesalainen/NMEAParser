@@ -108,9 +108,7 @@
         <xs:attribute name="name" type="nameType" use="required"/>
     </xs:complexType>
     <xs:complexType name="filterType">
-        <xs:simpleContent>
-            <xs:extension base="xs:string"/>
-        </xs:simpleContent>
+        <xs:attribute name="classname" type="xs:string" use="required"/>
     </xs:complexType>
     <xs:complexType name="scriptType">
         <xs:simpleContent>

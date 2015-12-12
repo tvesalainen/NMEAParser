@@ -897,7 +897,7 @@ public class Router extends JavaLogging implements Runnable
                 filterList = new ArrayList<>();
                 for (FilterType filterType : filters)
                 {
-                    String classname = filterType.getValue();
+                    String classname = filterType.getClassname();
                     try
                     {
                         Class<?> cls = Class.forName(classname);
