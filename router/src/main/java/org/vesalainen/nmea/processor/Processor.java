@@ -16,13 +16,12 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.parsers.nmea.NMEADispatcher;
 import java.io.IOException;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
 import org.vesalainen.nmea.jaxb.router.SntpMulticasterType;
@@ -31,113 +30,79 @@ import org.vesalainen.nmea.jaxb.router.TimeSetterType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
-import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.util.logging.JavaLogging;
+import org.vesalainen.parsers.nmea.NMEAService;
 
 /**
  *
  * @author tkv
  */
-public class Processor extends JavaLogging implements Runnable, AutoCloseable
+public class Processor extends NMEAService implements Runnable, AutoCloseable
 {
     private final ScatteringByteChannel in;
     private final GatheringByteChannel out;
     private final ProcessorType processorType;
     private final NMEADispatcher observer = NMEADispatcher.getInstance(NMEADispatcher.class);
     private final List<AutoCloseable> autoCloseables = new ArrayList<>();
+    private Thread thread;
 
     public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out) throws IOException
     {
+        super(in, out);
         this.processorType = processorType;
-        setLogger(this.getClass());
         this.in = in;
         this.out = out;
-    }
-    
-    public void add(PropertySetter propertySetter)
-    {
-        observer.addObserver(propertySetter, propertySetter.getPrefixes());
-        if (propertySetter instanceof AutoCloseable)
+        for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
         {
-            AutoCloseable ac = (AutoCloseable) propertySetter;
-            autoCloseables.add(ac);
-        }
-    }
-    
-    @Override
-    public void run()
-    {
-        try
-        {
-            for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
+            if (ob instanceof VariationSourceType)
             {
-                if (ob instanceof VariationSourceType)
-                {
-                    VariationSourceType vst = (VariationSourceType) ob;
-                    info("add VariationSource");
-                    VariationSource vs = new VariationSource(out, vst);
-                    add(vs);
-                }
-                if (ob instanceof TrueWindSourceType)
-                {
-                    TrueWindSourceType vst = (TrueWindSourceType) ob;
-                    info("add TrueWindSource");
-                    TrueWindSource vs = new TrueWindSource(out, vst);
-                    add(vs);
-                }
-                if (ob instanceof TrackerType)
-                {
-                    TrackerType tt = (TrackerType) ob;
-                    info("add Tracker");
-                    Tracker tracker = new Tracker(tt);
-                    add(tracker);
-                }
-                if (ob instanceof SntpBroadcasterType)
-                {
-                    SntpBroadcasterType sntpBroadcasterType = (SntpBroadcasterType) ob;
-                    info("add SNTPBroadcaster");
-                    SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
-                    add(broadcaster);
-                }
-                if (ob instanceof SntpMulticasterType)
-                {
-                    SntpMulticasterType sntpMulticasterType = (SntpMulticasterType) ob;
-                    info("add SNTPMulticaster");
-                    SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
-                    add(multicaster);
-                }
-                if (ob instanceof TimeSetterType)
-                {
-                    TimeSetterType timeSetterType = (TimeSetterType) ob;
-                    info("add TimeSetterType");
-                    TimeSetter timeSetter = new TimeSetter(timeSetterType);
-                    add(timeSetter);
-                }
-                if (ob instanceof SntpServerType)
-                {
-                    SntpServerType sntpServerType = (SntpServerType) ob;
-                    info("add SNTPServer");
-                    SNTPServer server = new SNTPServer(sntpServerType);
-                    add(server);
-                }
+                VariationSourceType vst = (VariationSourceType) ob;
+                info("add VariationSource");
+                VariationSource vs = new VariationSource(out, vst);
+                addNMEAObserver(vs);
             }
-            NMEAParser parser = NMEAParser.newInstance();
-            parser.parse(in, observer, null);
+            if (ob instanceof TrueWindSourceType)
+            {
+                TrueWindSourceType vst = (TrueWindSourceType) ob;
+                info("add TrueWindSource");
+                TrueWindSource vs = new TrueWindSource(out, vst);
+                addNMEAObserver(vs);
+            }
+            if (ob instanceof TrackerType)
+            {
+                TrackerType tt = (TrackerType) ob;
+                info("add Tracker");
+                Tracker tracker = new Tracker(tt);
+                addNMEAObserver(tracker);
+            }
+            if (ob instanceof SntpBroadcasterType)
+            {
+                SntpBroadcasterType sntpBroadcasterType = (SntpBroadcasterType) ob;
+                info("add SNTPBroadcaster");
+                SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
+                addNMEAObserver(broadcaster);
+            }
+            if (ob instanceof SntpMulticasterType)
+            {
+                SntpMulticasterType sntpMulticasterType = (SntpMulticasterType) ob;
+                info("add SNTPMulticaster");
+                SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
+                addNMEAObserver(multicaster);
+            }
+            if (ob instanceof TimeSetterType)
+            {
+                TimeSetterType timeSetterType = (TimeSetterType) ob;
+                info("add TimeSetterType");
+                TimeSetter timeSetter = new TimeSetter(timeSetterType);
+                addNMEAObserver(timeSetter);
+            }
+            if (ob instanceof SntpServerType)
+            {
+                SntpServerType sntpServerType = (SntpServerType) ob;
+                info("add SNTPServer");
+                SNTPServer server = new SNTPServer(sntpServerType);
+                addNMEAObserver(server);
+            }
         }
-        catch (IOException ex)
-        {
-            log(Level.SEVERE, "", ex);
-        }
-        log(Level.SEVERE, "Processor dies!!!");
     }
-
-    @Override
-    public void close() throws Exception
-    {
-        for (AutoCloseable ac : autoCloseables)
-        {
-            ac.close();
-        }
-    }
-
+    
 }

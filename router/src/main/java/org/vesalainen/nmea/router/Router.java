@@ -476,7 +476,6 @@ public class Router extends JavaLogging implements Runnable
         protected GatheringByteChannel writeTarget;
         private final ProcessorType processorType;
         private Processor processor;
-        private Thread thread;
         public ProcessorEndpoint(ProcessorType processorType)
         {
             super(processorType);
@@ -494,8 +493,7 @@ public class Router extends JavaLogging implements Runnable
             writeTarget = in.sink();
             processor = new Processor(processorType, in.source(), out.sink());
             autoCloseables.add(processor);
-            thread = new Thread(processor);
-            thread.start();
+            processor.start();
             return channel;
         }
 

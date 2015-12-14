@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.parsers.nmea.NMEADispatcher;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
