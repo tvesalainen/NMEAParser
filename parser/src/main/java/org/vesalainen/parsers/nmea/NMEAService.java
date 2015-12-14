@@ -17,13 +17,13 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
-import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -33,12 +33,21 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
 {
-    private final ScatteringByteChannel in;
-    private final GatheringByteChannel out;
+    protected ScatteringByteChannel in;
+    protected GatheringByteChannel out;
     private final NMEADispatcher nmeaObserver = NMEADispatcher.getInstance(NMEADispatcher.class);
     private AISDispatcher aisObserver;
     private final List<AutoCloseable> autoCloseables = new ArrayList<>();
     private Thread thread;
+
+    public NMEAService()
+    {
+    }
+
+    public NMEAService(DatagramChannel channel) throws IOException
+    {
+        this(channel, channel);
+    }
 
     public NMEAService(ScatteringByteChannel in, GatheringByteChannel out) throws IOException
     {
@@ -82,6 +91,31 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         }
     }
     
+    public void removeNMEAObserver(PropertySetter propertySetter)
+    {
+        nmeaObserver.removeObserver(propertySetter, propertySetter.getPrefixes());
+        if (propertySetter instanceof AutoCloseable)
+        {
+            AutoCloseable ac = (AutoCloseable) propertySetter;
+            autoCloseables.remove(ac);
+        }
+    }
+    
+    public void removeAISObserver(PropertySetter propertySetter)
+    {
+        aisObserver.removeObserver(propertySetter, propertySetter.getPrefixes());
+        if (propertySetter instanceof AutoCloseable)
+        {
+            AutoCloseable ac = (AutoCloseable) propertySetter;
+            autoCloseables.remove(ac);
+        }
+    }
+    
+    public boolean hasObservers()
+    {
+        return nmeaObserver.hasObservers() ||
+                (aisObserver != null && aisObserver.hasObservers());
+    }
     @Override
     public void run()
     {
