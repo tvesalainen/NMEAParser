@@ -1286,7 +1286,7 @@ public class Router extends JavaLogging implements Runnable
         @Override
         protected void handle(SelectionKey sk) throws IOException
         {
-            int count = read(ring);
+            int count = read(ring); // TODO if throws exception
             if (count == -1)
             {
                 return;
