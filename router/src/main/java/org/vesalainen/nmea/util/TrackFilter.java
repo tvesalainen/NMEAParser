@@ -192,6 +192,9 @@ public abstract class TrackFilter
         else
         {
             wp = pool.pop();
+            wp.time = time;
+            wp.latitude = latitude;
+            wp.longitude = longitude;
         }
         return wp;
     }
@@ -224,9 +227,9 @@ public abstract class TrackFilter
 
     private class WP implements WayPoint
     {
-        private final long time;
-        private final float latitude;
-        private final float longitude;
+        private long time;
+        private float latitude;
+        private float longitude;
 
         public WP(long time, float latitude, float longitude)
         {
