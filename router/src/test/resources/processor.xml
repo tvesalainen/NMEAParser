@@ -2,14 +2,16 @@
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
     <router>
         <processor name="Proc">
-            <tracker directory="c:/temp"/>
+            <true-wind-source/>
             <route prefix="$UPMWV" target="Net"/>
         </processor>
         <multicast-nmea-0183 name="Net" address="224.0.0.3">
-            <route prefix="$GPRMC" target="Proc"/>
+            <route prefix="$GPRMC" target="Proc MT"/>
             <route prefix="$IIMWV" target="Proc"/>
             <route prefix="!AI" target="MT"/>
         </multicast-nmea-0183>
-        <datagram name="MT" address="5.9.207.224" port="5321"/>
+        <datagram name="MT" address="5.9.207.224" port="5321">
+            <filter classname="org.vesalainen.nmea.router.RMCFilter"/>
+        </datagram>
     </router>
 </nmea>
