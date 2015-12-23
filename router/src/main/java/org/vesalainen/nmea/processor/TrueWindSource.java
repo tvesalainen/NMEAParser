@@ -94,7 +94,13 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
                 bb.clear();
                 try
                 {
-                    trueWind.setBoatSpeed(Navis.speed(prev, current));
+                    double speed = Navis.speed(prev, current);
+                    if (Double.isNaN(speed) && log.isLoggable(Level.WARNING))
+                    {
+                        log.warning("prev = %s", prev);
+                        log.warning("current = %s", current);
+                    }
+                    trueWind.setBoatSpeed(speed);
                     trueWind.calc();
                     log.finest("%s", trueWind);
                     int trueAngle = (int) trueWind.getTrueAngle();
@@ -195,6 +201,12 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
         public void setLongitude(double longitude)
         {
             this.longitude = longitude;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "WayPointImpl{" + "time=" + time + ", latitude=" + latitude + ", longitude=" + longitude + '}';
         }
 
     }
