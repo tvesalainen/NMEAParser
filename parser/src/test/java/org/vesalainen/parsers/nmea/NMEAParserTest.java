@@ -808,7 +808,8 @@ public class NMEAParserTest
                 "$IIMWV,282,R,11.6,N,A*1D\r\n",
                 "$IIMWV,284,T,12.3,N,A*1B\r\n",
                 "$IIMWV,280,R,11.6,N,A*1F\r\n",
-                "$IIMWV,282,T,11.6,N,A*1B\r\n"
+                "$IIMWV,282,T,11.6,N,A*1B\r\n",
+                "$IIMWV,180,R,14.3,N,A*1C\r\n"
             };
             for (String nmea : nmeas)
             {
