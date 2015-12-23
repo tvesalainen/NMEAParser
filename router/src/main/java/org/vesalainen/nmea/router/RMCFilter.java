@@ -67,11 +67,11 @@ public class RMCFilter extends AbstractNMEAFilter
                 {
                     if (Math.abs(latitude-value) > 0.1)
                     {
+                        log.warning("latitude %f differs too much from %f rejected", latitude, value);
                         if (count < 2)
                         {
                             reset();
                         }
-                        log.warning("latitude %f differs too much from %f rejected", latitude, value);
                         return Cond.Reject;
                     }
                 }
@@ -94,11 +94,11 @@ public class RMCFilter extends AbstractNMEAFilter
                 {
                     if (Math.abs(longitude-value) > 0.1)
                     {
+                        log.warning("longitude %f differs too much from %f rejected", longitude, value);
                         if (count < 2)
                         {
                             reset();
                         }
-                        log.warning("longitude %f differs too much from %f rejected", longitude, value);
                         return Cond.Reject;
                     }
                 }
