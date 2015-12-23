@@ -52,6 +52,8 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
     private final TrueWind trueWind = new TrueWind();
     private WayPointImpl prev;
     private final WayPointImpl current = new WayPointImpl();
+    private float latitude;
+    private float longitude;
     private boolean positionUpdated;
     private boolean relativeUpdated;
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
@@ -83,8 +85,18 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
     {
         if (positionUpdated)
         {
+            if (current.getTime() != 0)
+            {
+                if (prev == null)
+                {
+                    prev = new WayPointImpl();
+                }
+                prev.copy(current);
+            }
             positionUpdated = false;
             current.setTime(calendar.getTimeInMillis());
+            current.setLatitude(latitude);
+            current.setLongitude(longitude);
         }
         if (relativeUpdated)
         {
@@ -115,11 +127,6 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
                     log.log(Level.SEVERE, ex.getMessage(), ex);
                 }
             }
-            if (prev == null)
-            {
-                prev = new WayPointImpl();
-            }
-            prev.copy(current);
         }
     }
     
@@ -136,11 +143,11 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
                 trueWind.setRelativeSpeed(Velocity.toKnots(arg));
                 break;
             case "latitude":
-                current.setLatitude(arg);
+                latitude = arg;
                 positionUpdated = true;
                 break;
             case "longitude":
-                current.setLongitude(arg);
+                longitude = arg;
                 break;
         }
     }
