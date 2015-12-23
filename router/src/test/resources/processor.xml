@@ -2,7 +2,7 @@
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
     <router>
         <processor name="Proc">
-            <tracker directory="/temp"/>
+            <tracker directory="c:/temp"/>
             <route prefix="$UPMWV" target="Net"/>
         </processor>
         <multicast-nmea-0183 name="Net" address="224.0.0.3">
