@@ -76,6 +76,7 @@ public class RMCFilter extends AbstractNMEAFilter
                     }
                 }
                 latitude = value;
+                log.finest("latitude=%f", latitude);
                 break;
             case 6:
                 switch (cs.charAt(begin))
@@ -102,6 +103,7 @@ public class RMCFilter extends AbstractNMEAFilter
                     }
                 }
                 longitude = value;
+                log.finest("longitude=%f", longitude);
                 break;
             case 12:
                 if (count < 10)
