@@ -96,6 +96,7 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
                 {
                     trueWind.setBoatSpeed(Navis.speed(prev, current));
                     trueWind.calc();
+                    log.finest("%s", trueWind);
                     int trueAngle = (int) trueWind.getTrueAngle();
                     float trueSpeed = (float) trueWind.getTrueSpeed();
                     NMEAGen.mwv(cout, trueAngle, trueSpeed, true);
