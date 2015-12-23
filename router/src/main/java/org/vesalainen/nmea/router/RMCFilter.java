@@ -60,6 +60,7 @@ public class RMCFilter extends AbstractNMEAFilter
                         value *= -1;
                         break;
                     default:
+                        log.warning("rejected got %c expected N/S", cs.charAt(begin));
                         return Cond.Reject;
                 }
                 if (!Float.isNaN(latitude))
@@ -85,6 +86,7 @@ public class RMCFilter extends AbstractNMEAFilter
                         value *= -1;
                         break;
                     default:
+                        log.warning("rejected got %c expected E/W", cs.charAt(begin));
                         return Cond.Reject;
                 }
                 if (!Float.isNaN(longitude))

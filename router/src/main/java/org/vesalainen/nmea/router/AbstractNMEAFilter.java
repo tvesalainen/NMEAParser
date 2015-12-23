@@ -49,6 +49,7 @@ public abstract class AbstractNMEAFilter implements MessageFilter
                     case Accept:
                         return true;
                     case Reject:
+                        log.warning("reject %s", cs);
                         return false;
                 }
                 prev = ii+1;

@@ -892,10 +892,12 @@ public class Router extends JavaLogging implements Runnable
             List<FilterType> filters = endpointType.getFilter();
             if (filters != null && !filters.isEmpty())
             {
+                config("add filters for %s", name);
                 filterList = new ArrayList<>();
                 for (FilterType filterType : filters)
                 {
                     String classname = filterType.getClassname();
+                    config("creating filter %s", classname);
                     try
                     {
                         Class<?> cls = Class.forName(classname);
