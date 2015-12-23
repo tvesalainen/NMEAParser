@@ -47,6 +47,7 @@ public abstract class AbstractNMEAFilter implements MessageFilter
                 switch (cond)
                 {
                     case Accept:
+                        log.finer("accept %s", cs);
                         return true;
                     case Reject:
                         log.warning("reject %s", cs);
