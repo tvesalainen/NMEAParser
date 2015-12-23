@@ -79,5 +79,11 @@ public class TrueWind
     {
         this.relativeSpeed = relativeSpeed;
     }
+
+    @Override
+    public String toString()
+    {
+        return "TrueWind{" + "boatSpeed=" + boatSpeed + ", relativeAngle=" + relativeAngle + ", relativeSpeed=" + relativeSpeed + ", trueAngle=" + trueAngle + ", trueSpeed=" + trueSpeed + '}';
+    }
     
 }
