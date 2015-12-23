@@ -93,7 +93,7 @@ public abstract class TrackFilter
                 }
                 else
                 {
-                    log.finest("%s skipped because of speed", buffer.get(0));
+                    log.warning("%s skipped because of speed", buffer.get(0));
                     buffer.add(wp);
                 }
                 break;
@@ -104,22 +104,25 @@ public abstract class TrackFilter
                     doInput(wp);
                     recycle(buffer.get(1));
                     buffer.clear();
+                    log.warning("%s skipped because of speed", buffer.get(1));
                 }
                 else
                 {
-                    log.finest("%s skipped because of speed", buffer.get(0));
                     if (speed(buffer.get(1), wp) <= maxSpeed)
                     {
                         doInput(buffer.get(1));
                         doInput(wp);
                         recycle(buffer.get(0));
                         buffer.clear();
+                        log.warning("%s skipped because of speed", buffer.get(0));
                     }
                     else
                     {
-                        log.finest("%s skipped because of speed", buffer.get(1));
                         recycle(wp);
                         recycle(buffer);
+                        log.warning("%s skipped because of speed", buffer.get(0));
+                        log.warning("%s skipped because of speed", buffer.get(1));
+                        log.warning("%s skipped because of speed", wp);
                     }
                 }
                 break;
