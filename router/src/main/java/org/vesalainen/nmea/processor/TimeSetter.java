@@ -58,7 +58,7 @@ public class TimeSetter extends TimerTask implements PropertySetter, Transaction
         }
         format = new SimpleDateFormat(cmd);
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        log.info("time setting command = %s", cmd);
+        log.config("time setting command = %s", cmd);
         int pollInterval = 6;
         Integer interval = timeSetterType.getPollInterval();
         if (interval != null)
@@ -117,7 +117,7 @@ public class TimeSetter extends TimerTask implements PropertySetter, Transaction
             }
             else
             {
-                log.info("Time not updated. Delta = %dms", delta);
+                log.fine("Time not updated. Delta = %dms", delta);
             }
         }
         catch (Exception ex)
