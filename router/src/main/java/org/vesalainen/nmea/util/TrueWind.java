@@ -32,8 +32,8 @@ public class TrueWind
     {
         double x = Math.cos(relativeAngle)*relativeSpeed - boatSpeed;
         double y = Math.sin(relativeAngle)*relativeSpeed;
-        trueSpeed = (float) Math.hypot(x, y);
-        trueAngle = (int) Math.toDegrees(Math.atan2(y, x));
+        trueSpeed = Math.hypot(x, y);
+        trueAngle = Math.toDegrees(Math.atan2(y, x));
         if (trueAngle < 0)
         {
             trueAngle += 360.0;
