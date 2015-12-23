@@ -109,7 +109,7 @@ public class TrueWindTest
         tw.setRelativeSpeed(Math.hypot(5, 5));
         tw.setRelativeAngle(45);
         tw.calc();
-        assertEquals(89.0, tw.getTrueAngle(), Epsilon);
+        assertEquals(90.0, tw.getTrueAngle(), Epsilon);
         assertEquals(5, tw.getTrueSpeed(), Epsilon);
     }
     
@@ -135,6 +135,18 @@ public class TrueWindTest
         tw.calc();
         assertEquals(180.0, tw.getTrueAngle(), Epsilon);
         assertEquals(20, tw.getTrueSpeed(), Epsilon);
+    }
+    
+    @Test
+    public void test4()
+    {
+        TrueWind tw = new TrueWind();
+        tw.setBoatSpeed(5);
+        tw.setRelativeSpeed(14.3);
+        tw.setRelativeAngle(180);
+        tw.calc();
+        assertEquals(180.0, tw.getTrueAngle(), Epsilon);
+        assertEquals(19.3, tw.getTrueSpeed(), Epsilon);
     }
     
 }
