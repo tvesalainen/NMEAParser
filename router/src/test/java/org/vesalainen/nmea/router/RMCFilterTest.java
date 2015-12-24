@@ -45,4 +45,13 @@ public class RMCFilterTest
         assertTrue(filter.accept("$GPRMC,062458,A,6009.2053,N,02453.6493,E,000.0,001.3,171009,,,A*72\r\n"));
     }
     
+    @Test
+    public void test2()
+    {
+        RMCFilter filter = new RMCFilter();
+        assertFalse(filter.accept("$GPRMC,065010,A,1555.6283,N,04059.98,W,4.9,265,241215,17,W*43\r\n"));
+        assertTrue(filter.accept("$GPRMC,065010,A,1555.6283,N,04059.99,W,4.9,265,241215,17,W*43\r\n"));
+        assertTrue(filter.accept("$GPRMC,065010,A,1555.6283,N,04100.0013,W,4.9,265,241215,17,W*43\r\n"));
+    }
+    
 }

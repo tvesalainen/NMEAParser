@@ -49,7 +49,7 @@ public class RMCFilter extends AbstractNMEAFilter
                 break;
             case 3:
             case 5:
-                value = Primitives.parseFloat(cs, begin, end);
+                value = coordinate(cs, begin, end);
                 break;
             case 4:
                 switch (cs.charAt(begin))
@@ -105,7 +105,7 @@ public class RMCFilter extends AbstractNMEAFilter
                 longitude = value;
                 log.finest("longitude=%f", longitude);
                 break;
-            case 12:
+            case 11:
                 if (count < 10)
                 {
                     count++;
@@ -117,6 +117,25 @@ public class RMCFilter extends AbstractNMEAFilter
                 break;
         }
         return Cond.GoOn;
+    }
+    private float coordinate(CharSequence cs, int begin, int end)
+    {
+        int idx = -1;
+        for (int ii=begin;ii<end;ii++)
+        {
+            if (cs.charAt(ii) == '.')
+            {
+                idx = ii-2;
+                break;
+            }
+        }
+        if (idx < 2)
+        {
+            throw new IllegalArgumentException("illegal coordinate "+cs);
+        }
+        float deg = Primitives.parseFloat(cs, begin, idx);
+        float min = Primitives.parseFloat(cs, idx, end);
+        return deg+min/60F;
     }
     private boolean equals(String str, CharSequence cs, int begin, int end)
     {
