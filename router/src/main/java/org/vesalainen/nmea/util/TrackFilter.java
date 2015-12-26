@@ -16,13 +16,14 @@
  */
 package org.vesalainen.nmea.util;
 
+import org.vesalainen.navi.WayPoint;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.logging.Level;
-import static org.vesalainen.nmea.util.Navis.*;
+import static org.vesalainen.navi.Navis.*;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**

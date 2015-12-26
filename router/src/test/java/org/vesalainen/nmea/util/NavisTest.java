@@ -16,6 +16,8 @@
  */
 package org.vesalainen.nmea.util;
 
+import org.vesalainen.navi.Navis;
+import org.vesalainen.navi.WayPoint;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
