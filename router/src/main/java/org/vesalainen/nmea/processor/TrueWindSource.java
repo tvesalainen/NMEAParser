@@ -26,7 +26,7 @@ import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.navi.Navis;
-import org.vesalainen.nmea.util.TrueWind;
+import org.vesalainen.navi.TrueWind;
 import org.vesalainen.navi.WayPoint;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
