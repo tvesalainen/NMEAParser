@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
+import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -40,8 +41,14 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     private final List<AutoCloseable> autoCloseables = new ArrayList<>();
     private Thread thread;
 
-    public NMEAService()
+    public NMEAService(String address, int port) throws IOException
     {
+        this(UnconnectedDatagramChannel.open(address, port, 100, true, false));
+    }
+
+    public NMEAService(UnconnectedDatagramChannel channel) throws IOException
+    {
+        this(channel, channel);
     }
 
     public NMEAService(DatagramChannel channel) throws IOException
@@ -69,7 +76,11 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void addNMEAObserver(PropertySetter propertySetter)
     {
-        nmeaObserver.addObserver(propertySetter, propertySetter.getPrefixes());
+        addNMEAObserver(propertySetter, propertySetter.getPrefixes());
+    }
+    public void addNMEAObserver(PropertySetter propertySetter, String... prefixes)
+    {
+        nmeaObserver.addObserver(propertySetter, prefixes);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
@@ -79,11 +90,15 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void addAISObserver(PropertySetter propertySetter)
     {
+        addAISObserver(propertySetter, propertySetter.getPrefixes());
+    }
+    public void addAISObserver(PropertySetter propertySetter, String... prefixes)
+    {
         if (aisObserver == null)
         {
             aisObserver = AISDispatcher.getInstance(AISDispatcher.class);
         }
-        aisObserver.addObserver(propertySetter, propertySetter.getPrefixes());
+        aisObserver.addObserver(propertySetter, prefixes);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
@@ -93,7 +108,11 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void removeNMEAObserver(PropertySetter propertySetter)
     {
-        nmeaObserver.removeObserver(propertySetter, propertySetter.getPrefixes());
+        removeNMEAObserver(propertySetter, propertySetter.getPrefixes());
+    }
+    public void removeNMEAObserver(PropertySetter propertySetter, String... prefixes)
+    {
+        nmeaObserver.removeObserver(propertySetter, prefixes);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
@@ -103,7 +122,11 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void removeAISObserver(PropertySetter propertySetter)
     {
-        aisObserver.removeObserver(propertySetter, propertySetter.getPrefixes());
+        removeAISObserver(propertySetter, propertySetter.getPrefixes());
+    }
+    public void removeAISObserver(PropertySetter propertySetter, String... prefixes)
+    {
+        aisObserver.removeObserver(propertySetter, prefixes);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
