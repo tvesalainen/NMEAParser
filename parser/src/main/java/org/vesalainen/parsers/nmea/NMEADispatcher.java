@@ -23,7 +23,7 @@ import org.vesalainen.code.PropertyDispatcherClass;
  *
  * @author tkv
  */
-@PropertyDispatcherClass("org.vesalainen.nmea.processor.NMEADispatcherImpl")
+@PropertyDispatcherClass("org.vesalainen.parsers.nmea.NMEADispatcherImpl")
 public abstract class NMEADispatcher extends PropertyDispatcher implements NMEAObserver
 {
 

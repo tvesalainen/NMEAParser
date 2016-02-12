@@ -19,6 +19,8 @@ package org.vesalainen.parsers.nmea;
 
 import org.vesalainen.util.Transactional;
 import java.util.List;
+import org.vesalainen.math.Unit;
+import static org.vesalainen.math.UnitType.*;
 
 /**
  * NMEAObserver is observer class for NMEA data. NMEAParser calls methods of this 
@@ -55,32 +57,38 @@ public interface NMEAObserver extends Transactional
      * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
      */
+    @Unit(DEG)
     void setLatitude(float latitude);
     /**
      * Longitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param longitude Longitude West is negative.
      */
+    @Unit(DEG)
     void setLongitude(float longitude);
     /**
      * RMA, RMC
      * @param knots 
      */
+    @Unit(KNOT)
     void setSpeedOverGround(float knots);
     /**
      * RMA, RMC
      * @param knots 
      */
+    @Unit(KNOT)
     void setTrackMadeGood(float knots);
     /**
      * HDG, RMA, RMC
      * @param degrees West is minus
      */
+    @Unit(DEGREE)
     void setMagneticVariation(float degrees);
     /**
      * DirectionToSteer - = left + = right
      * APA, APB, XTR
      * @param nm
      */
+    @Unit(NM)
     void setCrossTrackError(float nm);
     /**
      * BOD, BWW, RMB, WNC
@@ -331,21 +339,25 @@ public interface NMEAObserver extends Transactional
      * DBT
      * @param meters
      */
+    @Unit(METER)
     void setDepthBelowTransducer(float meters);
     /**
      * BOD, BWC, BWR, BWW
      * @param degrees
      */
+    @Unit(DEGREE)
     void setTrueBearing(float degrees);
     /**
      * BOD, BWC, BWR, BWW
      * @param degrees
      */
+    @Unit(DEGREE)
     void setMagneticBearing(float degrees);
     /**
      * DBT
      * @param meters
      */
+    @Unit(METER)
     void setDepthOfWater(float meters);
     /**
      * DBT
@@ -356,36 +368,43 @@ public interface NMEAObserver extends Transactional
      * HDG
      * @param magneticDeviation 
      */
+    @Unit(DEGREE)
     void setMagneticDeviation(float magneticDeviation);
     /**
      * HDG
      * @param magneticSensorHeading 
      */
+    @Unit(DEGREE)
     void setMagneticSensorHeading(float magneticSensorHeading);
     /**
      * HDM, HDT
      * @param degrees
      */
+    @Unit(DEGREE)
     void setTrueHeading(float degrees);
     /**
      * HDM, HDT
      * @param degrees
      */
+    @Unit(DEGREE)
     void setMagneticHeading(float degrees);
     /**
      * MTW
      * @param celcius
      */
+    @Unit(CELSIUS)
     void setWaterTemperature(float celcius);
     /**
      * MWV
      * @param windAngle Wind Angle, 0 to 360 degrees
      */
+    @Unit(DEGREE)
     void setRelativeWindAngle(float windAngle);
     /**
      * MWV
      * @param windAngle Wind Angle, 0 to 360 degrees
      */
+    @Unit(DEGREE)
     void setTrueWindAngle(float windAngle);
     /**
      * Returns the wind speed.
@@ -394,6 +413,7 @@ public interface NMEAObserver extends Transactional
      * MWV, VWR
      * @param metersInSecond
      */
+    @Unit(MS)
     void setWindSpeed(float metersInSecond);
     /**
      * ROT
@@ -441,16 +461,19 @@ public interface NMEAObserver extends Transactional
      * VHW
      * @param degrees
      */
+    @Unit(DEGREE)
     void setTrueWaterHeading(float degrees);
     /**
      * VHW
      * @param degrees
      */
+    @Unit(DEGREE)
     void setMagneticWaterHeading(float degrees);
     /**
      * VHW
      * @param knots
      */
+    @Unit(KNOT)
     void setWaterSpeed(float knots);
     /**
      * @deprecated This method will no longer be called. Use setRelativeWindAngle.
@@ -586,27 +609,32 @@ public interface NMEAObserver extends Transactional
      * positive. Value reported to the nearest 0.1 degree.
      * @param value 
      */
+    @Unit(DEGREE)
     public void setPitch(float value);
     /**
      * Roll: oscillation of vessel about its longitudinal axis. Roll to the
      * starboard is positive. Value reported to the nearest 0.1 degree.
      * @param value 
      */
+    @Unit(DEGREE)
     public void setRoll(float value);
     /**
      * X-Acceleration. Unit is gravity.
      * @param value 
      */
+    @Unit(GRAVITY)
     public void setXAcceleration(float value);
     /**
      * Y-Acceleration. Unit is gravity.
      * @param value 
      */
+    @Unit(GRAVITY)
     public void setYAcceleration(float value);
     /**
      * Z-Acceleration. Unit is gravity.
      * @param value 
      */
+    @Unit(GRAVITY)
     public void setZAcceleration(float value);
 
     public void setRRat(float value);

@@ -30,11 +30,12 @@ public class DatagramNMEAService extends NMEAService
 {
     private static DatagramNMEAService service;
     private boolean started;
-    
-    private DatagramNMEAService()
-    {
-    }
 
+    public DatagramNMEAService(String address, int port) throws IOException
+    {
+        super(address, port);
+    }
+    
     private DatagramNMEAService(DatagramChannel channel) throws IOException
     {
         super(channel);
@@ -45,11 +46,11 @@ public class DatagramNMEAService extends NMEAService
         super(in, out);
     }
 
-    public static DatagramNMEAService getInstance()
+    public static DatagramNMEAService getInstance() throws IOException
     {
         if (service == null)
         {
-            service = new DatagramNMEAService();
+            service = new DatagramNMEAService("224.0.0.3", 10110);
         }
         return service;
     }
@@ -73,19 +74,8 @@ public class DatagramNMEAService extends NMEAService
     @Override
     public void start()
     {
-        try
-        {
-            UnconnectedDatagramChannel channel = UnconnectedDatagramChannel.open("224.0.0.3", 10110, 100, true, false);
-            in = channel;
-            out = channel;
-            
-            super.start();
-            started = true;
-        }
-        catch (IOException ex)
-        {
-            throw new IllegalArgumentException(ex);
-        }
+        super.start();
+        started = true;
     }
 
     public boolean isStarted()
