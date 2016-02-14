@@ -23,7 +23,7 @@ import org.vesalainen.code.PropertyDispatcherClass;
  *
  * @author tkv
  */
-@PropertyDispatcherClass("org.vesalainen.nmea.processor.AISDispatcherImpl")
+@PropertyDispatcherClass("org.vesalainen.parsers.nmea.ais.AISDispatcherImpl")
 public abstract class AISDispatcher extends PropertyDispatcher implements AISObserver
 {
 

@@ -27,11 +27,11 @@ import static org.vesalainen.math.UnitType.*;
  * interface.
  * 
  * <p>User of NMEAParser is probably only interested in a small subset of the data.
- * For this reason creation of Strings is avoided because of performance and GC
- * overhead. CharSequence arguments should not be stored. There are mostly valid
- * only during the observer method call. Use toString method to convert to string.
- * 
- * <p>It is mostly easier to derive your class from AbstractNMEAObserver class.
+ For this reason creation of Strings is avoided because of performance and GC
+ overhead. CharSequence arguments should not be stored. There are mostly valid
+ only during the observer method call. Use toString method to convertTo to string.
+ 
+ <p>It is mostly easier to derive your class from AbstractNMEAObserver class.
  * AbstractNMEAObserver has empty methods for all NMEAObserver methods.
  * 
  * <p>Observer methods are called as soon they are found in input. Parsing might
@@ -622,19 +622,19 @@ public interface NMEAObserver extends Transactional
      * X-Acceleration. Unit is gravity.
      * @param value 
      */
-    @Unit(GRAVITY)
+    @Unit(GFORCEEARTH)
     public void setXAcceleration(float value);
     /**
      * Y-Acceleration. Unit is gravity.
      * @param value 
      */
-    @Unit(GRAVITY)
+    @Unit(GFORCEEARTH)
     public void setYAcceleration(float value);
     /**
      * Z-Acceleration. Unit is gravity.
      * @param value 
      */
-    @Unit(GRAVITY)
+    @Unit(GFORCEEARTH)
     public void setZAcceleration(float value);
 
     public void setRRat(float value);
