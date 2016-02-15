@@ -855,7 +855,7 @@ public class NMEAParserTest
                 assertEquals(TalkerId.II, ss.getProperty("talkerId"));
                 if ('L' == nch.getChar(2))
                 {
-                    assertEquals(nch.getFloat(1)+180, ss.getFloat("relativeWindAngle"), Epsilon);
+                    assertEquals(-nch.getFloat(1)+360, ss.getFloat("relativeWindAngle"), Epsilon);
                 }
                 else
                 {

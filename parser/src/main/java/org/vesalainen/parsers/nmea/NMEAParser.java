@@ -603,7 +603,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         }
         else
         {
-            data.setRelativeWindAngle(-wd+180);
+            data.setRelativeWindAngle(wd+360);
         }
     }
 
