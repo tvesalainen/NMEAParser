@@ -66,6 +66,7 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Void>
             }
             this.numberOfSentences = numberOfSentences;
             this.sentenceNumber = 1;
+            aisData.start(null);
             switchTo(0, Go);
         }
         else

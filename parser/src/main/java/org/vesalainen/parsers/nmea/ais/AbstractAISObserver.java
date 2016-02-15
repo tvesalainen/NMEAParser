@@ -1028,6 +1028,11 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
+    public void start(String reason)
+    {
+    }
+
+    @Override
     public void commit(String reason)
     {
     }

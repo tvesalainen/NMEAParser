@@ -446,6 +446,12 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
+    public void start(String reason)
+    {
+
+    }
+
+    @Override
     public void rollback(String reason)
     {
         

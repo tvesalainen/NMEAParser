@@ -1223,6 +1223,7 @@ public class MessageTest
         }
         catch (Exception ex)
         {
+            ex.printStackTrace();
             fail(ex.getMessage());
         }
     }
