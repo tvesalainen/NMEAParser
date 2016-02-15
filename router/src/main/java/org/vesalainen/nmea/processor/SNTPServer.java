@@ -18,12 +18,10 @@ package org.vesalainen.nmea.processor;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.GregorianCalendar;
 import java.util.logging.Level;
-import org.apache.commons.net.ntp.NtpV3Packet;
 import static org.apache.commons.net.ntp.NtpV3Packet.*;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.vesalainen.code.PropertySetter;
@@ -59,6 +57,11 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
     public String[] getPrefixes()
     {
         return Prefixes;
+    }
+
+    @Override
+    public void start(String reason)
+    {
     }
 
     @Override

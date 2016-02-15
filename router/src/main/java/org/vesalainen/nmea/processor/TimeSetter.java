@@ -80,6 +80,11 @@ public class TimeSetter extends TimerTask implements PropertySetter, Transaction
     }
 
     @Override
+    public void start(String reason)
+    {
+    }
+
+    @Override
     public void rollback(String reason)
     {
         log.warning("rollback(%s)", reason);

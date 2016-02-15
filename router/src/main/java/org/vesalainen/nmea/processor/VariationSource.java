@@ -88,6 +88,11 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
     }
 
     @Override
+    public void start(String reason)
+    {
+    }
+
+    @Override
     public void rollback(String reason)
     {
         log.warning("rollback(%s)", reason);

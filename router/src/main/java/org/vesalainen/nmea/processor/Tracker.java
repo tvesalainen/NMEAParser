@@ -116,6 +116,11 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
     }
 
     @Override
+    public void start(String reason)
+    {
+    }
+
+    @Override
     public void rollback(String reason)
     {
         log.warning("rollback(%s)", reason);
