@@ -43,7 +43,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
 
     public NMEAService(String address, int port) throws IOException
     {
-        this(UnconnectedDatagramChannel.open(address, port, 100, true, false));
+        this(UnconnectedDatagramChannel.open(address, port, 100, true, true));
     }
 
     public NMEAService(UnconnectedDatagramChannel channel) throws IOException
