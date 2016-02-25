@@ -73,10 +73,10 @@ public interface NMEAObserver extends Transactional
     void setSpeedOverGround(float knots);
     /**
      * RMA, RMC
-     * @param knots 
+     * @param degrees
      */
-    @Unit(KNOT)
-    void setTrackMadeGood(float knots);
+    @Unit(DEGREE)
+    void setTrackMadeGood(float degrees);
     /**
      * HDG, RMA, RMC
      * @param degrees West is minus

@@ -1316,7 +1316,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
 
     @Rule("decimal")
     protected void trackMadeGood(
-            float trackMadeGood, // knots
+            float trackMadeGood, // degrees
             @ParserContext("data") NMEAObserver data)
     {
         data.setTrackMadeGood(trackMadeGood);
