@@ -18,6 +18,7 @@ package org.vesalainen.parsers.nmea;
 
 import org.vesalainen.code.PropertyDispatcher;
 import org.vesalainen.code.PropertyDispatcherClass;
+import org.vesalainen.code.PropertySetterDispatcher;
 
 /**
  *
@@ -30,6 +31,11 @@ public abstract class NMEADispatcher extends PropertyDispatcher implements NMEAO
     public NMEADispatcher(int[] sizes)
     {
         super(sizes);
+    }
+
+    public NMEADispatcher(int[] sizes, PropertySetterDispatcher observers)
+    {
+        super(sizes, observers);
     }
     
 }

@@ -28,7 +28,7 @@ import static org.vesalainen.math.UnitType.*;
  * 
  * <p>User of NMEAParser is probably only interested in a small subset of the data.
  For this reason creation of Strings is avoided because of performance and GC
- overhead. CharSequence arguments should not be stored. There are mostly valid
+ overhead. CharSequence arguments should not be stored. They are mostly valid
  only during the observer method call. Use toString method to convertTo to string.
  
  <p>It is mostly easier to derive your class from AbstractNMEAObserver class.
@@ -39,6 +39,7 @@ import static org.vesalainen.math.UnitType.*;
  * is called. Critical application should store the values and use them only after
  * commit. 
  * @author Timo Vesalainen
+ * @see org.vesalainen.parsers.nmea.NMEADispatcher
  */
 public interface NMEAObserver extends Transactional
 {

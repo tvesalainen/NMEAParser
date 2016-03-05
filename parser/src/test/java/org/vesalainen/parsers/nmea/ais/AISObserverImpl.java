@@ -18,6 +18,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import org.vesalainen.code.PropertyDispatcher;
 import org.vesalainen.code.PropertyDispatcherClass;
+import org.vesalainen.code.PropertySetterDispatcher;
 
 /**
  *
@@ -30,6 +31,11 @@ public abstract class AISObserverImpl extends PropertyDispatcher implements AISO
     public AISObserverImpl(int[] sizes)
     {
         super(sizes);
+    }
+
+    public AISObserverImpl(int[] sizes, PropertySetterDispatcher observers)
+    {
+        super(sizes, observers);
     }
     
 }

@@ -1217,7 +1217,7 @@ public class MessageTest
             list.remove(1);
             MapListPropertySetter ls = new MapListPropertySetter();
             AISObserverImpl tc = AISObserverImpl.getInstance(AISObserverImpl.class);
-            tc.addObserver(ls, "");
+            tc.addObserver(ls, "mmsi");
             parser.parse(nmea, null, tc);
             assertEquals(list, ls.getProperty("mmsi"));
         }
