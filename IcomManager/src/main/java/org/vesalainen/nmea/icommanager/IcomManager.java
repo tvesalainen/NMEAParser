@@ -174,10 +174,10 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable
     }
 
     @Override
-    public void setProprietaryData(List<String> data)
+    public void setProprietaryData(List<CharSequence> data)
     {
-        String key = data.get(2);
-        String value = data.size() >= 4 ? data.get(3) : null;
+        String key = data.get(2).toString();
+        String value = data.size() >= 4 ? data.get(3).toString() : null;
         map.put(key, value);
         if (key.equals(waitKey))
         {
@@ -187,7 +187,7 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable
     }
 
     @Override
-    public void setProprietaryType(String type)
+    public void setProprietaryType(CharSequence type)
     {
         if (initSemaphore != null && "ICOA".equals(type))
         {
