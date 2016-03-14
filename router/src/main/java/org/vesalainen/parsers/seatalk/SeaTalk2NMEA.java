@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.CheckedOutputStream;
 import java.nio.channels.ScatteringByteChannel;
+import java.util.logging.Level;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import static org.vesalainen.parser.ParserFeature.SingleThread;
@@ -35,6 +36,7 @@ import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.LocalNMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * Note! This class is not thread safe.
@@ -65,7 +67,7 @@ import org.vesalainen.parsers.nmea.NMEAGen;
     @Rule(left = "statement", value = "m60"),
     @Rule(left = "statement", value = "m65")
 })
-public abstract class SeaTalk2NMEA
+public abstract class SeaTalk2NMEA extends JavaLogging
 {
     private static final String talkerId = "ST";
     private boolean haveBetterMTW;
@@ -100,7 +102,14 @@ public abstract class SeaTalk2NMEA
         boolean defect = (z & 4) == 4;
         boolean deepAlarm = (z & 2) == 2;
         boolean shallowAlarm = (z & 1) == 1;
-        NMEAGen.dbt(out, (float)xx/10F);
+        if (yz != 0x60)
+        {
+            log(Level.WARNING, Integer.toHexString(yz)+" "+defect+" "+xx);
+        }
+        if (!defect)
+        {
+            NMEAGen.dbt(out, (float)xx/10F);
+        }
     }
     @Rule("'\\x01\\x05\\x00\\x00\\x00\\x60\\x01\\x00'")
     protected void m01a(
