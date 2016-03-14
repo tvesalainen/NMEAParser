@@ -26,11 +26,6 @@
         </dependency>
         <dependency>
             <groupId>org.vesalainen</groupId>
-            <artifactId>comm</artifactId>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.vesalainen</groupId>
             <artifactId>util</artifactId>
             <type>jar</type>
         </dependency>
