@@ -58,31 +58,31 @@ public interface NMEAObserver extends Transactional
      * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
      */
-    @Unit(DEG)
+    @Unit(DegMin)
     void setLatitude(float latitude);
     /**
      * Longitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param longitude Longitude West is negative.
      */
-    @Unit(DEG)
+    @Unit(DegMin)
     void setLongitude(float longitude);
     /**
      * RMA, RMC
      * @param knots 
      */
-    @Unit(KNOT)
+    @Unit(Knot)
     void setSpeedOverGround(float knots);
     /**
      * RMA, RMC
      * @param degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setTrackMadeGood(float degrees);
     /**
      * HDG, RMA, RMC
      * @param degrees West is minus
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setMagneticVariation(float degrees);
     /**
      * DirectionToSteer - = left + = right
@@ -340,25 +340,25 @@ public interface NMEAObserver extends Transactional
      * DBT
      * @param meters
      */
-    @Unit(METER)
+    @Unit(Meter)
     void setDepthBelowTransducer(float meters);
     /**
      * BOD, BWC, BWR, BWW
      * @param degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setTrueBearing(float degrees);
     /**
      * BOD, BWC, BWR, BWW
      * @param degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setMagneticBearing(float degrees);
     /**
      * DBT
      * @param meters
      */
-    @Unit(METER)
+    @Unit(Meter)
     void setDepthOfWater(float meters);
     /**
      * DBT
@@ -369,43 +369,43 @@ public interface NMEAObserver extends Transactional
      * HDG
      * @param magneticDeviation 
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setMagneticDeviation(float magneticDeviation);
     /**
      * HDG
      * @param magneticSensorHeading 
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setMagneticSensorHeading(float magneticSensorHeading);
     /**
      * HDM, HDT
      * @param degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setTrueHeading(float degrees);
     /**
      * HDM, HDT
      * @param degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setMagneticHeading(float degrees);
     /**
      * MTW
      * @param celcius
      */
-    @Unit(CELSIUS)
+    @Unit(Celsius)
     void setWaterTemperature(float celcius);
     /**
      * MWV
      * @param windAngle Wind Angle, 0 to 360 degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setRelativeWindAngle(float windAngle);
     /**
      * MWV
      * @param windAngle Wind Angle, 0 to 360 degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setTrueWindAngle(float windAngle);
     /**
      * Returns the wind speed.
@@ -462,19 +462,19 @@ public interface NMEAObserver extends Transactional
      * VHW
      * @param degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setTrueWaterHeading(float degrees);
     /**
      * VHW
      * @param degrees
      */
-    @Unit(DEGREE)
+    @Unit(Degree)
     void setMagneticWaterHeading(float degrees);
     /**
      * VHW
      * @param knots
      */
-    @Unit(KNOT)
+    @Unit(Knot)
     void setWaterSpeed(float knots);
     /**
      * @deprecated This method will no longer be called. Use setRelativeWindAngle.
@@ -610,32 +610,32 @@ public interface NMEAObserver extends Transactional
      * positive. Value reported to the nearest 0.1 degree.
      * @param value 
      */
-    @Unit(DEGREE)
+    @Unit(DegreeNeg)
     public void setPitch(float value);
     /**
      * Roll: oscillation of vessel about its longitudinal axis. Roll to the
      * starboard is positive. Value reported to the nearest 0.1 degree.
      * @param value 
      */
-    @Unit(DEGREE)
+    @Unit(DegreeNeg)
     public void setRoll(float value);
     /**
      * X-Acceleration. Unit is gravity.
      * @param value 
      */
-    @Unit(GFORCEEARTH)
+    @Unit(GForceEarth)
     public void setXAcceleration(float value);
     /**
      * Y-Acceleration. Unit is gravity.
      * @param value 
      */
-    @Unit(GFORCEEARTH)
+    @Unit(GForceEarth)
     public void setYAcceleration(float value);
     /**
      * Z-Acceleration. Unit is gravity.
      * @param value 
      */
-    @Unit(GFORCEEARTH)
+    @Unit(GForceEarth)
     public void setZAcceleration(float value);
 
     public void setRRat(float value);
