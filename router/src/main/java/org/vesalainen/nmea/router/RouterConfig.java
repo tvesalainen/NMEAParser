@@ -33,16 +33,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
-import org.vesalainen.comm.channel.SerialChannel.Speed;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
 import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.ScriptType;
-import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.script.ScriptParser;
-import org.vesalainen.util.HashMapSet;
-import org.vesalainen.util.MapSet;
 
 /**
  *
