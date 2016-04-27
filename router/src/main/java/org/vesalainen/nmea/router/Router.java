@@ -160,7 +160,14 @@ public class Router extends JavaLogging implements Runnable
                         iterator.remove();
                         DataSource dataSource = (DataSource) selectionKey.attachment();
                         fine("select %s %d", dataSource.name, selectionKey.readyOps());
-                        dataSource.handle(selectionKey);
+                        try
+                        {
+                            dataSource.handle(selectionKey);
+                        }
+                        catch (IOException ex)
+                        {
+                            severe("%s: %s", ex.getClass().getSimpleName(), ex.getMessage());
+                        }
                     }
                 }
                 else
