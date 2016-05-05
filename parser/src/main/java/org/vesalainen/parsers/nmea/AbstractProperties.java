@@ -41,7 +41,7 @@ public abstract class AbstractProperties
         Map<String,Prop> map = new HashMap<>();
         for (Method method : cls.getMethods())
         {
-            String property = BeanHelper.getField(method);
+            String property = BeanHelper.getProperty(method);
             Unit unit = method.getAnnotation(Unit.class);
             if (unit != null)
             {

@@ -68,5 +68,11 @@ public class BoatMonitor extends AbstractPropertySetter implements Transactional
     public void commit(String reason)
     {
     }
+
+    @Override
+    protected void setProperty(String property, Object arg)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

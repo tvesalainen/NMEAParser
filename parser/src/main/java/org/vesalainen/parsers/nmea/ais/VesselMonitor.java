@@ -20,7 +20,6 @@ package org.vesalainen.parsers.nmea.ais;
 import java.util.HashMap;
 import java.util.Map;
 import org.vesalainen.code.AbstractPropertySetter;
-import org.vesalainen.code.PropertySetter;
 import org.vesalainen.parsers.nmea.BoatMonitor;
 import org.vesalainen.parsers.nmea.Clock;
 import org.vesalainen.util.Transactional;
@@ -99,6 +98,12 @@ public class VesselMonitor extends AbstractPropertySetter implements Transaction
                 target.set(property, arg);
                 break;
         }
+    }
+
+    @Override
+    protected void setProperty(String property, Object arg)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }
