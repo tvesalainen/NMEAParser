@@ -19,6 +19,7 @@ package org.vesalainen.parsers.nmea;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.vesalainen.bean.BeanHelper;
 import org.vesalainen.math.Unit;
 import org.vesalainen.math.UnitType;
@@ -54,7 +55,10 @@ public abstract class AbstractProperties
         }
         return map;
     }
-    
+    public Stream<String> stream()
+    {
+        return map.keySet().stream();
+    }
     public boolean isProperty(String property)
     {
         return map.containsKey(property);
