@@ -44,14 +44,18 @@ public abstract class AbstractProperties
         {
             String property = BeanHelper.getProperty(method);
             Unit unit = method.getAnnotation(Unit.class);
+            UnitType unitType = null;
+            NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
             if (unit != null)
             {
-                map.put(property, new Prop(property, unit.value()));
+                unitType = unit.value();
             }
-            else
+            NMEACategory nmeaCategory = null;
+            if (nmeaCat != null)
             {
-                map.put(property, new Prop(property));
+                nmeaCategory = nmeaCat.value();
             }
+            map.put(property, new Prop(property, unitType, nmeaCategory));
         }
         return map;
     }
@@ -73,22 +77,36 @@ public abstract class AbstractProperties
         }
         return null;
     }
-    
+    public NMEACategory getCategory(String property)
+    {
+        Prop prop = map.get(property);
+        if (prop != null)
+        {
+            return prop.nmeaCategory;
+        }
+        return null;
+    }
     protected static class Prop
     {
         private final String property;
         private final UnitType unit;
+        private final NMEACategory nmeaCategory;
 
         public Prop(String property)
         {
-            this.property = property;
-            this.unit = null;
+            this(property, null, null);
         }
 
         public Prop(String property, UnitType unit)
         {
+            this(property, unit, null);
+        }
+
+        public Prop(String property, UnitType unit, NMEACategory nmeaCategory)
+        {
             this.property = property;
             this.unit = unit;
+            this.nmeaCategory = nmeaCategory;
         }
         
     }
