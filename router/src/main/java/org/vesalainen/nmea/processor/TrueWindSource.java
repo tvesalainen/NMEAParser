@@ -164,6 +164,12 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
         }
     }
 
+    @Override
+    protected void setProperty(String property, Object arg)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     private class WayPointImpl implements WayPoint
     {
         private long time;
