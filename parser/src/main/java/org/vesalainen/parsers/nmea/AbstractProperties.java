@@ -50,7 +50,7 @@ public abstract class AbstractProperties
             NMEACategory nmeaCategory = nmeaCat.value();
             String property = BeanHelper.getProperty(method);
             Unit unit = method.getAnnotation(Unit.class);
-            UnitType unitType = null;
+            UnitType unitType = UnitType.Unitless;
             if (unit != null)
             {
                 unitType = unit.value();
