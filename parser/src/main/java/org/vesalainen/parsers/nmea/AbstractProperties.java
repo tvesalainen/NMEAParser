@@ -89,7 +89,7 @@ public abstract class AbstractProperties
     protected static class Prop
     {
         private final String property;
-        private final UnitType unit;
+        private UnitType unit = UnitType.Unitless;
         private NMEACategory nmeaCategory = NMEACategory.Miscelleneous;
 
         public Prop(String property)
