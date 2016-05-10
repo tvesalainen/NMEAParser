@@ -42,18 +42,18 @@ public abstract class AbstractProperties
         Map<String,Prop> map = new HashMap<>();
         for (Method method : cls.getMethods())
         {
+            NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
+            if (nmeaCat == null)
+            {
+                continue;
+            }
+            NMEACategory nmeaCategory = nmeaCat.value();
             String property = BeanHelper.getProperty(method);
             Unit unit = method.getAnnotation(Unit.class);
             UnitType unitType = null;
-            NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
             if (unit != null)
             {
                 unitType = unit.value();
-            }
-            NMEACategory nmeaCategory = null;
-            if (nmeaCat != null)
-            {
-                nmeaCategory = nmeaCat.value();
             }
             map.put(property, new Prop(property, unitType, nmeaCategory));
         }
