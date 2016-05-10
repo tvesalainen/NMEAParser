@@ -90,7 +90,7 @@ public abstract class AbstractProperties
     {
         private final String property;
         private final UnitType unit;
-        private final NMEACategory nmeaCategory;
+        private NMEACategory nmeaCategory = NMEACategory.Miscelleneous;
 
         public Prop(String property)
         {
