@@ -84,7 +84,7 @@ public abstract class AbstractProperties
         {
             return prop.nmeaCategory;
         }
-        return null;
+        return NMEACategory.Miscelleneous;
     }
     protected static class Prop
     {

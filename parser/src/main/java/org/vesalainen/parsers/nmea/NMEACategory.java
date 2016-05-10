@@ -33,5 +33,6 @@ public enum NMEACategory
     Turn,
     RPM,
     Attitude,
-    Acceleration
+    Acceleration,
+    Miscelleneous
 }
