@@ -104,8 +104,8 @@ public abstract class TrackFilter
                     doInput(buffer.get(0));
                     doInput(wp);
                     recycle(buffer.get(1));
-                    buffer.clear();
                     log.warning("%s skipped because of speed", buffer.get(1));
+                    buffer.clear();
                 }
                 else
                 {
@@ -114,8 +114,8 @@ public abstract class TrackFilter
                         doInput(buffer.get(1));
                         doInput(wp);
                         recycle(buffer.get(0));
-                        buffer.clear();
                         log.warning("%s skipped because of speed", buffer.get(0));
+                        buffer.clear();
                     }
                     else
                     {
