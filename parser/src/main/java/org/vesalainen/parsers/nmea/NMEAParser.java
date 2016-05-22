@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.ScatteringByteChannel;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -42,6 +43,7 @@ import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
+import org.vesalainen.parsers.nmea.time.GPSClock;
 
 /**
  * @author Timo Vesalainen
@@ -544,7 +546,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("integer")
     protected void day(
             int day,
-            @ParserContext("clock") Clock clock)
+            @ParserContext("clock") NMEAClock clock)
     {
         clock.setDay(day);
     }
@@ -552,7 +554,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("integer")
     protected void month(
             int month,
-            @ParserContext("clock") Clock clock)
+            @ParserContext("clock") NMEAClock clock)
     {
         clock.setMonth(month);
     }
@@ -560,7 +562,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("integer")
     protected void year(
             int year,
-            @ParserContext("clock") Clock clock)
+            @ParserContext("clock") NMEAClock clock)
     {
         clock.setYear(year);
     }
@@ -568,7 +570,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("integer")
     protected void localZoneHours(
             int localZoneHours,
-            @ParserContext("clock") Clock clock)
+            @ParserContext("clock") NMEAClock clock)
     {
         clock.setZoneHours(localZoneHours);
     }
@@ -576,7 +578,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("integer")
     protected void localZoneMinutes(
             int localZoneMinutes,
-            @ParserContext("clock") Clock clock)
+            @ParserContext("clock") NMEAClock clock)
     {
         clock.setZoneMinutes(localZoneMinutes);
     }
@@ -1053,9 +1055,10 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             int hour,
             int minute,
             float second,
-            @ParserContext("clock") Clock clock)
+            @ParserContext("clock") NMEAClock clock)
     {
-        clock.setTime(hour, minute, second);
+        int s = (int) second;
+        clock.setTime(hour, minute, s, (int)((second - (float)s)*1000));
     }
 
     @Rule("digit2 digit2 digit2")
@@ -1063,7 +1066,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             int day,
             int month,
             int year,
-            @ParserContext("clock") Clock clock)
+            @ParserContext("clock") NMEAClock clock)
     {
         clock.setDate(year, month, day);
     }
@@ -1410,7 +1413,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     protected void checksum(
             int sum,
             @ParserContext(ParserConstants.InputReader) InputReader input,
-            @ParserContext("clock") Clock clock,
+            @ParserContext("clock") NMEAClock clock,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             )
@@ -1561,19 +1564,23 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
      */
     public <I> void parse(I input, NMEAObserver data, AISObserver aisData) throws IOException
     {
+        parse(input, Clock.systemUTC(), data, aisData);
+    }
+    public <I> void parse(I input, Clock clock, NMEAObserver data, AISObserver aisData) throws IOException
+    {
         if (data == null)
         {
             data = new AbstractNMEAObserver();
         }
         data.start(null);
-        Clock clock = new GPSClock();
-        data.setClock(clock);
+        GPSClock gpsClock = new GPSClock(clock);
+        data.setClock(gpsClock);
         data.commit("Set clock");
         AISContext aisContext = null;
         if (aisData != null)
         {
             aisData.start(null);
-            aisData.setClock(clock);
+            aisData.setClock(gpsClock);
             aisData.commit("Set clock");
             aisContext = new AISContext(aisData);
         }
@@ -1582,28 +1589,28 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             if (input instanceof ScatteringByteChannel)
             {
                 ScatteringByteChannel sbc = (ScatteringByteChannel) input;
-                parse(sbc, clock, data, aisContext);
+                parse(sbc, gpsClock, data, aisContext);
             }
             else
             {
                 if (input instanceof URL)
                 {
                     URL url = (URL) input;
-                    parse(url, clock, data, aisContext);
+                    parse(url, gpsClock, data, aisContext);
                 }
                 else
                 {
                     if (input instanceof String)
                     {
                         String str = (String) input;
-                        parse(str, clock, data, aisContext);
+                        parse(str, gpsClock, data, aisContext);
                     }
                     else
                     {
                         if (input instanceof InputStream)
                         {
                             InputStream is = (InputStream) input;
-                            parse(is, clock, data, aisContext);
+                            parse(is, gpsClock, data, aisContext);
                         }
                         else
                         {
@@ -1626,7 +1633,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     )
     protected abstract void parse(
             URL url,
-            @ParserContext("clock") Clock clock,
+            @ParserContext("clock") NMEAClock clock,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;
@@ -1636,7 +1643,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     )
     protected abstract void parse(
             ScatteringByteChannel channel,
-            @ParserContext("clock") Clock clock,
+            @ParserContext("clock") NMEAClock clock,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;
@@ -1646,7 +1653,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     )
     protected abstract void parse(
             String text,
-            @ParserContext("clock") Clock clock,
+            @ParserContext("clock") NMEAClock clock,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;
@@ -1656,7 +1663,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     )
     protected abstract void parse(
             InputStream is,
-            @ParserContext("clock") Clock clock,
+            @ParserContext("clock") NMEAClock clock,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;

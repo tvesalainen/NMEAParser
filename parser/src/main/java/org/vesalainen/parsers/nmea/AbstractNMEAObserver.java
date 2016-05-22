@@ -17,6 +17,7 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.time.Clock;
 import java.util.List;
 
 /**

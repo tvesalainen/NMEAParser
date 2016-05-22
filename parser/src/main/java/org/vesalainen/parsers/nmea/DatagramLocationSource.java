@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parsers.nmea;
 
+import java.time.Clock;
 import java.util.GregorianCalendar;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.navi.LocationSource;
@@ -65,14 +66,14 @@ public class DatagramLocationSource extends LocationSource
         private float longitude;
         private float horizontalDilutionOfPrecision = Float.NaN;
         private boolean positionUpdated;
-        private GregorianCalendar calendar;
+        private Clock clock;
 
         @Override
         public void commit(String reason)
         {
             if (positionUpdated)
             {
-                update(longitude, latitude, calendar.getTimeInMillis(), horizontalDilutionOfPrecision);
+                update(longitude, latitude, clock.millis(), horizontalDilutionOfPrecision);
             }
         }
 
@@ -111,8 +112,7 @@ public class DatagramLocationSource extends LocationSource
             switch (property)
             {
                 case "clock":
-                    Clock clock = (Clock) arg;
-                    calendar = clock.getCalendar();
+                    clock = (Clock) arg;
                     break;
             }
         }

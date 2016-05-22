@@ -16,7 +16,7 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.util.Transactional;
 
 /**
@@ -909,7 +909,7 @@ public interface AISObserver extends Transactional
 
     void setError(String string);
 
-    void setClock(Clock clock);
+    void setClock(NMEAClock clock);
     /**
      * 0=[ITU1371], 1-3 = future editions
      * @param arg 

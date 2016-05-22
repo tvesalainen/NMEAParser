@@ -18,7 +18,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import org.vesalainen.parsers.mmsi.MMSIType;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 
 /**
  * @author Timo Vesalainen
@@ -1068,7 +1068,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setClock(Clock clock)
+    public void setClock(NMEAClock clock)
     {
     }
 

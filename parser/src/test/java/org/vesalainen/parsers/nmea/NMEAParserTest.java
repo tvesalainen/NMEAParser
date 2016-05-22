@@ -17,6 +17,7 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -216,7 +217,7 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.getTime());
+                cal.setTimeInMillis(clock.millis());
                 String hhmmss = nch.getString(1);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
@@ -292,7 +293,7 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.getTime());
+                cal.setTimeInMillis(clock.millis());
                 String hhmmss = nch.getString(1);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
@@ -337,7 +338,7 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.getTime());
+                cal.setTimeInMillis(clock.millis());
                 String hhmmss = nch.getString(1);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
@@ -535,7 +536,7 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.getTime());
+                cal.setTimeInMillis(clock.millis());
                 String hhmmss = nch.getString(1);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
@@ -582,7 +583,7 @@ public class NMEAParserTest
                 assertEquals(nch.getDegree(3), ss.getFloat("longitude"), Epsilon);
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.getTime());
+                cal.setTimeInMillis(clock.millis());
                 String hhmmss = nch.getString(5);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
@@ -1004,7 +1005,7 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.getTime());
+                cal.setTimeInMillis(clock.millis());
                 String hhmmss = nch.getString(1);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
@@ -1454,7 +1455,7 @@ public class NMEAParserTest
                 int md = nch.getInt(6);
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.getTime());
+                cal.setTimeInMillis(clock.millis());
                 String hhmmss = nch.getString(1);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY)+hd);
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));

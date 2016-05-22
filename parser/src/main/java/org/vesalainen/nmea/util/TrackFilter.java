@@ -94,7 +94,8 @@ public abstract class TrackFilter
                 }
                 else
                 {
-                    log.warning("%s skipped because of speed", buffer.get(0));
+                    log.warning("%s skipped because of speed (1)", buffer.get(0));
+                    log.warning("%s", wp);
                     buffer.add(wp);
                 }
                 break;
@@ -104,7 +105,6 @@ public abstract class TrackFilter
                     doInput(buffer.get(0));
                     doInput(wp);
                     recycle(buffer.get(1));
-                    log.warning("%s skipped because of speed", buffer.get(1));
                     buffer.clear();
                 }
                 else
@@ -114,16 +114,16 @@ public abstract class TrackFilter
                         doInput(buffer.get(1));
                         doInput(wp);
                         recycle(buffer.get(0));
-                        log.warning("%s skipped because of speed", buffer.get(0));
+                        log.warning("%s skipped because of speed (2)", buffer.get(0));
+                        log.warning("%s", wp);
                         buffer.clear();
                     }
                     else
                     {
                         recycle(wp);
                         recycle(buffer);
-                        log.warning("%s skipped because of speed", buffer.get(0));
-                        log.warning("%s skipped because of speed", buffer.get(1));
-                        log.warning("%s skipped because of speed", wp);
+                        log.warning("%s skipped because of speed (3)", buffer.get(1));
+                        log.warning("%s", wp);
                     }
                 }
                 break;

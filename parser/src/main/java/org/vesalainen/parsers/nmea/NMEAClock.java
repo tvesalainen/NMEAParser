@@ -22,31 +22,16 @@ import java.util.GregorianCalendar;
  *
  * @author Timo Vesalainen
  */
-public interface Clock
+public interface NMEAClock
 {
-    /**
-     * Returns current GregorianCalendar. This object is not copy and it should
-     * not be modified!
-     * @return 
-     */
-    GregorianCalendar getCalendar();
-    /**
-     * Returns this Clocks Time
-     * @return 
-     */
-    long getTime();
-    /**
-     * Returns NMEA time - system time
-     * @return 
-     */
-    long getOffset();
     /**
      * Set utc time
      * @param hour 0 - 23
      * @param minute 0 - 59
-     * @param second 0.0 - 59.999
+     * @param second 0 - 59
+     * @param microSecond 0-999
      */
-    public void setTime(int hour, int minute, float second);
+    public void setTime(int hour, int minute, int second, int microSecond);
     /**
      * Set utc date
      * @param year yy
@@ -68,7 +53,12 @@ public interface Clock
      * Update utc second
      * @param second 
      */
-    public void setSecond(float second);
+    public void setSecond(int second);
+    /**
+     * Update UTC microsecond
+     * @param microSecond 
+     */
+    public void setMicroSecond(int microSecond);
 
     /**
      * Read NMEA sentence was broken.

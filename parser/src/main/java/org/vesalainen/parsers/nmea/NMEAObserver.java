@@ -17,6 +17,7 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.time.Clock;
 import org.vesalainen.util.Transactional;
 import java.util.List;
 import org.vesalainen.math.Unit;

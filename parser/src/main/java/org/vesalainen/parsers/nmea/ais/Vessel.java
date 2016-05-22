@@ -17,10 +17,11 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
+import java.time.Clock;
 import java.util.Calendar;
 import java.util.TimeZone;
 import org.vesalainen.code.AbstractPropertySetter;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.util.Transactional;
 
 /**
@@ -150,7 +151,7 @@ public class Vessel extends AbstractPropertySetter implements Transactional
         switch (property)
         {
             case Second:
-                calendar.setTimeInMillis(clock.getTime());
+                calendar.setTimeInMillis(clock.millis());
                 int second = calendar.get(Calendar.SECOND);
                 if (second > arg)
                 {

@@ -17,11 +17,12 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.Map;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.parsers.nmea.BoatMonitor;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.util.Transactional;
 
 /**
