@@ -215,13 +215,11 @@ public class NMEAParserTest
                 assertEquals(MessageType.BEC, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.millis());
+                NMEAClock clock = (NMEAClock) ss.getProperty("clock");
                 String hhmmss = nch.getString(1);
-                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
-                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
-                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
+                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
                 assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
                 assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
                 assertEquals(nch.getFloat(6), ss.getFloat(nch.getPrefix(7)+"Bearing"), Epsilon);
@@ -291,13 +289,11 @@ public class NMEAParserTest
                 assertEquals(MessageType.BWC, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.millis());
+                NMEAClock clock = (NMEAClock) ss.getProperty("clock");
                 String hhmmss = nch.getString(1);
-                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
-                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
-                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
+                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
                 assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
                 assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
                 assertEquals(nch.getFloat(6), ss.getFloat(nch.getPrefix(7)+"Bearing"), Epsilon);
@@ -336,13 +332,11 @@ public class NMEAParserTest
                 assertEquals(MessageType.BWR, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.millis());
+                NMEAClock clock = (NMEAClock) ss.getProperty("clock");
                 String hhmmss = nch.getString(1);
-                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
-                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
-                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
+                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
                 assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
                 assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
                 assertEquals(nch.getFloat(6), ss.getFloat(nch.getPrefix(7)+"Bearing"), Epsilon);
@@ -534,13 +528,11 @@ public class NMEAParserTest
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.GGA, ss.getProperty("messageType"));
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.millis());
+                NMEAClock clock = (NMEAClock) ss.getProperty("clock");
                 String hhmmss = nch.getString(1);
-                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
-                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
-                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
+                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
                 assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
                 assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
                 assertEquals(GPSQualityIndicator.values()[nch.getInt(6)], ss.getProperty("gpsQualityIndicator"));
@@ -581,13 +573,11 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 assertEquals(nch.getDegree(1), ss.getFloat("latitude"), Epsilon);
                 assertEquals(nch.getDegree(3), ss.getFloat("longitude"), Epsilon);
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.millis());
+                NMEAClock clock = (NMEAClock) ss.getProperty("clock");
                 String hhmmss = nch.getString(5);
-                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY));
-                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
-                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
+                assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
                 assertEquals(nch.getChar(6), ss.getProperty("status"));
                 if (nch.getSize() > 8)
                 {
@@ -1453,17 +1443,15 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 int hd = nch.getInt(5);
                 int md = nch.getInt(6);
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                Clock clock = (Clock) ss.getProperty("clock");
-                cal.setTimeInMillis(clock.millis());
+                NMEAClock clock = (NMEAClock) ss.getProperty("clock");
                 String hhmmss = nch.getString(1);
-                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), cal.get(Calendar.HOUR_OF_DAY)+hd);
-                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour()+hd);
+                assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
                 // note that clock is running!
-                assertEquals(Float.parseFloat(hhmmss.substring(4)), (double)cal.get(Calendar.SECOND)+(double)cal.get(Calendar.MILLISECOND)/1000.0, 0.1);  
-                assertEquals(nch.getInt(2), Integer.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
-                assertEquals(nch.getInt(3), Integer.valueOf(cal.get(Calendar.MONTH)+1));
-                assertEquals(nch.getInt(4), Integer.valueOf(cal.get(Calendar.YEAR)));
+                assertEquals(Float.parseFloat(hhmmss.substring(4)), (double)clock.getSecond()+(double)clock.getMilliSecond()/1000.0, 0.1);  
+                assertEquals(nch.getInt(2), Integer.valueOf(clock.getDay()));
+                assertEquals(nch.getInt(3), Integer.valueOf(clock.getMonth()));
+                assertEquals(nch.getInt(4), Integer.valueOf(clock.getYear()));
             }
         }
         catch (Exception ex)

@@ -19,8 +19,12 @@ package org.vesalainen.parsers.nmea.time;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.chrono.ChronoLocalDate;
+import java.time.chrono.ChronoZonedDateTime;
 import java.time.chrono.IsoChronology;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
@@ -42,21 +46,16 @@ public class GPSClockTest
     @Test
     public void test1()
     {
-        IsoChronology ic;
-        TemporalQuery tq;
-        ZonedDateTime zdt;
-        Instant i;
-        Temporal t;
-        TemporalAccessor ta;
-        Duration d;
         GPSClock clock = new GPSClock(Clock.fixed(Instant.EPOCH, ZoneId.of("Z")));
+        clock.start(null);
         clock.setYear(1970);
         clock.setMonth(1);
         clock.setDay(1);
         clock.setHour(0);
         clock.setMinute(0);
         clock.setSecond(1);
-        clock.commit();
+        clock.setMilliSecond(0);
+        clock.commit(null);
         assertEquals(1000, clock.millis());
     }
     

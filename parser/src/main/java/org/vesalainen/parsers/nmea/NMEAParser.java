@@ -1421,7 +1421,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         NMEAChecksum checksum = (NMEAChecksum) getChecksum();
         if (sum != checksum.getValue())
         {
-            clock.rollback();
+            clock.rollback("checksum");
             String reason = input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
             data.rollback(reason);
             warning(reason);
@@ -1432,7 +1432,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         }
         else
         {
-            clock.commit();
+            clock.commit("ok");
             //String reason = input.getLineNumber()+": "+Integer.toHexString(sum);
             data.commit("ok");
             if (aisContext != null && aisContext.isAisMessage())
@@ -1575,6 +1575,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         data.start(null);
         GPSClock gpsClock = new GPSClock(clock);
         data.setClock(gpsClock);
+        gpsClock.start(null);
         data.commit("Set clock");
         AISContext aisContext = null;
         if (aisData != null)

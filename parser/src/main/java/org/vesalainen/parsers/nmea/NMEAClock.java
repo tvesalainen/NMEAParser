@@ -16,13 +16,13 @@
  */
 package org.vesalainen.parsers.nmea;
 
-import java.util.GregorianCalendar;
+import org.vesalainen.util.Transactional;
 
 /**
  *
  * @author Timo Vesalainen
  */
-public interface NMEAClock
+public interface NMEAClock extends Transactional
 {
     /**
      * Set utc time
@@ -31,71 +31,97 @@ public interface NMEAClock
      * @param second 0 - 59
      * @param microSecond 0-999
      */
-    public void setTime(int hour, int minute, int second, int microSecond);
+    void setTime(int hour, int minute, int second, int microSecond);
     /**
      * Set utc date
      * @param year yy
      * @param month mm 1 - 12
      * @param day dd 1 - 31
      */
-    public void setDate(int year, int month, int day);
+    void setDate(int year, int month, int day);
     /**
      * Update UTC Hour
      * @param hour
      */
-    public void setHour(int hour);
+    void setHour(int hour);
     /**
      * Update utc minute
      * @param minute 
      */
-    public void setMinute(int minute);
+    void setMinute(int minute);
     /**
      * Update utc second
      * @param second 
      */
-    public void setSecond(int second);
+    void setSecond(int second);
     /**
      * Update UTC microsecond
-     * @param microSecond 
+     * @param milliSecond 
      */
-    public void setMicroSecond(int microSecond);
-
+    void setMilliSecond(int milliSecond);
     /**
-     * Read NMEA sentence was broken.
-     */
-    public void rollback();
-    /**
-     * Read NMEA sentence was correct.
-     */
-    public void commit();
-    /**
-     * Day, 01 to 31
+     * Day of Month, 01 to 31
      * @param day 
      */
-    public void setDay(int day);
+    void setDay(int day);
     /**
-     * Month, 01 to 12
+     * Month of Year, 01 to 12
      * @param month 
      */
-    public void setMonth(int month);
+    void setMonth(int month);
     /**
      * Year (4 digits)
      * @param year 
      */
-    public void setYear(int year);
+    void setYear(int year);
     /**
      * Local zone description, 00 to +- 13 hours
      * @param localZoneHours 
      */
-    public void setZoneHours(int localZoneHours);
+    void setZoneHours(int localZoneHours);
     /**
      * Local zone minutes description, apply same sign as local hours
      * @param localZoneMinutes 
      */
-    public void setZoneMinutes(int localZoneMinutes);
+    void setZoneMinutes(int localZoneMinutes);
+    /**
+     * Return Year (4 digits)
+     * @return 
+     */
+    int getYear();
+    /**
+     * Returns Month of Year (1-12)
+     * @return 
+     */
+    int getMonth();
+    /**
+     * Return Day of Month (1-31)
+     * @return 
+     */
+    int getDay();
+    /**
+     * Return Hour of Day (0-23)
+     * @return 
+     */
+    int getHour();
+    /**
+     * Return Minute of Hour (0-59)
+     * @return 
+     */
+    int getMinute();
+    /**
+     * Return Second of Minute (0-59)
+     * @return 
+     */
+    int getSecond();
+    /**
+     * Return Milli Second of Second (0-999)
+     * @return 
+     */
+    int getMilliSecond();
     /**
      * returns true if committed ever
      * @return 
      */
-    public boolean isCommitted();
+    boolean isCommitted();
 }
