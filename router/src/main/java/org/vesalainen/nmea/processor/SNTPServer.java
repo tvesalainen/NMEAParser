@@ -28,7 +28,7 @@ import org.vesalainen.code.PropertySetter;
 import org.vesalainen.net.sntp.NtpV4Impl;
 import org.vesalainen.net.sntp.ReferenceIdentifier;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -41,9 +41,8 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
     private static final String[] Prefixes = new String[]{
         "clock"
             };
-    private GregorianCalendar calendar;
     private final JavaLogging log = new JavaLogging();
-    private Clock clock;
+    private NMEAClock clock;
     private DatagramSocket socket;
     private NtpV4Impl ntpMessage;
     private Thread thread;
@@ -102,9 +101,9 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
                 ntpMessage.setRootDelay(0);
                 ntpMessage.setRootDispersion(0);
                 ntpMessage.setReferenceId(ReferenceIdentifier.GPS);
-                ntpMessage.setReferenceTime(TimeStamp.getNtpTime(calendar.getTimeInMillis()));
+                ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.getZonedDateTime().toEpochSecond()));
                 ntpMessage.setOriginateTimeStamp(transmitTimeStamp);
-                long time = clock.getTime();
+                long time = clock.millis();
                 TimeStamp timeStamp = TimeStamp.getNtpTime(time);
                 ntpMessage.setReceiveTimeStamp(timeStamp);
                 ntpMessage.setTransmitTime(timeStamp);
@@ -195,8 +194,7 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
         switch (property)
         {
             case "clock":
-                clock = (Clock) arg;
-                calendar = clock.getCalendar();
+                clock = (NMEAClock) arg;
                 break;
         }
     }

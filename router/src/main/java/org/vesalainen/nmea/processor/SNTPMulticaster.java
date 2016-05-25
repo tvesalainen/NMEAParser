@@ -32,7 +32,7 @@ import org.vesalainen.code.PropertySetter;
 import org.vesalainen.net.sntp.NtpV4Impl;
 import org.vesalainen.net.sntp.ReferenceIdentifier;
 import org.vesalainen.nmea.jaxb.router.SntpMulticasterType;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -45,12 +45,10 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
     private static final String[] Prefixes = new String[]{
         "clock"
             };
-    private boolean updated;
-    private GregorianCalendar calendar;
     private long period = 4000;
     private Timer timer;
     private JavaLogging log = new JavaLogging();
-    private Clock clock;
+    private NMEAClock clock;
     private final MulticastSocket socket;
     private InetAddress group;
     private final NtpV4Impl ntpMessage;
@@ -111,8 +109,8 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
         try
         {
             
-            ntpMessage.setReferenceTime(TimeStamp.getNtpTime(calendar.getTimeInMillis()));
-            ntpMessage.setTransmitTime(TimeStamp.getNtpTime(clock.getTime()));
+            ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.getZonedDateTime().toEpochSecond()));
+            ntpMessage.setTransmitTime(TimeStamp.getNtpTime(clock.millis()));
             DatagramPacket datagramPacket = ntpMessage.getDatagramPacket();
             datagramPacket.setAddress(group);
             socket.send(datagramPacket);
@@ -200,8 +198,7 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
         switch (property)
         {
             case "clock":
-                clock = (Clock) arg;
-                calendar = clock.getCalendar();
+                clock = (NMEAClock) arg;
                 break;
         }
     }

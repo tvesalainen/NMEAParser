@@ -19,7 +19,6 @@ package org.vesalainen.nmea.processor;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
-import java.util.GregorianCalendar;
 import java.util.logging.Level;
 import java.util.zip.CheckedOutputStream;
 import org.vesalainen.code.AbstractPropertySetter;
@@ -28,7 +27,7 @@ import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.TrueWind;
 import org.vesalainen.navi.WayPoint;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
 import org.vesalainen.util.Transactional;
@@ -60,7 +59,7 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
     private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
     private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
     private final JavaLogging log = new JavaLogging();
-    private GregorianCalendar calendar;
+    private NMEAClock clock;
 
     public TrueWindSource(GatheringByteChannel channel, TrueWindSourceType trueWindSourceType)
     {
@@ -94,7 +93,7 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
                 prev.copy(current);
             }
             positionUpdated = false;
-            current.setTime(calendar.getTimeInMillis());
+            current.setTime(clock.millis());
             current.setLatitude(latitude);
             current.setLongitude(longitude);
         }
@@ -109,6 +108,12 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
                     double speed = Navis.speed(prev, current);
                     if (Double.isNaN(speed) && log.isLoggable(Level.WARNING))
                     {
+                        log.warning("prev = %s", prev);
+                        log.warning("current = %s", current);
+                    }
+                    if (speed > 15 && log.isLoggable(Level.WARNING))
+                    {
+                        log.warning("speed = %f", speed);
                         log.warning("prev = %s", prev);
                         log.warning("current = %s", current);
                     }
@@ -158,8 +163,7 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
         switch (property)
         {
             case "clock":
-                Clock clock = (Clock) arg;
-                calendar = clock.getCalendar();
+                clock = (NMEAClock) arg;
                 break;
         }
     }

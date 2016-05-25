@@ -34,8 +34,9 @@ import org.vesalainen.gpx.GPX;
 import org.vesalainen.gpx.TrackHandler;
 import org.vesalainen.nio.channels.ReadableByteChannelFactory;
 import org.vesalainen.nmea.util.TrackInput;
-import org.vesalainen.parsers.nmea.GPSClock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.parsers.nmea.time.GPSClock;
 
 /**
  *
@@ -129,8 +130,8 @@ public class TrackerTest
     private class TH implements TrackHandler
     {
         private Tracker tracker;
-        private final GPSClock clock = new GPSClock();
-        private Calendar calendar = clock.getCalendar();
+        private final NMEAClock clock = new GPSClock();
+        private Calendar calendar = clock.getGregorianCalendar();
         
         @Override
         public boolean startTrack(String name, Collection<Object> extensions)

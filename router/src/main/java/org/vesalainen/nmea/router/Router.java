@@ -786,6 +786,8 @@ public class Router extends JavaLogging implements Runnable
         @Override
         protected SelectableChannel configureChannel() throws IOException
         {
+            readBytes = 0;
+            readCount = 0;
             if (matcher == null)
             {
                 return null;

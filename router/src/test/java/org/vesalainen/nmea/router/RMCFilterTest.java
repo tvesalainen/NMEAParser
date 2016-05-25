@@ -50,8 +50,8 @@ public class RMCFilterTest
     {
         RMCFilter filter = new RMCFilter();
         assertFalse(filter.accept("$GPRMC,065010,A,1555.6283,N,04059.98,W,4.9,265,241215,17,W*43\r\n"));
-        assertTrue(filter.accept("$GPRMC,065010,A,1555.6283,N,04059.99,W,4.9,265,241215,17,W*43\r\n"));
-        assertTrue(filter.accept("$GPRMC,065010,A,1555.6283,N,04100.0013,W,4.9,265,241215,17,W*43\r\n"));
+        assertTrue(filter.accept("$GPRMC,065011,A,1555.6283,N,04059.99,W,4.9,265,241215,17,W*43\r\n"));
+        assertTrue(filter.accept("$GPRMC,065012,A,1555.6283,N,04100.0013,W,4.9,265,241215,17,W*43\r\n"));
     }
     
 }

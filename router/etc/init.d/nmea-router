@@ -12,6 +12,8 @@
 
 # Author: Timo Vesalainen <timo.vesalainen@iki.fi>
 #
+# RUN: update-rc.d nmea-router defaults
+# 
 # Do NOT "set -e"
 
 #
@@ -20,10 +22,10 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="NMEA Router"
-NAME=nmea
+NAME="nmea-router"
 PNAME="NMEA Router"
 PIDFILE=/var/run/$NAME.pid
-SCRIPTNAME=/etc/init.d/$NAME.sh
+SCRIPTNAME=/etc/init.d/$NAME
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
@@ -132,6 +134,7 @@ case "$1" in
 	#
 	log_daemon_msg "Restarting $DESC" "$NAME"
 	do_stop
+        sleep $SLEEP-TIME
 	case "$?" in
 	  0|1)
 		do_start

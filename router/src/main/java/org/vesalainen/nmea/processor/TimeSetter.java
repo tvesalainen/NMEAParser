@@ -27,7 +27,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nmea.jaxb.router.TimeSetterType;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -44,7 +44,7 @@ public class TimeSetter extends TimerTask implements PropertySetter, Transaction
     private long period = 4000;
     private Timer timer;
     private JavaLogging log = new JavaLogging();
-    private Clock clock;
+    private NMEAClock clock;
     private SimpleDateFormat format;
     private long maxDelta = 1000;   // max time difference
 
@@ -106,7 +106,7 @@ public class TimeSetter extends TimerTask implements PropertySetter, Transaction
     {
         try
         {
-            long delta = Math.abs(clock.getOffset());
+            long delta = Math.abs(clock.offset());
             if (delta > maxDelta)
             {
                 Date time = calendar.getTime();
@@ -219,8 +219,7 @@ public class TimeSetter extends TimerTask implements PropertySetter, Transaction
         switch (property)
         {
             case "clock":
-                clock = (Clock) arg;
-                calendar = clock.getCalendar();
+                clock = (NMEAClock) arg;
                 break;
         }
     }

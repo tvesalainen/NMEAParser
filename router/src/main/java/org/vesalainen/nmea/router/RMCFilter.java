@@ -28,6 +28,8 @@ public class RMCFilter extends AbstractNMEAFilter
     private float longitude = Float.NaN;
     private float value;
     private int count;
+    private int prevTime;
+    private int time;
     
     private void reset()
     {
@@ -46,6 +48,15 @@ public class RMCFilter extends AbstractNMEAFilter
                 {
                     return Cond.Accept;
                 }
+                break;
+            case 1:
+                time = Primitives.parseInt(cs, begin, end);
+                if (time == prevTime)
+                {
+                    log.warning("rejected because same time %d as previous %d", time, prevTime);
+                    return Cond.Reject;
+                }
+                prevTime = time;
                 break;
             case 3:
             case 5:

@@ -29,7 +29,7 @@ import java.util.zip.CheckedOutputStream;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
 import org.vesalainen.util.Transactional;
@@ -54,7 +54,7 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
     private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
     private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
-    private GregorianCalendar calendar;
+    private NMEAClock clock;
     private long period = 1000;
     private final Preferences prefs;
     private TSAGeoMag geoMag = new TSAGeoMag();
@@ -105,7 +105,7 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
         if (positionUpdated && now-lastUpdate > 10000)
         {
             log.fine("location %f %f", latitude, longitude);
-            declination = geoMag.getDeclination(latitude, longitude, geoMag.decimalYear(calendar), 0);
+            declination = geoMag.getDeclination(latitude, longitude, geoMag.decimalYear(clock.getGregorianCalendar()), 0);
             if (timer  == null)
             {
                 log.config("timer started by first update period=%d declination=%f", period, declination);
@@ -224,8 +224,7 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
         switch (property)
         {
             case "clock":
-                Clock clock = (Clock) arg;
-                calendar = clock.getCalendar();
+                clock = (NMEAClock) arg;
                 break;
         }
     }

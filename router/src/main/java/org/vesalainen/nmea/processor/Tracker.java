@@ -21,13 +21,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.Clock;
+import java.time.temporal.ChronoField;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.util.TrackOutput;
-import org.vesalainen.parsers.nmea.Clock;
+import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -41,7 +43,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         "longitude",
         "clock"
             };
-    private GregorianCalendar calendar;
+    private Clock clock;
     private int dayOfMonth;
     private double bearingTolerance = 3;
     private double minDistance = 0.1;
@@ -137,19 +139,19 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
             {
                 if (dayOfMonth == 0)
                 {
-                    dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+                    dayOfMonth = clock.instant().get(ChronoField.DAY_OF_MONTH);
                 }
                 else
                 {
-                    int dom = calendar.get(Calendar.DAY_OF_MONTH);
+                    int dom = clock.instant().get(ChronoField.DAY_OF_MONTH);
                     if (dayOfMonth != dom)
                     {
                         track.close();
                         dayOfMonth = dom;
                     }
                 }
-                track.input(calendar.getTimeInMillis(), latitude, longitude);
-                log.finest("input %d %f %f", calendar.getTimeInMillis(), latitude, longitude);
+                track.input(clock.millis(), latitude, longitude);
+                log.finest("input %d %f %f", clock.millis(), latitude, longitude);
             }
             catch (IOException ex)
             {
@@ -242,8 +244,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         switch (property)
         {
             case "clock":
-                Clock clock = (Clock) arg;
-                calendar = clock.getCalendar();
+                clock = (Clock) arg;
                 break;
         }
     }

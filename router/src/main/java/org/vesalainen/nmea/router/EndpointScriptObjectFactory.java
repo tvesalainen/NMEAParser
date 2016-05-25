@@ -17,7 +17,6 @@
 package org.vesalainen.nmea.router;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import org.vesalainen.nmea.script.ScriptStatement;
 
 /**
