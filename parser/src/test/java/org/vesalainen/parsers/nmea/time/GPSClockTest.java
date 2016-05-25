@@ -53,10 +53,10 @@ public class GPSClockTest
         clock.setDay(1);
         clock.setHour(0);
         clock.setMinute(0);
-        clock.setSecond(1);
-        clock.setMilliSecond(0);
+        clock.setSecond(0);
+        clock.setMilliSecond(500);
         clock.commit(null);
-        assertEquals(1000, clock.millis());
+        assertEquals(500, clock.millis());
     }
     
 }

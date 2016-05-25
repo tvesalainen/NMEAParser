@@ -16,64 +16,16 @@
  */
 package org.vesalainen.parsers.nmea;
 
+import java.time.ZonedDateTime;
+import org.vesalainen.time.MutableTime;
 import org.vesalainen.util.Transactional;
 
 /**
  *
  * @author Timo Vesalainen
  */
-public interface NMEAClock extends Transactional
+public interface NMEAClock extends MutableTime, Transactional
 {
-    /**
-     * Set utc time
-     * @param hour 0 - 23
-     * @param minute 0 - 59
-     * @param second 0 - 59
-     * @param microSecond 0-999
-     */
-    void setTime(int hour, int minute, int second, int microSecond);
-    /**
-     * Set utc date
-     * @param year yy
-     * @param month mm 1 - 12
-     * @param day dd 1 - 31
-     */
-    void setDate(int year, int month, int day);
-    /**
-     * Update UTC Hour
-     * @param hour
-     */
-    void setHour(int hour);
-    /**
-     * Update utc minute
-     * @param minute 
-     */
-    void setMinute(int minute);
-    /**
-     * Update utc second
-     * @param second 
-     */
-    void setSecond(int second);
-    /**
-     * Update UTC microsecond
-     * @param milliSecond 
-     */
-    void setMilliSecond(int milliSecond);
-    /**
-     * Day of Month, 01 to 31
-     * @param day 
-     */
-    void setDay(int day);
-    /**
-     * Month of Year, 01 to 12
-     * @param month 
-     */
-    void setMonth(int month);
-    /**
-     * Year (4 digits)
-     * @param year 
-     */
-    void setYear(int year);
     /**
      * Local zone description, 00 to +- 13 hours
      * @param localZoneHours 
@@ -85,43 +37,28 @@ public interface NMEAClock extends Transactional
      */
     void setZoneMinutes(int localZoneMinutes);
     /**
-     * Return Year (4 digits)
-     * @return 
-     */
-    int getYear();
-    /**
-     * Returns Month of Year (1-12)
-     * @return 
-     */
-    int getMonth();
-    /**
-     * Return Day of Month (1-31)
-     * @return 
-     */
-    int getDay();
-    /**
-     * Return Hour of Day (0-23)
-     * @return 
-     */
-    int getHour();
-    /**
-     * Return Minute of Hour (0-59)
-     * @return 
-     */
-    int getMinute();
-    /**
-     * Return Second of Minute (0-59)
-     * @return 
-     */
-    int getSecond();
-    /**
-     * Return Milli Second of Second (0-999)
-     * @return 
-     */
-    int getMilliSecond();
-    /**
      * returns true if committed ever
      * @return 
      */
     boolean isCommitted();
+    /**
+     * Returns milliseconds from epoch.
+     * @return 
+     */
+    long millis();
+    /**
+     * Set time in milliseconds from epoch.
+     * @param millis 
+     */
+    void setMillis(long millis);
+    /**
+     * Returns ZonedDateTime created from latest fix from GPS.
+     * @return 
+     */
+    ZonedDateTime getZonedDateTime();
+    /**
+     * Returns offset from system clock.
+     * @return 
+     */
+    long offset();
 }
