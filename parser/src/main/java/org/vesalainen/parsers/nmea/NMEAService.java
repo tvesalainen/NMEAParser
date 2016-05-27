@@ -23,12 +23,19 @@ import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.code.BackgroundPropertySetterDispatcher;
 import org.vesalainen.code.PropertySetterDispatcher;
+import org.vesalainen.code.SimplePropertySetterDispatcher;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
+import org.vesalainen.nmea.util.NMEASample;
+import org.vesalainen.nmea.util.NMEASampler;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
+import org.vesalainen.util.WeakMapList;
+import org.vesalainen.util.WeakMapSet;
 import org.vesalainen.util.logging.JavaLogging;
+import org.vesalainen.util.stream.Generator;
 
 /**
  *
@@ -42,7 +49,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     private AISDispatcher aisDispatcher;
     private final List<AutoCloseable> autoCloseables = new ArrayList<>();
     private Thread thread;
-    private BackgroundPropertySetterDispatcher dispatcher;
+    private PropertySetterDispatcher dispatcher;
 
     public NMEAService(String address, int port) throws IOException
     {
@@ -64,13 +71,12 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         setLogger(this.getClass());
         this.in = in;
         this.out = out;
-        dispatcher = new BackgroundPropertySetterDispatcher(1024);
+        dispatcher = new SimplePropertySetterDispatcher(new WeakMapSet<>());
         nmeaDispatcher = NMEADispatcher.getInstance(NMEADispatcher.class, dispatcher);
     }
     
     public void start()
     {
-        dispatcher.start();
         thread = new Thread(this, NMEAService.class.getSimpleName());
         thread.start();
     }
@@ -78,9 +84,18 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     public void stop()
     {
         thread.interrupt();
-        dispatcher.stop();
     }
 
+    public Stream<NMEASample> stream(String... properties)
+    {
+        return sampler(properties).stream();
+    }
+
+    public NMEASampler sampler(String... properties)
+    {
+        return new NMEASampler(nmeaDispatcher, properties);
+    }
+    
     public PropertySetterDispatcher getDispatcher()
     {
         return dispatcher;

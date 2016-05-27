@@ -17,6 +17,8 @@
 package org.vesalainen.parsers.nmea.time;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import org.vesalainen.parsers.nmea.NMEAClock;
@@ -24,18 +26,42 @@ import org.vesalainen.time.MutableClock;
 import org.vesalainen.time.SimpleMutableTime;
 
 /**
- *
+ * Transactional MutableClock.
+ * <p>
+ * There are two modes depending on base clock.
+ * <p>Live (default). Data coming from active GPS. Time is updated between 
+ * time-setting NMEA sentences to give accurate timing for other sentences as well.
+ * <p>Fixed (use fixed base clock). Data coming from recorded NMEA sentences
+ * like track file. Time is not updated between time-setting NMEA sentences.
  * @author tkv
  */
 public final class GPSClock extends MutableClock implements NMEAClock
 {
-    SimpleMutableTime uncommitted = new SimpleMutableTime();
-
+    private SimpleMutableTime uncommitted = new SimpleMutableTime();
+    private int localZoneMinutes;
+    /**
+     * Creates a GPSClock in live mode using systemUTC base clock.
+     */
     public GPSClock()
     {
         this(Clock.systemUTC());
     }
-
+    /**
+     * Creates a GPSClock in live or fixed mode depending on argument.
+     * @param live 
+     */
+    public GPSClock(boolean live)
+    {
+        this(live ? Clock.systemUTC() : Clock.fixed(Instant.now(), ZoneOffset.UTC));
+    }
+    
+    /**
+     * Creates a GPSClock. If clock is fixed mode is fixed.
+     * <p>It only matter if the clock is fixed or live. This clock always returns
+     * time according to GPS data. Live or recorded.
+     * @param clock 
+     * @see java.time.Clock#fixed(java.time.Instant, java.time.ZoneId) 
+     */
     public GPSClock(Clock clock)
     {
         super(clock);
@@ -44,12 +70,22 @@ public final class GPSClock extends MutableClock implements NMEAClock
     @Override
     public void start(String reason)
     {
+        this.localZoneMinutes = 0;
     }
 
     @Override
     public void commit(String reason)
     {
-        fields.putAll(uncommitted.getFields());
+        uncommitted.getFields().entrySet().stream().forEach((e) ->
+        {
+            super.set(e.getKey(), e.getValue().getValue());
+        });
+        if (localZoneMinutes != 0)
+        {
+            ZonedDateTime zonedDateTime = getZonedDateTime();
+            zonedDateTime = zonedDateTime.plusMinutes(-localZoneMinutes);
+            setZonedDateTime(zonedDateTime);
+        }
     }
 
     @Override
@@ -62,6 +98,15 @@ public final class GPSClock extends MutableClock implements NMEAClock
     {
         uncommitted.set(chronoField, amount);
     }
+
+    @Override
+    public void setZonedDateTime(ZonedDateTime zonedDateTime)
+    {
+        for (ChronoField cf : SupportedFields)
+        {
+            super.set(cf, zonedDateTime.get(cf));
+        }
+    }
     
     /**
      * Sets Zone hour offset. This method exist to support ZDA sentence which is
@@ -71,12 +116,7 @@ public final class GPSClock extends MutableClock implements NMEAClock
     @Override
     public void setZoneHours(int localZoneHours)
     {
-        if (localZoneHours != 0)
-        {
-            ZonedDateTime zonedDateTime = getZonedDateTime();
-            zonedDateTime = zonedDateTime.plusHours(-localZoneHours);
-            setZonedDateTime(zonedDateTime);
-        }
+        this.localZoneMinutes += 60*localZoneHours;
     }
     /**
      * Sets Zone minute offset. This method exist to support ZDA sentence which is
@@ -86,12 +126,7 @@ public final class GPSClock extends MutableClock implements NMEAClock
     @Override
     public void setZoneMinutes(int localZoneMinutes)
     {
-        if (localZoneMinutes != 0)
-        {
-            ZonedDateTime zonedDateTime = getZonedDateTime();
-            zonedDateTime = zonedDateTime.plusMinutes(-localZoneMinutes);
-            setZonedDateTime(zonedDateTime);
-        }
+        this.localZoneMinutes += 60*localZoneMinutes;
     }
 
     @Override
@@ -99,7 +134,10 @@ public final class GPSClock extends MutableClock implements NMEAClock
     {
         return !fields.isEmpty();
     }
-
+    /**
+     * Returns the offset in milliseconds between systemUTC time and this clock.
+     * @return 
+     */
     @Override
     public long offset()
     {

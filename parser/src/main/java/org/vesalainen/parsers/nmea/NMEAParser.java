@@ -1434,6 +1434,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         {
             clock.commit("ok");
             //String reason = input.getLineNumber()+": "+Integer.toHexString(sum);
+            data.setClock((Clock) clock);
             data.commit("ok");
             if (aisContext != null && aisContext.isAisMessage())
             {
