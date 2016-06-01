@@ -33,5 +33,15 @@
             <groupId>org.htmlparser</groupId>
             <artifactId>htmlparser</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.vesalainen</groupId>
+            <artifactId>test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.vesalainen</groupId>
+            <artifactId>web-util</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

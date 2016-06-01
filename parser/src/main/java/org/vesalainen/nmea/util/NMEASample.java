@@ -20,6 +20,8 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Map.Entry;
+import org.vesalainen.lang.Primitives;
+import org.vesalainen.navi.WayPoint;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.TalkerId;
 import org.vesalainen.util.FloatMap;
@@ -31,7 +33,7 @@ import org.vesalainen.util.Recycler;
  *
  * @author tkv
  */
-public class NMEASample implements Recyclable
+public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
 {
     private long time;
     private TalkerId talkerId;
@@ -47,15 +49,28 @@ public class NMEASample implements Recyclable
         return !map.isEmpty();
     }
     
+    public boolean hasProperty(String property)
+    {
+        return map.containsKey(property);
+    }
+    
     public float getProperty(String property)
     {
         return map.getFloat(property);
     }
+    @Override
     public long getTime()
     {
         return time;
     }
-
+    /**
+     * Return time in seconds since epoch.
+     * @return 
+     */
+    public float getFloatTime()
+    {
+        return ((float)time)/1000.0F;
+    }
     void setTime(long time)
     {
         this.time = time;
@@ -110,6 +125,24 @@ public class NMEASample implements Recyclable
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    @Override
+    public int compareTo(NMEASample o)
+    {
+        return (int) Primitives.signum(time - o.time);
+    }
+
+    @Override
+    public double getLatitude()
+    {
+        return map.getFloat("latitude");
+    }
+
+    @Override
+    public double getLongitude()
+    {
+        return map.getFloat("longitude");
     }
     
 }

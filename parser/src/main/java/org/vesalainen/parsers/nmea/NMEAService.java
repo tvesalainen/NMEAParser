@@ -25,17 +25,14 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.vesalainen.code.PropertySetter;
-import org.vesalainen.code.BackgroundPropertySetterDispatcher;
 import org.vesalainen.code.PropertySetterDispatcher;
 import org.vesalainen.code.SimplePropertySetterDispatcher;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEASampler;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
-import org.vesalainen.util.WeakMapList;
 import org.vesalainen.util.WeakMapSet;
 import org.vesalainen.util.logging.JavaLogging;
-import org.vesalainen.util.stream.Generator;
 
 /**
  *
@@ -50,6 +47,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     private final List<AutoCloseable> autoCloseables = new ArrayList<>();
     private Thread thread;
     private PropertySetterDispatcher dispatcher;
+    private boolean liveClock = true;
 
     public NMEAService(String address, int port) throws IOException
     {
@@ -94,6 +92,16 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     public NMEASampler sampler(String... properties)
     {
         return new NMEASampler(nmeaDispatcher, properties);
+    }
+
+    public boolean isLiveClock()
+    {
+        return liveClock;
+    }
+
+    public void setLiveClock(boolean liveClock)
+    {
+        this.liveClock = liveClock;
     }
     
     public PropertySetterDispatcher getDispatcher()
@@ -172,7 +180,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         try
         {
             NMEAParser parser = NMEAParser.newInstance();
-            parser.parse(in, nmeaDispatcher, aisDispatcher);
+            parser.parse(in, liveClock, nmeaDispatcher, aisDispatcher);
         }
         catch (Exception ex)
         {

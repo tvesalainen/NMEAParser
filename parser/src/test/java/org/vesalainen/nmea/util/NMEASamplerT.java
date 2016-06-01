@@ -42,6 +42,7 @@ public class NMEASamplerT
         try
         {
             NMEAService service = new NMEAService("224.0.0.3", 10110);
+            //service.setLiveClock(false);
             service.start();
             Stream<NMEASample> stream = service.stream("latitude", "longitude");
             stream.forEach(Streams.recyclingConsumer((s)->System.err.println(s)));

@@ -20,49 +20,95 @@ import java.time.Clock;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEADispatcher;
 import org.vesalainen.parsers.nmea.TalkerId;
+import org.vesalainen.util.Lists;
 import org.vesalainen.util.Recycler;
-import org.vesalainen.util.stream.Generator;
+import org.vesalainen.util.stream.ObserverSpliterator;
 
 /**
- *
+ * NMEASampler acts as bridge from observer to stream.
  * @author tkv
  */
-public class NMEASampler extends AbstractPropertySetter
+public class NMEASampler extends AbstractPropertySetter implements Runnable
 {
     private NMEADispatcher dispatcher;
-    private Generator<NMEASample> generator = new Generator<>();
+    private ObserverSpliterator<NMEASample> spliterator;
     private Set<String> properties = new HashSet<>();
     private NMEASample sample;
     private Clock clock;
-
+    private Consumer<NMEASampler> initializer;
+    /**
+     * Creates new NMEASampler and add's it as observer to dispatcher.
+     * @param dispatcher
+     * @param properties Observed properties. Properties 'clock', 'messageType'
+     * and 'talkerId' are always included. (but can be included)
+     */
     public NMEASampler(NMEADispatcher dispatcher, String... properties)
     {
+        this(dispatcher, 0, Long.MAX_VALUE, TimeUnit.MILLISECONDS, null, properties);
+    }
+    public NMEASampler(NMEADispatcher dispatcher, long offerTimeout, long takeTimeout, TimeUnit timeUnit, Consumer<NMEASampler> initializer, String... properties)
+    {
         this.dispatcher = dispatcher;
+        this.initializer = initializer;
         this.properties.addAll(Arrays.asList(properties));
         this.properties.add("clock");
         this.properties.add("messageType");
         this.properties.add("talkerId");
-        addProperties(getPrefixes());
+        spliterator = new ObserverSpliterator<>(
+            Long.MAX_VALUE, 
+            Spliterator.CONCURRENT | Spliterator.NONNULL | Spliterator.ORDERED |Spliterator.SORTED,
+            offerTimeout,
+            takeTimeout,
+            timeUnit,
+            null,
+            (o)->init()
+    );        
     }
-
-    public final void addProperties(String... properties)
+    protected void init()
     {
+        addProperties(getPrefixes());
+        if (initializer != null)
+        {
+            initializer.accept(this);
+            initializer = null;
+        }
+    }
+    /**
+     * Add offer properties to running set.
+     * @param properties 
+     */
+    public void addProperties(String... properties)
+    {
+        this.properties.addAll(Lists.create(properties));
         dispatcher.addObserver(this, properties);
     }
-    
+    /**
+     * Removes observers from running set.
+     * @param properties 
+     */
     public void removeProperties(String... properties)
     {
         dispatcher.removeObserver(this, properties);
+        this.properties.removeAll(Lists.create(properties));
     }
-    
+    /**
+     * Creates a stream from observer. Behavior of two or more running streams
+     * is unpredictable. (will split the streams? not tested)
+     * @return 
+     */
     public Stream<NMEASample> stream()
     {
-        return Stream.generate(()->generator.generate());
+        return StreamSupport.stream(spliterator, false)
+                .onClose(this);
     }
     
     @Override
@@ -83,7 +129,7 @@ public class NMEASampler extends AbstractPropertySetter
     {
         if (sample != null && sample.hasProperties())
         {
-            generator.provide(sample);
+            spliterator.offer(sample);
             sample = null;
         }
     }
@@ -134,6 +180,12 @@ public class NMEASampler extends AbstractPropertySetter
     public final String[] getPrefixes()
     {
         return properties.toArray(new String[properties.size()]);
+    }
+
+    @Override
+    public void run()
+    {
+        dispatcher.removeObserver(this, getPrefixes());
     }
 
 }

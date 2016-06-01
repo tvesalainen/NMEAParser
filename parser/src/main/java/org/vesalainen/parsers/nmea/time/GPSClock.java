@@ -39,6 +39,8 @@ public final class GPSClock extends MutableClock implements NMEAClock
 {
     private SimpleMutableTime uncommitted = new SimpleMutableTime();
     private int localZoneMinutes;
+    private long startTime;
+    private long updTime;
     /**
      * Creates a GPSClock in live mode using systemUTC base clock.
      */
@@ -70,12 +72,14 @@ public final class GPSClock extends MutableClock implements NMEAClock
     @Override
     public void start(String reason)
     {
+        startTime = clock.millis();
         this.localZoneMinutes = 0;
     }
 
     @Override
     public void commit(String reason)
     {
+        updTime = startTime;
         uncommitted.getFields().entrySet().stream().forEach((e) ->
         {
             super.set(e.getKey(), e.getValue().getValue());
@@ -91,6 +95,12 @@ public final class GPSClock extends MutableClock implements NMEAClock
     @Override
     public void rollback(String reason)
     {
+    }
+
+    @Override
+    protected long getUpdated()
+    {
+        return updTime;
     }
 
     @Override
