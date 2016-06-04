@@ -28,6 +28,7 @@ import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.svg.SVGPlotter;
 import org.vesalainen.test.DebugHelper;
 import org.vesalainen.ui.Plotter;
+import org.vesalainen.ui.Plotter.Polyline;
 import org.vesalainen.util.stream.Streams;
 
 /**
@@ -46,24 +47,23 @@ public class NMEAStreamTest
     {
         long offerTimeout = DebugHelper.guessDebugging() ? 600 : 0;
         long takeTimeout = DebugHelper.guessDebugging() ? 600 : 5;
-        SVGPlotter plotter1 = new SVGPlotter(1000, 1000);
-        plotter1.setColor(Color.BLACK);
-        SVGPlotter plotter2 = new SVGPlotter(1000, 1000);
-        plotter2.setColor(Color.BLUE);
-        SVGPlotter plotter3 = new SVGPlotter(1000, 1000);
-        plotter3.setColor(Color.RED);
+        SVGPlotter plotter = new SVGPlotter(1000, 1000);
+        Polyline pl1 = plotter.polyline(Color.BLACK);
+        Polyline pl2 = plotter.polyline(Color.BLUE);
+        Polyline pl3 = plotter.polyline(Color.RED);
         
         try(InputStream is = NMEAStreamTest.class.getResourceAsStream("/sample.nmea"))
         {
             Stream<NMEASample> peek = NMEAStream.parse(is, offerTimeout, takeTimeout, TimeUnit.SECONDS, "latitude", "longitude")
-                    .peek((s)->{plotter1.lineTo(s.getLongitude(), s.getLatitude());})
+                    .peek((s)->{pl1.lineTo(s.getLongitude(), s.getLatitude());})
                     .filter(NMEAFilters.minDistanceFilter(0.01))
-                    .peek((s)->{plotter2.lineTo(s.getLongitude(), s.getLatitude());});
+                    .peek((s)->{pl2.lineTo(s.getLongitude(), s.getLatitude());});
             NMEAFilters.BearingToleranceFilter(peek, 3.0)
-                    .forEach(Streams.recyclingConsumer((s)->{plotter3.lineTo(s.getLongitude(), s.getLatitude());}));
-            plotter1.plot("sample1", "svg");
-            plotter2.plot("sample2", "svg");
-            plotter3.plot("sample3", "svg");
+                    .forEach(Streams.recyclingConsumer((s)->{pl2.lineTo(s.getLongitude(), s.getLatitude());}));
+            plotter.drawPolyline(pl1);
+            plotter.drawPolyline(pl2);
+            plotter.drawPolyline(pl3);
+            plotter.plot("sample", "svg");
         }
         catch (IOException ex)
         {
