@@ -120,10 +120,10 @@ public abstract class TrackFilter
                     }
                     else
                     {
-                        recycle(wp);
-                        recycle(buffer);
                         log.warning("%s skipped because of speed (3)", buffer.get(1));
                         log.warning("%s", wp);
+                        recycle(wp);
+                        recycle(buffer);
                     }
                 }
                 break;
