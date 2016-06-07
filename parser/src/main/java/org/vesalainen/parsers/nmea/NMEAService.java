@@ -17,11 +17,13 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.vesalainen.code.PropertySetter;
@@ -180,7 +182,13 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         try
         {
             NMEAParser parser = NMEAParser.newInstance();
-            parser.parse(in, liveClock, nmeaDispatcher, aisDispatcher);
+            Supplier<InetSocketAddress> origin = null;
+            if (in instanceof UnconnectedDatagramChannel)
+            {
+                UnconnectedDatagramChannel udc = (UnconnectedDatagramChannel) in;
+                origin = ()->{return udc.getFromAddress();};
+            }
+            parser.parse(in, liveClock, origin, nmeaDispatcher, aisDispatcher);
         }
         catch (Exception ex)
         {

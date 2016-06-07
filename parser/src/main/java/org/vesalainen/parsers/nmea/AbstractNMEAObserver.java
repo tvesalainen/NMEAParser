@@ -804,4 +804,9 @@ public class AbstractNMEAObserver implements NMEAObserver
     {
     }
 
+    @Override
+    public void setOrigin(Object origin)
+    {
+    }
+
 }

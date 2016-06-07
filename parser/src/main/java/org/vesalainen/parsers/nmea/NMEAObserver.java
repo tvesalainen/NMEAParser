@@ -46,6 +46,11 @@ import static org.vesalainen.parsers.nmea.NMEACategory.*;
 public interface NMEAObserver extends Transactional
 {
     /**
+     * Set the origin of the data. Like inet address or port name.
+     * @param origin 
+     */
+    void setOrigin(Object origin);
+    /**
      * Set the clock
      * @param clock 
      */

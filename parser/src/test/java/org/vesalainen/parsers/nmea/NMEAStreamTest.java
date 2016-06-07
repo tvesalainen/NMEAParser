@@ -88,7 +88,7 @@ public class NMEAStreamTest
         
         try(InputStream is = NMEAStreamTest.class.getResourceAsStream("/sample.nmea"))
         {
-            Stream<NMEASample> peek = NMEAStream.parse(is, offerTimeout, takeTimeout, TimeUnit.SECONDS, "latitude", "longitude")
+            Stream<NMEASample> peek = NMEAStream.parse(is, offerTimeout, takeTimeout, TimeUnit.SECONDS, ()->{return "/sample.nmea";}, "latitude", "longitude")
                     .peek((s)->{pl1.lineTo(s.getLongitude(), s.getLatitude());})
                     .filter(NMEAFilters.minDistanceFilter(0.01))
                     .peek((s)->{pl2.lineTo(s.getLongitude(), s.getLatitude());});

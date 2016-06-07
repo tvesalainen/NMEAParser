@@ -18,10 +18,9 @@ package org.vesalainen.nmea.util;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.vesalainen.code.SimplePropertySetterDispatcher;
-import org.vesalainen.nmea.util.NMEASample;
-import org.vesalainen.nmea.util.NMEASampler;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEADispatcher;
 import org.vesalainen.parsers.nmea.NMEAParser;
@@ -36,18 +35,18 @@ public class NMEAStream
 {
     public static final <I> Stream<NMEASample> parse(I input, String... properties)
     {
-        return parse(input, 0, 10, TimeUnit.SECONDS, properties);
+        return parse(input, 0, 10, TimeUnit.SECONDS, null, properties);
     }
-    public static final <I> Stream<NMEASample> parse(I input, long offerTimeout, long takeTimeout, TimeUnit timeUnit, String... properties)
+    public static final <I> Stream<NMEASample> parse(I input, long offerTimeout, long takeTimeout, TimeUnit timeUnit, Supplier origin, String... properties)
     {
         SimplePropertySetterDispatcher dispatcher = new SimplePropertySetterDispatcher();
         NMEADispatcher nmeaDispatcher = NMEADispatcher.getInstance(NMEADispatcher.class, dispatcher);
-        NMEASampler sampler = new NMEASampler(nmeaDispatcher, offerTimeout, takeTimeout, timeUnit, (s)->init(input, nmeaDispatcher), properties);
+        NMEASampler sampler = new NMEASampler(nmeaDispatcher, offerTimeout, takeTimeout, timeUnit, (s)->init(input, nmeaDispatcher, origin), properties);
         return sampler.stream();
     }
-    private static <I> void init(I input, NMEADispatcher nmeaDispatcher)
+    private static <I> void init(I input, NMEADispatcher nmeaDispatcher, Supplier origin)
     {
-        Runner runner = new Runner(input, nmeaDispatcher);
+        Runner runner = new Runner(input, nmeaDispatcher, origin);
         Thread thread = new Thread(runner, NMEAStream.class.getSimpleName());
         thread.start();
     }
@@ -72,13 +71,15 @@ public class NMEAStream
     }
     private static class Runner<I> implements Runnable
     {
-        I input;
-        NMEADispatcher nmeaDispatcher;
+        private I input;
+        private NMEADispatcher nmeaDispatcher;
+        private Supplier origin;
 
-        public Runner(I input, NMEADispatcher nmeaDispatcher)
+        public Runner(I input, NMEADispatcher nmeaDispatcher, Supplier origin)
         {
             this.input = input;
             this.nmeaDispatcher = nmeaDispatcher;
+            this.origin = origin;
         }
         
         @Override
@@ -87,7 +88,7 @@ public class NMEAStream
             try
             {
                 NMEAParser parser = NMEAParser.newInstance();
-                parser.parse(input, false, nmeaDispatcher, null);
+                parser.parse(input, false, origin, nmeaDispatcher, null);
             }
             catch (IOException ex)
             {

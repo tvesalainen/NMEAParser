@@ -24,6 +24,7 @@ import java.nio.channels.ScatteringByteChannel;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.zip.Checksum;
 import org.vesalainen.parser.GenClassFactory;
@@ -47,6 +48,7 @@ import org.vesalainen.parsers.nmea.time.GPSClock;
 
 /**
  * @author Timo Vesalainen
+ * @param 
  * @see <a href="http://catb.org/gpsd/NMEA.html">NMEA Revealed</a>
  * @see <a href="http://catb.org/gpsd/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
  * @see <a href="http://www.eye4software.com/hydromagic/documentation/nmea0183/">Professional hydrographic survey software</a>
@@ -1414,6 +1416,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             int sum,
             @ParserContext(ParserConstants.InputReader) InputReader input,
             @ParserContext("clock") NMEAClock clock,
+            @ParserContext("origin") Supplier origin,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             )
@@ -1435,6 +1438,10 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             clock.commit("ok");
             //String reason = input.getLineNumber()+": "+Integer.toHexString(sum);
             data.setClock((Clock) clock);
+            if (origin != null)
+            {
+                data.setOrigin(origin.get());
+            }
             data.commit("ok");
             if (aisContext != null && aisContext.isAisMessage())
             {
@@ -1565,9 +1572,9 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
      */
     public <I> void parse(I input, NMEAObserver data, AISObserver aisData) throws IOException
     {
-        parse(input, true, data, aisData);
+        parse(input, true, null, data, aisData);
     }
-    public <I> void parse(I input, boolean liveClock, NMEAObserver data, AISObserver aisData) throws IOException
+    public <I> void parse(I input, boolean liveClock, Supplier origin, NMEAObserver data, AISObserver aisData) throws IOException
     {
         if (data == null)
         {
@@ -1591,28 +1598,28 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             if (input instanceof ScatteringByteChannel)
             {
                 ScatteringByteChannel sbc = (ScatteringByteChannel) input;
-                parse(sbc, gpsClock, data, aisContext);
+                parse(sbc, gpsClock, origin, data, aisContext);
             }
             else
             {
                 if (input instanceof URL)
                 {
                     URL url = (URL) input;
-                    parse(url, gpsClock, data, aisContext);
+                    parse(url, gpsClock, origin, data, aisContext);
                 }
                 else
                 {
                     if (input instanceof String)
                     {
                         String str = (String) input;
-                        parse(str, gpsClock, data, aisContext);
+                        parse(str, gpsClock, origin, data, aisContext);
                     }
                     else
                     {
                         if (input instanceof InputStream)
                         {
                             InputStream is = (InputStream) input;
-                            parse(is, gpsClock, data, aisContext);
+                            parse(is, gpsClock, origin, data, aisContext);
                         }
                         else
                         {
@@ -1636,6 +1643,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     protected abstract void parse(
             URL url,
             @ParserContext("clock") NMEAClock clock,
+            @ParserContext("origin") Supplier origin,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;
@@ -1646,6 +1654,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     protected abstract void parse(
             ScatteringByteChannel channel,
             @ParserContext("clock") NMEAClock clock,
+            @ParserContext("origin") Supplier origin,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;
@@ -1656,6 +1665,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     protected abstract void parse(
             String text,
             @ParserContext("clock") NMEAClock clock,
+            @ParserContext("origin") Supplier origin,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;
@@ -1666,6 +1676,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     protected abstract void parse(
             InputStream is,
             @ParserContext("clock") NMEAClock clock,
+            @ParserContext("origin") Supplier origin,
             @ParserContext("data") NMEAObserver data,
             @ParserContext("aisContext") AISContext aisContext
             ) throws IOException;
