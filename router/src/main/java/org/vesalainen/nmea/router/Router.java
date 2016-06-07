@@ -101,7 +101,7 @@ public class Router extends JavaLogging implements Runnable
     private static final int BufferSize = 1024;
     private AutoCloseableList<AutoCloseable> autoCloseables;
     private MultiProviderSelector selector;
-    private Set<SerialChannel> portPool = new HashSet<>();
+    private Set<String> portPool = new HashSet<>();
     private Set<SerialEndpoint> resolvPool = new HashSet<>();
     private final MapSet<String,DataSource> sources = new HashMapSet<>();
     private final Map<String,SerialEndpoint> allSerialEndpoints = new HashMap<>();
@@ -219,9 +219,9 @@ public class Router extends JavaLogging implements Runnable
         for (String port : SerialChannel.getFreePorts())
         {
             config("%s", port);
-            SerialChannel sc = builder.setPort(port).get();
-            autoCloseables.add(sc);
-            portPool.add(sc);
+            //SerialChannel sc = builder.setPort(port).get();
+            //autoCloseables.add(sc);
+            portPool.add(port);
         }
         portCount = portPool.size();
 
@@ -308,7 +308,7 @@ public class Router extends JavaLogging implements Runnable
                         assert (channel != null);
                         config("%s: failed %s read cound=%d bytes=%d", ds.name, channel, ds.readCount, ds.readBytes);
                         config("add portPool -> %s", channel);
-                        portPool.add(channel);
+                        portPool.add(endpoint.port);
                         if (allSerialEndpoints.containsKey(endpoint.name))
                         {
                             config("add resolvPool -> %s", endpoint);
@@ -319,6 +319,7 @@ public class Router extends JavaLogging implements Runnable
                             config("killed %s", endpoint);
                         }
                         sk.cancel();
+                        channel.close();
                     }
                 }
             }
@@ -327,11 +328,11 @@ public class Router extends JavaLogging implements Runnable
                 allMatched = true;
                 matcherManager.allMatched();
                 config("all ports matched");
-                for (SerialChannel sc : portPool)
-                {
-                    sc.close();
-                    config("release extra port %s",sc);
-                }
+                //for (SerialChannel sc : portPool)
+                //{
+                //    sc.close();
+                //    config("release extra port %s",sc);
+                //}
                 portPool = null;
                 resolvPool = null;
                 matcherManager = null;
@@ -388,7 +389,7 @@ public class Router extends JavaLogging implements Runnable
             {
                 // endpoint is active
                 config("add portPool -> %s", se.channel);
-                portPool.add((SerialChannel) se.channel);
+                portPool.add(se.port);
             }
             resolvPool.remove(se);
             sources.remove(target);
@@ -719,7 +720,7 @@ public class Router extends JavaLogging implements Runnable
         protected Configuration configuration;
         private long resolvStarted;
         private long resolvTimeout = ResolvTimeout;
-        protected Set<SerialChannel> triedPorts = new HashSet<>();
+        protected Set<String> triedPorts = new HashSet<>();
         protected String lastPort;
         protected String port;
         
@@ -794,28 +795,28 @@ public class Router extends JavaLogging implements Runnable
             }
             if (lastPort != null)
             {
-                Iterator<SerialChannel> iterator = portPool.iterator();
+                Iterator<String> iterator = portPool.iterator();
                 while (iterator.hasNext())
                 {
-                    SerialChannel serialChannel = iterator.next();
-                    if (lastPort.equals(serialChannel.getPort()))
+                    String prt = iterator.next();
+                    if (lastPort.equals(prt))
                     {
                         info("using last matched port %s", lastPort);
                         iterator.remove();
                         lastPort = null;
-                        return configure(serialChannel);
+                        return configure(prt);
                     }
                 }
                 configChanged = true;
             }
-            Iterator<SerialChannel> iterator = portPool.iterator();
+            Iterator<String> iterator = portPool.iterator();
             while (iterator.hasNext())
             {
-                SerialChannel serialChannel = iterator.next();
-                if (!triedPorts.contains(serialChannel))
+                String prt = iterator.next();
+                if (!triedPorts.contains(prt))
                 {
                     iterator.remove();
-                    return configure(serialChannel);
+                    return configure(prt);
                 }
             }
             if (triedPorts.size() >= portCount-matchedSerialEndpoints.size())
@@ -827,14 +828,16 @@ public class Router extends JavaLogging implements Runnable
             return null;
         }
 
-        private SerialChannel configure(SerialChannel serialChannel) throws IOException
+        private SerialChannel configure(String prt) throws IOException
         {
-            serialChannel.configure(configuration);
-            triedPorts.add(serialChannel);
+            Builder builder = new SerialChannel.Builder(prt, configuration)
+                    .setBlocking(false);
+            SerialChannel serialChannel = builder.get();
+            triedPorts.add(prt);
             resolvStarted = System.currentTimeMillis();
-            info("%s: %s -> %s", name, serialChannel, configuration);
+            info("%s: %s -> %s", name, prt, configuration);
             channel = serialChannel;
-            port = serialChannel.getPort();
+            port = prt;
             return serialChannel;
         }
         
