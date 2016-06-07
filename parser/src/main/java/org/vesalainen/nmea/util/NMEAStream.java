@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.parsers.nmea;
+package org.vesalainen.nmea.util;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +22,11 @@ import java.util.stream.Stream;
 import org.vesalainen.code.SimplePropertySetterDispatcher;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEASampler;
+import org.vesalainen.parsers.nmea.MessageType;
+import org.vesalainen.parsers.nmea.NMEADispatcher;
+import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.parsers.nmea.TalkerId;
+import org.vesalainen.util.Recycler;
 
 /**
  *
@@ -45,6 +50,25 @@ public class NMEAStream
         Runner runner = new Runner(input, nmeaDispatcher);
         Thread thread = new Thread(runner, NMEAStream.class.getSimpleName());
         thread.start();
+    }
+    public static class Builder
+    {
+        private Stream.Builder<NMEASample> builder = Stream.builder();
+        
+        public void addWaypoint(long time, float latitude, float longitude)
+        {
+            NMEASample sample = Recycler.get(NMEASample.class);
+            sample.setMessageType(MessageType.RMC);
+            sample.setTalkerId(TalkerId.GP);
+            sample.setTime(time);
+            sample.setProperty("latitude", latitude);
+            sample.setProperty("longitude", longitude);
+            builder.add(sample);
+        }
+        public Stream<NMEASample> build()
+        {
+            return builder.build();
+        }
     }
     private static class Runner<I> implements Runnable
     {

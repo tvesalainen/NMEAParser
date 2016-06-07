@@ -52,6 +52,7 @@ public class NMEAFilters
         private double bearingTolerance;
         private double lastBearing = Double.NaN;
         private boolean go;
+        private boolean ended;
         private NMEASample anchor;
         private NMEASample middle;
 
@@ -68,11 +69,21 @@ public class NMEAFilters
         @Override
         public boolean tryAdvance(Consumer<? super NMEASample> action)
         {
+            if (ended)
+            {
+                return false;
+            }
             go = true;
             while (go)
             {
                 if (!spliterator.tryAdvance((s)->handle(s, action)))
                 {
+                    if (middle != null)
+                    {
+                        action.accept(middle);
+                        ended = true;
+                        return true;
+                    }
                     return false;
                 }
             }
@@ -109,10 +120,14 @@ public class NMEAFilters
                 }
                 else
                 {
-                    double bearing = bearing(anchor, wp);
-                    if (Math.abs(bearing-lastBearing) > bearingTolerance)
+                    double anchorBearing = bearing(anchor, wp);
+                    double middleBearing = bearing(middle, wp);
+                    if (
+                            Math.abs(anchorBearing-lastBearing) > bearingTolerance ||
+                            Math.abs(middleBearing-lastBearing) > bearingTolerance
+                            )
                     {
-                        lastBearing = bearing;
+                        lastBearing = middleBearing;
                         action.accept(middle);
                         go = false;
                         anchor = middle;
