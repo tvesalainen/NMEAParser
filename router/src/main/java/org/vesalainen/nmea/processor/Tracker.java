@@ -23,13 +23,12 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.time.temporal.ChronoField;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.util.TrackOutput;
 import org.vesalainen.parsers.nmea.NMEAClock;
+import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -43,7 +42,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         "longitude",
         "clock"
             };
-    private Clock clock;
+    private GPSClock clock;
     private int dayOfMonth;
     private double bearingTolerance = 3;
     private double minDistance = 0.1;
@@ -139,11 +138,11 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
             {
                 if (dayOfMonth == 0)
                 {
-                    dayOfMonth = clock.instant().get(ChronoField.DAY_OF_MONTH);
+                    dayOfMonth = clock.getDay();
                 }
                 else
                 {
-                    int dom = clock.instant().get(ChronoField.DAY_OF_MONTH);
+                    int dom = clock.getDay();
                     if (dayOfMonth != dom)
                     {
                         track.close();
@@ -244,7 +243,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         switch (property)
         {
             case "clock":
-                clock = (Clock) arg;
+                clock = (GPSClock) arg;
                 break;
         }
     }

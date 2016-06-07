@@ -110,8 +110,8 @@ public class TrackerTest
         }
         catch (Exception ex)
         {
-            fail(ex.getMessage());
             Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail(ex.getMessage());
         }
     }
 
