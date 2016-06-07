@@ -1589,7 +1589,7 @@ public class Router extends JavaLogging implements Runnable
                     lg = Router.this.getLogger();
                     break;
                 case 2:
-                    lg = getLogger(arr[1]);
+                    lg = getLog(arr[1]);
                     break;
                 default:
                     throw new BadInputException("error : "+cmd);
@@ -1603,7 +1603,7 @@ public class Router extends JavaLogging implements Runnable
             logHandler = new ChannelHandler(channel);
             lg.addHandler(logHandler);
         }
-        private Logger getLogger(String s)
+        private Logger getLog(String s)
         {
             DataSource ds = DataSource.get(s);
             if (ds != null)
