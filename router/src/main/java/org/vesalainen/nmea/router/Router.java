@@ -393,7 +393,7 @@ public class Router extends JavaLogging implements Runnable
             resolvPool.remove(se);
             sources.remove(target);
             allSerialEndpoints.remove(target);
-            matchedSerialEndpoints.remove(se);
+            matchedSerialEndpoints.remove(target);
             if (se.scriptEngine != null)
             {
                 se.scriptEngine.stop();
