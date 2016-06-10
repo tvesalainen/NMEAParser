@@ -255,7 +255,7 @@ public class Router extends JavaLogging implements Runnable
                 se.init2(e.getValue());
                 if (!configureChannel(se, selector))
                 {
-                    config("add resolvPool -> %s", se);
+                    fine("add resolvPool -> %s", se);
                     resolvPool.add(se);
                 }
             }
@@ -306,12 +306,12 @@ public class Router extends JavaLogging implements Runnable
                     {
                         SerialChannel channel = (SerialChannel) sk.channel();
                         assert (channel != null);
-                        config("%s: failed %s read cound=%d bytes=%d", ds.name, channel, ds.readCount, ds.readBytes);
-                        config("add portPool -> %s", channel);
+                        fine("%s: failed %s read cound=%d bytes=%d", ds.name, channel, ds.readCount, ds.readBytes);
+                        fine("add portPool -> %s", channel);
                         portPool.add(endpoint.port);
                         if (allSerialEndpoints.containsKey(endpoint.name))
                         {
-                            config("add resolvPool -> %s", endpoint);
+                            fine("add resolvPool -> %s", endpoint);
                             resolvPool.add(endpoint);
                         }
                         else
@@ -354,7 +354,7 @@ public class Router extends JavaLogging implements Runnable
             {
                 if (endpoint.isSource())
                 {
-                    config("register "+endpoint);
+                    fine("register "+endpoint);
                     channel.register(selector, OP_READ, endpoint);
                 }
                 else
@@ -388,7 +388,7 @@ public class Router extends JavaLogging implements Runnable
             if (!resolvPool.contains(se))
             {
                 // endpoint is active
-                config("add portPool -> %s", se.channel);
+                fine("add portPool -> %s", se.channel);
                 portPool.add(se.port);
             }
             resolvPool.remove(se);
@@ -821,7 +821,7 @@ public class Router extends JavaLogging implements Runnable
             }
             if (triedPorts.size() >= portCount-matchedSerialEndpoints.size())
             {
-                config("starting again because tried all ports already");
+                fine("starting again because tried all ports already");
                 triedPorts.clear(); // try again
             }
             //info("set resolvTimeout=%d", resolvTimeout);
@@ -835,7 +835,7 @@ public class Router extends JavaLogging implements Runnable
             SerialChannel serialChannel = builder.get();
             triedPorts.add(prt);
             resolvStarted = System.currentTimeMillis();
-            info("%s: %s -> %s", name, prt, configuration);
+            fine("%s: %s -> %s", name, prt, configuration);
             channel = serialChannel;
             port = prt;
             return serialChannel;
