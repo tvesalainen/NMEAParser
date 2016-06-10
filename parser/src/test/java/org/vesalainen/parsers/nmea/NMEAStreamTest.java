@@ -55,7 +55,7 @@ public class NMEAStreamTest
         builder.addWaypoint(20000, 60.2F, 25);
         builder.addWaypoint(30000, 60.3F, 25.1F);
         builder.addWaypoint(40000, 60.4F, 25.2F);
-        List<NMEASample> list = NMEAFilters.BearingToleranceFilter(builder.build(), 3.0).collect(Collectors.toList());
+        List<NMEASample> list = NMEAFilters.bearingToleranceFilter(builder.build(), 3.0).collect(Collectors.toList());
         assertEquals(3, list.size());
         assertEquals(0, list.get(0).getTime());
         assertEquals(20000, list.get(1).getTime());
@@ -92,7 +92,7 @@ public class NMEAStreamTest
                     .peek((s)->{pl1.lineTo(s.getLongitude(), s.getLatitude());})
                     .filter(NMEAFilters.minDistanceFilter(0.01))
                     .peek((s)->{pl2.lineTo(s.getLongitude(), s.getLatitude());});
-            NMEAFilters.BearingToleranceFilter(peek, 3.0)
+            NMEAFilters.bearingToleranceFilter(peek, 3.0)
                     .forEach(Streams.recyclingConsumer((s)->{pl3.lineTo(s.getLongitude(), s.getLatitude());}));
             plotter.drawPolyline(pl1);
             plotter.drawPolyline(pl2);

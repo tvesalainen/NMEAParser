@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.navi.WayPoint;
 import org.vesalainen.parsers.nmea.MessageType;
@@ -40,6 +41,16 @@ public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
     private MessageType messageType;
     private FloatMap<String> map = new FloatMap<>();
 
+    public Set<String> getProperties()
+    {
+        return map.keySet();
+    }
+
+    public FloatMap<String> getMap()
+    {
+        return map;
+    }
+    
     void setProperty(String property, float value)
     {
         map.put(property, value);

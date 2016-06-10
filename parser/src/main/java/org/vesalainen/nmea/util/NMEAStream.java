@@ -64,6 +64,12 @@ public class NMEAStream
             sample.setProperty("longitude", longitude);
             builder.add(sample);
         }
+        public NMEASample addSample()
+        {
+            NMEASample sample = Recycler.get(NMEASample.class);
+            builder.add(sample);
+            return sample;
+        }
         public Stream<NMEASample> build()
         {
             return builder.build();

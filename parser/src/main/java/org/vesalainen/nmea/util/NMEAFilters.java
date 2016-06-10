@@ -20,15 +20,22 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Spliterator;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.vesalainen.navi.Navis;
 import static org.vesalainen.navi.Navis.bearing;
-import static org.vesalainen.navi.Navis.distance;
+import org.vesalainen.util.FloatMap;
+import org.vesalainen.util.FloatReference;
+import org.vesalainen.util.Lists;
 import org.vesalainen.util.Recycler;
 import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.stream.Streams;
@@ -41,7 +48,114 @@ import org.vesalainen.util.stream.Streams;
  */
 public class NMEAFilters
 {
-    public static final Stream<NMEASample> BearingToleranceFilter(Stream<NMEASample> stream, double bearingTolerance)
+    /**
+     * Creates a filter that filters samples so, that no two samples have time
+     * closer than period.
+     * <p>Use with accumulatorMap and containsAllFilter to make sure all needed
+     * properties are present.
+     * @param period
+     * @param unit
+     * @return 
+     */
+    public static final Predicate<NMEASample> periodicFilter(long period, TimeUnit unit)
+    {
+        return Streams.recyclingPredicate(new PeriodicFilter(unit.toMillis(period)));
+    }
+    private static class PeriodicFilter implements Predicate<NMEASample>
+    {
+        private long period;
+        private long limit;
+
+        public PeriodicFilter(long period)
+        {
+            this.period = period;
+        }
+        
+        @Override
+        public boolean test(NMEASample t)
+        {
+            if (limit == 0)
+            {
+                limit = period + t.getTime();
+                return true;
+            }
+            else
+            {
+                long time = t.getTime();
+                if (limit < time)
+                {
+                    limit = period + t.getTime();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+        
+    }
+    /**
+     * This filter passes only samples that have all of given properties.
+     * @param properties
+     * @return 
+     */
+    public static final Predicate<NMEASample> containsAllFilter(String... properties)
+    {
+        return Streams.recyclingPredicate(new ContainsAllFilter(properties));
+    }
+    private static class ContainsAllFilter implements Predicate<NMEASample>
+    {
+        private final Set<String> set = new HashSet<>();
+
+        public ContainsAllFilter(String... properties)
+        {
+            for (String property : properties)
+            {
+                set.add(property);
+            }
+        }
+        
+        @Override
+        public boolean test(NMEASample t)
+        {
+            return t.getProperties().containsAll(set);
+        }
+        
+    }
+    /**
+     * Returns map that accumulates previous properties to sample.
+     * 
+     * @return 
+     */
+    public static final UnaryOperator<NMEASample> accumulatorMap()
+    {
+        return new AccumulatorMap();
+    }
+    private static class AccumulatorMap implements UnaryOperator<NMEASample>
+    {
+        private FloatMap<String> map = new FloatMap<>();
+        @Override
+        public NMEASample apply(NMEASample t)
+        {
+            map.entrySet().stream().filter((e) -> (!t.hasProperty(e.getKey()))).forEach((Entry<String, FloatReference> e) ->
+            {
+                t.setProperty(e.getKey(), e.getValue().getValue());
+            });
+            map.putAll(t.getMap());
+            return t;
+        }
+        
+    }
+    /**
+     * Returns filter that filters waypoints which bearing differs less that 
+     * bearingTolerance in degrees from previous waypoint.
+     * <p>This is used to filter waypoints which can be replaced by line in.
+     * @param stream
+     * @param bearingTolerance
+     * @return 
+     */
+    public static final Stream<NMEASample> bearingToleranceFilter(Stream<NMEASample> stream, double bearingTolerance)
     {
         BearingToleranceSpliterator bearingToleranceSpliterator = new BearingToleranceSpliterator(stream, bearingTolerance);
         return StreamSupport.stream(bearingToleranceSpliterator, false);
