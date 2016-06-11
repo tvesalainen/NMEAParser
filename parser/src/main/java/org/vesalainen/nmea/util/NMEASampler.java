@@ -120,7 +120,6 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
             {
                 sample = Recycler.get(NMEASample.class);
             }
-            sample.setTime(clock.millis());
         }
     }
 
@@ -129,6 +128,7 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
     {
         if (sample != null && sample.hasProperties())
         {
+            sample.setTime(clock.millis());
             spliterator.offer(sample);
             sample = null;
         }

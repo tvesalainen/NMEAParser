@@ -31,7 +31,6 @@ import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEAStream.Builder;
 import org.vesalainen.svg.SVGPlotter;
 import org.vesalainen.test.DebugHelper;
-import org.vesalainen.ui.Plotter;
 import org.vesalainen.ui.Plotter.Polyline;
 import org.vesalainen.util.stream.Streams;
 

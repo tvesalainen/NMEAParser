@@ -25,12 +25,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import org.vesalainen.io.CompressedOutput;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author tkv
  */
-public class TrackOutput extends TrackFilter implements AutoCloseable
+public class TrackOutput extends JavaLogging implements AutoCloseable
 {
     private final TrackPoint trackPoint = new TrackPoint();
     private final File directory;
@@ -39,6 +40,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
     private String format;
     private CompressedOutput<TrackPoint> compressor;
     private File file;
+    private boolean open;
     /**
      * Creates a TrackOutput for writing compressed track file. Filename is 
      * comprised of track starting date
@@ -56,29 +58,32 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
      */
     public TrackOutput(File directory, String format)
     {
+        super(TrackOutput.class);
         this.directory = directory;
         this.format = format;
     }
 
-    @Override
-    protected void output(long time, float latitude, float longitude) throws IOException
+    public void output(long time, float latitude, float longitude) throws IOException
     {
+        if (!open)
+        {
+            open(time);
+        }
         trackPoint.time = time;
         trackPoint.latitude = latitude;
         trackPoint.longitude = longitude;
         compressor.write();
-        log.finer("input %d %f %f", time, latitude, longitude);
+        finer("input %d %f %f", time, latitude, longitude);
     }
 
-    @Override
     protected void open(long time) throws IOException
     {
-        super.open(time);
+        open = true;
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String dstr = sdf.format(new Date(time));
         file = new File(directory, dstr);
-        log.fine("open %s", file);
+        fine("open %s", file);
         OutputStream out = new FileOutputStream(file);
         if (buffered)
         {
@@ -90,7 +95,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
     @Override
     public void close() throws IOException
     {
-        super.close();
+        open = false;
         if (compressor != null)
         {
             compressor.close();
@@ -100,7 +105,7 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
             }
             compressor = null;
         }
-        log.fine("close tracker file");
+        fine("close tracker file");
     }
 
     public TrackOutput setBuffered(boolean buffered)
@@ -109,28 +114,4 @@ public class TrackOutput extends TrackFilter implements AutoCloseable
         return this;
     }
     
-    @Override
-    public TrackOutput setMaxPassive(long maxPassive)
-    {
-        return (TrackOutput) super.setMaxPassive(maxPassive);
-    }
-
-    @Override
-    public TrackOutput setMaxSpeed(double maxSpeed)
-    {
-        return (TrackOutput) super.setMaxSpeed(maxSpeed);
-    }
-
-    @Override
-    public TrackOutput setMinDistance(double minDistance)
-    {
-        return (TrackOutput) super.setMinDistance(minDistance);
-    }
-
-    @Override
-    public TrackOutput setBearingTolerance(double bearingTolerance)
-    {
-        return (TrackOutput) super.setBearingTolerance(bearingTolerance);
-    }
-
 }
