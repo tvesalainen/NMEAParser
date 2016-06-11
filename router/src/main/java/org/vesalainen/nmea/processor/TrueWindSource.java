@@ -20,50 +20,37 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 import java.util.zip.CheckedOutputStream;
-import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
-import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.TrueWind;
-import org.vesalainen.navi.WayPoint;
-import org.vesalainen.parsers.nmea.NMEAClock;
+import org.vesalainen.nmea.util.NMEAFilters;
+import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
-import org.vesalainen.util.Transactional;
-import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.navi.Velocity;
 
 /**
  *
  * @author tkv
  */
-public class TrueWindSource extends AbstractPropertySetter implements Transactional
+public class TrueWindSource extends AbstractProcess
 {
     private static final String[] Prefixes = new String[]{
         "relativeWindAngle",
         "windSpeed",
-        "latitude",
-        "longitude",
-        "clock"
+        "speedOverGround"
             };
     private final GatheringByteChannel channel;
     private final TrueWind trueWind = new TrueWind();
-    private WayPointImpl prev;
-    private final WayPointImpl current = new WayPointImpl();
-    private float latitude;
-    private float longitude;
-    private boolean positionUpdated;
-    private boolean relativeUpdated;
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
     private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
     private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
-    private final JavaLogging log = new JavaLogging();
-    private NMEAClock clock;
 
     public TrueWindSource(GatheringByteChannel channel, TrueWindSourceType trueWindSourceType)
     {
-        log.setLogger(this.getClass());
+        super(TrueWindSource.class);
         this.channel = channel;
     }
     
@@ -74,157 +61,33 @@ public class TrueWindSource extends AbstractPropertySetter implements Transactio
     }
 
     @Override
-    public void rollback(String reason)
+    public void init(Stream<NMEASample> stream)
     {
-        log.warning("rollback(%s)", reason);
+        this.stream = stream.map(NMEAFilters.accumulatorMap()).filter(NMEAFilters.containsAllFilter(Prefixes));
     }
 
     @Override
-    public void commit(String reason)
+    protected void process(NMEASample sample)
     {
-        if (positionUpdated)
+        bb.clear();
+        try
         {
-            if (current.getTime() != 0)
-            {
-                if (prev == null)
-                {
-                    prev = new WayPointImpl();
-                }
-                prev.copy(current);
-            }
-            positionUpdated = false;
-            current.setTime(clock.millis());
-            current.setLatitude(latitude);
-            current.setLongitude(longitude);
+            trueWind.setBoatSpeed(sample.getProperty("speedOverGround"));
+            trueWind.setRelativeAngle(sample.getProperty("relativeWindAngle"));
+            trueWind.setRelativeSpeed(Velocity.toKnots(sample.getProperty("windSpeed")));
+            trueWind.calc();
+            finest("%s", trueWind);
+            int trueAngle = (int) trueWind.getTrueAngle();
+            float trueSpeed = (float) trueWind.getTrueSpeed();
+            NMEAGen.mwv(cout, trueAngle, trueSpeed, true);
+            bb.flip();
+            channel.write(bb);
+            finest("send MWV trueAngle=%d trueSpeed=%f", trueAngle, trueSpeed);
         }
-        if (relativeUpdated)
+        catch (IOException ex)
         {
-            relativeUpdated = false;
-            if (prev != null)
-            {
-                bb.clear();
-                try
-                {
-                    double speed = Navis.speed(prev, current);
-                    if (Double.isNaN(speed) && log.isLoggable(Level.WARNING))
-                    {
-                        log.warning("prev = %s", prev);
-                        log.warning("current = %s", current);
-                    }
-                    if (speed > 15 && log.isLoggable(Level.WARNING))
-                    {
-                        log.warning("speed = %f", speed);
-                        log.warning("prev = %s", prev);
-                        log.warning("current = %s", current);
-                    }
-                    trueWind.setBoatSpeed(speed);
-                    trueWind.calc();
-                    log.finest("%s", trueWind);
-                    int trueAngle = (int) trueWind.getTrueAngle();
-                    float trueSpeed = (float) trueWind.getTrueSpeed();
-                    NMEAGen.mwv(cout, trueAngle, trueSpeed, true);
-                    bb.flip();
-                    channel.write(bb);
-                    log.finest("send MWV trueAngle=%d trueSpeed=%f", trueAngle, trueSpeed);
-                }
-                catch (IOException ex)
-                {
-                    log.log(Level.SEVERE, ex.getMessage(), ex);
-                }
-            }
-        }
-    }
-    
-    @Override
-    public void set(String property, float arg)
-    {
-        switch (property)
-        {
-            case "relativeWindAngle":
-                trueWind.setRelativeAngle(arg);
-                relativeUpdated = true;
-                break;
-            case "windSpeed":
-                trueWind.setRelativeSpeed(Velocity.toKnots(arg));
-                break;
-            case "latitude":
-                latitude = arg;
-                positionUpdated = true;
-                break;
-            case "longitude":
-                longitude = arg;
-                break;
+            log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
 
-    @Override
-    public void set(String property, Object arg)
-    {
-        switch (property)
-        {
-            case "clock":
-                clock = (NMEAClock) arg;
-                break;
-        }
-    }
-
-    @Override
-    protected void setProperty(String property, Object arg)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private class WayPointImpl implements WayPoint
-    {
-        private long time;
-        private double latitude;
-        private double longitude;
-
-        public void copy(WayPoint oth)
-        {
-            this.time = oth.getTime();
-            this.latitude = oth.getLatitude();
-            this.longitude = oth.getLongitude();
-        }
-
-        @Override
-        public long getTime()
-        {
-            return time;
-        }
-
-        public void setTime(long time)
-        {
-            this.time = time;
-        }
-
-        @Override
-        public double getLatitude()
-        {
-            return latitude;
-        }
-
-        public void setLatitude(double latitude)
-        {
-            this.latitude = latitude;
-        }
-
-        @Override
-        public double getLongitude()
-        {
-            return longitude;
-        }
-
-        public void setLongitude(double longitude)
-        {
-            this.longitude = longitude;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "WayPointImpl{" + "time=" + time + ", latitude=" + latitude + ", longitude=" + longitude + '}';
-        }
-
-    }
 }

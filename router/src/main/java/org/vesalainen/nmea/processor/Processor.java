@@ -22,6 +22,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
 import org.vesalainen.nmea.jaxb.router.SntpMulticasterType;
@@ -30,6 +31,7 @@ import org.vesalainen.nmea.jaxb.router.TimeSetterType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
+import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.parsers.nmea.NMEAService;
 
 /**
@@ -40,68 +42,65 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
 {
     private final ScatteringByteChannel in;
     private final GatheringByteChannel out;
-    private final ProcessorType processorType;
-    private final NMEADispatcher observer = NMEADispatcher.getInstance(NMEADispatcher.class);
-    private final List<AutoCloseable> autoCloseables = new ArrayList<>();
-    private Thread thread;
 
     public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out) throws IOException
     {
         super(in, out);
-        this.processorType = processorType;
         this.in = in;
         this.out = out;
         for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
         {
+            AbstractProcess process = null;
             if (ob instanceof VariationSourceType)
             {
                 VariationSourceType vst = (VariationSourceType) ob;
                 info("add VariationSource");
-                VariationSource vs = new VariationSource(out, vst);
-                addNMEAObserver(vs);
+                process = new VariationSource(out, vst);
             }
             if (ob instanceof TrueWindSourceType)
             {
                 TrueWindSourceType vst = (TrueWindSourceType) ob;
                 info("add TrueWindSource");
-                TrueWindSource vs = new TrueWindSource(out, vst);
-                addNMEAObserver(vs);
+                process = new TrueWindSource(out, vst);
             }
             if (ob instanceof TrackerType)
             {
                 TrackerType tt = (TrackerType) ob;
                 info("add Tracker");
-                Tracker tracker = new Tracker(tt);
-                addNMEAObserver(tracker);
+                process = new Tracker(tt);
             }
             if (ob instanceof SntpBroadcasterType)
             {
                 SntpBroadcasterType sntpBroadcasterType = (SntpBroadcasterType) ob;
-                info("add SNTPBroadcaster");
-                SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
-                addNMEAObserver(broadcaster);
+                warning("not supported SNTPBroadcaster");
+                //SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
+                //addNMEAObserver(broadcaster);
             }
             if (ob instanceof SntpMulticasterType)
             {
                 SntpMulticasterType sntpMulticasterType = (SntpMulticasterType) ob;
-                info("add SNTPMulticaster");
-                SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
-                addNMEAObserver(multicaster);
+                warning("not supported SNTPMulticaster");
+                //SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
+                //addNMEAObserver(multicaster);
             }
             if (ob instanceof TimeSetterType)
             {
                 TimeSetterType timeSetterType = (TimeSetterType) ob;
-                info("add TimeSetterType");
-                TimeSetter timeSetter = new TimeSetter(timeSetterType);
-                addNMEAObserver(timeSetter);
+                warning("not supported TimeSetterType");
+                //TimeSetter timeSetter = new TimeSetter(timeSetterType);
+                //addNMEAObserver(timeSetter);
             }
             if (ob instanceof SntpServerType)
             {
                 SntpServerType sntpServerType = (SntpServerType) ob;
-                info("add SNTPServer");
-                SNTPServer server = new SNTPServer(sntpServerType);
-                addNMEAObserver(server);
+                warning("not supported SNTPServer");
+                //SNTPServer server = new SNTPServer(sntpServerType);
+                //addNMEAObserver(server);
             }
+            Stream<NMEASample> stream = stream(process.getPrefixes());
+            process.init(stream);
+            Thread thread = new Thread(process, process.getClass().getSimpleName());
+            thread.start();
         }
     }
     

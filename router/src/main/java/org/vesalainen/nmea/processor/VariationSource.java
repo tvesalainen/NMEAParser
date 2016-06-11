@@ -20,15 +20,21 @@ import d3.env.TSAGeoMag;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
+import java.time.ZoneOffset;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
+import java.util.stream.Stream;
 import java.util.zip.CheckedOutputStream;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
+import org.vesalainen.nmea.util.NMEAFilters;
+import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
@@ -39,7 +45,7 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class VariationSource extends TimerTask implements PropertySetter, Transactional
+public class VariationSource extends AbstractProcess
 {
     private static final String[] Prefixes = new String[]{
         "latitude",
@@ -47,37 +53,22 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
         "clock"
             };
     private final GatheringByteChannel channel;
-    private float longitude;
-    private float latitude;
-    private long lastUpdate;
-    private boolean positionUpdated;
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
     private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
     private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
-    private NMEAClock clock;
     private long period = 1000;
-    private final Preferences prefs;
     private TSAGeoMag geoMag = new TSAGeoMag();
-    private double declination;
-    private Timer timer;
-    private JavaLogging log = new JavaLogging();
+    private GregorianCalendar calendar;
+    private long nextCalendarUpdate;
 
     public VariationSource(GatheringByteChannel channel, VariationSourceType variationSourceType)
     {
-        log.setLogger(this.getClass());
+        super(VariationSource.class);
         this.channel = channel;
         Long per = variationSourceType.getPeriod();
         if (per != null)
         {
             period = per;
-        }
-        this.prefs = Preferences.userNodeForPackage(this.getClass());
-        this.declination = prefs.getDouble("declination", Double.NaN);
-        if (!Double.isNaN(declination))
-        {
-            log.config("timer started by preference period=%d declination=%f", period, declination);
-            timer = new Timer();
-            timer.scheduleAtFixedRate(this, 0, period);
         }
     }
     
@@ -88,144 +79,35 @@ public class VariationSource extends TimerTask implements PropertySetter, Transa
     }
 
     @Override
-    public void start(String reason)
+    public void init(Stream<NMEASample> stream)
     {
+        this.stream = stream.filter(NMEAFilters.periodicFilter(period, TimeUnit.MILLISECONDS));
     }
 
+    private static final long DayInMillis = 24*60*60000;
     @Override
-    public void rollback(String reason)
-    {
-        log.warning("rollback(%s)", reason);
-    }
-
-    @Override
-    public void commit(String reason)
-    {
-        long now = System.currentTimeMillis();
-        if (positionUpdated && now-lastUpdate > 10000)
-        {
-            log.fine("location %f %f", latitude, longitude);
-            declination = geoMag.getDeclination(latitude, longitude, geoMag.decimalYear(clock.getGregorianCalendar()), 0);
-            if (timer  == null)
-            {
-                log.config("timer started by first update period=%d declination=%f", period, declination);
-                timer = new Timer();
-                timer.scheduleAtFixedRate(this, 0, period);
-            }
-            lastUpdate = now;
-        }
-    }
-    
-    @Override
-    public void run()
+    protected void process(NMEASample sample)
     {
         bb.clear();
         try
         {
+            if (calendar == null || nextCalendarUpdate < sample.getTime())
+            {
+                long time = sample.getTime();
+                calendar = new GregorianCalendar(TimeZone.getTimeZone(ZoneOffset.UTC));
+                calendar.setTimeInMillis(time);
+                nextCalendarUpdate = time+DayInMillis;
+            }
+            fine("location %s", sample);
+            double declination = geoMag.getDeclination(sample.getLatitude(), sample.getLongitude(), geoMag.decimalYear(calendar), 0);
             NMEAGen.rmc(cout, declination);
             bb.flip();
             channel.write(bb);
-            log.finest("send RMC declination=%f", declination);
+            finest("send RMC declination=%f", declination);
         }
         catch (IOException ex)
         {
-            log.log(Level.SEVERE, ex.getMessage(), ex);
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable
-    {
-        super.finalize();
-        prefs.putDouble("declination", declination);
-    }
-
-    @Override
-    public void set(String property, boolean arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, byte arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, char arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, short arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, int arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, long arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, float arg)
-    {
-        switch (property)
-        {
-            case "latitude":
-                latitude = arg;
-                positionUpdated = true;
-                break;
-            case "longitude":
-                longitude = arg;
-                break;
-        }
-    }
-
-    @Override
-    public void set(String property, double arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, Object arg)
-    {
-        switch (property)
-        {
-            case "clock":
-                clock = (NMEAClock) arg;
-                break;
+            log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
 

@@ -95,5 +95,10 @@
             <artifactId>javalpg</artifactId>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>org.vesalainen</groupId>
+            <artifactId>test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

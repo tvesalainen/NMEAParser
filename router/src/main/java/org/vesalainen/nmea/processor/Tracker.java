@@ -20,42 +20,40 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.time.Clock;
-import java.time.temporal.ChronoField;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.concurrent.TimeUnit;
-import org.vesalainen.code.PropertySetter;
+import java.util.logging.Level;
+import java.util.stream.Stream;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
+import org.vesalainen.nmea.util.NMEAFilters;
+import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.TrackOutput;
-import org.vesalainen.parsers.nmea.NMEAClock;
-import org.vesalainen.parsers.nmea.time.GPSClock;
-import org.vesalainen.util.Transactional;
-import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * @author tkv
  */
-public class Tracker implements PropertySetter, Transactional, AutoCloseable
+public class Tracker extends AbstractProcess implements AutoCloseable
 {
+    private static final long SecondInMillis = 1000;
+    private static final long MinuteInMillis = 60*SecondInMillis;
+    private static final long HourInMillis = 60*MinuteInMillis;
+    private static final long DayInMillis = 24*HourInMillis;
     private static final String[] Prefixes = new String[]{
         "latitude",
-        "longitude",
-        "clock"
+        "longitude"
             };
-    private GPSClock clock;
     private int dayOfMonth;
+    private long nextDayMillis;
     private double bearingTolerance = 3;
     private double minDistance = 0.1;
-    private double maxSpeed = 10;
+    private float maxSpeedAcceleration = 1;
     private long maxPassive = TimeUnit.MINUTES.toMillis(15);
     private boolean buffered;
     private File directory;
-    private float longitude;
-    private float latitude;
-    private boolean positionUpdated;
-    private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
-    private final JavaLogging log = new JavaLogging();
     private final TrackOutput track;
+    private int count;
     /**
      * This is for testing
      * @param out
@@ -63,19 +61,15 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
      */
     Tracker(String dirStr) throws IOException
     {
+        super(Tracker.class);
         this.directory = new File(dirStr);
-        log.setLogger(this.getClass());
         track = new TrackOutput(directory)
-                .setBearingTolerance(bearingTolerance)
-                .setMinDistance(minDistance)
-                .setMaxSpeed(maxSpeed)
-                .setMaxPassive(maxPassive)
                 .setBuffered(buffered);
     }
 
     public Tracker(TrackerType trackerType) throws FileNotFoundException, IOException
     {
-        log.setLogger(this.getClass());
+        super(Tracker.class);
         Long bt = trackerType.getBearingTolerance();
         if (bt != null)
         {
@@ -89,7 +83,7 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         BigDecimal ms = trackerType.getMaxSpeed();
         if (ms != null)
         {
-            maxSpeed = ms.doubleValue();
+            maxSpeedAcceleration = ms.floatValue();
         }
         Long mp = trackerType.getMaxPassive();
         if (mp != null)
@@ -103,10 +97,6 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
         }
         this.directory = new File(trackerType.getDirectory());
         track = new TrackOutput(directory)
-                .setBearingTolerance(bearingTolerance)
-                .setMinDistance(minDistance)
-                .setMaxSpeed(maxSpeed)
-                .setMaxPassive(maxPassive)
                 .setBuffered(buffered);
     }
     
@@ -117,135 +107,49 @@ public class Tracker implements PropertySetter, Transactional, AutoCloseable
     }
 
     @Override
-    public void start(String reason)
+    public void init(Stream<NMEASample> stream)
     {
+        this.stream = NMEAFilters.bearingToleranceFilter(stream.filter(NMEAFilters.locationFilter(maxSpeedAcceleration)), bearingTolerance);
     }
 
     @Override
-    public void rollback(String reason)
+    protected void process(NMEASample sample)
     {
-        log.warning("rollback(%s)", reason);
+        output(sample.getTime(), sample.getProperty("latitude"), sample.getProperty("longitude"));
     }
-
-    @Override
-    public void commit(String reason)
+    public void output(long time, float latitude, float longitude)
     {
-        if (positionUpdated)
+        count++;
+        try
         {
-            positionUpdated = false;
-            log.finest("location %f %f", latitude, longitude);
-            try
+            if (nextDayMillis == 0)
             {
-                if (dayOfMonth == 0)
-                {
-                    dayOfMonth = clock.getDay();
-                }
-                else
-                {
-                    int dom = clock.getDay();
-                    if (dayOfMonth != dom)
-                    {
-                        track.close();
-                        dayOfMonth = dom;
-                    }
-                }
-                track.input(clock.millis(), latitude, longitude);
-                log.finest("input %d %f %f", clock.millis(), latitude, longitude);
+                ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneOffset.UTC);
+                nextDayMillis = time + DayInMillis - (
+                        HourInMillis*zdt.getHour() +
+                        MinuteInMillis*zdt.getMinute() +
+                        SecondInMillis*zdt.getSecond()
+                        );
             }
-            catch (IOException ex)
+            else
             {
-                throw new IllegalArgumentException(ex);
+                if (nextDayMillis < time)
+                {
+                    track.close();
+                    nextDayMillis = time + DayInMillis;
+                }
             }
+            track.output(time, latitude, longitude);
         }
-    }
-    
-    @Override
-    public void set(String property, boolean arg)
-    {
-        switch (property)
+        catch (IOException ex)
         {
-            
+            log(Level.SEVERE, ex, ex.getMessage());
         }
     }
 
-    @Override
-    public void set(String property, byte arg)
+    int getCount()
     {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, char arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, short arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, int arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, long arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, float arg)
-    {
-        switch (property)
-        {
-            case "latitude":
-                latitude = arg;
-                positionUpdated = true;
-                break;
-            case "longitude":
-                longitude = arg;
-                break;
-        }
-    }
-
-    @Override
-    public void set(String property, double arg)
-    {
-        switch (property)
-        {
-            
-        }
-    }
-
-    @Override
-    public void set(String property, Object arg)
-    {
-        switch (property)
-        {
-            case "clock":
-                clock = (GPSClock) arg;
-                break;
-        }
+        return count;
     }
 
     @Override
