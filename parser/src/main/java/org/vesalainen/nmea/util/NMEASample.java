@@ -51,9 +51,10 @@ public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
         return map;
     }
     
-    void setProperty(String property, float value)
+    public NMEASample setProperty(String property, float value)
     {
         map.put(property, value);
+        return this;
     }
     public boolean hasProperties()
     {

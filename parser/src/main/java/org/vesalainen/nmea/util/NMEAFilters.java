@@ -35,7 +35,6 @@ import org.vesalainen.navi.Navis;
 import static org.vesalainen.navi.Navis.bearing;
 import org.vesalainen.util.FloatMap;
 import org.vesalainen.util.FloatReference;
-import org.vesalainen.util.Lists;
 import org.vesalainen.util.Recycler;
 import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.stream.Streams;

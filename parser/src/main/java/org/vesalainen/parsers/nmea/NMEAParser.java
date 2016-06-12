@@ -101,7 +101,7 @@ import org.vesalainen.parsers.nmea.time.GPSClock;
     @Rule(left = "nmeaSentence", value = "vtg c track c track c speed c speed faaModeIndicator"),
     @Rule(left = "nmeaSentence", value = "vtg c trueCourseOverGround c magneticCourseOverGround c speedOverGroundKnots c speedOverGroundKilometers"),
     @Rule(left = "nmeaSentence", value = "vwr c windDirection c windSpeed c windSpeed c windSpeed"),
-    @Rule(left = "nmeaSentence", value = "wcv' c velocityToWaypoint c waypoint"),
+    @Rule(left = "nmeaSentence", value = "wcv c velocityToWaypoint c waypoint"),
     @Rule(left = "nmeaSentence", value = "wnc c distanceToWaypoint c distanceToWaypoint c waypointToWaypoint"),
     @Rule(left = "nmeaSentence", value = "wpl c destinationWaypointLocation c waypoint"),
     @Rule(left = "nmeaSentence", value = "xdr xdrGroup+"),
