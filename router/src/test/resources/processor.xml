@@ -3,6 +3,7 @@
     <router>
         <processor name="Proc">
             <true-wind-source/>
+            <tracker directory="." />
             <route prefix="$UPMWV" target="Net"/>
         </processor>
         <multicast-nmea-0183 name="Net" address="224.0.0.3">

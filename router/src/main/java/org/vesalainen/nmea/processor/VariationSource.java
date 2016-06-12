@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import d3.env.TSAGeoMag;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -45,7 +46,7 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class VariationSource extends AbstractProcess
+public class VariationSource extends AbstractSampleConsumer
 {
     private static final String[] Prefixes = new String[]{
         "latitude",
@@ -73,7 +74,7 @@ public class VariationSource extends AbstractProcess
     }
     
     @Override
-    public String[] getPrefixes()
+    public String[] getProperties()
     {
         return Prefixes;
     }

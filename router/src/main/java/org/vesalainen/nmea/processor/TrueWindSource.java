@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
@@ -26,6 +27,7 @@ import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.navi.TrueWind;
 import org.vesalainen.nmea.util.NMEAFilters;
+import org.vesalainen.nmea.util.NMEAMappers;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
@@ -35,9 +37,11 @@ import org.vesalainen.util.navi.Velocity;
  *
  * @author tkv
  */
-public class TrueWindSource extends AbstractProcess
+public class TrueWindSource extends AbstractSampleConsumer
 {
     private static final String[] Prefixes = new String[]{
+        "trueHeading",
+        "trackMadeGood",
         "relativeWindAngle",
         "windSpeed",
         "speedOverGround"
@@ -55,7 +59,7 @@ public class TrueWindSource extends AbstractProcess
     }
     
     @Override
-    public String[] getPrefixes()
+    public String[] getProperties()
     {
         return Prefixes;
     }
@@ -63,7 +67,10 @@ public class TrueWindSource extends AbstractProcess
     @Override
     public void init(Stream<NMEASample> stream)
     {
-        this.stream = stream.map(NMEAFilters.accumulatorMap()).filter(NMEAFilters.containsAllFilter(Prefixes));
+        this.stream = stream
+                .map(NMEAFilters.accumulatorMap())
+                .filter(NMEAFilters.containsAllFilter("relativeWindAngle", "windSpeed", "speedOverGround"))
+                .map(NMEAMappers.driftAngleMap());
     }
 
     @Override
@@ -73,6 +80,7 @@ public class TrueWindSource extends AbstractProcess
         try
         {
             trueWind.setBoatSpeed(sample.getProperty("speedOverGround"));
+            trueWind.setDriftAngle(sample.getProperty("driftAngle"));
             trueWind.setRelativeAngle(sample.getProperty("relativeWindAngle"));
             trueWind.setRelativeSpeed(Velocity.toKnots(sample.getProperty("windSpeed")));
             trueWind.calc();

@@ -16,12 +16,14 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.parsers.nmea.NMEADispatcher;
+import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
@@ -42,66 +44,94 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
 {
     private final ScatteringByteChannel in;
     private final GatheringByteChannel out;
+    private ProcessorType processorType;
+    private List<AbstractSampleConsumer> processes = new ArrayList<>();
 
     public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out) throws IOException
     {
         super(in, out);
         this.in = in;
         this.out = out;
-        for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
+        this.processorType = processorType;
+    }
+
+    @Override
+    public void start()
+    {
+        super.start();
+        try
         {
-            AbstractProcess process = null;
-            if (ob instanceof VariationSourceType)
+            for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
             {
-                VariationSourceType vst = (VariationSourceType) ob;
-                info("add VariationSource");
-                process = new VariationSource(out, vst);
+                AbstractSampleConsumer process = null;
+                if (ob instanceof VariationSourceType)
+                {
+                    VariationSourceType vst = (VariationSourceType) ob;
+                    info("add VariationSource");
+                    process = new VariationSource(out, vst);
+                }
+                if (ob instanceof TrueWindSourceType)
+                {
+                    TrueWindSourceType vst = (TrueWindSourceType) ob;
+                    info("add TrueWindSource");
+                    process = new TrueWindSource(out, vst);
+                }
+                if (ob instanceof TrackerType)
+                {
+                    TrackerType tt = (TrackerType) ob;
+                    info("add Tracker");
+                    process = new Tracker(tt);
+                }
+                if (ob instanceof SntpBroadcasterType)
+                {
+                    SntpBroadcasterType sntpBroadcasterType = (SntpBroadcasterType) ob;
+                    warning("not supported SNTPBroadcaster");
+                    //SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
+                    //addNMEAObserver(broadcaster);
+                }
+                if (ob instanceof SntpMulticasterType)
+                {
+                    SntpMulticasterType sntpMulticasterType = (SntpMulticasterType) ob;
+                    warning("not supported SNTPMulticaster");
+                    //SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
+                    //addNMEAObserver(multicaster);
+                }
+                if (ob instanceof TimeSetterType)
+                {
+                    TimeSetterType timeSetterType = (TimeSetterType) ob;
+                    warning("not supported TimeSetterType");
+                    //TimeSetter timeSetter = new TimeSetter(timeSetterType);
+                    //addNMEAObserver(timeSetter);
+                }
+                if (ob instanceof SntpServerType)
+                {
+                    SntpServerType sntpServerType = (SntpServerType) ob;
+                    warning("not supported SNTPServer");
+                    //SNTPServer server = new SNTPServer(sntpServerType);
+                    //addNMEAObserver(server);
+                }
+                if (process == null)
+                {
+                    throw new UnsupportedOperationException(ob+" not supported");
+                }
+                process.start(this);
+                processes.add(process);
             }
-            if (ob instanceof TrueWindSourceType)
-            {
-                TrueWindSourceType vst = (TrueWindSourceType) ob;
-                info("add TrueWindSource");
-                process = new TrueWindSource(out, vst);
-            }
-            if (ob instanceof TrackerType)
-            {
-                TrackerType tt = (TrackerType) ob;
-                info("add Tracker");
-                process = new Tracker(tt);
-            }
-            if (ob instanceof SntpBroadcasterType)
-            {
-                SntpBroadcasterType sntpBroadcasterType = (SntpBroadcasterType) ob;
-                warning("not supported SNTPBroadcaster");
-                //SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
-                //addNMEAObserver(broadcaster);
-            }
-            if (ob instanceof SntpMulticasterType)
-            {
-                SntpMulticasterType sntpMulticasterType = (SntpMulticasterType) ob;
-                warning("not supported SNTPMulticaster");
-                //SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
-                //addNMEAObserver(multicaster);
-            }
-            if (ob instanceof TimeSetterType)
-            {
-                TimeSetterType timeSetterType = (TimeSetterType) ob;
-                warning("not supported TimeSetterType");
-                //TimeSetter timeSetter = new TimeSetter(timeSetterType);
-                //addNMEAObserver(timeSetter);
-            }
-            if (ob instanceof SntpServerType)
-            {
-                SntpServerType sntpServerType = (SntpServerType) ob;
-                warning("not supported SNTPServer");
-                //SNTPServer server = new SNTPServer(sntpServerType);
-                //addNMEAObserver(server);
-            }
-            Stream<NMEASample> stream = stream(process.getPrefixes());
-            process.init(stream);
-            Thread thread = new Thread(process, process.getClass().getSimpleName());
-            thread.start();
         }
+        catch (IOException ex)
+        {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    @Override
+    public void stop()
+    {
+        processes.stream().forEach((process) ->
+        {
+            process.stop();
+        });
+        super.stop();
     }
     
 }

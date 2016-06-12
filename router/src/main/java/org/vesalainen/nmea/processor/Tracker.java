@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,18 +24,22 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.util.NMEAFilters;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.TrackOutput;
+import org.vesalainen.parsers.nmea.NMEAService;
 
 /**
  * @author tkv
  */
-public class Tracker extends AbstractProcess implements AutoCloseable
+public class Tracker extends AbstractSampleConsumer implements AutoCloseable
 {
     private static final long SecondInMillis = 1000;
     private static final long MinuteInMillis = 60*SecondInMillis;
@@ -54,6 +59,9 @@ public class Tracker extends AbstractProcess implements AutoCloseable
     private File directory;
     private final TrackOutput track;
     private int count;
+    private Timer timer;
+    private WatchDog closer;
+    private boolean active;
     /**
      * This is for testing
      * @param out
@@ -101,7 +109,7 @@ public class Tracker extends AbstractProcess implements AutoCloseable
     }
     
     @Override
-    public String[] getPrefixes()
+    public String[] getProperties()
     {
         return Prefixes;
     }
@@ -109,7 +117,26 @@ public class Tracker extends AbstractProcess implements AutoCloseable
     @Override
     public void init(Stream<NMEASample> stream)
     {
-        this.stream = NMEAFilters.bearingToleranceFilter(stream.filter(NMEAFilters.locationFilter(maxSpeedAcceleration)), bearingTolerance);
+        Stream<NMEASample> accFilter = stream
+                .filter(NMEAFilters.locationFilter(maxSpeedAcceleration))
+                .filter(NMEAFilters.minDistanceFilter(minDistance));
+        this.stream = NMEAFilters.bearingToleranceFilter(accFilter, bearingTolerance);
+    }
+
+    @Override
+    public void start(NMEAService service)
+    {
+        super.start(service);
+        closer = new WatchDog();
+        timer = new Timer();
+        timer.scheduleAtFixedRate(closer, maxPassive, maxPassive);
+    }
+
+    @Override
+    public void stop()
+    {
+        timer.cancel();
+        super.stop();
     }
 
     @Override
@@ -119,6 +146,7 @@ public class Tracker extends AbstractProcess implements AutoCloseable
     }
     public void output(long time, float latitude, float longitude)
     {
+        active = true;
         count++;
         try
         {
@@ -158,7 +186,29 @@ public class Tracker extends AbstractProcess implements AutoCloseable
         if (track != null)
         {
             track.close();
+            count = 0;
         }
     }
 
+    private class WatchDog extends TimerTask
+    {
+
+        @Override
+        public void run()
+        {
+            try
+            {
+                if (!active)
+                {
+                    close();
+                }
+                active = false;
+            }
+            catch (Exception ex)
+            {
+                log(Level.WARNING, ex, "timed close failed %s", ex.getMessage());
+            }
+        }
+        
+    }
 }

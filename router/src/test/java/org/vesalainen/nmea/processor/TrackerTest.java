@@ -67,7 +67,7 @@ public class TrackerTest
             try (FileInputStream is = new FileInputStream(file);
                     Tracker tracker = new Tracker(".");)
             {
-                Stream<NMEASample> stream = NMEAStream.parse(is, offerTimeout, takeTimeout, TimeUnit.SECONDS, ()->{return "/sample.nmea";}, tracker.getPrefixes());
+                Stream<NMEASample> stream = NMEAStream.parse(is, offerTimeout, takeTimeout, TimeUnit.SECONDS, ()->{return "/sample.nmea";}, tracker.getProperties());
                 tracker.init(stream);
                 tracker.run();
                 assertEquals(8105, tracker.getCount());
