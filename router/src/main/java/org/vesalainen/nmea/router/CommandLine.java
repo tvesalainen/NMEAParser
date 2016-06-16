@@ -84,7 +84,6 @@ public class CommandLine extends CmdArgs<Router>
                 switch (effectiveGroup)
                 {
                 case "filelog":
-                    
                     handler = new FileHandler((String) cmdArgs.getOption("-lp"), (int) cmdArgs.getOption("-l"), (int) cmdArgs.getOption("-c"), true);
                     break;
                 case "netlog":

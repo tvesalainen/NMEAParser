@@ -28,7 +28,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.util.NMEAFilters;
@@ -49,7 +48,6 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
         "latitude",
         "longitude"
             };
-    private int dayOfMonth;
     private long nextDayMillis;
     private double bearingTolerance = 3;
     private double minDistance = 0.1;

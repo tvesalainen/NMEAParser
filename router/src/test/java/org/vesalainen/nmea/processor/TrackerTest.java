@@ -16,17 +16,12 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.parsers.nmea.NMEADispatcher;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.ReadableByteChannel;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -36,14 +31,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.gpx.GPX;
 import org.vesalainen.gpx.TrackHandler;
-import org.vesalainen.nio.channels.ReadableByteChannelFactory;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEAStream;
 import org.vesalainen.nmea.util.TrackInput;
-import org.vesalainen.parsers.nmea.NMEAClock;
-import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.test.DebugHelper;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -63,6 +55,7 @@ public class TrackerTest
         long takeTimeout = DebugHelper.guessDebugging() ? 600 : 5;
         try
         {
+            //JavaLogging.setConsoleHandler("org.vesalainen.nmea", Level.ALL);
             File file = new File("../parser/src/test/resources/sample.nmea");
             try (FileInputStream is = new FileInputStream(file);
                     Tracker tracker = new Tracker(".");)
@@ -70,7 +63,7 @@ public class TrackerTest
                 Stream<NMEASample> stream = NMEAStream.parse(is, offerTimeout, takeTimeout, TimeUnit.SECONDS, ()->{return "/sample.nmea";}, tracker.getProperties());
                 tracker.init(stream);
                 tracker.run();
-                assertEquals(8105, tracker.getCount());
+                assertEquals(132, tracker.getCount());
             }
             catch (IOException ex)
             {
@@ -91,7 +84,7 @@ public class TrackerTest
                 {
                     count++;
                 }
-                assertEquals(8105, count);
+                assertEquals(132, count);
                 //assertEquals("20100515120656", sdf.format(new Date(trackInput.getTime())));   TODO
                 //assertEquals(toFloat(6009.2038), trackInput.getLatitude(), Epsilon);
                 //assertEquals(toFloat(2453.6586), trackInput.getLongitude(), Epsilon);

@@ -319,6 +319,7 @@ public class Router extends JavaLogging implements Runnable
                             config("killed %s", endpoint);
                         }
                         sk.cancel();
+                        fine("close(%s)", channel);
                         channel.close();
                     }
                 }
