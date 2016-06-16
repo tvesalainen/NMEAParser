@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.vesalainen.io.CompressedInput;
 
 /**
@@ -93,5 +94,10 @@ public class TrackInput implements AutoCloseable
     public void close() throws IOException
     {
         input.close();
+    }
+    
+    public Stream<TrackPoint> stream()
+    {
+        return input.stream();
     }
 }

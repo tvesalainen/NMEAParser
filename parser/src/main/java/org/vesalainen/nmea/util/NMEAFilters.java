@@ -318,6 +318,7 @@ public class NMEAFilters
                     double distance = Navis.distance(lat1, lon1, lat2, lon2);
                     if (distance < minDistance)
                     {
+                        JavaLogging.getLogger(BearingToleranceSpliterator.class).finest("%s skipped because of min distance", t);
                         return false;
                     }
                     else
