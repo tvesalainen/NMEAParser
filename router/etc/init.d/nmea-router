@@ -134,7 +134,6 @@ case "$1" in
 	#
 	log_daemon_msg "Restarting $DESC" "$NAME"
 	do_stop
-        sleep $SLEEP-TIME
 	case "$?" in
 	  0|1)
 		do_start
