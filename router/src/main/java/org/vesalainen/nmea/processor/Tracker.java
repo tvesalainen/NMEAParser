@@ -88,7 +88,7 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
         {
             minDistance = md.doubleValue();
         }
-        BigDecimal ms = trackerType.getMaxSpeed();
+        BigDecimal ms = trackerType.getMaxSpeedAcceleration();
         if (ms != null)
         {
             maxSpeedAcceleration = ms.floatValue();
