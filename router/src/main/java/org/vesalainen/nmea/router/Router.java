@@ -409,12 +409,16 @@ public class Router extends JavaLogging implements Runnable
     }
     public int send(String to, ByteBuffer bb) throws IOException
     {
-        DataSource ds = DataSource.get(to);
-        if (ds == null)
+        int rc = 0;
+        for (DataSource ds : DataSource.get(to))
         {
-            return 0;
+            if (ds == null)
+            {
+                return 0;
+            }
+            rc += ds.write(bb);
         }
-        return ds.write(bb);
+        return rc;
     }
     private Endpoint getInstance(EndpointType endpointType)
     {
@@ -1497,7 +1501,7 @@ public class Router extends JavaLogging implements Runnable
                 throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
-            DataSource ds = DataSource.get(target);
+            DataSource ds = DataSource.getSingle(target);
             if (ds == null)
             {
                 throw new BadInputException("no such target: "+target);
@@ -1521,7 +1525,7 @@ public class Router extends JavaLogging implements Runnable
                 throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
-            DataSource ds = DataSource.get(target);
+            DataSource ds = DataSource.getSingle(target);
             if (ds == null)
             {
                 throw new BadInputException("no such target: "+target);
@@ -1607,7 +1611,7 @@ public class Router extends JavaLogging implements Runnable
         }
         private Logger getLog(String s)
         {
-            DataSource ds = DataSource.get(s);
+            DataSource ds = DataSource.getSingle(s);
             if (ds != null)
             {
                 return ds.getLogger();

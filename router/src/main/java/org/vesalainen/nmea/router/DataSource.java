@@ -19,11 +19,17 @@ package org.vesalainen.nmea.router;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
+import org.vesalainen.util.MapList;
+import org.vesalainen.util.WeakMapList;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -32,7 +38,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public abstract class DataSource extends JavaLogging
 {
-    private static final Map<String,DataSource> map = new WeakHashMap<>();
+    private static final MapList<String,DataSource> map = new WeakMapList<>();
     protected final String name;
     protected DataSource attached;
     protected boolean isSink;
@@ -45,17 +51,30 @@ public abstract class DataSource extends JavaLogging
     public DataSource(String name)
     {
         this.name = name;
-        DataSource old = map.put(name, this);
-        if (old != null)
+        if (map.contains(name, this))
         {
             throw new IllegalArgumentException(name+" DataSource exists already");
         }
+        map.add(name, this);
         setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.') + "." + name));
     }
 
-    public static DataSource get(String name)
+    public static List<DataSource> get(String name)
     {
         return map.get(name);
+    }
+    public static DataSource getSingle(String name)
+    {
+        List<DataSource> list = map.get(name);
+        switch (list.size())
+        {
+            case 0:
+                return null;
+            case 1:
+                return list.get(0);
+            default:
+                throw new IllegalArgumentException("many data sources");
+        }
     }
     protected abstract int read(RingByteBuffer ring) throws IOException;
 
@@ -115,7 +134,12 @@ public abstract class DataSource extends JavaLogging
 
     public static Collection<DataSource> getDataSources()
     {
-        return map.values();
+        Set<DataSource> set = new HashSet<>();
+        map.values().stream().forEach((l) ->
+        {
+            set.addAll(l);
+        });
+        return set;
     }
     
 }

@@ -88,21 +88,23 @@ public final class Route
         {
             for (String target : targetList)
             {
-                DataSource dataSource = DataSource.get(target);
-                if (dataSource == null)
+                for (DataSource dataSource : DataSource.get(target))
                 {
-                    throw new IllegalArgumentException(target+" not found");
-                }
-                if (partial)
-                {
-                    if (dataSource.isSingleSink())
+                    if (dataSource == null)
                     {
-                       dataSource.writePartial(ring);
+                        throw new IllegalArgumentException(target+" not found");
                     }
-                }
-                else
-                {
-                    dataSource.write(ring);
+                    if (partial)
+                    {
+                        if (dataSource.isSingleSink())
+                        {
+                           dataSource.writePartial(ring);
+                        }
+                    }
+                    else
+                    {
+                        dataSource.write(ring);
+                    }
                 }
             }
             count++;
