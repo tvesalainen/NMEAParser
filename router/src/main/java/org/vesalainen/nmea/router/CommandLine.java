@@ -107,7 +107,7 @@ public class CommandLine extends CmdArgs<Router>
         log.addHandler(memoryHandler);
         try
         {
-            Router router = new Router(config, log, cmdArgs);
+            Router router = new Router(config, log);
             cmdArgs.attach(router);
             router.loop();
         }

@@ -111,18 +111,16 @@ public class Router extends JavaLogging implements Runnable
     private int ctrlTcpPort;
     private final Preferences prefs;
     private boolean configChanged=true;
-    private final CommandLine commandLine;
     private int portCount;
     private RouterThreadGroup routerThreadGroup;
     private boolean forcePortConfig;
     private NMEAMatcherManager matcherManager;
     private boolean allMatched;
     
-    public Router(RouterConfig config, Logger rootLog, CommandLine commandLine)
+    public Router(RouterConfig config, Logger rootLog)
     {
         super(rootLog);
         this.config = config;
-        this.commandLine = commandLine;
         this.prefs = Preferences.userNodeForPackage(this.getClass());
         
     }
