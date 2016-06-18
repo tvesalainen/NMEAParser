@@ -42,6 +42,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -275,7 +277,17 @@ public class Router extends JavaLogging implements Runnable
         if (ctrlTcpPort > 0)
         {
             config("monitor listener at %d", ctrlTcpPort);
-            SocketSource ss = new SocketSource(ctrlTcpPort);
+            SocketSource ss = new SocketSource(ctrlTcpPort, (c)->
+            {
+                try
+                {
+                    return new Monitor(c);
+                }
+                catch (IOException ex)
+                {
+                    throw new IllegalArgumentException(ex);
+                }
+            });
         }
     }
     
@@ -1165,10 +1177,11 @@ public class Router extends JavaLogging implements Runnable
     }
     public class SocketSource extends DataSource
     {
-
-        public SocketSource(int port) throws IOException, InterruptedException
+        private Function<SocketChannel,DataSource> dataSourceFactory;
+        public SocketSource(int port, Function<SocketChannel,DataSource> dataSourceFactory) throws IOException, InterruptedException
         {
             super("SocketSource("+port+")");
+            this.dataSourceFactory = dataSourceFactory;
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             autoCloseables.add(serverSocketChannel);
             serverSocketChannel.setOption(SO_REUSEADDR, true);
@@ -1214,8 +1227,8 @@ public class Router extends JavaLogging implements Runnable
                 fine("accept %s", socketChannel);
                 autoCloseables.add(socketChannel);
                 socketChannel.configureBlocking(false);
-                Monitor monitor = new Monitor(socketChannel);
-                socketChannel.register(selector, OP_READ, monitor);
+                DataSource dataSource = dataSourceFactory.apply(socketChannel);
+                socketChannel.register(selector, OP_READ, dataSource);
             }
             else
             {
