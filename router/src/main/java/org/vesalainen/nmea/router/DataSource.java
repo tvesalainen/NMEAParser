@@ -19,15 +19,13 @@ package org.vesalainen.nmea.router;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
+import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.MapList;
 import org.vesalainen.util.WeakMapList;
 import org.vesalainen.util.logging.JavaLogging;
@@ -38,7 +36,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public abstract class DataSource extends JavaLogging
 {
-    private static final MapList<String,DataSource> map = new WeakMapList<>();
+    private static final MapList<String,DataSource> map = new HashMapList<>();
     protected final String name;
     protected DataSource attached;
     protected boolean isSink;

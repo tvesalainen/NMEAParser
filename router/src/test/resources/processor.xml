@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
+    <tcp-listener>
+        <tcp-endpoint name="TCP" port="12345">
+            
+        </tcp-endpoint>
+    </tcp-listener>
     <router>
         <processor name="Proc">
             <true-wind-source/>
@@ -7,7 +12,7 @@
             <route prefix="$UPMWV" target="Net"/>
         </processor>
         <multicast-nmea-0183 name="Net" address="224.0.0.3">
-            <route prefix="$GPRMC" target="Proc MT"/>
+            <route prefix="$GPRMC" target="Proc MT TCP"/>
             <route prefix="$IIMWV" target="Proc"/>
             <route prefix="!AI" target="MT"/>
         </multicast-nmea-0183>

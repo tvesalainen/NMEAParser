@@ -38,6 +38,8 @@ import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
 import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.ScriptType;
+import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
+import org.vesalainen.nmea.jaxb.router.TcpListenerType;
 import org.vesalainen.nmea.script.ScriptParser;
 
 /**
@@ -107,14 +109,27 @@ public class RouterConfig
         return digest;
     }
 
-    public List<EndpointType> getEndpoints()
+    public List<EndpointType> getRouterEndpoints()
     {
-        for (Object ob : nmea.getValue().getRouter())
+        for (Object ob : nmea.getValue().getTcpListenerOrRouter())
         {
             if (ob instanceof RouterType)
             {
                 RouterType rt = (RouterType) ob;
                 return rt.getProcessorOrMulticastOrMulticastNmea0183();
+            }
+        }
+        return null;
+    }
+    
+    public List<TcpEndpointType> getTcpListenerEndpoints()
+    {
+        for (Object ob : nmea.getValue().getTcpListenerOrRouter())
+        {
+            if (ob instanceof TcpListenerType)
+            {
+                TcpListenerType tlt = (TcpListenerType) ob;
+                return tlt.getTcpEndpoint();
             }
         }
         return null;
@@ -140,7 +155,7 @@ public class RouterConfig
 
     private void check()
     {
-        for (EndpointType et : getEndpoints())
+        for (EndpointType et : getRouterEndpoints())
         {
             String name = et.getName();
             ScriptType scriptType = et.getScript();

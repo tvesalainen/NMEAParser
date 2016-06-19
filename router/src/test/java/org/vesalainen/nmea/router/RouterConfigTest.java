@@ -46,7 +46,7 @@ public class RouterConfigTest
         try (InputStream is = RouterConfigTest.class.getClassLoader().getResourceAsStream("router.xml");)
         {
             RouterConfig rc = new RouterConfig(is);
-            List<EndpointType> endpoints = rc.getEndpoints();
+            List<EndpointType> endpoints = rc.getRouterEndpoints();
             assertNotNull(endpoints);
             assertEquals(4, endpoints.size());
             

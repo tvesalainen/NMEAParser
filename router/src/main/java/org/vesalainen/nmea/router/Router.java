@@ -16,9 +16,11 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
 import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.AlreadyBoundException;
@@ -43,7 +45,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -75,6 +76,7 @@ import org.vesalainen.nmea.jaxb.router.ScriptType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
+import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.processor.Processor;
 import org.vesalainen.regex.WildcardMatcher;
 import org.vesalainen.util.AbstractProvisioner.Setting;
@@ -145,7 +147,8 @@ public class Router extends JavaLogging implements Runnable
         try (AutoCloseableList ac = new AutoCloseableList<>())
         {
             autoCloseables = ac;
-            initialize();
+            initializeEndpoints();
+            initializeTcpListeners();
             startSocketServer();
             Runtime.getRuntime().addShutdownHook(new Thread(this));
             while (true)
@@ -166,7 +169,8 @@ public class Router extends JavaLogging implements Runnable
                         }
                         catch (IOException ex)
                         {
-                            severe("%s: %s", ex.getClass().getSimpleName(), ex.getMessage());
+                            log(Level.SEVERE, ex, "%s: %s", ex.getClass().getSimpleName(), ex.getMessage());
+                            selectionKey.cancel();
                         }
                     }
                 }
@@ -190,7 +194,7 @@ public class Router extends JavaLogging implements Runnable
             }
         }
     }
-    private void initialize() throws IOException
+    private void initializeEndpoints() throws IOException
     {
         if (!forcePortConfig)
         {
@@ -234,7 +238,7 @@ public class Router extends JavaLogging implements Runnable
         }
         MapList<Speed,EndpointType> endPointMap = new HashMapList<>();
         Bijection<Endpoint,EndpointType> endpointBijection = new HashBijection<>();
-        for (EndpointType et : config.getEndpoints())
+        for (EndpointType et : config.getRouterEndpoints())
         {
             Endpoint endpoint = getInstance(et);
             endpointBijection.put(endpoint, et);
@@ -269,6 +273,32 @@ public class Router extends JavaLogging implements Runnable
         {
             DataSource ds = (DataSource) sk.attachment();
             ds.updateStatus();
+        }
+    }
+
+    private void initializeTcpListeners() throws IOException, InterruptedException
+    {
+        List<TcpEndpointType> tcpListenerEndpoints = config.getTcpListenerEndpoints();
+        if (tcpListenerEndpoints != null)
+        {
+            for (TcpEndpointType tlep : tcpListenerEndpoints)
+            {
+                int port = tlep.getPort();
+                config("tcp listener at %d", port);
+                SocketSource ss = new SocketSource(port, (c)->
+                {
+                    try
+                    {
+                        TcpEndpoint tcpEndpoint = new TcpEndpoint(tlep, c);
+                        tcpEndpoint.init2(tlep);
+                        return tcpEndpoint;
+                    }
+                    catch (IOException ex)
+                    {
+                        throw new IllegalArgumentException(ex);
+                    }
+                });
+            }
         }
     }
 
@@ -889,6 +919,24 @@ public class Router extends JavaLogging implements Runnable
         }
 
     }
+    public class TcpEndpoint extends Endpoint<SocketChannel>
+    {
+
+        public TcpEndpoint(TcpEndpointType tcpType, SocketChannel channel) throws IOException
+        {
+            super(tcpType);
+            this.channel = channel;
+            this.matched = true;
+            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        }
+
+        @Override
+        protected SocketChannel configureChannel() throws IOException
+        {
+            return null;
+        }
+
+    }
     public abstract class Endpoint<T extends SelectableChannel> extends DataSource
     {
         protected T channel;
@@ -1087,17 +1135,12 @@ public class Router extends JavaLogging implements Runnable
         @Override
         protected void handle(SelectionKey sk) throws IOException
         {   
-            if (matcher == null)
-            {
-                throw new IOException("receive without matcher for "+name);
-            }
             lastRead = nowRead;
             nowRead = System.currentTimeMillis();
             int count = read(ring);
             if (count == -1)
             {
-                warning("eof(%s)", name);
-                return;
+                throw new EOFException(name);
             }
             if (ring.isFull())
             {
@@ -1106,6 +1149,11 @@ public class Router extends JavaLogging implements Runnable
             }
             readCount++;
             readBytes += count;
+            if (matcher == null)
+            {
+                warning("receive %s without matcher for %s", ring, name);
+                return;
+            }
             if (attached != null)
             {
                 ring.getAll(false);
@@ -1232,7 +1280,7 @@ public class Router extends JavaLogging implements Runnable
             }
             else
             {
-                warning("accept = null");
+                warning("socketChannel = null");
             }
         }
 
@@ -1251,7 +1299,7 @@ public class Router extends JavaLogging implements Runnable
     }
     public class Monitor extends DataSource
     {
-        final SocketChannel channel;
+        private final SocketChannel channel;
         private final ByteBuffer bb = ByteBuffer.allocateDirect(4096);
         private final AppendablePrinter out;
         private final AppendableByteChannel outChannel;

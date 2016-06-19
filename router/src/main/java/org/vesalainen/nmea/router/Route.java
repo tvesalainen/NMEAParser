@@ -17,15 +17,18 @@
 package org.vesalainen.nmea.router;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.RouteType;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author tkv
  */
-public final class Route
+public final class Route extends JavaLogging
 {
     private final NMEAPrefix prefix;
     private final String[] targetList;
@@ -38,12 +41,14 @@ public final class Route
 
     Route() // for test
     {
+        super(Route.class);
         this.prefix = null;
         this.targetList = null;
     }
     
     public Route(RouteType routeType)
     {
+        super(Route.class);
         this.prefix = new NMEAPrefix(routeType.getPrefix());
         List<String> targets = routeType.getTarget();
         if (targets != null)
@@ -88,22 +93,28 @@ public final class Route
         {
             for (String target : targetList)
             {
-                for (DataSource dataSource : DataSource.get(target))
+                Iterator<DataSource> iterator = DataSource.get(target).iterator();
+                while (iterator.hasNext())
                 {
-                    if (dataSource == null)
+                    DataSource dataSource = iterator.next();
+                    try
                     {
-                        throw new IllegalArgumentException(target+" not found");
-                    }
-                    if (partial)
-                    {
-                        if (dataSource.isSingleSink())
+                        if (partial)
                         {
-                           dataSource.writePartial(ring);
+                            if (dataSource.isSingleSink())
+                            {
+                               dataSource.writePartial(ring);
+                            }
+                        }
+                        else
+                        {
+                            dataSource.write(ring);
                         }
                     }
-                    else
+                    catch (IOException ex)
                     {
-                        dataSource.write(ring);
+                        log(Level.SEVERE, ex, "%s", ex.getMessage());
+                        iterator.remove();
                     }
                 }
             }

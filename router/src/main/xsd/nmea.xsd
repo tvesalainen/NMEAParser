@@ -4,10 +4,16 @@
     <xs:element name="nmea" type="nmeaType"/>
     <xs:complexType name="nmeaType">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="tcp-listener" type="tcpListenerType" minOccurs="0" maxOccurs="1"/>
             <xs:element name="router" type="routerType" minOccurs="0" maxOccurs="1"/>
         </xs:choice>
         <xs:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xs:attribute>
         <xs:attribute name="ctrlTcpPort" type="portType"/>
+    </xs:complexType>
+    <xs:complexType name="tcpListenerType">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="tcp-endpoint" type="tcpEndpointType"/>
+        </xs:choice>
     </xs:complexType>
     <xs:complexType name="routerType">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -22,6 +28,13 @@
             <xs:element name="nmea-0183" type="nmea-0183Type"/>
             <xs:element name="serial" type="serialType"/>
         </xs:choice>
+    </xs:complexType>
+    <xs:complexType name="tcpEndpointType">
+        <xs:complexContent>
+            <xs:extension base="endpointType">
+                <xs:attribute name="port" type="portType" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
     <xs:complexType name="processorType">
         <xs:complexContent>
