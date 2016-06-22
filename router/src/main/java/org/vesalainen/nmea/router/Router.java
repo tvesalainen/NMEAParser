@@ -162,7 +162,7 @@ public class Router extends JavaLogging implements Runnable
                         SelectionKey selectionKey = iterator.next();
                         iterator.remove();
                         DataSource dataSource = (DataSource) selectionKey.attachment();
-                        fine("select %s %d", dataSource.name, selectionKey.readyOps());
+                        fine("handle %s readyOps=%d", dataSource.name, selectionKey.readyOps());
                         try
                         {
                             dataSource.handle(selectionKey);
@@ -1138,14 +1138,15 @@ public class Router extends JavaLogging implements Runnable
             lastRead = nowRead;
             nowRead = System.currentTimeMillis();
             int count = read(ring);
+            fine("handle %s read %d bytes", name, count);
             if (count == -1)
             {
                 throw new EOFException(name);
             }
             if (ring.isFull())
             {
-                long elapsed = System.currentTimeMillis()-lastRead;
-                warning("buffer not big enough (%s) time from last read %d millis", name, elapsed);
+                long elapsed = nowRead-lastRead;
+                warning("buffer %s not big enough (%s) time from last read %d millis count %d", ring, name, elapsed, count);
             }
             readCount++;
             readBytes += count;
@@ -1204,7 +1205,6 @@ public class Router extends JavaLogging implements Runnable
         private void write(Matcher<Route> matcher, RingByteBuffer ring, boolean partial) throws IOException
         {
             matcher.getMatched().write(ring, partial);
-            finer("write: %s", ring);
             if (scriptEngine != null)
             {
                 scriptEngine.write(ring);

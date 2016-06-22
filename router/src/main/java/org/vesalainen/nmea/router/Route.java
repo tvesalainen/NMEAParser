@@ -103,11 +103,13 @@ public final class Route extends JavaLogging
                         {
                             if (dataSource.isSingleSink())
                             {
-                               dataSource.writePartial(ring);
+                                finer("write partial: %s %s", target, ring);
+                                dataSource.writePartial(ring);
                             }
                         }
                         else
                         {
+                            finer("write: %s %s", target, ring);
                             dataSource.write(ring);
                         }
                     }
