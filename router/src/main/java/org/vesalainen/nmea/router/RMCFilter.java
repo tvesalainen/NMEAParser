@@ -148,20 +148,4 @@ public class RMCFilter extends AbstractNMEAFilter
         float min = Primitives.parseFloat(cs, idx, end);
         return deg+min/60F;
     }
-    private boolean equals(String str, CharSequence cs, int begin, int end)
-    {
-        if (str.length() != end-begin)
-        {
-            return false;
-        }
-        for (;begin<end;begin++)
-        {
-            if (str.charAt(begin) != cs.charAt(begin))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    
 }

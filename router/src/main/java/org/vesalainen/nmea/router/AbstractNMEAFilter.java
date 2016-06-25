@@ -50,7 +50,7 @@ public abstract class AbstractNMEAFilter implements MessageFilter
                         log.finer("accept %s", cs);
                         return true;
                     case Reject:
-                        log.warning("reject %s", cs);
+                        log.fine("reject %s", cs);
                         return false;
                 }
                 prev = ii+1;
@@ -59,6 +59,22 @@ public abstract class AbstractNMEAFilter implements MessageFilter
         return true;
     }
 
+    protected boolean equals(String str, CharSequence cs, int begin, int end)
+    {
+        if (str.length() != end-begin)
+        {
+            return false;
+        }
+        for (int ii=0;begin<end;begin++,ii++)
+        {
+            if (str.charAt(ii) != cs.charAt(begin))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     protected abstract Cond acceptField(CharSequence cs, int index, int begin, int end);
     
 }
