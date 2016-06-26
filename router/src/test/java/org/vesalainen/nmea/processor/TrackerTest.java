@@ -19,6 +19,8 @@ package org.vesalainen.nmea.processor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -27,8 +29,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
 import org.vesalainen.gpx.GPX;
 import org.vesalainen.gpx.TrackHandler;
 import org.vesalainen.nmea.util.NMEASample;
@@ -48,6 +52,21 @@ public class TrackerTest
     {
     }
 
+    @After
+    public void after() throws IOException
+    {
+        Files.find(Paths.get("."), 1, (p,b)->{return p.toString().endsWith(".trc");}).forEach((p)->
+        {
+            try
+            {
+                Files.delete(p);
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(TrackerTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
     @Test
     public void test1()
     {
