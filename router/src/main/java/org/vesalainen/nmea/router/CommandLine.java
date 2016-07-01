@@ -30,25 +30,20 @@ import java.util.logging.SocketHandler;
 import javax.xml.bind.JAXBException;
 import org.vesalainen.util.CmdArgs;
 import org.vesalainen.util.CmdArgsException;
+import org.vesalainen.util.LoggingCommandLine;
+import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.logging.MinimalFormatter;
 
 /**
  *
  * @author tkv
  */
-public class CommandLine extends CmdArgs<Router>
+public class CommandLine extends LoggingCommandLine
 {
 
     public CommandLine()
     {
         addArgument(File.class, "configuration file");
-        addOption("-lp", "log pattern", "filelog", "%t/router%g.log");
-        addOption("-l", "log limit", "filelog", 409600);
-        addOption("-c", "log count", "filelog", 16);
-        addOption("-h", "host", "netlog", "localhost");
-        addOption("-p", "port", "netlog", 0);
-        addOption("-ll", "log level", null, INFO);
-        addOption("-pl", "push level", null, SEVERE);
         addOption("-f", "force port resolv", null, Boolean.FALSE);
         addOption("-rt", "resolv timeout", null, 2000L);
     }
@@ -56,42 +51,11 @@ public class CommandLine extends CmdArgs<Router>
     public static void main(String... args)
     {
         CommandLine cmdArgs = new CommandLine();
-        try
-        {
-            cmdArgs.setArgs(args);
-        }
-        catch (CmdArgsException ex)
-        {
-            Logger logger = Logger.getLogger(Router.class.getName());
-            logger.log(Level.SEVERE, ex.getMessage(), ex);
-            logger.log(Level.SEVERE, ex.usage());
-            System.exit(-1);
-        }
-        Logger log = Logger.getLogger("org.vesalainen");
-        log.setUseParentHandlers(false);
-        log.setLevel((Level) cmdArgs.getOption("-ll"));
-        Handler handler = null;
+        cmdArgs.command(args);
+        JavaLogging log = cmdArgs.getLog();
         RouterConfig config = null;
         try
         {
-            String effectiveGroup = cmdArgs.getEffectiveGroup();
-            if (effectiveGroup == null)
-            {
-                handler = new ConsoleHandler();
-            }
-            else
-            {
-                switch (effectiveGroup)
-                {
-                case "filelog":
-                    handler = new FileHandler((String) cmdArgs.getOption("-lp"), (int) cmdArgs.getOption("-l"), (int) cmdArgs.getOption("-c"), true);
-                    break;
-                case "netlog":
-                    handler = new SocketHandler((String) cmdArgs.getOption("-h"), (int) cmdArgs.getOption("p"));
-                    break;
-                }
-            }
-            handler.setLevel((Level) cmdArgs.getOption("-ll"));
             File configfile = (File) cmdArgs.getArgument("configuration file");
             config = new RouterConfig(configfile);
         }
@@ -100,14 +64,9 @@ public class CommandLine extends CmdArgs<Router>
             ex.printStackTrace();
             return;
         }
-        MinimalFormatter minimalFormatter = new MinimalFormatter();
-        handler.setFormatter(minimalFormatter);
-        MemoryHandler memoryHandler = new MemoryHandler(handler, 256, (Level) cmdArgs.getOption("-pl"));
-        memoryHandler.setFormatter(minimalFormatter);
-        log.addHandler(memoryHandler);
         try
         {
-            Router router = new Router(config, log);
+            Router router = new Router(config);
             cmdArgs.attach(router);
             router.loop();
         }

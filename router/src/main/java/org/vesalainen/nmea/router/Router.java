@@ -121,9 +121,9 @@ public class Router extends JavaLogging implements Runnable
     private NMEAMatcherManager matcherManager;
     private boolean allMatched;
     
-    public Router(RouterConfig config, Logger rootLog)
+    public Router(RouterConfig config)
     {
-        super(rootLog);
+        super(Router.class);
         this.config = config;
         this.prefs = Preferences.userNodeForPackage(this.getClass());
         
