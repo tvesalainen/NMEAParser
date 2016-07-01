@@ -55,13 +55,22 @@ public abstract class AbstractProperties
             {
                 unitType = unit.value();
             }
-            map.put(property, new Prop(property, unitType, nmeaCategory));
+            Class<?> type = method.getParameterTypes()[0];
+            map.put(property, new Prop(property, unitType, nmeaCategory, type));
         }
         return map;
     }
+    /**
+     * Stream of all properties
+     * @return 
+     */
     public Stream<String> stream()
     {
         return map.keySet().stream();
+    }
+    public Stream<String> stream(Class<?> type)
+    {
+        return map.values().stream().filter((p)->{return type == p.type;}).map((p)->{return p.property;});
     }
     public boolean isProperty(String property)
     {
@@ -91,22 +100,24 @@ public abstract class AbstractProperties
         private final String property;
         private UnitType unit = UnitType.Unitless;
         private NMEACategory nmeaCategory = NMEACategory.Miscelleneous;
+        private Class<?> type;
 
         public Prop(String property)
         {
-            this(property, null, null);
+            this(property, null, null, null);
         }
 
         public Prop(String property, UnitType unit)
         {
-            this(property, unit, null);
+            this(property, unit, null, null);
         }
 
-        public Prop(String property, UnitType unit, NMEACategory nmeaCategory)
+        public Prop(String property, UnitType unit, NMEACategory nmeaCategory, Class<?> type)
         {
             this.property = property;
             this.unit = unit;
             this.nmeaCategory = nmeaCategory;
+            this.type = type;
         }
         
     }

@@ -40,6 +40,7 @@ public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
     private TalkerId talkerId;
     private MessageType messageType;
     private FloatMap<String> map = new FloatMap<>();
+    private Object origin;
 
     public Set<String> getProperties()
     {
@@ -107,6 +108,16 @@ public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
     {
         this.messageType = messageType;
     }
+
+    public Object getOrigin()
+    {
+        return origin;
+    }
+
+    void setOrigin(Object origin)
+    {
+        this.origin = origin;
+    }
     
     @Override
     public void clear()
@@ -116,6 +127,7 @@ public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
         messageType = null;
         Recycler.recycle(map.values());
         map.clear();
+        origin = null;
     }
 
     @Override
@@ -136,6 +148,11 @@ public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
             
         }
         sb.append("]");
+        if (origin != null)
+        {
+            sb.append(" <- ");
+            sb.append(origin);
+        }
         return sb.toString();
     }
 

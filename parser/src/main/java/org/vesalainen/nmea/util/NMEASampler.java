@@ -63,6 +63,7 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
         this.properties.add("clock");
         this.properties.add("messageType");
         this.properties.add("talkerId");
+        this.properties.add("origin");
         spliterator = new ObserverSpliterator<>(
             Long.MAX_VALUE, 
             Spliterator.CONCURRENT | Spliterator.NONNULL | Spliterator.ORDERED |Spliterator.SORTED,
@@ -162,6 +163,12 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
                 if (sample != null)
                 {
                     sample.setMessageType((MessageType) arg);
+                }
+                break;
+            case "origin":
+                if (sample != null)
+                {
+                    sample.setOrigin(arg);
                 }
                 break;
         }
