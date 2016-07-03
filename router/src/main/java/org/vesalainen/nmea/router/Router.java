@@ -20,6 +20,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.net.StandardSocketOptions;
 import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
@@ -593,7 +594,7 @@ public class Router extends JavaLogging implements Runnable
 
         
     }
-    public class MulticastNMEAEndpoint extends Endpoint<UnconnectedDatagramChannel>
+    public class MulticastNMEAEndpoint extends UDPEndpoint
     {
         protected String address;
         public MulticastNMEAEndpoint(MulticastNMEAType multicastNMEAType)
@@ -611,7 +612,7 @@ public class Router extends JavaLogging implements Runnable
         }
         
     }
-    public class MulticastEndpoint extends Endpoint<UnconnectedDatagramChannel>
+    public class MulticastEndpoint extends UDPEndpoint
     {
         protected int port;
         protected String address;
@@ -631,7 +632,7 @@ public class Router extends JavaLogging implements Runnable
             return channel;
         }
     }
-    public class BroadcastNMEAEndpoint extends Endpoint<UnconnectedDatagramChannel>
+    public class BroadcastNMEAEndpoint extends UDPEndpoint
     {
         public BroadcastNMEAEndpoint(BroadcastNMEAType broadcastNMEAType)
         {
@@ -646,7 +647,7 @@ public class Router extends JavaLogging implements Runnable
             return channel;
         }
     }
-    public class BroadcastEndpoint extends Endpoint<UnconnectedDatagramChannel>
+    public class BroadcastEndpoint extends UDPEndpoint
     {
         protected int port;
         public BroadcastEndpoint(BroadcastType broadcastType)
@@ -664,7 +665,7 @@ public class Router extends JavaLogging implements Runnable
             return channel;
         }
     }
-    public class DatagramEndpoint extends Endpoint<UnconnectedDatagramChannel>
+    public class DatagramEndpoint extends UDPEndpoint
     {
         protected String host;
         protected int port;
@@ -702,6 +703,29 @@ public class Router extends JavaLogging implements Runnable
             return "DatagramEndpoint{name=" +name+ ", host=" + host + ", port=" + port + '}';
         }
 
+    }
+    public abstract class UDPEndpoint extends Endpoint<UnconnectedDatagramChannel>
+    {
+
+        public UDPEndpoint(EndpointType endpointType)
+        {
+            super(endpointType);
+        }
+
+        @Override
+        protected int write(RingByteBuffer ring) throws IOException
+        {
+            try
+            {
+                return super.write(ring);
+            }
+            catch (SocketException ex)
+            {
+                warning("UDP send %s", ex.getMessage());
+                return 0;
+            }
+        }
+        
     }
     public class SeaTalkEndpoint extends SerialEndpoint
     {
