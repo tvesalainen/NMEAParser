@@ -17,14 +17,14 @@
 package org.vesalainen.parsers.nmea;
 
 import java.time.ZonedDateTime;
-import org.vesalainen.time.MutableTime;
+import org.vesalainen.time.MutableDateTime;
 import org.vesalainen.util.Transactional;
 
 /**
  *
  * @author Timo Vesalainen
  */
-public interface NMEAClock extends MutableTime, Transactional
+public interface NMEAClock extends MutableDateTime, Transactional
 {
     /**
      * Local zone description, 00 to +- 13 hours

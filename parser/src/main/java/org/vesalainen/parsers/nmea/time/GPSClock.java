@@ -23,7 +23,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.time.MutableClock;
-import org.vesalainen.time.SimpleMutableTime;
+import org.vesalainen.time.SimpleMutableDateTime;
 
 /**
  * Transactional MutableClock.
@@ -37,7 +37,7 @@ import org.vesalainen.time.SimpleMutableTime;
  */
 public final class GPSClock extends MutableClock implements NMEAClock
 {
-    private SimpleMutableTime uncommitted = new SimpleMutableTime();
+    private SimpleMutableDateTime uncommitted = new SimpleMutableDateTime();
     private int localZoneMinutes;
     private long startTime;
     private long updTime;
