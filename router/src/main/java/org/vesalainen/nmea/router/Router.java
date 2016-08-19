@@ -168,6 +168,10 @@ public class Router extends JavaLogging implements Runnable
                         {
                             dataSource.handle(selectionKey);
                         }
+                        catch (SocketException ex)
+                        {
+                            log(Level.SEVERE, ex, "continuing after %s", ex.getMessage());
+                        }
                         catch (IOException ex)
                         {
                             log(Level.SEVERE, ex, "%s: %s", ex.getClass().getSimpleName(), ex.getMessage());

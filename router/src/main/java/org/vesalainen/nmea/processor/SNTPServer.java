@@ -20,7 +20,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.GregorianCalendar;
 import java.util.logging.Level;
 import static org.apache.commons.net.ntp.NtpV3Packet.*;
 import org.apache.commons.net.ntp.TimeStamp;
