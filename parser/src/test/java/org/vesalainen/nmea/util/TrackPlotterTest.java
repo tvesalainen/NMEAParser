@@ -35,7 +35,7 @@ public class TrackPlotterTest
     {
     }
 
-    @Test
+    //@Test
     public void test1Plot()
     {
             try (FileInputStream input = new FileInputStream("../router/20100515070534.trc"))
