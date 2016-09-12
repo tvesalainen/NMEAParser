@@ -66,35 +66,35 @@ public interface NMEAObserver extends Transactional
      * @param latitude Latitude. South is negative.
      */
     @NMEACat(Coordinate)
-    @Unit(DegMin)
+    @Unit(value=DegMin, min=-90, max=90)
     void setLatitude(float latitude);
     /**
      * Longitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param longitude Longitude West is negative.
      */
     @NMEACat(Coordinate)
-    @Unit(DegMin)
+    @Unit(value=DegMin, min=-180, max=180)
     void setLongitude(float longitude);
     /**
      * RMA, RMC
      * @param knots 
      */
     @NMEACat(Speed)
-    @Unit(Knot)
+    @Unit(value=Knot, min=0, max=50)
     void setSpeedOverGround(float knots);
     /**
      * RMA, RMC
      * @param degrees
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setTrackMadeGood(float degrees);
     /**
      * HDG, RMA, RMC
      * @param degrees West is minus
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setMagneticVariation(float degrees);
     /**
      * DirectionToSteer - = left + = right
@@ -102,7 +102,7 @@ public interface NMEAObserver extends Transactional
      * @param nm
      */
     @NMEACat(Bearing)
-    @Unit(NM)
+    @Unit(value=NM, min=-10, max=10)
     void setCrossTrackError(float nm);
     /**
      * BOD, BWW, RMB, WNC
@@ -121,35 +121,35 @@ public interface NMEAObserver extends Transactional
      * @param latitude 
      */
     @NMEACat(Waypoint)
-    @Unit(DegMin)
+    @Unit(value=DegMin, min=-90, max=90)
     void setDestinationWaypointLatitude(float latitude);
     /**
      * RMB, WPL
      * @param longitude 
      */
     @NMEACat(Waypoint)
-    @Unit(DegMin)
+    @Unit(value=DegMin, min=-180, max=180)
     void setDestinationWaypointLongitude(float longitude);
     /**
      * RMB
      * @param nm 
      */
     @NMEACat(Waypoint)
-    @Unit(NM)
+    @Unit(value=NM, min=0, max=10000)
     void setRangeToDestination(float nm);
     /**
      * RMB
      * @param degrees True
      */
     @NMEACat(Waypoint)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setBearingToDestination(float degrees);
     /**
      * RMB
      * @param knots 
      */
     @NMEACat(Waypoint)
-    @Unit(Knot)
+    @Unit(value=Knot, min=0, max=50)
     void setDestinationClosingVelocity(float knots);
     /**
      * GGA
@@ -168,14 +168,14 @@ public interface NMEAObserver extends Transactional
      * @param meters 
      */
     @NMEACat(GPS)
-    @Unit(Meter)
+    @Unit(value=Meter, min=0, max=50)
     void setHorizontalDilutionOfPrecision(float meters);
     /**
      * GGA
      * @param meters
      */
     @NMEACat(GPS)
-    @Unit(Meter)
+    @Unit(value=Meter, min=0, max=10000)
     void setAntennaAltitude(float meters);
     /**
      * GGA
@@ -336,42 +336,42 @@ public interface NMEAObserver extends Transactional
      * @param bearingOriginToDestination 
      */
     @NMEACat(Waypoint)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setMagneticBearingOriginToDestination(float bearingOriginToDestination);
     /**
      * APA, APB
      * @param bearingOriginToDestination 
      */
     @NMEACat(Waypoint)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setTrueBearingOriginToDestination(float bearingOriginToDestination);
     /**
      * APB
      * @param bearingPresentPositionToDestination 
      */
     @NMEACat(Waypoint)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setMagneticBearingPresentPositionToDestination(float bearingPresentPositionToDestination);
     /**
      * APB
      * @param bearingPresentPositionToDestination 
      */
     @NMEACat(Waypoint)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setTrueBearingPresentPositionToDestination(float bearingPresentPositionToDestination);
     /**
      * APB
      * @param headingToSteerToDestination 
      */
     @NMEACat(Waypoint)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setMagneticHeadingToSteerToDestination(float headingToSteerToDestination);
     /**
      * APB
      * @param headingToSteerToDestination 
      */
     @NMEACat(Waypoint)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setTrueHeadingToSteerToDestination(float headingToSteerToDestination);
     /**
      * BWC, GLL, XTE
@@ -393,105 +393,105 @@ public interface NMEAObserver extends Transactional
      * @param nm
      */
     @NMEACat(Waypoint)
-    @Unit(NM)
+    @Unit(value=NM, min=0, max=500)
     void setDistanceToWaypoint(float nm);
     /**
      * DBK
      * @param meters
      */
     @NMEACat(Depth)
-    @Unit(Meter)
+    @Unit(value=Meter, min=0, max=100)
     void setDepthBelowKeel(float meters);
     /**
      * DBS
      * @param meters
      */
     @NMEACat(Depth)
-    @Unit(Meter)
+    @Unit(value=Meter, min=0, max=100)
     void setDepthBelowSurface(float meters);
     /**
      * DBT
      * @param meters
      */
     @NMEACat(Depth)
-    @Unit(Meter)
+    @Unit(value=Meter, min=0, max=100)
     void setDepthBelowTransducer(float meters);
     /**
      * BOD, BWC, BWR, BWW
      * @param degrees
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setTrueBearing(float degrees);
     /**
      * BOD, BWC, BWR, BWW
      * @param degrees
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setMagneticBearing(float degrees);
     /**
      * DBT
      * @param meters
      */
     @NMEACat(Depth)
-    @Unit(Meter)
+    @Unit(value=Meter, min=0, max=100)
     void setDepthOfWater(float meters);
     /**
      * DBT
      * @param meters
      */
     @NMEACat(Depth)
-    @Unit(Meter)
+    @Unit(value=Meter, min=0, max=10)
     void setDepthOffsetOfWater(float meters);
     /**
      * HDG
      * @param magneticDeviation 
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=-30, max=30)
     void setMagneticDeviation(float magneticDeviation);
     /**
      * HDG
      * @param magneticSensorHeading 
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setMagneticSensorHeading(float magneticSensorHeading);
     /**
      * HDM, HDT
      * @param degrees
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setTrueHeading(float degrees);
     /**
      * HDM, HDT
      * @param degrees
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setMagneticHeading(float degrees);
     /**
      * MTW
      * @param celcius
      */
     @NMEACat(Temperature)
-    @Unit(Celsius)
+    @Unit(value=Celsius, min=0, max=40)
     void setWaterTemperature(float celcius);
     /**
      * MWV
      * @param windAngle Wind Angle, 0 to 360 degrees
      */
     @NMEACat(Wind)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setRelativeWindAngle(float windAngle);
     /**
      * MWV
      * @param windAngle Wind Angle, 0 to 360 degrees
      */
     @NMEACat(Wind)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setTrueWindAngle(float windAngle);
     /**
      * Returns the wind speed.
@@ -501,7 +501,7 @@ public interface NMEAObserver extends Transactional
      * @param metersInSecond
      */
     @NMEACat(Wind)
-    @Unit(MS)
+    @Unit(value=MS, min=0, max=100)
     void setWindSpeed(float metersInSecond);
     /**
      * ROT
@@ -554,21 +554,21 @@ public interface NMEAObserver extends Transactional
      * @param degrees
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setTrueWaterHeading(float degrees);
     /**
      * VHW
      * @param degrees
      */
     @NMEACat(Bearing)
-    @Unit(Degree)
+    @Unit(value=Degree, min=0, max=360)
     void setMagneticWaterHeading(float degrees);
     /**
      * VHW
      * @param knots
      */
     @NMEACat(Speed)
-    @Unit(Knot)
+    @Unit(value=Knot, min=0, max=50)
     void setWaterSpeed(float knots);
     /**
      * @deprecated This method will no longer be called. Use setRelativeWindAngle.
@@ -583,7 +583,7 @@ public interface NMEAObserver extends Transactional
      * @param knots
      */
     @NMEACat(Waypoint)
-    @Unit(Knot)
+    @Unit(value=Knot, min=0, max=50)
     void setVelocityToWaypoint(float knots);
     /**
      * TXT
@@ -729,7 +729,7 @@ public interface NMEAObserver extends Transactional
      * @param value 
      */
     @NMEACat(Attitude)
-    @Unit(DegreeNeg)
+    @Unit(value=DegreeNeg, min=-60, max=60)
     public void setPitch(float value);
     /**
      * Roll: oscillation of vessel about its longitudinal axis. Roll to the
@@ -737,28 +737,28 @@ public interface NMEAObserver extends Transactional
      * @param value 
      */
     @NMEACat(Attitude)
-    @Unit(DegreeNeg)
+    @Unit(value=DegreeNeg, min=-100, max=100)
     public void setRoll(float value);
     /**
      * X-Acceleration. Unit is gravity.
      * @param value 
      */
     @NMEACat(Acceleration)
-    @Unit(GForceEarth)
+    @Unit(value=GForceEarth, min=-1.1, max=1.1)
     public void setXAcceleration(float value);
     /**
      * Y-Acceleration. Unit is gravity.
      * @param value 
      */
     @NMEACat(Acceleration)
-    @Unit(GForceEarth)
+    @Unit(value=GForceEarth, min=-1.1, max=1.1)
     public void setYAcceleration(float value);
     /**
      * Z-Acceleration. Unit is gravity.
      * @param value 
      */
     @NMEACat(Acceleration)
-    @Unit(GForceEarth)
+    @Unit(value=GForceEarth, min=-1.1, max=1.1)
     public void setZAcceleration(float value);
 
     @NMEACat(Acceleration)
