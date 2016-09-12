@@ -19,6 +19,7 @@ package org.vesalainen.parsers.nmea;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.vesalainen.bean.BeanHelper;
 import org.vesalainen.math.Unit;
@@ -50,13 +51,8 @@ public abstract class AbstractProperties
             NMEACategory nmeaCategory = nmeaCat.value();
             String property = BeanHelper.getProperty(method);
             Unit unit = method.getAnnotation(Unit.class);
-            UnitType unitType = UnitType.Unitless;
-            if (unit != null)
-            {
-                unitType = unit.value();
-            }
             Class<?> type = method.getParameterTypes()[0];
-            map.put(property, new Prop(property, unitType, nmeaCategory, type));
+            map.put(property, new Prop(property, unit, nmeaCategory, type));
         }
         return map;
     }
@@ -68,15 +64,28 @@ public abstract class AbstractProperties
     {
         return map.keySet().stream();
     }
+    public Set<String> getAllProperties()
+    {
+        return map.keySet();
+    }
     public Stream<String> stream(Class<?> type)
     {
         return map.values().stream().filter((p)->{return type == p.type;}).map((p)->{return p.property;});
     }
+    /**
+     * Returns true if given property is one of NMEA properties
+     * @param property
+     * @return 
+     */
     public boolean isProperty(String property)
     {
         return map.containsKey(property);
     }
-    
+    /**
+     * Returns NMEA property type 
+     * @param property
+     * @return 
+     */
     public UnitType getType(String property)
     {
         Prop prop = map.get(property);
@@ -86,6 +95,39 @@ public abstract class AbstractProperties
         }
         return null;
     }
+    /**
+     * Returns NMEA property minimum value or -Double.MAX_VALUE.
+     * @param property
+     * @return 
+     */
+    public double getMin(String property)
+    {
+        Prop prop = map.get(property);
+        if (prop != null)
+        {
+            return prop.min;
+        }
+        return -Double.MAX_VALUE;
+    }
+    /**
+     * Returns NMEA property maximum value or Double.MAX_VALUE.
+     * @param property
+     * @return 
+     */
+    public double getMax(String property)
+    {
+        Prop prop = map.get(property);
+        if (prop != null)
+        {
+            return prop.max;
+        }
+        return Double.MAX_VALUE;
+    }
+    /**
+     * Returns NMEA property category or Miscelleneous if property not found.
+     * @param property
+     * @return 
+     */
     public NMEACategory getCategory(String property)
     {
         Prop prop = map.get(property);
@@ -101,21 +143,28 @@ public abstract class AbstractProperties
         private UnitType unit = UnitType.Unitless;
         private NMEACategory nmeaCategory = NMEACategory.Miscelleneous;
         private Class<?> type;
+        private double min = -Double.MAX_VALUE;
+        private double max = Double.MAX_VALUE;
 
         public Prop(String property)
         {
             this(property, null, null, null);
         }
 
-        public Prop(String property, UnitType unit)
+        public Prop(String property, Unit unit)
         {
             this(property, unit, null, null);
         }
 
-        public Prop(String property, UnitType unit, NMEACategory nmeaCategory, Class<?> type)
+        public Prop(String property, Unit unit, NMEACategory nmeaCategory, Class<?> type)
         {
             this.property = property;
-            this.unit = unit;
+            if (unit != null)
+            {
+                this.unit = unit.value();
+                this.min = unit.min();
+                this.max = unit.max();
+            }
             this.nmeaCategory = nmeaCategory;
             this.type = type;
         }
