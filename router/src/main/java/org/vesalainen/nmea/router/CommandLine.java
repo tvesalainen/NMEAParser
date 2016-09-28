@@ -18,21 +18,10 @@ package org.vesalainen.nmea.router;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
-import java.util.logging.MemoryHandler;
-import java.util.logging.SocketHandler;
 import javax.xml.bind.JAXBException;
-import org.vesalainen.util.CmdArgs;
-import org.vesalainen.util.CmdArgsException;
 import org.vesalainen.util.LoggingCommandLine;
 import org.vesalainen.util.logging.JavaLogging;
-import org.vesalainen.util.logging.MinimalFormatter;
 
 /**
  *
@@ -52,7 +41,7 @@ public class CommandLine extends LoggingCommandLine
     {
         CommandLine cmdArgs = new CommandLine();
         cmdArgs.command(args);
-        JavaLogging log = cmdArgs.getLog();
+        JavaLogging log = JavaLogging.getLogger(CommandLine.class);
         RouterConfig config = null;
         try
         {
