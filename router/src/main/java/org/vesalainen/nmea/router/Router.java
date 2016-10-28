@@ -46,6 +46,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+import java.util.logging.Filter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -92,6 +93,7 @@ import org.vesalainen.util.Matcher;
 import org.vesalainen.util.Matcher.Status;
 import org.vesalainen.util.logging.ChannelHandler;
 import org.vesalainen.util.logging.JavaLogging;
+import org.vesalainen.util.logging.RegexFilter;
 
 /**
  *
@@ -434,7 +436,7 @@ public class Router extends JavaLogging implements Runnable
             if (!resolvPool.contains(se))
             {
                 // endpoint is active
-                fine("add portPool -> %s", se.channel);
+                fine("add portPool -> %s", se.selectableChannel);
                 portPool.add(se.port);
             }
             resolvPool.remove(se);
@@ -528,9 +530,8 @@ public class Router extends JavaLogging implements Runnable
 
     public class ProcessorEndpoint extends Endpoint<SourceChannel>
     {
-        protected Pipe in;
-        protected Pipe out;
-        protected GatheringByteChannel writeTarget;
+        protected Pipe inPipe;
+        protected Pipe outPipe;
         private final ProcessorType processorType;
         private Processor processor;
         public ProcessorEndpoint(ProcessorType processorType)
@@ -543,59 +544,17 @@ public class Router extends JavaLogging implements Runnable
         protected SourceChannel configureChannel() throws IOException
         {
             matched("because is processor");
-            in = Pipe.open();
-            out = Pipe.open();
-            channel = out.source();
-            channel.configureBlocking(false);
-            writeTarget = in.sink();
-            processor = new Processor(processorType, in.source(), out.sink());
+            inPipe = Pipe.open();
+            outPipe = Pipe.open();
+            selectableChannel = outPipe.source();
+            selectableChannel.configureBlocking(false);
+            in = outPipe.source();
+            out = inPipe.sink();
+            processor = new Processor(processorType, inPipe.source(), outPipe.sink());
             autoCloseables.add(processor);
             processor.start();
-            return channel;
+            return selectableChannel;
         }
-
-        @Override
-        protected int write(RingByteBuffer ring) throws IOException
-        {
-            int cnt = 0;
-            if (matched && attached == null)
-            {
-                cnt = ring.write(writeTarget);
-                finer("write %s = %d", ring, cnt);
-                writeCount++;
-                writeBytes += cnt;
-            }
-            return cnt;
-        }
-
-        @Override
-        protected int write(ByteBuffer bb) throws IOException
-        {
-            int cnt = 0;
-            if (matched && attached == null)
-            {
-                cnt = (writeTarget).write(bb);
-                finer("write %s = %d", bb, cnt);
-                writeCount++;
-                writeBytes += cnt;
-            }
-            return cnt;
-        }
-
-        @Override
-        protected int attachedWrite(RingByteBuffer ring) throws IOException
-        {
-            if (matched)
-            {
-                int cnt = ring.write(writeTarget);
-                finest("write %s = %d", ring, cnt);
-                writeCount++;
-                writeBytes += cnt;
-                return cnt;
-            }
-            return 0;
-        }
-
         
     }
     public class MulticastNMEAEndpoint extends UDPEndpoint
@@ -610,9 +569,11 @@ public class Router extends JavaLogging implements Runnable
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open(address, 10110, BufferSize, true, false);
-            channel.configureBlocking(false);
-            return channel;
+            selectableChannel = UnconnectedDatagramChannel.open(address, 10110, BufferSize, true, false);
+            selectableChannel.configureBlocking(false);
+            in = selectableChannel;
+            out = selectableChannel;
+            return selectableChannel;
         }
         
     }
@@ -631,9 +592,11 @@ public class Router extends JavaLogging implements Runnable
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open(address, port, BufferSize, true, false);
-            channel.configureBlocking(false);
-            return channel;
+            selectableChannel = UnconnectedDatagramChannel.open(address, port, BufferSize, true, false);
+            selectableChannel.configureBlocking(false);
+            in = selectableChannel;
+            out = selectableChannel;
+            return selectableChannel;
         }
     }
     public class BroadcastNMEAEndpoint extends UDPEndpoint
@@ -646,9 +609,11 @@ public class Router extends JavaLogging implements Runnable
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open("255.255.255.255", 10110, BufferSize, true, false);
-            channel.configureBlocking(false);
-            return channel;
+            selectableChannel = UnconnectedDatagramChannel.open("255.255.255.255", 10110, BufferSize, true, false);
+            selectableChannel.configureBlocking(false);
+            in = selectableChannel;
+            out = selectableChannel;
+            return selectableChannel;
         }
     }
     public class BroadcastEndpoint extends UDPEndpoint
@@ -664,9 +629,11 @@ public class Router extends JavaLogging implements Runnable
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open("255.255.255.255", port, BufferSize, true, false);
-            channel.configureBlocking(false);
-            return channel;
+            selectableChannel = UnconnectedDatagramChannel.open("255.255.255.255", port, BufferSize, true, false);
+            selectableChannel.configureBlocking(false);
+            in = selectableChannel;
+            out = selectableChannel;
+            return selectableChannel;
         }
     }
     public class DatagramEndpoint extends UDPEndpoint
@@ -690,9 +657,11 @@ public class Router extends JavaLogging implements Runnable
         protected UnconnectedDatagramChannel configureChannel() throws IOException
         {
             matched("because is datagram");
-            channel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, false);
-            channel.configureBlocking(false);
-            return channel;
+            selectableChannel = UnconnectedDatagramChannel.open(host, port, BufferSize, true, false);
+            selectableChannel.configureBlocking(false);
+            in = selectableChannel;
+            out = selectableChannel;
+            return selectableChannel;
         }
 
         @Override
@@ -725,7 +694,7 @@ public class Router extends JavaLogging implements Runnable
             }
             catch (SocketException ex)
             {
-                warning("UDP send %s", ex.getMessage());
+                warning("%s send %s", name, ex.getMessage());
                 return 0;
             }
         }
@@ -753,9 +722,11 @@ public class Router extends JavaLogging implements Runnable
             SerialChannel serialChannel = (SerialChannel) super.configureChannel();
             if (serialChannel != null)
             {
-                channel = new SeaTalkChannel(serialChannel);
-                ((SeaTalkChannel)channel).setProprietaryPrefix(proprietaryPrefix);
-                return channel;
+                selectableChannel = new SeaTalkChannel(serialChannel);
+                ((SeaTalkChannel)selectableChannel).setProprietaryPrefix(proprietaryPrefix);
+                in = (ScatteringByteChannel) selectableChannel;
+                out = (GatheringByteChannel) selectableChannel;
+                return selectableChannel;
             }
             else
             {
@@ -909,7 +880,9 @@ public class Router extends JavaLogging implements Runnable
             triedPorts.add(prt);
             resolvStarted = System.currentTimeMillis();
             fine("%s: %s -> %s", name, prt, configuration);
-            channel = serialChannel;
+            selectableChannel = serialChannel;
+            in = (ScatteringByteChannel) selectableChannel;
+            out = (GatheringByteChannel) selectableChannel;
             port = prt;
             return serialChannel;
         }
@@ -917,7 +890,7 @@ public class Router extends JavaLogging implements Runnable
         @Override
         protected int attachedWrite(RingByteBuffer ring) throws IOException
         {
-            int cnt = ring.write((GatheringByteChannel)channel);
+            int cnt = ring.write(out);
             writeCount++;
             writeBytes += cnt;
             return cnt;
@@ -953,7 +926,9 @@ public class Router extends JavaLogging implements Runnable
         public TcpEndpoint(TcpEndpointType tcpType, SocketChannel channel) throws IOException
         {
             super(tcpType);
-            this.channel = channel;
+            this.selectableChannel = channel;
+            in = channel;
+            out = channel;
             this.matched = true;
             channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
         }
@@ -967,17 +942,20 @@ public class Router extends JavaLogging implements Runnable
     }
     public abstract class Endpoint<T extends SelectableChannel> extends DataSource
     {
-        protected T channel;
+        protected T selectableChannel;
+        protected ScatteringByteChannel in;
+        protected GatheringByteChannel out;
         protected NMEAMatcher matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean matched;
         private boolean mark = true;
-        private int position = -1;
         protected EndpointScriptEngine scriptEngine;
         private long lastRead;
         private long nowRead;
         protected List<MessageFilter> filterList;
-
+        boolean partial = false;
+        int lastPosition = -1;
+        
         public Endpoint(EndpointType endpointType)
         {
             super(endpointType.getName());
@@ -1056,24 +1034,24 @@ public class Router extends JavaLogging implements Runnable
             if (wm != null)
             {
                 wm.compile();
-            }
+            }   
             return wm;
         }
         @Override
-        protected int writePartial(RingByteBuffer ring) throws IOException
+        protected int writePartial(RingByteBuffer ring, int lastPosition) throws IOException
         {
             int cnt = 0;
             if (matched && attached == null)
             {
-                if (position == -1)
+                finest("lastPosition = %d", lastPosition);
+                if (lastPosition == -1)
                 {
-                    cnt = ring.write((GatheringByteChannel)channel);
+                    cnt = ring.write(out);
                 }
                 else
                 {
-                    cnt = ring.write((GatheringByteChannel)channel, position);
+                    cnt = ring.write(out, lastPosition);
                 }
-                position = ring.getPosition();
                 finest("write %s = %d", ring, cnt);
                 writeCount++;
                 writeBytes += cnt;
@@ -1097,18 +1075,10 @@ public class Router extends JavaLogging implements Runnable
             int cnt = 0;
             if (matched && attached == null)
             {
-                if (position != -1)
-                {
-                    cnt = writePartial(ring);
-                    position = -1;
-                }
-                else
-                {
-                    cnt = ring.write((GatheringByteChannel)channel);
-                    finer("write %s = %d", ring, cnt);
-                    writeCount++;
-                    writeBytes += cnt;
-                }
+                cnt = ring.write(out);
+                finer("write %s = %d", ring, cnt);
+                writeCount++;
+                writeBytes += cnt;
             }
             return cnt;
         }
@@ -1119,7 +1089,7 @@ public class Router extends JavaLogging implements Runnable
             int cnt = 0;
             if (matched && attached == null)
             {
-                cnt = ((WritableByteChannel)channel).write(bb);
+                cnt = out.write(bb);
                 finest("write %s = %d", bb, cnt);
                 writeCount++;
                 writeBytes += cnt;
@@ -1132,7 +1102,7 @@ public class Router extends JavaLogging implements Runnable
         {
             if (matched)
             {
-                int cnt = ring.write((GatheringByteChannel)channel);
+                int cnt = ring.write(out);
                 finest("write %s = %d", ring, cnt);
                 writeCount++;
                 writeBytes += cnt;
@@ -1152,12 +1122,13 @@ public class Router extends JavaLogging implements Runnable
             Set<DataSource> set = sources.get(name);
             isSink = set != null && set.size() > 0;
             isSingleSink = isSink && set.size() == 1 && filterList == null;
+            finest("updateStatus(%s: set=%s filterList=%s)-> isSink=%b isSingleSink=%b", name, set, filterList, isSink, isSingleSink);
         }
 
         @Override
         protected int read(RingByteBuffer ring) throws IOException
         {
-            return ring.read((ScatteringByteChannel)channel);
+            return ring.read(in);
         }
         
         @Override
@@ -1201,6 +1172,7 @@ public class Router extends JavaLogging implements Runnable
                         case Error:
                             finest("drop: '%1$c' %1$d 0x%1$02X %2$s", b & 0xff, (RingBuffer)ring);
                             mark = true;
+                            lastPosition = -1;
                             break;
                         case Ok:
                         case WillMatch:
@@ -1208,7 +1180,9 @@ public class Router extends JavaLogging implements Runnable
                             break;
                         case Match:
                             finer("read: %s", ring);
-                            write(matcher, ring, false);
+                            write(matcher, ring, lastPosition);
+                            write(matcher, ring, -2);
+                            lastPosition = -1;
                             if (!matched)
                             {
                                 matched(ring);
@@ -1219,7 +1193,8 @@ public class Router extends JavaLogging implements Runnable
                 }
                 if (match == Status.WillMatch)
                 {
-                    write(matcher, ring, true);
+                    write(matcher, ring, lastPosition);
+                    lastPosition = ring.getPosition();
                 }
             }
         }
@@ -1230,9 +1205,9 @@ public class Router extends JavaLogging implements Runnable
             return "Endpoint{" + "name=" + name + '}';
         }
 
-        private void write(Matcher<Route> matcher, RingByteBuffer ring, boolean partial) throws IOException
+        private void write(Matcher<Route> matcher, RingByteBuffer ring, int lastPosition) throws IOException
         {
-            matcher.getMatched().write(ring, partial);
+            matcher.getMatched().write(name, ring, lastPosition);
             if (scriptEngine != null)
             {
                 scriptEngine.write(ring);
@@ -1248,6 +1223,7 @@ public class Router extends JavaLogging implements Runnable
             {
                 scriptEngine.start();
             }
+            updateStatus();
         }
 
     }
@@ -1362,7 +1338,7 @@ public class Router extends JavaLogging implements Runnable
             matcher.addExpression("kill*\n", "kill");
             sb.append("kill <target> - Kill target \r\n");
             matcher.addExpression("l*\n", "log");
-            sb.append("l[og] [target] [level] - Log\r\n");
+            sb.append("l[og] target level [regex] - Log\r\n");
             matcher.addExpression("sho*\n", "logs");
             sb.append("sho[w logs] - Show available logs\r\n");
             matcher.addExpression("st*\n", "statistics");
@@ -1672,17 +1648,18 @@ public class Router extends JavaLogging implements Runnable
             String cmd = ring.getString();
             String[] arr = cmd.split(whiteSpace);
             int l = arr.length;
-            Level level = level(arr[l-1]);
-            if (level != null)
-            {
-                l--;
-            }
+            Level level = Level.FINEST;
             Logger lg;
+            Filter f = null;
             switch (l)
             {
                 case 1:
                     lg = Router.this.getLogger();
                     break;
+                case 4:
+                    f = new RegexFilter(arr[3]);
+                case 3:
+                    level = level(arr[2]);
                 case 2:
                     lg = getLog(arr[1]);
                     break;
@@ -1696,6 +1673,7 @@ public class Router extends JavaLogging implements Runnable
                 lg.setLevel(level);
             }
             logHandler = new ChannelHandler(channel);
+            logHandler.setFilter(f);
             lg.addHandler(logHandler);
         }
         private Logger getLog(String s)

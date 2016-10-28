@@ -82,7 +82,7 @@ public abstract class DataSource extends JavaLogging
 
     protected abstract int write(RingByteBuffer ring) throws IOException;
 
-    protected int writePartial(RingByteBuffer ring) throws IOException
+    protected int writePartial(RingByteBuffer ring, int lastPosition) throws IOException
     {
         return 0;
     }

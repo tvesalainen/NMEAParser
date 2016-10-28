@@ -19,6 +19,7 @@ package org.vesalainen.nmea.router;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -41,7 +42,7 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author tkv
  */
-public class SeaTalkChannel extends SelectableChannel implements ScatteringByteChannel, WritableByteChannel
+public class SeaTalkChannel extends SelectableChannel implements ScatteringByteChannel, GatheringByteChannel
 {
     private final SerialChannel channel;
     private final RingByteBuffer readRing = new RingByteBuffer(100, true);
@@ -77,6 +78,18 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
         nmeaMatcher.add(new SimpleMatcher("$P"+proprietaryPrefix+",ST,LAMP,?*\n"));
     }
     
+    @Override
+    public long write(ByteBuffer[] srcs, int offset, int length) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public long write(ByteBuffer[] srcs) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     @Override
     public int write(ByteBuffer src) throws IOException
     {

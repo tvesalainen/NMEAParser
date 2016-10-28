@@ -24,23 +24,16 @@ import java.nio.channels.GatheringByteChannel;
 import java.time.ZoneOffset;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.prefs.Preferences;
 import java.util.stream.Stream;
 import java.util.zip.CheckedOutputStream;
-import org.vesalainen.code.PropertySetter;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.nmea.util.NMEAFilters;
 import org.vesalainen.nmea.util.NMEASample;
-import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
-import org.vesalainen.util.Transactional;
-import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *

@@ -66,10 +66,10 @@ public class CommandLine extends LoggingCommandLine
         catch (ShutdownException ex)
         {
             log.info("shutdown by "+ex.getMessage());
-        }
+        }   
         catch (Throwable ex)
         {
-            log.log(Level.SEVERE, "recovering...", ex);
+            log.log(Level.SEVERE, ex, "recovering...");
         }
     }
 }

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
+import static java.util.logging.Level.FINER;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.util.logging.JavaLogging;
@@ -86,7 +87,7 @@ public final class Route extends JavaLogging
         return backup;
     }
     
-    public final void write(RingByteBuffer ring, boolean partial) throws IOException
+    public final void write(String origin, RingByteBuffer ring, int lastPosition) throws IOException
     {
         lastWrote = System.currentTimeMillis();
         if (canWrite())
@@ -99,18 +100,27 @@ public final class Route extends JavaLogging
                     DataSource dataSource = iterator.next();
                     try
                     {
-                        if (partial)
+                        if (dataSource.isSingleSink())
                         {
-                            if (dataSource.isSingleSink())
+                            if (lastPosition != -2) // -2 full write -1 first write >= 0 partial
                             {
-                                finer("write partial: %s %s", target, ring);
-                                dataSource.writePartial(ring);
+                                int cnt = dataSource.writePartial(ring, lastPosition);
+                                finest("%s = %d", ring, cnt);
+                                if (this.isLoggable(FINER))
+                                {
+                                    String string = ring.getString();
+                                    int length = string.length();
+                                    finer("write partial: %s -> %s %s", origin, target, string.substring(length-cnt, length));
+                                }
                             }
                         }
                         else
                         {
-                            finer("write: %s %s", target, ring);
-                            dataSource.write(ring);
+                            if (lastPosition == -2) // -2 last write -1 first write
+                            {
+                                finer("write: %s -> %s %s", origin, target, ring.getString());
+                                dataSource.write(ring);
+                            }
                         }
                     }
                     catch (IOException ex)
