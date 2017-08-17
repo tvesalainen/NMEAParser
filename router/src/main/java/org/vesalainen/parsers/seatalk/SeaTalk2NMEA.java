@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 tkv
+ * Copyright (C) 2015 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * Note! This class is not thread safe.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @see <a href="http://www.thomasknauf.de/seatalk.htm">SeaTalk Technical Reference</a>
  */
 @GenClassname("org.vesalainen.parsers.seatalk.SeaTalk2NMEAImpl")
