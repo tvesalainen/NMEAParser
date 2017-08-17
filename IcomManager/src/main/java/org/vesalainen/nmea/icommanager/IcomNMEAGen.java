@@ -12,7 +12,7 @@ import org.vesalainen.parsers.nmea.NMEAGen;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class IcomNMEAGen extends NMEAGen
 {

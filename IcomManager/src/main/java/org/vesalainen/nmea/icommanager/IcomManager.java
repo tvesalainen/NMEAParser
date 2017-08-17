@@ -83,7 +83,7 @@ $PICOA,90,00,TXF,7.053000*08
      
 
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class IcomManager extends AbstractNMEAObserver implements Runnable 
 {

@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.vesalainen</groupId>
         <artifactId>parent</artifactId>
-        <version>1.8.0</version>
+        <version>1.8.1</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.vesalainen.nmea</groupId>
@@ -12,7 +12,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>parser</module>
-        <module>router</module>
+        <module>nmea-router</module>
         <module>IcomManager</module>
         <module>track-plotter</module>
     </modules>

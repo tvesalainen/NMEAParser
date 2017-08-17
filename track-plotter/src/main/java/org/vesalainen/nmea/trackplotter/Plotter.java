@@ -13,7 +13,7 @@ import org.vesalainen.util.CmdArgs;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Plotter extends CmdArgs
 {
