@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 tkv
+ * Copyright (C) 2016 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.vesalainen.util.stream.ObserverSpliterator;
 
 /**
  * NMEASampler acts as bridge from observer to stream.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class NMEASampler extends AbstractPropertySetter implements Runnable
 {

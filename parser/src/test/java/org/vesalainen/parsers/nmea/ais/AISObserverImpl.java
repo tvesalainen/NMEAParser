@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 tkv
+ * Copyright (C) 2015 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import org.vesalainen.code.PropertySetterDispatcher;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @PropertyDispatcherClass("org.vesalainen.parser.nmea.ais.NMEAObserverFactoryImpl")
 public abstract class AISObserverImpl extends PropertyDispatcher implements AISObserver

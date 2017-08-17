@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 tkv
+ * Copyright (C) 2016 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import org.vesalainen.navi.Navis;
 /**
  * NMEAMappers contains stream mappings from NMEASample to NMEASample. Same 
  * sample is mapped but added some pseudo fields
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class NMEAMappers
 {

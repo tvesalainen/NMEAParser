@@ -16,7 +16,7 @@ import java.net.UnknownHostException;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class DatagramInputStream extends InputStream
 {

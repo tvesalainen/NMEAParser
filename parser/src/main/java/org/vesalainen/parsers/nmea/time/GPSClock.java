@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 tkv
+ * Copyright (C) 2016 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import org.vesalainen.time.SimpleMutableDateTime;
  * time-setting NMEA sentences to give accurate timing for other sentences as well.
  * <p>Fixed (use fixed base clock). Data coming from recorded NMEA sentences
  * like track file. Time is not updated between time-setting NMEA sentences.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public final class GPSClock extends MutableClock implements NMEAClock
 {
