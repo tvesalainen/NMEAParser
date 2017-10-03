@@ -21,6 +21,16 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
+import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.HOUR_OF_DAY;
+import static java.time.temporal.ChronoField.MILLI_OF_SECOND;
+import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
+import static java.time.temporal.ChronoField.YEAR;
+import java.time.temporal.TemporalField;
+import java.util.EnumSet;
+import java.util.Set;
 import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.time.MutableClock;
 import org.vesalainen.time.SimpleMutableDateTime;
@@ -37,6 +47,15 @@ import org.vesalainen.time.SimpleMutableDateTime;
  */
 public final class GPSClock extends MutableClock implements NMEAClock
 {
+    static final Set<ChronoField> SUPPORTED_FIELDS = EnumSet.of(
+        YEAR,
+        MONTH_OF_YEAR, 
+        DAY_OF_MONTH, 
+        HOUR_OF_DAY, 
+        MINUTE_OF_HOUR, 
+        SECOND_OF_MINUTE,
+        MILLI_OF_SECOND
+        );
     private SimpleMutableDateTime uncommitted = new SimpleMutableDateTime();
     private int localZoneMinutes;
     private long startTime;
@@ -104,15 +123,15 @@ public final class GPSClock extends MutableClock implements NMEAClock
     }
 
     @Override
-    public void set(ChronoField chronoField, int amount)
+    public void set(TemporalField field, long amount)
     {
-        uncommitted.set(chronoField, amount);
+        uncommitted.set(field, amount);
     }
 
     @Override
     public void setZonedDateTime(ZonedDateTime zonedDateTime)
     {
-        for (ChronoField cf : SupportedFields)
+        for (ChronoField cf : SUPPORTED_FIELDS)
         {
             super.set(cf, zonedDateTime.get(cf));
         }

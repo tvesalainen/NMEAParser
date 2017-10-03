@@ -30,7 +30,6 @@ import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEADispatcher;
 import org.vesalainen.parsers.nmea.TalkerId;
 import org.vesalainen.util.Lists;
-import org.vesalainen.util.Recycler;
 import org.vesalainen.util.stream.ObserverSpliterator;
 
 /**
@@ -119,7 +118,7 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
         {
             if (sample == null)
             {
-                sample = Recycler.get(NMEASample.class);
+                sample = new NMEASample();
             }
         }
     }
@@ -140,7 +139,6 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
     {
         if (sample != null && sample.hasProperties())
         {
-            Recycler.recycle(sample);
             sample = null;
         }
     }

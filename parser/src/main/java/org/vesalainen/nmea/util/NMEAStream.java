@@ -25,7 +25,6 @@ import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEADispatcher;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.TalkerId;
-import org.vesalainen.util.Recycler;
 
 /**
  *
@@ -56,7 +55,7 @@ public class NMEAStream
         
         public void addWaypoint(long time, float latitude, float longitude)
         {
-            NMEASample sample = Recycler.get(NMEASample.class);
+            NMEASample sample = new NMEASample();
             sample.setMessageType(MessageType.RMC);
             sample.setTalkerId(TalkerId.GP);
             sample.setTime(time);
@@ -66,7 +65,7 @@ public class NMEAStream
         }
         public NMEASample addSample()
         {
-            NMEASample sample = Recycler.get(NMEASample.class);
+            NMEASample sample = new NMEASample();
             builder.add(sample);
             return sample;
         }
