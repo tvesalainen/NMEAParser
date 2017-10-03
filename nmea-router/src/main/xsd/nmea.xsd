@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+           elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xsd:element name="nmea" type="nmeaType"/>
+    <xsd:complexType name="nmeaType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="tcp-listener" type="tcpListenerType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="router" type="routerType" minOccurs="0" maxOccurs="1"/>
+        </xsd:choice>
+        <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
+        <xsd:attribute name="ctrlTcpPort" type="portType"/>
+    </xsd:complexType>
+    <xsd:complexType name="tcpListenerType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="tcp-endpoint" type="tcpEndpointType"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <xsd:complexType name="routerType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="processor" type="processorType"/>
+            <xsd:element name="multicast" type="multicastType"/>
+            <xsd:element name="multicast-nmea-0183" type="multicastNMEAType"/>
+            <xsd:element name="broadcast" type="broadcastType"/>
+            <xsd:element name="broadcast-nmea-0183" type="broadcastNMEAType"/>
+            <xsd:element name="datagram" type="datagramType"/>
+            <xsd:element name="seatalk" type="seatalkType"/>
+            <xsd:element name="nmea-0183-hs" type="nmea-0183-hsType"/>
+            <xsd:element name="nmea-0183" type="nmea-0183Type"/>
+            <xsd:element name="serial" type="serialType"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <xsd:complexType name="tcpEndpointType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:attribute name="port" type="portType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="processorType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                    <xsd:element name="variation-source" type="variation-sourceType"/>
+                    <xsd:element name="true-wind-source" type="true-wind-sourceType"/>
+                    <xsd:element name="tracker" type="trackerType"/>
+                    <xsd:element name="sntp-broadcaster" type="sntp-broadcasterType"/>
+                    <xsd:element name="sntp-multicaster" type="sntp-multicasterType"/>
+                    <xsd:element name="sntp-server" type="sntp-serverType"/>
+                    <xsd:element name="time-setter" type="timeSetterType"/>
+                </xsd:choice>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="multicastNMEAType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:attribute name="address" type="addressType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="multicastType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:attribute name="address" type="addressType" use="required"/>
+                <xsd:attribute name="port" type="portType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="broadcastNMEAType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="broadcastType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:attribute name="port" type="portType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="datagramType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:attribute name="address" type="addressType" use="required"/>
+                <xsd:attribute name="port" type="portType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="seatalkType">
+        <xsd:complexContent>
+            <xsd:extension base="serialType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="nmea-0183-hsType">
+        <xsd:complexContent>
+            <xsd:extension base="serialType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="nmea-0183Type">
+        <xsd:complexContent>
+            <xsd:extension base="serialType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="serialType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:attribute name="speed" type="speedType"/>
+                <xsd:attribute name="bits" type="bitsType"/>
+                <xsd:attribute name="parity" type="parityType"/>
+                <xsd:attribute name="stops" type="stopsType"/>
+                <xsd:attribute name="flowControl" type="flowControlType"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="endpointType">
+        <xsd:sequence>
+            <xsd:element name="script" type="scriptType" maxOccurs="1"/>
+            <xsd:element name="route" type="routeType" maxOccurs="unbounded"/>
+            <xsd:element name="filter" type="filterType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="nameType" use="required"/>
+    </xsd:complexType>
+    <xsd:complexType name="filterType">
+        <xsd:attribute name="classname" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    <xsd:complexType name="scriptType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string"/>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <xsd:complexType name="routeType">
+        <xsd:attribute name="prefix" type="prefixType" use="required"/>
+        <xsd:attribute name="target" type="targetType"/>
+        <xsd:attribute name="backup" type="backupType"/>
+        <xsd:attribute name="expire" type="millisType"/>
+    </xsd:complexType>
+    <xsd:complexType name="trackerType">
+        <xsd:attribute name="directory" type="xsd:string" use="required"/>
+        <xsd:attribute name="bearingTolerance" type="xsd:unsignedInt"/>
+        <xsd:attribute name="minDistance" type="xsd:decimal"/>
+        <xsd:attribute name="maxSpeedAcceleration" type="xsd:decimal"/>
+        <xsd:attribute name="maxPassive" type="xsd:unsignedInt"/>
+        <xsd:attribute name="buffered" type="xsd:boolean"/>
+    </xsd:complexType>
+    <xsd:complexType name="timeSetterType">
+        <xsd:attribute name="cmd" type="xsd:string" use="required"/>
+        <xsd:attribute name="pollInterval" type="pollIntervalType"/>
+        <xsd:attribute name="maxDelta" type="millisType"/>
+    </xsd:complexType>
+    <xsd:complexType name="sntp-broadcasterType">
+        <xsd:attribute name="pollInterval" type="pollIntervalType"/>
+    </xsd:complexType>
+    <xsd:complexType name="sntp-multicasterType">
+        <xsd:attribute name="pollInterval" type="pollIntervalType"/>
+    </xsd:complexType>
+    <xsd:complexType name="sntp-serverType">
+    </xsd:complexType>
+    <xsd:complexType name="variation-sourceType">
+        <xsd:attribute name="period" type="millisType"/>
+    </xsd:complexType>
+    <xsd:complexType name="true-wind-sourceType">
+    </xsd:complexType>
+    <xsd:simpleType name="pollIntervalType">
+        <xsd:restriction base="xsd:integer">
+            <xsd:minInclusive value="4"/>
+            <xsd:maxInclusive value="17"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="addressType">
+        <xsd:restriction base="xsd:string">
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="portType">
+        <xsd:restriction base="xsd:unsignedShort"/>
+    </xsd:simpleType>
+    <xsd:simpleType name="prefixType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="([A-Za-z0-9$!?])+"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="proprietaryPrefixType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="[A-Z]([A-Z0-9])*"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="millisType">
+        <xsd:restriction base="xsd:unsignedInt"/>
+    </xsd:simpleType>
+    <xsd:simpleType name="backupType">
+        <xsd:restriction base="xsd:boolean"/>
+    </xsd:simpleType>
+    <xsd:simpleType name="targetType">
+        <xsd:list itemType="nameType"/>
+    </xsd:simpleType>
+    <xsd:simpleType name="nameType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="[A-Za-z]([A-Za-z0-9])*"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="speedType">
+        <xsd:restriction base="xsd:unsignedInt">
+            <xsd:enumeration value="50"/>
+            <xsd:enumeration value="75"/>
+            <xsd:enumeration value="110"/>
+            <xsd:enumeration value="134"/>
+            <xsd:enumeration value="150"/>
+            <xsd:enumeration value="200"/>
+            <xsd:enumeration value="300"/>
+            <xsd:enumeration value="600"/>
+            <xsd:enumeration value="1200"/>
+            <xsd:enumeration value="1800"/>
+            <xsd:enumeration value="2400"/>
+            <xsd:enumeration value="4800"/>
+            <xsd:enumeration value="9600"/>
+            <xsd:enumeration value="14400"/>
+            <xsd:enumeration value="19200"/>
+            <xsd:enumeration value="38400"/>
+            <xsd:enumeration value="57600"/>
+            <xsd:enumeration value="115200"/>
+            <xsd:enumeration value="128000"/>
+            <xsd:enumeration value="230400"/>
+            <xsd:enumeration value="256000"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="parityType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="NONE"/>
+            <xsd:enumeration value="ODD"/>
+            <xsd:enumeration value="EVEN"/>
+            <xsd:enumeration value="MARK"/>
+            <xsd:enumeration value="SPACE"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="bitsType">
+        <xsd:restriction base="xsd:integer">
+            <xsd:minInclusive value="4"/>
+            <xsd:maxInclusive value="8"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="stopsType">
+        <xsd:restriction base="xsd:integer">
+            <xsd:minInclusive value="1"/>
+            <xsd:maxInclusive value="2"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="flowControlType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="NONE"/>
+            <xsd:enumeration value="XONXOFF"/>
+            <xsd:enumeration value="RTSCTS"/>
+            <xsd:enumeration value="DSRDTR"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+</xsd:schema>

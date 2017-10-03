@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
+    <tcp-listener>
+        <tcp-endpoint name="TCP" port="12345">
+            
+        </tcp-endpoint>
+    </tcp-listener>
+    <router>
+        <processor name="Proc">
+            <true-wind-source/>
+            <tracker directory="." />
+            <route prefix="$UPMWV" target="Net"/>
+        </processor>
+        <multicast-nmea-0183 name="Net" address="224.0.0.3">
+            <route prefix="$GPRMC" target="Proc MT TCP"/>
+            <route prefix="$IIMWV" target="Proc"/>
+            <route prefix="!AI" target="MT"/>
+        </multicast-nmea-0183>
+        <datagram name="MT" address="5.9.207.224" port="5321">
+            <filter classname="org.vesalainen.nmea.router.RMCFilter"/>
+        </datagram>
+    </router>
+</nmea>

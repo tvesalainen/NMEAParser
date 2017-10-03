@@ -1,0 +1,10 @@
+VERSION=1.8.0
+JAR=/home/pi/router-$VERSION-jar-with-dependencies.jar
+OPTS="-ll CONFIG -pl CONFIG -lp /var/log/nmea%g.log"
+CONFIG=/home/pi/router2.xml
+DAEMON=/usr/bin/java
+DAEMON_ARGS="-jar $JAR $OPTS $CONFIG"
+# time to sleep after stop in restart
+SLEEP-TIME=3
+
+
