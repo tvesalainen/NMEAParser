@@ -70,7 +70,7 @@ public final class NMEAMatcherManager extends JavaLogging
                 wm = new NMEAMatcher();
             }
             String prefix = rt.getPrefix();
-            wm.addNMEAExpression(prefix, new Route(rt));
+            wm.addExpression(prefix, new Route(rt));
         }
         if (wm != null)
         {
@@ -104,7 +104,7 @@ public final class NMEAMatcherManager extends JavaLogging
                             wm = new NMEAMatcher();
                         }
                         String prefix = rt.getPrefix();
-                        wm.addNMEAExpression(prefix, new Route(rt));
+                        wm.addExpression(prefix, new Route(rt));
                     }
                 }
             }

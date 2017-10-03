@@ -40,11 +40,11 @@ import org.vesalainen.parsers.nmea.NMEAService;
  */
 public class Tracker extends AbstractSampleConsumer implements AutoCloseable
 {
-    private static final long SecondInMillis = 1000;
-    private static final long MinuteInMillis = 60*SecondInMillis;
-    private static final long HourInMillis = 60*MinuteInMillis;
-    private static final long DayInMillis = 24*HourInMillis;
-    private static final String[] Prefixes = new String[]{
+    private static final long SECOND_IN_MILLIS = 1000;
+    private static final long MINUTE_IN_MILLIS = 60*SECOND_IN_MILLIS;
+    private static final long HOUR_IN_MILLIS = 60*MINUTE_IN_MILLIS;
+    private static final long DAY_IN_MILLIS = 24*HOUR_IN_MILLIS;
+    private static final String[] PREFIXES = new String[]{
         "latitude",
         "longitude"
             };
@@ -109,7 +109,7 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
     @Override
     public String[] getProperties()
     {
-        return Prefixes;
+        return PREFIXES;
     }
 
     @Override
@@ -151,10 +151,10 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
             if (nextDayMillis == 0)
             {
                 ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneOffset.UTC);
-                nextDayMillis = time + DayInMillis - (
-                        HourInMillis*zdt.getHour() +
-                        MinuteInMillis*zdt.getMinute() +
-                        SecondInMillis*zdt.getSecond()
+                nextDayMillis = time + DAY_IN_MILLIS - (
+                        HOUR_IN_MILLIS*zdt.getHour() +
+                        MINUTE_IN_MILLIS*zdt.getMinute() +
+                        SECOND_IN_MILLIS*zdt.getSecond()
                         );
             }
             else
@@ -162,7 +162,7 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
                 if (nextDayMillis < time)
                 {
                     track.close();
-                    nextDayMillis = time + DayInMillis;
+                    nextDayMillis = time + DAY_IN_MILLIS;
                 }
             }
             track.output(time, latitude, longitude);

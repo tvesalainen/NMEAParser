@@ -44,7 +44,8 @@ public class NMEAMatcher extends WildcardMatcher<Route>
         this.checksum = new NMEAChecksum();
     }
 
-    public void addNMEAExpression(String expr, Route attach, Regex.Option... options)
+    @Override
+    public void addExpression(String expr, Route attach, Regex.Option... options)
     {
         super.addExpression(expr, attach, options);
         routes.add(attach);

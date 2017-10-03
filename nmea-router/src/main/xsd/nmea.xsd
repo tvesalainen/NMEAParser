@@ -114,6 +114,8 @@
     </xsd:complexType>
     <xsd:complexType name="endpointType">
         <xsd:sequence>
+            <xsd:element name="enable" type="xsd:boolean" maxOccurs="1"/>
+            <xsd:element name="comment" type="xsd:string" maxOccurs="1"/>
             <xsd:element name="script" type="scriptType" maxOccurs="1"/>
             <xsd:element name="route" type="routeType" maxOccurs="unbounded"/>
             <xsd:element name="filter" type="filterType" maxOccurs="unbounded"/>

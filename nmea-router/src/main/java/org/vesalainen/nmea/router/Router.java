@@ -1023,7 +1023,7 @@ public class Router extends JavaLogging implements Runnable
                         {
                             wm = new NMEAMatcher();
                         }
-                        wm.addNMEAExpression(prefix, new Route(rt));
+                        wm.addExpression(prefix, new Route(rt));
                     }
                     for (String trg : targetList)
                     {
