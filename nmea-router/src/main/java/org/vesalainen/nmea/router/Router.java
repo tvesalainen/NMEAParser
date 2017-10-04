@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.router;
 
+import org.vesalainen.nmea.router.seatalk.SeaTalkChannel;
 import org.vesalainen.nmea.router.filter.MessageFilter;
 import java.io.EOFException;
 import java.io.IOException;
@@ -816,7 +817,7 @@ public class Router extends JavaLogging implements Runnable
         }
 
         @Override
-        protected NMEAMatcher createMatcher(EndpointType endpointType)
+        protected NMEAMatcher<Route> createMatcher(EndpointType endpointType)
         {
             List<RouteType> route = endpointType.getRoute();
             for (RouteType rt : route)
@@ -945,7 +946,7 @@ public class Router extends JavaLogging implements Runnable
         protected T selectableChannel;
         protected ScatteringByteChannel in;
         protected GatheringByteChannel out;
-        protected NMEAMatcher matcher;
+        protected NMEAMatcher<Route> matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean matched;
         private boolean mark = true;
@@ -1003,13 +1004,13 @@ public class Router extends JavaLogging implements Runnable
         {
             matcher = createMatcher(endpointType);
         }
-        void setMatcher(NMEAMatcher matcher)
+        void setMatcher(NMEAMatcher<Route> matcher)
         {
             this.matcher = matcher;
         }
-        protected NMEAMatcher createMatcher(EndpointType endpointType)
+        protected NMEAMatcher<Route> createMatcher(EndpointType endpointType)
         {
-            NMEAMatcher wm = null;
+            NMEAMatcher<Route> wm = null;
             List<RouteType> route = endpointType.getRoute();
             if (!endpointType.getRoute().isEmpty())
             {
@@ -1021,7 +1022,7 @@ public class Router extends JavaLogging implements Runnable
                     {
                         if (wm == null)
                         {
-                            wm = new NMEAMatcher();
+                            wm = new NMEAMatcher<>();
                         }
                         wm.addExpression(prefix, new Route(rt));
                     }
@@ -1546,7 +1547,7 @@ public class Router extends JavaLogging implements Runnable
                     Endpoint ep = (Endpoint) ds;
                     out.print(ds.name+"\t");
                     boolean first = true;
-                    NMEAMatcher m = (NMEAMatcher) ep.matcher;
+                    NMEAMatcher<Route> m = (NMEAMatcher) ep.matcher;
                     if (m != null)
                     {
                         out.print(m.getMatches()+"\t");

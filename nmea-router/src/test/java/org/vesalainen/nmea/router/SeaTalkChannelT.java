@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.router;
 
+import org.vesalainen.nmea.router.seatalk.SeaTalkChannel;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Test;

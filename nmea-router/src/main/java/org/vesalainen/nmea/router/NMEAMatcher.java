@@ -27,7 +27,7 @@ import org.vesalainen.regex.WildcardMatcher;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class NMEAMatcher extends WildcardMatcher<Route>
+public class NMEAMatcher<T> extends WildcardMatcher<T>
 {
     enum State {Prefix, Data, Checksum1, Checksum2, Cr, Lf};
     private State state = State.Prefix;
@@ -36,8 +36,8 @@ public class NMEAMatcher extends WildcardMatcher<Route>
     private float matches;
     private boolean parsing;
     private float errors;
-    private Route matched;
-    private final List<Route> routes = new ArrayList<>();
+    private T matched;
+    private final List<T> routes = new ArrayList<>();
 
     public NMEAMatcher()
     {
@@ -45,13 +45,13 @@ public class NMEAMatcher extends WildcardMatcher<Route>
     }
 
     @Override
-    public void addExpression(String expr, Route attach, Regex.Option... options)
+    public void addExpression(String expr, T attach, Regex.Option... options)
     {
         super.addExpression(expr, attach, options);
         routes.add(attach);
     }
 
-    public List<Route> getRoutes()
+    public List<T> getRoutes()
     {
         return routes;
     }
@@ -144,7 +144,7 @@ public class NMEAMatcher extends WildcardMatcher<Route>
     }
 
     @Override
-    public Route getMatched()
+    public T getMatched()
     {
         return matched;
     }

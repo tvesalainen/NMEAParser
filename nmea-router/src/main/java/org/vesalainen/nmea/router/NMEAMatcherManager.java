@@ -169,7 +169,7 @@ public final class NMEAMatcherManager extends JavaLogging
         for (Entry<Endpoint, EndpointType> entry : endpointBijection.entrySet())
         {
             Endpoint ep = entry.getKey();
-            NMEAMatcher matcher = ep.matcher;
+            NMEAMatcher<Route> matcher = ep.matcher;
             if (matcher != null)
             {
                 for (Route route : matcher.getRoutes())
