@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.security.DigestInputStream;
@@ -30,6 +31,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import static javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -49,8 +51,8 @@ import org.vesalainen.nmea.script.ScriptParser;
 public class RouterConfig
 {
     protected static JAXBContext jaxbCtx;
-    protected static ObjectFactory factory;
-    protected static DatatypeFactory dtFactory;
+    protected static ObjectFactory objectFactory;
+    protected static DatatypeFactory dataTypeFactory;
     protected MessageDigest digest;
     
     protected JAXBElement<NmeaType> nmea;
@@ -59,8 +61,8 @@ public class RouterConfig
         try
         {
             jaxbCtx = JAXBContext.newInstance("org.vesalainen.nmea.jaxb.router");
-            factory = new ObjectFactory();
-            dtFactory = DatatypeFactory.newInstance();
+            objectFactory = new ObjectFactory();
+            dataTypeFactory = DatatypeFactory.newInstance();
         }
         catch (DatatypeConfigurationException ex)
         {
@@ -74,7 +76,10 @@ public class RouterConfig
 
     public RouterConfig()
     {
-        nmea = factory.createNmea(factory.createNmeaType());
+        nmea = objectFactory.createNmea(objectFactory.createNmeaType());
+        NmeaType type = nmea.getValue();
+        type.getTcpListenerOrRouter().add(objectFactory.createRouterType());
+        type.getTcpListenerOrRouter().add(objectFactory.createTcpListenerType());
     }
     
     public RouterConfig(File file) throws IOException, JAXBException
@@ -96,7 +101,7 @@ public class RouterConfig
             DigestInputStream dis = new DigestInputStream(is, digest);
             Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
             nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(dis);
-            check();
+            checkScriptSyntax();
         }
         catch (NoSuchAlgorithmException ex)
         {
@@ -145,6 +150,7 @@ public class RouterConfig
         try
         {
             Marshaller marshaller = jaxbCtx.createMarshaller();
+            marshaller.setProperty(JAXB_FORMATTED_OUTPUT, true);
             marshaller.marshal(nmea, writer);
         }
         catch (JAXBException ex)
@@ -153,7 +159,17 @@ public class RouterConfig
         }
     }
 
-    private void check()
+    public static ObjectFactory getObjectFactory()
+    {
+        return objectFactory;
+    }
+
+    public static DatatypeFactory getDataTypeFactory()
+    {
+        return dataTypeFactory;
+    }
+
+    private void checkScriptSyntax()
     {
         for (EndpointType et : getRouterEndpoints())
         {
@@ -166,4 +182,20 @@ public class RouterConfig
             }
         }
     }
+
+    @Override
+    public String toString()
+    {
+        try
+        {
+            StringWriter sw = new StringWriter();
+            write(sw);
+            return sw.toString();
+        }
+        catch (IOException ex)
+        {
+            throw new RuntimeException(ex);
+        }
+    }
+    
 }

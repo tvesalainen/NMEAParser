@@ -9,6 +9,7 @@
         </xsd:choice>
         <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
         <xsd:attribute name="ctrlTcpPort" type="portType"/>
+        <xsd:attribute name="allDevices" type="deviceListType"/>
     </xsd:complexType>
     <xsd:complexType name="tcpListenerType">
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -114,13 +115,14 @@
     </xsd:complexType>
     <xsd:complexType name="endpointType">
         <xsd:sequence>
-            <xsd:element name="enable" type="xsd:boolean" maxOccurs="1"/>
-            <xsd:element name="comment" type="xsd:string" maxOccurs="1"/>
             <xsd:element name="script" type="scriptType" maxOccurs="1"/>
             <xsd:element name="route" type="routeType" maxOccurs="unbounded"/>
             <xsd:element name="filter" type="filterType" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="nameType" use="required"/>
+        <xsd:attribute name="device" type="deviceType" use="required"/>
+        <xsd:attribute name="enable" type="xsd:boolean" use="required"/>
+        <xsd:attribute name="priority" type="priorityType"/>
     </xsd:complexType>
     <xsd:complexType name="filterType">
         <xsd:attribute name="classname" type="xsd:string" use="required"/>
@@ -135,6 +137,7 @@
         <xsd:attribute name="target" type="targetType"/>
         <xsd:attribute name="backup" type="backupType"/>
         <xsd:attribute name="expire" type="millisType"/>
+        <xsd:attribute name="comment" type="xsd:string"/>
     </xsd:complexType>
     <xsd:complexType name="trackerType">
         <xsd:attribute name="directory" type="xsd:string" use="required"/>
@@ -162,6 +165,12 @@
     </xsd:complexType>
     <xsd:complexType name="true-wind-sourceType">
     </xsd:complexType>
+    <xsd:simpleType name="priorityType">
+        <xsd:restriction base="xsd:integer">
+            <xsd:minInclusive value="1"/>
+            <xsd:maxInclusive value="10"/>
+        </xsd:restriction>
+    </xsd:simpleType>
     <xsd:simpleType name="pollIntervalType">
         <xsd:restriction base="xsd:integer">
             <xsd:minInclusive value="4"/>
@@ -190,6 +199,14 @@
     </xsd:simpleType>
     <xsd:simpleType name="backupType">
         <xsd:restriction base="xsd:boolean"/>
+    </xsd:simpleType>
+    <xsd:simpleType name="deviceListType">
+        <xsd:list itemType="deviceType"/>
+    </xsd:simpleType>
+    <xsd:simpleType name="deviceType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="[A-Za-z0-9/:]+"/>
+        </xsd:restriction>
     </xsd:simpleType>
     <xsd:simpleType name="targetType">
         <xsd:list itemType="nameType"/>

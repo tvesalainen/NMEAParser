@@ -18,7 +18,7 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import org.vesalainen.nmea.router.Router.Endpoint;
+import org.vesalainen.nmea.router.OldRouter.Endpoint;
 import org.vesalainen.nmea.script.AbstractScriptObjectFactory;
 import org.vesalainen.nmea.script.ScriptStatement;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
@@ -29,10 +29,10 @@ import org.vesalainen.parsers.nmea.NMEAChecksum;
  */
 public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScriptObjectFactory<E>
 {
-    private final Router router;
+    private final OldRouter router;
     private final Endpoint endpoint;
 
-    public AbstractEndpointScriptObjectFactory(Router router, Endpoint endpoint)
+    public AbstractEndpointScriptObjectFactory(OldRouter router, Endpoint endpoint)
     {
         this.router = router;
         this.endpoint = endpoint;

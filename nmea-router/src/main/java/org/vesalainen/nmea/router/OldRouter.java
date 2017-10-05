@@ -100,7 +100,7 @@ import org.vesalainen.util.logging.RegexFilter;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class Router extends JavaLogging implements Runnable
+public class OldRouter extends JavaLogging implements Runnable
 {
     private static final String ConfigDigestKey = "config.digest";
     private static final String whiteSpace = "[ \r\n\t]+";
@@ -125,9 +125,9 @@ public class Router extends JavaLogging implements Runnable
     private NMEAMatcherManager matcherManager;
     private boolean allMatched;
     
-    public Router(RouterConfig config)
+    public OldRouter(RouterConfig config)
     {
-        super(Router.class);
+        super(OldRouter.class);
         this.config = config;
         this.prefs = Preferences.userNodeForPackage(this.getClass());
         
@@ -525,7 +525,7 @@ public class Router extends JavaLogging implements Runnable
         }
         catch (IOException ex)
         {
-            Logger.getLogger(Router.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(OldRouter.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -968,7 +968,7 @@ public class Router extends JavaLogging implements Runnable
             ScriptType scriptType = endpointType.getScript();
             if (scriptType != null)
             {
-                scriptEngine = new EndpointScriptEngine(Router.this, routerThreadGroup, this, scriptType.getValue());
+                scriptEngine = new EndpointScriptEngine(OldRouter.this, routerThreadGroup, this, scriptType.getValue());
             }
             List<FilterType> filters = endpointType.getFilter();
             if (filters != null && !filters.isEmpty())
@@ -1655,7 +1655,7 @@ public class Router extends JavaLogging implements Runnable
             switch (l)
             {
                 case 1:
-                    lg = Router.this.getLogger();
+                    lg = OldRouter.this.getLogger();
                     break;
                 case 4:
                     f = new RegexFilter(arr[3]);

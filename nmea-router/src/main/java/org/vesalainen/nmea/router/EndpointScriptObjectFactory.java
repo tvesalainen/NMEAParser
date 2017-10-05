@@ -26,7 +26,7 @@ import org.vesalainen.nmea.script.ScriptStatement;
 public class EndpointScriptObjectFactory extends AbstractEndpointScriptObjectFactory<EndpointScriptEngine>
 {
 
-    public EndpointScriptObjectFactory(Router router, Router.Endpoint endpoint)
+    public EndpointScriptObjectFactory(OldRouter router, OldRouter.Endpoint endpoint)
     {
         super(router, endpoint);
     }

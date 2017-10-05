@@ -19,12 +19,13 @@ package org.vesalainen.nmea.router.scanner;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.channels.ScatteringByteChannel;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -35,11 +36,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import static java.util.logging.Level.*;
-import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nio.RingBuffer;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.router.NMEAMatcher;
-import org.vesalainen.nmea.router.seatalk.SeaTalkChannel;
+import org.vesalainen.nmea.router.PortType;
 import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.Matcher;
 import org.vesalainen.util.RepeatingIterator;
@@ -54,28 +54,56 @@ import static org.vesalainen.nmea.router.ThreadPool.*;
 public class PortScanner extends JavaLogging
 {
     private static final int BUF_SIZE = 128;
-    private List<IOFunction<String,ScatteringByteChannel>> channelSuppliers = new ArrayList<>();
+    private Set<PortType> portTypes;
     private long checkPeriod = 5000;
     private long closeDelay = 1000;
     private long fingerPrintPeriod = 10000;
-    private List<String> freePorts;
-    private Map<String,Iterator<IOFunction<String,ScatteringByteChannel>>> channelIterators = new HashMap<>();
+    private Set<String> ports = new HashSet<>();
+    private Map<String,Iterator<PortType>> channelIterators = new HashMap<>();
     private Map<String,Future<Throwable>> futures = new HashMap<>();
     private Map<String,Scanner> scanners = new HashMap<>();
     private ScheduledFuture<?> scanFuture;
     private Consumer<ScanResult> consumer;
+    private Set<String> distinguishSet;
 
     public PortScanner()
     {
         super(PortScanner.class);
     }
 
+    public PortScanner setPorts(Collection<String> ports)
+    {
+        this.ports.addAll(ports);
+        return this;
+    }
+    /**
+     * Add new port for scan. If scan has been started but already stopped it is restarted.
+     * @param port
+     * @throws IOException 
+     */
+    public PortScanner addPort(String port) throws IOException
+    {
+        ports.add(port);
+        if (!isScanning() && consumer != null && distinguishSet != null)
+        {
+            scan(consumer, distinguishSet);
+        }
+        return this;
+    }
+    public boolean isScanning()
+    {
+        return scanFuture != null && !scanFuture.isDone();
+    }
     public void waitScanner() throws IOException
     {
         waitScanner(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
     }
     public void waitScanner(long time, TimeUnit unit) throws IOException
     {
+        if (scanFuture == null)
+        {
+            return;
+        }
         try
         {
             scanFuture.get(time, unit);
@@ -88,12 +116,9 @@ public class PortScanner extends JavaLogging
             throw new IOException(ex);
         }
     }
-    public PortScanner addChannelSuppliers(IOFunction<String,ScatteringByteChannel>... suppliers)
+    public PortScanner addChannelSuppliers(Set<PortType> portTypes)
     {
-        for (IOFunction<String,ScatteringByteChannel> supplier : suppliers)
-        {
-            channelSuppliers.add(supplier);
-        }
+        this.portTypes = portTypes;
         return this;
     }
 
@@ -121,43 +146,34 @@ public class PortScanner extends JavaLogging
             throw new IllegalArgumentException("closeDelay < checkPeriod < fingerPrintPeriod");
         }
     }
-    public static ScatteringByteChannel nmea4800(String port) throws IOException
-    {
-        JavaLogging.getLogger(PortScanner.class).fine("created NMEA4800 channel for %s", port);
-        return new SerialChannel.Builder(port, SerialChannel.Speed.B4800).get();
-    }
-    public static ScatteringByteChannel nmea38400(String port) throws IOException
-    {
-        JavaLogging.getLogger(PortScanner.class).fine("created NMEA38400 channel for %s", port);
-        return new SerialChannel.Builder(port, SerialChannel.Speed.B38400).get();
-    }
-    public static ScatteringByteChannel seaTalk(String port) throws IOException
-    {
-        JavaLogging.getLogger(PortScanner.class).fine("created SeaTalk channel for %s", port);
-        return new SeaTalkChannel(port);
-    }
     public void scan(Consumer<ScanResult> consumer) throws IOException
     {
-        if (scanFuture != null)
+        scan(consumer, Collections.EMPTY_SET);
+    }
+    public void scan(Consumer<ScanResult> consumer, Set<String> distinguishSet) throws IOException
+    {
+        if (isScanning())
         {
             throw new IllegalStateException("scan is already running");
         }
         checkDelays();
-        freePorts = SerialChannel.getFreePorts();
-        if (freePorts.isEmpty())
+        if (ports.isEmpty())
         {
-            warning("no free ports");
+            warning("no ports");
             return;
         }
-        if (channelSuppliers.isEmpty())
+        if (portTypes == null || portTypes.isEmpty())
         {
             warning("no channel suppliers");
             return;
         }
+        Objects.requireNonNull(consumer, "consumer");
+        Objects.requireNonNull(distinguishSet, "distinguishSet");
         this.consumer = consumer;
-        for (String port : freePorts)
+        this.distinguishSet = distinguishSet;
+        for (String port : ports)
         {
-            RepeatingIterator<IOFunction<String, ScatteringByteChannel>> it = new RepeatingIterator<>(channelSuppliers);
+            RepeatingIterator<PortType> it = new RepeatingIterator<>(portTypes);
             channelIterators.put(port, it);
             startScanner(port, 0);
         }
@@ -167,11 +183,11 @@ public class PortScanner extends JavaLogging
     private void startScanner(String port, long delayMillis) throws IOException
     {
         config("starting scanner for %s after %d millis", port, delayMillis);
-        Iterator<IOFunction<String, ScatteringByteChannel>> it = channelIterators.get(port);
+        Iterator<PortType> it = channelIterators.get(port);
         if (it.hasNext())
         {
-            IOFunction<String, ScatteringByteChannel> channelSupplier = it.next();
-            Scanner scanner = new Scanner(port, channelSupplier);
+            PortType portType = it.next();
+            Scanner scanner = new Scanner(port, portType);
             scanners.put(port, scanner);
             Future<Throwable> future = POOL.schedule(scanner, delayMillis, TimeUnit.MILLISECONDS);
             futures.put(port, future);
@@ -187,7 +203,7 @@ public class PortScanner extends JavaLogging
         @Override
         public void run()
         {
-            Iterator<String> iterator = freePorts.iterator();
+            Iterator<String> iterator = ports.iterator();
             while (iterator.hasNext())
             {
                 String port = iterator.next();
@@ -196,15 +212,25 @@ public class PortScanner extends JavaLogging
                 Future<Throwable> future = futures.get(port);
                 if (future.isDone())
                 {
-                    try
+                    if (!future.isCancelled())
                     {
-                        log(SEVERE, future.get(), "rescanning %s because stopped", port);
+                        fine("finger print for %s because distinguish hit", port, fingerPrintPeriod, scanner.getFingerPrint());
+                        ScanResult sr = new ScanResult(scanner);
+                        consumer.accept(sr);
+                        iterator.remove();
                     }
-                    catch (InterruptedException | ExecutionException ex)
+                    else
                     {
-                        log(SEVERE, ex, "%s", ex.getMessage());
+                        try
+                        {
+                            log(SEVERE, future.get(), "rescanning %s because stopped", port);
+                        }
+                        catch (InterruptedException | ExecutionException ex)
+                        {
+                            log(SEVERE, ex, "%s", ex.getMessage());
+                        }
+                        rescan = true;
                     }
-                    rescan = true;
                 }
                 else
                 {
@@ -246,7 +272,7 @@ public class PortScanner extends JavaLogging
                     }
                 }
             }
-            if (freePorts.isEmpty())
+            if (ports.isEmpty())
             {
                 scanFuture.cancel(false);
             }
@@ -256,7 +282,7 @@ public class PortScanner extends JavaLogging
     private class Scanner implements Callable<Throwable>
     {
         private String port;
-        private IOFunction<String, ScatteringByteChannel> supplier;
+        private PortType portType;
         private RingByteBuffer ring = new RingByteBuffer(BUF_SIZE, true);
         private NMEAMatcher<Boolean> matcher;
         private Set<String> fingerPrint = new HashSet<>();
@@ -266,10 +292,10 @@ public class PortScanner extends JavaLogging
         private Matcher.Status match;
         private long time;
 
-        public Scanner(String port, IOFunction<String, ScatteringByteChannel> supplier) throws IOException
+        public Scanner(String port, PortType portType) throws IOException
         {
             this.port = port;
-            this.supplier = supplier;
+            this.portType = portType;
             matcher = new NMEAMatcher<>();
             matcher.addExpression("$", true);
             matcher.addExpression("!", true);
@@ -280,7 +306,7 @@ public class PortScanner extends JavaLogging
         @Override
         public Throwable call() throws Exception
         {
-            try (ScatteringByteChannel channel = supplier.apply(port))
+            try (ScatteringByteChannel channel = portType.getChannelFactory().apply(port))
             {
                 config("started scanner for %s %s", port, channel);
                 while (true)
@@ -310,7 +336,12 @@ public class PortScanner extends JavaLogging
                                 int idx = CharSequences.indexOf(ring, ',');
                                 if (idx != -1)
                                 {
-                                    fingerPrint.add(ring.subSequence(0, idx).toString());
+                                    String prefix = ring.subSequence(0, idx).toString();
+                                    fingerPrint.add(prefix);
+                                    if (distinguishSet.contains(prefix))
+                                    {
+                                        return null;
+                                    }
                                 }
                                 matched += ring.length();
                                 mark = true;
@@ -364,13 +395,13 @@ public class PortScanner extends JavaLogging
     public static class ScanResult
     {
         private String port;
-        private IOFunction<String, ScatteringByteChannel> supplier;
+        private PortType portType;
         private Set<String> fingerPrint;
 
         public ScanResult(Scanner scanner)
         {
             this.port = scanner.port;
-            this.supplier = scanner.supplier;
+            this.portType = scanner.portType;
             this.fingerPrint = scanner.fingerPrint;
         }
 
@@ -379,9 +410,9 @@ public class PortScanner extends JavaLogging
             return port;
         }
 
-        public IOFunction<String, ScatteringByteChannel> getSupplier()
+        public PortType getPortType()
         {
-            return supplier;
+            return portType;
         }
 
         public Set<String> getFingerPrint()
@@ -392,8 +423,8 @@ public class PortScanner extends JavaLogging
         @Override
         public String toString()
         {
-            return "ScanResult{" + "port=" + port + ", fingerPrint=" + fingerPrint + '}';
+            return "ScanResult{" + "port=" + port + ", portType=" + portType + ", fingerPrint=" + fingerPrint + '}';
         }
-        
+
     }
 }

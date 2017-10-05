@@ -17,30 +17,27 @@
 package org.vesalainen.nmea.router.scanner;
 
 import java.io.IOException;
-import java.util.logging.Level;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.vesalainen.util.logging.JavaLogging;
+import org.vesalainen.nmea.router.RouterConfig;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class PortScannerTest
+public class ConfigCreatorT
 {
     
-    public PortScannerTest()
+    public ConfigCreatorT()
     {
-        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINE);
     }
 
     @Test
-    public void testScan() throws IOException
+    public void test1() throws IOException
     {
-        PortScanner portScanner = new PortScanner()
-        .addChannelSuppliers(PortScanner::nmea4800, PortScanner::nmea38400, PortScanner::seaTalk);
-        portScanner.scan((s)->System.err.println(s));
-        portScanner.waitScanner();
+        ConfigCreator cc = new ConfigCreator();
+        RouterConfig config = cc.createConfig();
+        System.err.println(config);
     }
     
 }

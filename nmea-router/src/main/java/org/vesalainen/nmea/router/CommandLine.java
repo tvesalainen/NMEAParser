@@ -46,6 +46,10 @@ public class CommandLine extends LoggingCommandLine
         try
         {
             File configfile = (File) cmdArgs.getArgument("configuration file");
+            if (!configfile.exists())
+            {
+                ConfigCreator configCreator
+            }
             config = new RouterConfig(configfile);
         }
         catch (IOException | SecurityException | JAXBException ex)
@@ -55,7 +59,7 @@ public class CommandLine extends LoggingCommandLine
         }
         try
         {
-            Router router = new Router(config);
+            OldRouter router = new OldRouter(config);
             cmdArgs.attachInstant(router);
             router.loop();
         }

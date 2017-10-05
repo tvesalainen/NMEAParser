@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import org.vesalainen.nio.RingByteBuffer;
-import org.vesalainen.nmea.router.Router.Endpoint;
+import org.vesalainen.nmea.router.OldRouter.Endpoint;
 import org.vesalainen.nmea.script.ScriptParser;
 import org.vesalainen.nmea.script.ScriptStatement;
 import org.vesalainen.util.logging.JavaLogging;
@@ -34,7 +34,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class EndpointScriptEngine extends JavaLogging implements Runnable
 {
-    private final Router router;
+    private final OldRouter router;
     private final ThreadGroup threadGroup;
     private final Endpoint endpoint;
     private Thread thread;
@@ -44,7 +44,7 @@ public class EndpointScriptEngine extends JavaLogging implements Runnable
     private Semaphore semaphore;
     private String waitMsg;
 
-    public EndpointScriptEngine(Router router, ThreadGroup threadGroup, Endpoint endpoint, String script)
+    public EndpointScriptEngine(OldRouter router, ThreadGroup threadGroup, Endpoint endpoint, String script)
     {
         setLogger(this.getClass(), endpoint.name);
         this.router = router;
