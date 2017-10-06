@@ -43,9 +43,9 @@ import org.vesalainen.nmea.router.PortType;
 import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.Matcher;
 import org.vesalainen.util.RepeatingIterator;
-import org.vesalainen.util.function.IOFunction;
 import org.vesalainen.util.logging.JavaLogging;
 import static org.vesalainen.nmea.router.ThreadPool.*;
+import org.vesalainen.util.AbstractProvisioner.Setting;
 
 /**
  *
@@ -55,9 +55,9 @@ public class PortScanner extends JavaLogging
 {
     private static final int BUF_SIZE = 128;
     private Set<PortType> portTypes;
-    private long checkPeriod = 5000;
+    private long checkDelay = 5000;
     private long closeDelay = 1000;
-    private long fingerPrintPeriod = 10000;
+    private long fingerPrintDelay = 10000;
     private Set<String> ports = new HashSet<>();
     private Map<String,Iterator<PortType>> channelIterators = new HashMap<>();
     private Map<String,Future<Throwable>> futures = new HashMap<>();
@@ -121,27 +121,27 @@ public class PortScanner extends JavaLogging
         this.portTypes = portTypes;
         return this;
     }
-
-    public PortScanner setCheckPeriod(long checkPeriod)
+    @Setting
+    public PortScanner setCheckDelay(long checkDelay)
     {
-        this.checkPeriod = checkPeriod;
+        this.checkDelay = checkDelay;
         return this;
     }
-
+    @Setting
     public PortScanner setCloseDelay(long closeDelay)
     {
         this.closeDelay = closeDelay;
         return this;
     }
-
-    public PortScanner setFingerPrintPeriod(long fingerPrintPeriod)
+    @Setting
+    public PortScanner setFingerPrintDelay(long fingerPrintDelay)
     {
-        this.fingerPrintPeriod = fingerPrintPeriod;
+        this.fingerPrintDelay = fingerPrintDelay;
         return this;
     }
     private void checkDelays()
     {
-        if (!(closeDelay < checkPeriod && checkPeriod < fingerPrintPeriod))
+        if (!(closeDelay < checkDelay && checkDelay < fingerPrintDelay))
         {
             throw new IllegalArgumentException("closeDelay < checkPeriod < fingerPrintPeriod");
         }
@@ -178,7 +178,7 @@ public class PortScanner extends JavaLogging
             startScanner(port, 0);
         }
         Monitor monitor = new Monitor();
-        scanFuture = POOL.scheduleWithFixedDelay(monitor, checkPeriod, checkPeriod, TimeUnit.MILLISECONDS);
+        scanFuture = POOL.scheduleWithFixedDelay(monitor, checkDelay, checkDelay, TimeUnit.MILLISECONDS);
     }
     private void startScanner(String port, long delayMillis) throws IOException
     {
@@ -214,7 +214,7 @@ public class PortScanner extends JavaLogging
                 {
                     if (!future.isCancelled())
                     {
-                        fine("finger print for %s because distinguish hit", port, fingerPrintPeriod, scanner.getFingerPrint());
+                        fine("finger print for %s because distinguish hit", port, fingerPrintDelay, scanner.getFingerPrint());
                         ScanResult sr = new ScanResult(scanner);
                         consumer.accept(sr);
                         iterator.remove();
@@ -234,16 +234,16 @@ public class PortScanner extends JavaLogging
                 }
                 else
                 {
-                    if (scanner.getElapsedTime() >= checkPeriod && scanner.getFingerPrint().isEmpty())
+                    if (scanner.getElapsedTime() >= checkDelay && scanner.getFingerPrint().isEmpty())
                     {
-                        fine("rescanning %s because no finger print after %d millis", port, checkPeriod);
+                        fine("rescanning %s because no finger print after %d millis", port, checkDelay);
                         rescan = true;
                     }
                     else
                     {
-                        if (scanner.getElapsedTime() >= fingerPrintPeriod)
+                        if (scanner.getElapsedTime() >= fingerPrintDelay)
                         {
-                            fine("finger print for %s after %d millis %s", port, fingerPrintPeriod, scanner.getFingerPrint());
+                            fine("finger print for %s after %d millis %s", port, fingerPrintDelay, scanner.getFingerPrint());
                             ScanResult sr = new ScanResult(scanner);
                             consumer.accept(sr);
                             iterator.remove();

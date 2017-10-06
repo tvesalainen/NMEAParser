@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.router.scanner;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -26,11 +27,9 @@ import java.util.Set;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
-import org.vesalainen.nmea.jaxb.router.ObjectFactory;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
-import org.vesalainen.nmea.jaxb.router.TcpListenerType;
 import static org.vesalainen.nmea.router.PortType.*;
 import org.vesalainen.nmea.router.RouterConfig;
 import org.vesalainen.nmea.router.scanner.PortScanner.ScanResult;
@@ -45,7 +44,6 @@ import static org.vesalainen.parsers.nmea.TalkerId.*;
  */
 public class ConfigCreator
 {
-    private ObjectFactory objectFactory = RouterConfig.getObjectFactory();
     private RouterConfig config;
     private Set<String> names = new HashSet<>();
     private boolean hasAis;
@@ -56,9 +54,9 @@ public class ConfigCreator
     {
     }
     
-    public RouterConfig createConfig() throws IOException
+    public RouterConfig createConfig(File file) throws IOException
     {
-        this.config = new RouterConfig();
+        this.config = new RouterConfig(file);
         config.getNmeaType().getAllDevices().addAll(SerialChannel.getAllPorts());
         
         PortScanner portScanner = new PortScanner()
@@ -66,24 +64,20 @@ public class ConfigCreator
                 .setPorts(SerialChannel.getFreePorts());
         portScanner.scan(this::addDevice);
         
-        MulticastNMEAType net = objectFactory.createMulticastNMEAType();
-        config.getRouterEndpoints().add(net);
+        MulticastNMEAType net = config.createMulticastNMEAType();
         net.setName("Net");
         net.setAddress("224.0.0.3");
         net.setEnable(true);
-        RouteType route = objectFactory.createRouteType();
-        net.getRoute().add(route);
+        RouteType route = config.createRouteTypeFor("Net");
         route.setPrefix("$");
         route.getTarget().add("Listener");
         route.setComment("Send all NMEA sentences to TCP Listener");
 
-        TcpEndpointType listener = objectFactory.createTcpEndpointType();
-        config.getTcpListenerEndpoints().add(listener);
+        TcpEndpointType listener = config.createTcpEndpointType();
         listener.setName("Listener");
         listener.setPort(10110);
         listener.setEnable(true);
-        RouteType listenerRoute = objectFactory.createRouteType();
-        listener.getRoute().add(listenerRoute);
+        RouteType listenerRoute = config.createRouteTypeFor(listener);
         listenerRoute.setPrefix("$");
         listenerRoute.getTarget().add("Net");
         listenerRoute.setComment("E.g. Autopilot sentences from Open CPN");
@@ -96,14 +90,12 @@ public class ConfigCreator
         }
         if (hasAis)
         {
-            DatagramType marineTraffic = objectFactory.createDatagramType();
-            config.getRouterEndpoints().add(marineTraffic);
+            DatagramType marineTraffic = config.createDatagramType();
             marineTraffic.setName("MarineTraffic");
             marineTraffic.setAddress("5.9.207.224");
             marineTraffic.setPort(5321);
         
-            RouteType aisRoute = objectFactory.createRouteType();
-            net.getRoute().add(aisRoute);
+            RouteType aisRoute = config.createRouteTypeFor(marineTraffic);
             aisRoute.setPrefix("AI");
             aisRoute.setComment("Send all AIS sentences to TCP Listener");
         }
@@ -115,18 +107,17 @@ public class ConfigCreator
         switch (scanResult.getPortType())
         {
             case NMEA:
-                serial = objectFactory.createNmea0183Type();
+                serial = config.createNmea0183Type();
                 break;
             case NMEA_HS:
-                serial = objectFactory.createNmea0183HsType();
+                serial = config.createNmea0183HsType();
                 break;
             case SEA_TALK:
-                serial = objectFactory.createSeatalkType();
+                serial = config.createSeatalkType();
                 break;
             default:
                 throw new UnsupportedOperationException(scanResult.getPortType()+" not supported");
         }
-        config.getRouterEndpoints().add(serial);
         Map<TalkerId,String> talkerIds = getTalkerIds(scanResult.getFingerPrint());
         Map<MessageType,String> messageTypes = getMessageTypes(scanResult.getFingerPrint());
         String name = createName(talkerIds.keySet(), messageTypes.keySet());
@@ -135,8 +126,7 @@ public class ConfigCreator
         serial.setEnable(true);
         for (Entry<MessageType,String> entry : messageTypes.entrySet())
         {
-            RouteType route = objectFactory.createRouteType();
-            serial.getRoute().add(route);
+            RouteType route = config.createRouteTypeFor(serial);
             route.setPrefix(entry.getValue());
             route.setComment(entry.getKey().getDescription());
             route.getTarget().add("Net");

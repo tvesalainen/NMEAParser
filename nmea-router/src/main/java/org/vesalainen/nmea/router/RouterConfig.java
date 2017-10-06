@@ -18,6 +18,7 @@ package org.vesalainen.nmea.router;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -35,11 +36,17 @@ import static javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
+import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
+import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
+import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
+import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
+import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.ScriptType;
+import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.jaxb.router.TcpListenerType;
 import org.vesalainen.nmea.script.ScriptParser;
@@ -50,10 +57,11 @@ import org.vesalainen.nmea.script.ScriptParser;
  */
 public class RouterConfig
 {
-    protected static JAXBContext jaxbCtx;
-    protected static ObjectFactory objectFactory;
-    protected static DatatypeFactory dataTypeFactory;
-    protected MessageDigest digest;
+    private File file;
+    private static JAXBContext jaxbCtx;
+    private static ObjectFactory objectFactory;
+    private static DatatypeFactory dataTypeFactory;
+    private MessageDigest digest;
     
     protected JAXBElement<NmeaType> nmea;
     static
@@ -74,26 +82,21 @@ public class RouterConfig
         }
     }
 
-    public RouterConfig()
+    public RouterConfig(File file)
     {
+        this.file = file;
         nmea = objectFactory.createNmea(objectFactory.createNmeaType());
         NmeaType type = nmea.getValue();
         type.getTcpListenerOrRouter().add(objectFactory.createRouterType());
         type.getTcpListenerOrRouter().add(objectFactory.createTcpListenerType());
     }
     
-    public RouterConfig(File file) throws IOException, JAXBException
-
+    public void load() throws IOException, JAXBException
     {
-        this(new FileInputStream(file));
+        load(new FileInputStream(file));
     }
 
-    public RouterConfig(URL url) throws IOException, JAXBException
-    {
-        this(url.openStream());
-    }
-
-    public RouterConfig(InputStream is) throws IOException, JAXBException
+    private void load(InputStream is) throws IOException, JAXBException
     {
         try
         {
@@ -144,10 +147,64 @@ public class RouterConfig
     {
         return nmea.getValue();
     }
-    
-    public void write(Writer writer) throws IOException
+    public MulticastNMEAType createMulticastNMEAType()
     {
-        try
+        MulticastNMEAType type = objectFactory.createMulticastNMEAType();
+        getRouterEndpoints().add(type);
+        return type;
+    }
+    public TcpEndpointType createTcpEndpointType()
+    {
+        TcpEndpointType listener = objectFactory.createTcpEndpointType();
+        getTcpListenerEndpoints().add(listener);
+        return listener;
+    }
+    public DatagramType createDatagramType()
+    {
+        DatagramType datagram = objectFactory.createDatagramType();
+        getRouterEndpoints().add(datagram);
+        return datagram;
+    }
+    public Nmea0183Type createNmea0183Type()
+    {
+        Nmea0183Type serial = objectFactory.createNmea0183Type();
+        getRouterEndpoints().add(serial);
+        return serial;
+    }
+    public Nmea0183HsType createNmea0183HsType()
+    {
+        Nmea0183HsType serial = objectFactory.createNmea0183HsType();
+        getRouterEndpoints().add(serial);
+        return serial;
+    }
+    public SeatalkType createSeatalkType()
+    {
+        SeatalkType serial = objectFactory.createSeatalkType();
+        getRouterEndpoints().add(serial);
+        return serial;
+    }
+    public RouteType createRouteTypeFor(EndpointType endpoint)
+    {
+        RouteType route = objectFactory.createRouteType();
+        endpoint.getRoute().add(route);
+        return route;
+    }
+    public RouteType createRouteTypeFor(String name)
+    {
+        RouteType route = objectFactory.createRouteType();
+        for (EndpointType endpoint : getRouterEndpoints())
+        {
+            if (endpoint.getName().equals(name))
+            {
+                endpoint.getRoute().add(route);
+                return route;
+            }
+        }
+        throw new IllegalArgumentException(name+" endpoint not found");
+    }
+    public void store() throws IOException
+    {
+        try (FileWriter writer = new FileWriter(file))
         {
             Marshaller marshaller = jaxbCtx.createMarshaller();
             marshaller.setProperty(JAXB_FORMATTED_OUTPUT, true);
@@ -157,16 +214,6 @@ public class RouterConfig
         {
             throw new IOException(ex);
         }
-    }
-
-    public static ObjectFactory getObjectFactory()
-    {
-        return objectFactory;
-    }
-
-    public static DatatypeFactory getDataTypeFactory()
-    {
-        return dataTypeFactory;
     }
 
     private void checkScriptSyntax()
@@ -189,7 +236,7 @@ public class RouterConfig
         try
         {
             StringWriter sw = new StringWriter();
-            write(sw);
+            store(sw);
             return sw.toString();
         }
         catch (IOException ex)

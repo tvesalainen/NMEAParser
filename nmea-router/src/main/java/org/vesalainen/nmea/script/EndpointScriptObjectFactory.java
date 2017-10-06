@@ -14,9 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.router;
+package org.vesalainen.nmea.script;
 
 import java.io.IOException;
+import org.vesalainen.nmea.router.Endpoint;
+import org.vesalainen.nmea.script.RouterEngine;
 import org.vesalainen.nmea.script.ScriptStatement;
 
 /**
@@ -26,7 +28,7 @@ import org.vesalainen.nmea.script.ScriptStatement;
 public class EndpointScriptObjectFactory extends AbstractEndpointScriptObjectFactory<EndpointScriptEngine>
 {
 
-    public EndpointScriptObjectFactory(OldRouter router, OldRouter.Endpoint endpoint)
+    public EndpointScriptObjectFactory(RouterEngine router, Endpoint endpoint)
     {
         super(router, endpoint);
     }

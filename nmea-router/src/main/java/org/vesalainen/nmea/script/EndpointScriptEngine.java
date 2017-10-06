@@ -14,16 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.router;
+package org.vesalainen.nmea.script;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import org.vesalainen.nio.RingByteBuffer;
-import org.vesalainen.nmea.router.OldRouter.Endpoint;
+import org.vesalainen.nmea.router.Endpoint;
+import static org.vesalainen.nmea.router.ThreadPool.POOL;
+import org.vesalainen.nmea.script.RouterEngine;
 import org.vesalainen.nmea.script.ScriptParser;
 import org.vesalainen.nmea.script.ScriptStatement;
 import org.vesalainen.util.logging.JavaLogging;
@@ -34,43 +37,36 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class EndpointScriptEngine extends JavaLogging implements Runnable
 {
-    private final OldRouter router;
-    private final ThreadGroup threadGroup;
+    private final RouterEngine router;
     private final Endpoint endpoint;
-    private Thread thread;
+    private Future<?> future;
     private final String scriptName;
     private final List<ScriptStatement> script;
     private ReentrantLock lock = new ReentrantLock();
     private Semaphore semaphore;
     private String waitMsg;
 
-    public EndpointScriptEngine(OldRouter router, ThreadGroup threadGroup, Endpoint endpoint, String script)
+    public EndpointScriptEngine(RouterEngine router, Endpoint endpoint, String script)
     {
-        setLogger(this.getClass(), endpoint.name);
+        setLogger(this.getClass(), endpoint.getName());
         this.router = router;
-        this.threadGroup = threadGroup;
         this.endpoint = endpoint;
         EndpointScriptObjectFactory factory = new EndpointScriptObjectFactory(router, endpoint);
         ScriptParser<EndpointScriptEngine> engine = ScriptParser.newInstance();
         this.script = engine.exec(script, factory);
-        scriptName = endpoint.name+".script";
+        scriptName = endpoint.getName()+".script";
     }
 
     public void start()
     {
-        if (thread != null)
-        {
-            throw new IllegalStateException("already started");
-        }
-        thread = new Thread(threadGroup, this, scriptName);
-        thread.start();
+        future = POOL.submit(this);
         info("%s started", scriptName);
     }
     public void stop()
     {
-        if (thread != null)
+        if (future != null)
         {
-            thread.interrupt();
+            future.cancel(true);
         }
     }
     public boolean startWait(long millis, String msg) throws InterruptedException

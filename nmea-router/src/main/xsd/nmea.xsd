@@ -10,6 +10,10 @@
         <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
         <xsd:attribute name="ctrlTcpPort" type="portType"/>
         <xsd:attribute name="allDevices" type="deviceListType"/>
+        <xsd:attribute name="ringBufferSize" type="bufferSizeType"/>
+        <xsd:attribute name="checkDelay" type="delayType"/>
+        <xsd:attribute name="closeDelay" type="delayType"/>
+        <xsd:attribute name="fingerPrintDelay" type="delayType"/>
     </xsd:complexType>
     <xsd:complexType name="tcpListenerType">
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -169,6 +173,18 @@
         <xsd:restriction base="xsd:integer">
             <xsd:minInclusive value="1"/>
             <xsd:maxInclusive value="10"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="delayType">
+        <xsd:restriction base="xsd:unsignedInt">
+            <xsd:minInclusive value="10"/>
+            <xsd:maxInclusive value="100000"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="bufferSizeType">
+        <xsd:restriction base="xsd:unsignedInt">
+            <xsd:minInclusive value="128"/>
+            <xsd:maxInclusive value="8192"/>
         </xsd:restriction>
     </xsd:simpleType>
     <xsd:simpleType name="pollIntervalType">

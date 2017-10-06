@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.router;
 
+import org.vesalainen.nmea.script.EndpointScriptEngine;
 import org.vesalainen.nmea.router.seatalk.SeaTalkChannel;
 import org.vesalainen.nmea.router.filter.MessageFilter;
 import java.io.EOFException;
@@ -81,6 +82,7 @@ import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.processor.Processor;
+import org.vesalainen.nmea.script.RouterEngine;
 import org.vesalainen.regex.WildcardMatcher;
 import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.AutoCloseableList;
@@ -97,10 +99,10 @@ import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.logging.RegexFilter;
 
 /**
- *
+ * @deprecated 
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class OldRouter extends JavaLogging implements Runnable
+public class OldRouter extends JavaLogging implements Runnable, RouterEngine
 {
     private static final String ConfigDigestKey = "config.digest";
     private static final String whiteSpace = "[ \r\n\t]+";
@@ -111,7 +113,7 @@ public class OldRouter extends JavaLogging implements Runnable
     private MultiProviderSelector selector;
     private Set<String> portPool = new HashSet<>();
     private Set<SerialEndpoint> resolvPool = new HashSet<>();
-    private final MapSet<String,DataSource> sources = new HashMapSet<>();
+    private final MapSet<String,OldDataSource> sources = new HashMapSet<>();
     private final Map<String,SerialEndpoint> allSerialEndpoints = new HashMap<>();
     private final Set<String> matchedSerialEndpoints = new HashSet<>();
     private final ReentrantLock lock = new ReentrantLock();
@@ -165,7 +167,7 @@ public class OldRouter extends JavaLogging implements Runnable
                     {
                         SelectionKey selectionKey = iterator.next();
                         iterator.remove();
-                        DataSource dataSource = (DataSource) selectionKey.attachment();
+                        OldDataSource dataSource = (OldDataSource) selectionKey.attachment();
                         fine("handle %s readyOps=%d", dataSource.name, selectionKey.readyOps());
                         try
                         {
@@ -279,7 +281,7 @@ public class OldRouter extends JavaLogging implements Runnable
         }
         for (SelectionKey sk : selector.keys())
         {
-            DataSource ds = (DataSource) sk.attachment();
+            OldDataSource ds = (OldDataSource) sk.attachment();
             ds.updateStatus();
         }
     }
@@ -346,7 +348,7 @@ public class OldRouter extends JavaLogging implements Runnable
             }
             for (SelectionKey sk : selector.keys())
             {
-                DataSource ds = (DataSource) sk.attachment();
+                OldDataSource ds = (OldDataSource) sk.attachment();
                 if (ds != null && (ds instanceof SerialEndpoint))
                 {
                     SerialEndpoint endpoint = (SerialEndpoint) ds;
@@ -457,10 +459,11 @@ public class OldRouter extends JavaLogging implements Runnable
             lock.unlock();
         }
     }
+    @Override
     public int send(String to, ByteBuffer bb) throws IOException
     {
         int rc = 0;
-        for (DataSource ds : DataSource.get(to))
+        for (OldDataSource ds : OldDataSource.get(to))
         {
             if (ds == null)
             {
@@ -817,7 +820,7 @@ public class OldRouter extends JavaLogging implements Runnable
         }
 
         @Override
-        protected NMEAMatcher<Route> createMatcher(EndpointType endpointType)
+        protected NMEAMatcher<OldRoute> createMatcher(EndpointType endpointType)
         {
             List<RouteType> route = endpointType.getRoute();
             for (RouteType rt : route)
@@ -941,12 +944,12 @@ public class OldRouter extends JavaLogging implements Runnable
         }
 
     }
-    public abstract class Endpoint<T extends SelectableChannel> extends DataSource
+    public abstract class Endpoint<T extends SelectableChannel> extends OldDataSource
     {
         protected T selectableChannel;
         protected ScatteringByteChannel in;
         protected GatheringByteChannel out;
-        protected NMEAMatcher<Route> matcher;
+        protected NMEAMatcher<OldRoute> matcher;
         protected RingByteBuffer ring = new RingByteBuffer(BufferSize, true);
         protected boolean matched;
         private boolean mark = true;
@@ -968,7 +971,7 @@ public class OldRouter extends JavaLogging implements Runnable
             ScriptType scriptType = endpointType.getScript();
             if (scriptType != null)
             {
-                scriptEngine = new EndpointScriptEngine(OldRouter.this, routerThreadGroup, this, scriptType.getValue());
+                scriptEngine = new EndpointScriptEngine(OldRouter.this, this, scriptType.getValue());
             }
             List<FilterType> filters = endpointType.getFilter();
             if (filters != null && !filters.isEmpty())
@@ -1004,13 +1007,13 @@ public class OldRouter extends JavaLogging implements Runnable
         {
             matcher = createMatcher(endpointType);
         }
-        void setMatcher(NMEAMatcher<Route> matcher)
+        void setMatcher(NMEAMatcher<OldRoute> matcher)
         {
             this.matcher = matcher;
         }
-        protected NMEAMatcher<Route> createMatcher(EndpointType endpointType)
+        protected NMEAMatcher<OldRoute> createMatcher(EndpointType endpointType)
         {
-            NMEAMatcher<Route> wm = null;
+            NMEAMatcher<OldRoute> wm = null;
             List<RouteType> route = endpointType.getRoute();
             if (!endpointType.getRoute().isEmpty())
             {
@@ -1024,7 +1027,7 @@ public class OldRouter extends JavaLogging implements Runnable
                         {
                             wm = new NMEAMatcher<>();
                         }
-                        wm.addExpression(prefix, new Route(rt));
+                        wm.addExpression(prefix, new OldRoute(rt));
                     }
                     for (String trg : targetList)
                     {
@@ -1120,7 +1123,7 @@ public class OldRouter extends JavaLogging implements Runnable
         @Override
         protected void updateStatus()
         {
-            Set<DataSource> set = sources.get(name);
+            Set<OldDataSource> set = sources.get(name);
             isSink = set != null && set.size() > 0;
             isSingleSink = isSink && set.size() == 1 && filterList == null;
             finest("updateStatus(%s: set=%s filterList=%s)-> isSink=%b isSingleSink=%b", name, set, filterList, isSink, isSingleSink);
@@ -1206,7 +1209,7 @@ public class OldRouter extends JavaLogging implements Runnable
             return "Endpoint{" + "name=" + name + '}';
         }
 
-        private void write(Matcher<Route> matcher, RingByteBuffer ring, int lastPosition) throws IOException
+        private void write(Matcher<OldRoute> matcher, RingByteBuffer ring, int lastPosition) throws IOException
         {
             matcher.getMatched().write(name, ring, lastPosition);
             if (scriptEngine != null)
@@ -1228,10 +1231,10 @@ public class OldRouter extends JavaLogging implements Runnable
         }
 
     }
-    public class SocketSource extends DataSource
+    public class SocketSource extends OldDataSource
     {
-        private Function<SocketChannel,DataSource> dataSourceFactory;
-        public SocketSource(int port, Function<SocketChannel,DataSource> dataSourceFactory) throws IOException, InterruptedException
+        private Function<SocketChannel,OldDataSource> dataSourceFactory;
+        public SocketSource(int port, Function<SocketChannel,OldDataSource> dataSourceFactory) throws IOException, InterruptedException
         {
             super("SocketSource("+port+")");
             this.dataSourceFactory = dataSourceFactory;
@@ -1280,7 +1283,7 @@ public class OldRouter extends JavaLogging implements Runnable
                 fine("accept %s", socketChannel);
                 autoCloseables.add(socketChannel);
                 socketChannel.configureBlocking(false);
-                DataSource dataSource = dataSourceFactory.apply(socketChannel);
+                OldDataSource dataSource = dataSourceFactory.apply(socketChannel);
                 socketChannel.register(selector, OP_READ, dataSource);
             }
             else
@@ -1302,7 +1305,7 @@ public class OldRouter extends JavaLogging implements Runnable
         }
         
     }
-    public class Monitor extends DataSource
+    public class Monitor extends OldDataSource
     {
         private final SocketChannel channel;
         private final ByteBuffer bb = ByteBuffer.allocateDirect(4096);
@@ -1498,11 +1501,11 @@ public class OldRouter extends JavaLogging implements Runnable
             for (SelectionKey sk : selector.keys())
             {
                 out.print("iOps="+sk.interestOps()+" rOps="+sk.readyOps()+" ");
-                DataSource ds = (DataSource) sk.attachment();
+                OldDataSource ds = (OldDataSource) sk.attachment();
                 out.println(ds);
             }
             out.println("targets:");
-            for (DataSource ds :DataSource.getDataSources())
+            for (OldDataSource ds :OldDataSource.getDataSources())
             {
                 out.println(ds);
             }
@@ -1511,7 +1514,7 @@ public class OldRouter extends JavaLogging implements Runnable
         private void statistics() throws IOException
         {
             out.println("Name\tReads\tBytes\tMean\tWrites\tBytes\tMean");
-            for (DataSource d :DataSource.getDataSources())
+            for (OldDataSource d :OldDataSource.getDataSources())
             {
                 if (d instanceof Endpoint)
                 {
@@ -1540,14 +1543,14 @@ public class OldRouter extends JavaLogging implements Runnable
         private void errors() throws IOException
         {
             out.println("Name\tMatches\tErrors\t%");
-            for (DataSource ds :DataSource.getDataSources())
+            for (OldDataSource ds :OldDataSource.getDataSources())
             {
                 if (ds instanceof Endpoint)
                 {
                     Endpoint ep = (Endpoint) ds;
                     out.print(ds.name+"\t");
                     boolean first = true;
-                    NMEAMatcher<Route> m = (NMEAMatcher) ep.matcher;
+                    NMEAMatcher<OldRoute> m = (NMEAMatcher) ep.matcher;
                     if (m != null)
                     {
                         out.print(m.getMatches()+"\t");
@@ -1567,7 +1570,7 @@ public class OldRouter extends JavaLogging implements Runnable
                 throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
-            DataSource ds = DataSource.getSingle(target);
+            OldDataSource ds = OldDataSource.getSingle(target);
             if (ds == null)
             {
                 throw new BadInputException("no such target: "+target);
@@ -1591,7 +1594,7 @@ public class OldRouter extends JavaLogging implements Runnable
                 throw new BadInputException("error: "+cmd);
             }
             String target = arr[1];
-            DataSource ds = DataSource.getSingle(target);
+            OldDataSource ds = OldDataSource.getSingle(target);
             if (ds == null)
             {
                 throw new BadInputException("no such target: "+target);
@@ -1679,7 +1682,7 @@ public class OldRouter extends JavaLogging implements Runnable
         }
         private Logger getLog(String s)
         {
-            DataSource ds = DataSource.getSingle(s);
+            OldDataSource ds = OldDataSource.getSingle(s);
             if (ds != null)
             {
                 return ds.getLogger();

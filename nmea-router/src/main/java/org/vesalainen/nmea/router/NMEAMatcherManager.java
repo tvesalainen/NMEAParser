@@ -70,7 +70,7 @@ public final class NMEAMatcherManager extends JavaLogging
                 wm = new NMEAMatcher();
             }
             String prefix = rt.getPrefix();
-            wm.addExpression(prefix, new Route(rt));
+            wm.addExpression(prefix, new OldRoute(rt));
         }
         if (wm != null)
         {
@@ -104,7 +104,7 @@ public final class NMEAMatcherManager extends JavaLogging
                             wm = new NMEAMatcher();
                         }
                         String prefix = rt.getPrefix();
-                        wm.addExpression(prefix, new Route(rt));
+                        wm.addExpression(prefix, new OldRoute(rt));
                     }
                 }
             }
@@ -164,15 +164,15 @@ public final class NMEAMatcherManager extends JavaLogging
     public void allMatched()
     {
         config("allMatched()");
-        MapList<NMEAPrefix,Route> mapList = new HashMapList<>();
-        List<Route> backups = new ArrayList<>();
+        MapList<NMEAPrefix,OldRoute> mapList = new HashMapList<>();
+        List<OldRoute> backups = new ArrayList<>();
         for (Entry<Endpoint, EndpointType> entry : endpointBijection.entrySet())
         {
             Endpoint ep = entry.getKey();
-            NMEAMatcher<Route> matcher = ep.matcher;
+            NMEAMatcher<OldRoute> matcher = ep.matcher;
             if (matcher != null)
             {
-                for (Route route : matcher.getRoutes())
+                for (OldRoute route : matcher.getRoutes())
                 {
                     NMEAPrefix prefix = route.getPrefix();
                     if (route.isBackup())
@@ -187,10 +187,10 @@ public final class NMEAMatcherManager extends JavaLogging
                 }
             }
         }
-        for (Route route : backups)
+        for (OldRoute route : backups)
         {
             NMEAPrefix prefix = route.getPrefix();
-            List<Route> list = mapList.get(prefix);
+            List<OldRoute> list = mapList.get(prefix);
             if (list != null)
             {
                 config("add %d sources to %s", list.size(), prefix);

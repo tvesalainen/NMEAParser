@@ -82,89 +82,15 @@ public final class Route extends JavaLogging
         return prefix;
     }
 
-    public boolean isBackup()
-    {
-        return backup;
-    }
-    
     public final void write(String origin, RingByteBuffer ring, int lastPosition) throws IOException
     {
         lastWrote = System.currentTimeMillis();
-        if (canWrite())
+        for (String target : targetList)
         {
-            for (String target : targetList)
-            {
-                Iterator<DataSource> iterator = DataSource.get(target).iterator();
-                while (iterator.hasNext())
-                {
-                    DataSource dataSource = iterator.next();
-                    try
-                    {
-                        if (dataSource.isSingleSink())
-                        {
-                            if (lastPosition != -2) // -2 full write -1 first write >= 0 partial
-                            {
-                                int cnt = dataSource.writePartial(ring, lastPosition);
-                                finest("%s = %d", ring, cnt);
-                                if (this.isLoggable(FINER))
-                                {
-                                    String string = ring.getString();
-                                    int length = string.length();
-                                    finer("write partial: %s -> %s %s", origin, target, string.substring(length-cnt, length));
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (lastPosition == -2) // -2 last write -1 first write
-                            {
-                                finer("write: %s -> %s %s", origin, target, ring.getString());
-                                dataSource.write(ring);
-                            }
-                        }
-                    }
-                    catch (IOException ex)
-                    {
-                        log(Level.SEVERE, ex, "%s", ex.getMessage());
-                        iterator.remove();
-                    }
-                }
-            }
-            count++;
+            DataSource dataSource = DataSource.get(target);
+            dataSource.write(ring);
         }
-        else
-        {
-            backupCount++;
-        }
-    }
-
-    private boolean canWrite()
-    {
-        if (backupSources != null && !backupSources.isEmpty())
-        {
-            boolean active = false;
-            for (Route p : backupSources)
-            {
-                if (p.isActive())
-                {
-                    active = true;
-                    break;
-                }
-            }
-            return !active;
-        }
-        else
-        {
-            return true;
-        }
-    }
-    private boolean isActive()
-    {
-        return System.currentTimeMillis()-lastWrote < expireTime;
-    }
-    void setBackupSources(List<Route> list)
-    {
-        this.backupSources = list;
+        count++;
     }
     
 }

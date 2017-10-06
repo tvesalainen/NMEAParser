@@ -17,9 +17,11 @@
 package org.vesalainen.nmea.router;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBException;
+import org.vesalainen.nmea.router.scanner.ConfigCreator;
 import org.vesalainen.util.LoggingCommandLine;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -42,24 +44,31 @@ public class CommandLine extends LoggingCommandLine
         CommandLine cmdArgs = new CommandLine();
         cmdArgs.command(args);
         JavaLogging log = JavaLogging.getLogger(CommandLine.class);
-        RouterConfig config = null;
+        File configfile = (File) cmdArgs.getArgument("configuration file");
+        RouterConfig config = new RouterConfig(configfile);
         try
         {
-            File configfile = (File) cmdArgs.getArgument("configuration file");
             if (!configfile.exists())
             {
-                ConfigCreator configCreator
+                log.config("Config file %s doesn't exist. Creating...", configfile);
+                ConfigCreator configCreator = new ConfigCreator();
+                config = configCreator.createConfig(configfile);
+                config.store();
+                log.config(config::toString);
             }
-            config = new RouterConfig(configfile);
+            else
+            {
+                config.load();
+            }
         }
         catch (IOException | SecurityException | JAXBException ex)
         {
             ex.printStackTrace();
-            return;
+            System.exit(1);
         }
         try
         {
-            OldRouter router = new OldRouter(config);
+            Router router = new Router(config);
             cmdArgs.attachInstant(router);
             router.loop();
         }

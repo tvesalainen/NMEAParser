@@ -14,12 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.router;
+package org.vesalainen.nmea.script;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import org.vesalainen.nmea.router.OldRouter.Endpoint;
+import org.vesalainen.nmea.router.Endpoint;
+import org.vesalainen.nmea.router.RestartException;
 import org.vesalainen.nmea.script.AbstractScriptObjectFactory;
+import org.vesalainen.nmea.script.RouterEngine;
 import org.vesalainen.nmea.script.ScriptStatement;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 
@@ -29,10 +31,10 @@ import org.vesalainen.parsers.nmea.NMEAChecksum;
  */
 public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScriptObjectFactory<E>
 {
-    private final OldRouter router;
+    private final RouterEngine router;
     private final Endpoint endpoint;
 
-    public AbstractEndpointScriptObjectFactory(OldRouter router, Endpoint endpoint)
+    public AbstractEndpointScriptObjectFactory(RouterEngine router, Endpoint endpoint)
     {
         this.router = router;
         this.endpoint = endpoint;
@@ -47,7 +49,7 @@ public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScr
     @Override
     public ScriptStatement<Integer,E> createSender(String msg)
     {
-        return new Sender(endpoint.name, msg);
+        return new Sender(endpoint.getName(), msg);
     }
 
     @Override

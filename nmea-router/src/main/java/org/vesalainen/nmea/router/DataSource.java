@@ -19,28 +19,20 @@ package org.vesalainen.nmea.router;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
-import org.vesalainen.util.HashMapList;
-import org.vesalainen.util.MapList;
-import org.vesalainen.util.WeakMapList;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class DataSource extends JavaLogging
+public abstract class DataSource extends JavaLogging implements DataSourceMXBean
 {
-    private static final MapList<String,DataSource> map = new HashMapList<>();
+    private static final Map<String,DataSource> map = new HashMap<>();
     protected final String name;
-    protected DataSource attached;
-    protected boolean isSink;
-    protected boolean isSingleSink;
     protected long readCount;
     protected long readBytes;
     protected long writeCount;
@@ -49,95 +41,52 @@ public abstract class DataSource extends JavaLogging
     public DataSource(String name)
     {
         this.name = name;
-        if (map.contains(name, this))
+        if (map.containsKey(name))
         {
             throw new IllegalArgumentException(name+" DataSource exists already");
         }
-        map.add(name, this);
+        map.put(name, this);
         setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.') + "." + name));
     }
 
-    public static List<DataSource> get(String name)
+    public static DataSource get(String name)
     {
         return map.get(name);
     }
-    public static DataSource getSingle(String name)
-    {
-        List<DataSource> list = map.get(name);
-        switch (list.size())
-        {
-            case 0:
-                return null;
-            case 1:
-                return list.get(0);
-            default:
-                throw new IllegalArgumentException("many data sources");
-        }
-    }
-    protected abstract int read(RingByteBuffer ring) throws IOException;
-
     protected abstract void handle(SelectionKey sk) throws IOException;
 
     protected abstract int write(ByteBuffer readBuffer) throws IOException;
 
     protected abstract int write(RingByteBuffer ring) throws IOException;
 
-    protected int writePartial(RingByteBuffer ring, int lastPosition) throws IOException
+    @Override
+    public String getName()
     {
-        return 0;
+        return name;
     }
 
-    protected int attachedWrite(RingByteBuffer ring) throws IOException
+    @Override
+    public long getReadCount()
     {
-        return 0;
+        return readCount;
     }
 
-    public boolean isSink()
+    @Override
+    public long getReadBytes()
     {
-        return isSink;
+        return readBytes;
     }
 
-    /**
-     * Returns true if only one endpoint writes to target and matched
-     * input is written to only one target.
-     * @return
-     */
-    protected boolean isSingleSink()
+    @Override
+    public long getWriteCount()
     {
-        return isSingleSink;
+        return writeCount;
     }
 
-    protected void attach(DataSource ds)
+    @Override
+    public long getWriteBytes()
     {
-        if (attached != null)
-        {
-            throw new BadInputException(name + " is already attached");
-        }
-        attached = ds;
+        return writeBytes;
     }
 
-    protected void detach()
-    {
-        attached = null;
-    }
-
-    protected boolean isAttached()
-    {
-        return attached != null;
-    }
-
-    protected void updateStatus()
-    {
-    }
-
-    public static Collection<DataSource> getDataSources()
-    {
-        Set<DataSource> set = new HashSet<>();
-        map.values().stream().forEach((l) ->
-        {
-            set.addAll(l);
-        });
-        return set;
-    }
-    
 }
