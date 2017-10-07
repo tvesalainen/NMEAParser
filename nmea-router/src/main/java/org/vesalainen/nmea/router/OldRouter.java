@@ -288,7 +288,7 @@ public class OldRouter extends JavaLogging implements Runnable, RouterEngine
 
     private void initializeTcpListeners() throws IOException, InterruptedException
     {
-        List<TcpEndpointType> tcpListenerEndpoints = config.getTcpListenerEndpoints();
+        List<TcpEndpointType> tcpListenerEndpoints = null;//config.getTcpListenerEndpoints();
         if (tcpListenerEndpoints != null)
         {
             for (TcpEndpointType tlep : tcpListenerEndpoints)
@@ -971,7 +971,7 @@ public class OldRouter extends JavaLogging implements Runnable, RouterEngine
             ScriptType scriptType = endpointType.getScript();
             if (scriptType != null)
             {
-                scriptEngine = new EndpointScriptEngine(OldRouter.this, this, scriptType.getValue());
+                //scriptEngine = new EndpointScriptEngine(OldRouter.this, this, scriptType.getValue());
             }
             List<FilterType> filters = endpointType.getFilter();
             if (filters != null && !filters.isEmpty())

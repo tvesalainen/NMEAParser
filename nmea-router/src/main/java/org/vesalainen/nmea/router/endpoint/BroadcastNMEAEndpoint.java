@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Timo Vesalainen <timo.vesalainen@iki.fi>
+ * Copyright (C) 2017 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,28 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.router;
+package org.vesalainen.nmea.router.endpoint;
 
-import java.net.URL;
-import org.junit.Test;
+import java.io.IOException;
+import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
+import org.vesalainen.nmea.jaxb.router.BroadcastNMEAType;
+import org.vesalainen.nmea.router.Router;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class RouterT
+public class BroadcastNMEAEndpoint extends Endpoint<BroadcastNMEAType,UnconnectedDatagramChannel>
 {
-    
-    public RouterT()
+
+    public BroadcastNMEAEndpoint(BroadcastNMEAType broadcastNMEAType, Router router, int bufSize)
     {
+        super(broadcastNMEAType, router, bufSize);
     }
 
-    @Test
-    public void test()
+    @Override
+    public UnconnectedDatagramChannel createChannel() throws IOException
     {
-        URL url = RouterT.class.getClassLoader().getResource("router4.xml");
-        String filename = url.getFile();
-        CommandLine.main("-ll", "CONFIG", "-pl", "INFO", filename);
+        return UnconnectedDatagramChannel.open("255.255.255.255", 10110, bufferSize, true, false);
     }
     
 }

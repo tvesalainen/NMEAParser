@@ -26,7 +26,7 @@ import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
- *
+ * @deprecated 
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public final class OldRoute extends JavaLogging

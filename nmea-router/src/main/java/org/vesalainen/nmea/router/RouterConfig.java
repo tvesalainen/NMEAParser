@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -44,18 +43,18 @@ import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.NmeaType;
 import org.vesalainen.nmea.jaxb.router.ObjectFactory;
 import org.vesalainen.nmea.jaxb.router.RouteType;
-import org.vesalainen.nmea.jaxb.router.RouterType;
 import org.vesalainen.nmea.jaxb.router.ScriptType;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
+import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
-import org.vesalainen.nmea.jaxb.router.TcpListenerType;
 import org.vesalainen.nmea.script.ScriptParser;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class RouterConfig
+public class RouterConfig extends JavaLogging
 {
     private File file;
     private static JAXBContext jaxbCtx;
@@ -84,11 +83,10 @@ public class RouterConfig
 
     public RouterConfig(File file)
     {
+        super(RouterConfig.class);
         this.file = file;
         nmea = objectFactory.createNmea(objectFactory.createNmeaType());
         NmeaType type = nmea.getValue();
-        type.getTcpListenerOrRouter().add(objectFactory.createRouterType());
-        type.getTcpListenerOrRouter().add(objectFactory.createTcpListenerType());
     }
     
     public void load() throws IOException, JAXBException
@@ -119,28 +117,7 @@ public class RouterConfig
 
     public List<EndpointType> getRouterEndpoints()
     {
-        for (Object ob : nmea.getValue().getTcpListenerOrRouter())
-        {
-            if (ob instanceof RouterType)
-            {
-                RouterType rt = (RouterType) ob;
-                return rt.getProcessorOrMulticastOrMulticastNmea0183();
-            }
-        }
-        return null;
-    }
-    
-    public List<TcpEndpointType> getTcpListenerEndpoints()
-    {
-        for (Object ob : nmea.getValue().getTcpListenerOrRouter())
-        {
-            if (ob instanceof TcpListenerType)
-            {
-                TcpListenerType tlt = (TcpListenerType) ob;
-                return tlt.getTcpEndpoint();
-            }
-        }
-        return null;
+        return nmea.getValue().getTcpEndpointOrProcessorOrMulticast();
     }
     
     public NmeaType getNmeaType()
@@ -156,7 +133,7 @@ public class RouterConfig
     public TcpEndpointType createTcpEndpointType()
     {
         TcpEndpointType listener = objectFactory.createTcpEndpointType();
-        getTcpListenerEndpoints().add(listener);
+        getRouterEndpoints().add(listener);
         return listener;
     }
     public DatagramType createDatagramType()
@@ -202,9 +179,94 @@ public class RouterConfig
         }
         throw new IllegalArgumentException(name+" endpoint not found");
     }
+    public void changeDevice(String name, String newDevice) throws IOException
+    {
+        for (EndpointType endpoint : getRouterEndpoints())
+        {
+            if (endpoint.getName().equals(name))
+            {
+                if (endpoint instanceof SerialType)
+                {
+                    SerialType serial = (SerialType) endpoint;
+                    String oldDevice = serial.getDevice();
+                    if (!newDevice.equals(oldDevice))
+                    {
+                        serial.setDevice(newDevice);
+                        config("%s device changed from %s to %s", name, oldDevice, newDevice);
+                        store();
+                        return;
+                    }
+                }
+                else
+                {
+                    throw new IllegalArgumentException(name+" is not serial endpoint");
+                }
+            }
+        }
+        throw new IllegalArgumentException(name+" endpoint not found");
+    }
+    public int getRingBufferSize()
+    {
+        Long value = nmea.getValue().getRingBufferSize();
+        if (value != null)
+        {
+            return value.intValue();
+        }
+        else
+        {
+            return 128;
+        }
+    }
+    public long getCheckDelay()
+    {
+        Long value = nmea.getValue().getCheckDelay();
+        if (value != null)
+        {
+            return value.longValue();
+        }
+        else
+        {
+            return 1000;
+        }
+    }
+    public long getCloseDelay()
+    {
+        Long value = nmea.getValue().getCloseDelay();
+        if (value != null)
+        {
+            return value.longValue();
+        }
+        else
+        {
+            return 500;
+        }
+    }
+    public long getFingerPrintDelay()
+    {
+        Long value = nmea.getValue().getFingerPrintDelay();
+        if (value != null)
+        {
+            return value.longValue();
+        }
+        else
+        {
+            return 500;
+        }
+    }
+    public List<String> getAllDevices()
+    {
+        return nmea.getValue().getAllDevices();
+    }
     public void store() throws IOException
     {
         try (FileWriter writer = new FileWriter(file))
+        {
+            store(writer);
+        }
+    }
+    public void store(Writer writer) throws IOException
+    {
+        try
         {
             Marshaller marshaller = jaxbCtx.createMarshaller();
             marshaller.setProperty(JAXB_FORMATTED_OUTPUT, true);

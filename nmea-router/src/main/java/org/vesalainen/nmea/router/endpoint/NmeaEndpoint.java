@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Timo Vesalainen <timo.vesalainen@iki.fi>
+ * Copyright (C) 2017 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,28 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.router;
+package org.vesalainen.nmea.router.endpoint;
 
-import java.net.URL;
-import org.junit.Test;
+import org.vesalainen.comm.channel.SerialChannel.Configuration;
+import static org.vesalainen.comm.channel.SerialChannel.Speed.B4800;
+import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
+import org.vesalainen.nmea.router.Router;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class RouterT
+public class NmeaEndpoint extends SerialEndpoint<Nmea0183Type>
 {
-    
-    public RouterT()
+
+    public NmeaEndpoint(Nmea0183Type nmea0183Type, Router router, int bufSize)
     {
+        super(nmea0183Type, router, bufSize);
     }
 
-    @Test
-    public void test()
+    @Override
+    protected Configuration createConfig()
     {
-        URL url = RouterT.class.getClassLoader().getResource("router4.xml");
-        String filename = url.getFile();
-        CommandLine.main("-ll", "CONFIG", "-pl", "INFO", filename);
+        Configuration configure = super.createConfig();
+        configure.setSpeed(B4800);
+        return configure;
     }
-    
+
 }

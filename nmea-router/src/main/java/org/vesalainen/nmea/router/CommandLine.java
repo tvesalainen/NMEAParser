@@ -70,7 +70,7 @@ public class CommandLine extends LoggingCommandLine
         {
             Router router = new Router(config);
             cmdArgs.attachInstant(router);
-            router.loop();
+            router.start();
         }
         catch (RestartException ex)
         {

@@ -18,7 +18,7 @@ package org.vesalainen.nmea.script;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import org.vesalainen.nmea.router.Endpoint;
+import org.vesalainen.nmea.router.endpoint.Endpoint;
 import org.vesalainen.nmea.router.RestartException;
 import org.vesalainen.nmea.script.AbstractScriptObjectFactory;
 import org.vesalainen.nmea.script.RouterEngine;

@@ -33,7 +33,7 @@ public class ProcessorT
     @Test
     public void test()
     {
-        URL url = RouterConfigTest.class.getClassLoader().getResource("processor.xml");
+        URL url = ProcessorT.class.getClassLoader().getResource("processor.xml");
         String filename = url.getFile();
         CommandLine.main("-ll", "INFO", "-pl", "INFO", filename);
     }

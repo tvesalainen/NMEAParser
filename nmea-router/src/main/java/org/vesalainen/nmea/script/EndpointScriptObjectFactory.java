@@ -17,7 +17,7 @@
 package org.vesalainen.nmea.script;
 
 import java.io.IOException;
-import org.vesalainen.nmea.router.Endpoint;
+import org.vesalainen.nmea.router.endpoint.Endpoint;
 import org.vesalainen.nmea.script.RouterEngine;
 import org.vesalainen.nmea.script.ScriptStatement;
 

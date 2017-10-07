@@ -4,24 +4,7 @@
     <xsd:element name="nmea" type="nmeaType"/>
     <xsd:complexType name="nmeaType">
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
-            <xsd:element name="tcp-listener" type="tcpListenerType" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="router" type="routerType" minOccurs="0" maxOccurs="1"/>
-        </xsd:choice>
-        <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
-        <xsd:attribute name="ctrlTcpPort" type="portType"/>
-        <xsd:attribute name="allDevices" type="deviceListType"/>
-        <xsd:attribute name="ringBufferSize" type="bufferSizeType"/>
-        <xsd:attribute name="checkDelay" type="delayType"/>
-        <xsd:attribute name="closeDelay" type="delayType"/>
-        <xsd:attribute name="fingerPrintDelay" type="delayType"/>
-    </xsd:complexType>
-    <xsd:complexType name="tcpListenerType">
-        <xsd:choice minOccurs="0" maxOccurs="unbounded">
             <xsd:element name="tcp-endpoint" type="tcpEndpointType"/>
-        </xsd:choice>
-    </xsd:complexType>
-    <xsd:complexType name="routerType">
-        <xsd:choice minOccurs="0" maxOccurs="unbounded">
             <xsd:element name="processor" type="processorType"/>
             <xsd:element name="multicast" type="multicastType"/>
             <xsd:element name="multicast-nmea-0183" type="multicastNMEAType"/>
@@ -33,6 +16,13 @@
             <xsd:element name="nmea-0183" type="nmea-0183Type"/>
             <xsd:element name="serial" type="serialType"/>
         </xsd:choice>
+        <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
+        <xsd:attribute name="ctrlTcpPort" type="portType"/>
+        <xsd:attribute name="allDevices" type="deviceListType"/>
+        <xsd:attribute name="ringBufferSize" type="bufferSizeType"/>
+        <xsd:attribute name="checkDelay" type="delayType"/>
+        <xsd:attribute name="closeDelay" type="delayType"/>
+        <xsd:attribute name="fingerPrintDelay" type="delayType"/>
     </xsd:complexType>
     <xsd:complexType name="tcpEndpointType">
         <xsd:complexContent>
@@ -109,6 +99,7 @@
     <xsd:complexType name="serialType">
         <xsd:complexContent>
             <xsd:extension base="endpointType">
+                <xsd:attribute name="device" type="deviceType" use="required"/>
                 <xsd:attribute name="speed" type="speedType"/>
                 <xsd:attribute name="bits" type="bitsType"/>
                 <xsd:attribute name="parity" type="parityType"/>
@@ -124,7 +115,6 @@
             <xsd:element name="filter" type="filterType" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="nameType" use="required"/>
-        <xsd:attribute name="device" type="deviceType" use="required"/>
         <xsd:attribute name="enable" type="xsd:boolean" use="required"/>
         <xsd:attribute name="priority" type="priorityType"/>
     </xsd:complexType>

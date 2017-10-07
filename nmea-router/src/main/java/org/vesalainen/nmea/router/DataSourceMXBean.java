@@ -16,6 +16,9 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.util.Date;
+import java.util.Set;
+
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
@@ -27,4 +30,7 @@ public interface DataSourceMXBean
     long getWriteCount();
     long getReadBytes();
     long getWriteBytes();
+    Date getLastRead();
+    Date getLastWrite();
+    Set<String> getFingerPrint();
 }

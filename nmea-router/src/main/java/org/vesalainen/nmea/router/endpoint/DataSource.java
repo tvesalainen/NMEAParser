@@ -14,22 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.router;
+package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
+import org.vesalainen.nmea.router.DataSourceMXBean;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class DataSource extends JavaLogging implements DataSourceMXBean
+public abstract class DataSource extends JavaLogging implements Runnable, DataSourceMXBean
 {
     private static final Map<String,DataSource> map = new HashMap<>();
     protected final String name;
@@ -53,11 +53,10 @@ public abstract class DataSource extends JavaLogging implements DataSourceMXBean
     {
         return map.get(name);
     }
-    protected abstract void handle(SelectionKey sk) throws IOException;
 
-    protected abstract int write(ByteBuffer readBuffer) throws IOException;
+    public abstract int write(ByteBuffer readBuffer) throws IOException;
 
-    protected abstract int write(RingByteBuffer ring) throws IOException;
+    public abstract int write(RingByteBuffer ring) throws IOException;
 
     @Override
     public String getName()

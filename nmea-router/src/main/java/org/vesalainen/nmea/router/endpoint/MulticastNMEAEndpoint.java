@@ -14,30 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.router.scanner;
+package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.vesalainen.nmea.router.RouterConfig;
+import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
+import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
+import org.vesalainen.nmea.router.Router;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class ConfigCreatorT
+public class MulticastNMEAEndpoint extends Endpoint<MulticastNMEAType,UnconnectedDatagramChannel>
 {
-    
-    public ConfigCreatorT()
+
+    public MulticastNMEAEndpoint(MulticastNMEAType multicastNMEAType, Router router, int bufSize)
     {
+        super(multicastNMEAType, router, bufSize);
     }
 
-    @Test
-    public void test1() throws IOException
+    @Override
+    public UnconnectedDatagramChannel createChannel() throws IOException
     {
-        ConfigCreator cc = new ConfigCreator();
-        RouterConfig config = cc.createConfig(null);
-        System.err.println(config);
+        String address = endpointType.getAddress();
+        return UnconnectedDatagramChannel.open(address, 10110, bufferSize, true, false);
     }
     
 }

@@ -16,11 +16,9 @@
  */
 package org.vesalainen.nmea.router;
 
+import org.vesalainen.nmea.router.endpoint.DataSource;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import static java.util.logging.Level.FINER;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.util.logging.JavaLogging;
@@ -82,7 +80,7 @@ public final class Route extends JavaLogging
         return prefix;
     }
 
-    public final void write(String origin, RingByteBuffer ring, int lastPosition) throws IOException
+    public final void write(String origin, RingByteBuffer ring) throws IOException
     {
         lastWrote = System.currentTimeMillis();
         for (String target : targetList)
