@@ -60,7 +60,7 @@ public class ConfigCreator
         config.getNmeaType().getAllDevices().addAll(SerialChannel.getAllPorts());
         
         PortScanner portScanner = new PortScanner()
-                .addChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK))
+                .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK))
                 .setPorts(SerialChannel.getFreePorts());
         portScanner.scan(this::addDevice);
         

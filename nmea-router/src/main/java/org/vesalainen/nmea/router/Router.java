@@ -19,14 +19,15 @@ package org.vesalainen.nmea.router;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Future;
 import org.vesalainen.comm.channel.SerialChannel;
+import org.vesalainen.math.Sets;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
@@ -36,8 +37,10 @@ import org.vesalainen.nmea.jaxb.router.SerialType;
 import static org.vesalainen.nmea.router.ThreadPool.POOL;
 import org.vesalainen.nmea.router.endpoint.EndpointFactory;
 import org.vesalainen.nmea.router.scanner.PortScanner;
+import org.vesalainen.nmea.router.scanner.PortScanner.ScanResult;
 import org.vesalainen.nmea.script.RouterEngine;
-import org.vesalainen.util.DistinguishMap;
+import org.vesalainen.util.EnumMapSet;
+import org.vesalainen.util.MapSet;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -50,10 +53,11 @@ public class Router extends JavaLogging implements RouterEngine
     private Map<String,Endpoint> sources = new HashMap<>();
     private Map<Future,Endpoint> futureMap = new HashMap<>();
     private Map<String,EndpointType> nameMap = new HashMap<>();
-    private Map<EndpointType,Set<String>> fingerPrintMap = new HashMap<>();
-    private DistinguishMap<String,EndpointType> distinguishMap = new DistinguishMap<>();
-    private Set<PortType> scanChoises = EnumSet.noneOf(PortType.class);
-    private PortScanner scanner;
+    private Map<SerialType,Set<String>> fingerPrintMap = new HashMap<>();
+    private Set<String> differenceSet = new HashSet<>();
+    private MapSet<PortType,SerialType> scanChoises = new EnumMapSet<>(PortType.class);
+    private Map<SerialType,Set<String>> lostMap = new HashMap<>();
+    private PortScanner portScanner;
     private final int ringBufferSize;
     private final long checkDelay;
     private final long closeDelay;
@@ -69,9 +73,9 @@ public class Router extends JavaLogging implements RouterEngine
         fingerPrintDelay = config.getFingerPrintDelay();
     }
 
-    public void start()
+    public void start() throws IOException
     {
-        scanner = new PortScanner();
+        portScanner = new PortScanner();
         takeFingerPrints();
         startNonSerial();
         List<String> allDevices = config.getAllDevices();
@@ -82,10 +86,67 @@ public class Router extends JavaLogging implements RouterEngine
         }
         else
         {
-            fingerPrintMap.forEach((endpoint,fingerPrint)->distinguishMap.add(fingerPrint, endpoint));
+            Sets.assign(Sets.symmetricDifference(fingerPrintMap.values()), differenceSet);
         }
+        createScanChoises();
+        portScanner.setPorts(SerialChannel.getFreePorts());
+        portScanner.setChannelSuppliers(scanChoises.keySet());
+        portScanner.scan(this::foundPort, differenceSet);
     }
     
+    private void foundPort(ScanResult scanResult)
+    {
+        SerialType serialType = null;
+        for (Entry<SerialType,Set<String>> entry : fingerPrintMap.entrySet())
+        {
+            if (Sets.intersect(scanResult.getFingerPrint(), entry.getValue()))
+            {
+                serialType = entry.getKey();
+                break;
+            }
+        }
+        if (serialType != null)
+        {
+            startEndpoint(serialType);
+            scanChoises.removeItem(scanResult.getPortType(), serialType);
+            lostMap.remove(serialType);
+            Sets.assign(Sets.symmetricDifference(lostMap.values()), differenceSet);
+        }
+        else
+        {
+            severe("no port for %s", scanResult);
+        }
+    }
+    private void createScanChoises()
+    {
+        for (SerialType serialType : lostMap.keySet())
+        {
+            scanChoises.add(getPortType(serialType), serialType);
+        }
+        config("scan choises %s", scanChoises);
+    }
+    private PortType getPortType(SerialType serialType)
+    {
+        if (serialType instanceof SeatalkType)
+        {
+            return PortType.SEA_TALK;
+        }
+        else
+        {
+            if (serialType instanceof Nmea0183Type)
+            {
+                return PortType.NMEA;
+            }
+            else
+            {
+                if (serialType instanceof Nmea0183HsType)
+                {
+                    return PortType.NMEA_HS;
+                }
+            }
+        }
+        throw new IllegalArgumentException(serialType+" conflicts with PortType");
+    }
     private void takeFingerPrints()
     {
         for (EndpointType endpointType : config.getRouterEndpoints())
@@ -99,27 +160,10 @@ public class Router extends JavaLogging implements RouterEngine
                 {
                     fingerPrint.add(route.getPrefix());
                 }
-                fingerPrintMap.put(endpointType, fingerPrint);
-                if (endpointType instanceof SeatalkType)
-                {
-                    scanChoises.add(PortType.SEA_TALK);
-                }
-                else
-                {
-                    if (endpointType instanceof Nmea0183Type)
-                    {
-                        scanChoises.add(PortType.NMEA);
-                    }
-                    else
-                    {
-                        if (endpointType instanceof Nmea0183HsType)
-                        {
-                            scanChoises.add(PortType.NMEA_HS);
-                        }
-                    }
-                }
+                fingerPrintMap.put(serialType, fingerPrint);
             }
         }
+        lostMap.putAll(fingerPrintMap);
     }
 
     private void startSerial()
@@ -128,9 +172,8 @@ public class Router extends JavaLogging implements RouterEngine
         {
             if (endpointType instanceof SerialType)
             {
-                Endpoint endpoint = EndpointFactory.getInstance(endpointType, this, ringBufferSize);
-                Future<?> future = POOL.submit(endpoint);
-                futureMap.put(future, endpoint);
+                startEndpoint(endpointType);
+                lostMap.remove(endpointType);
             }
         }
     }
@@ -141,13 +184,18 @@ public class Router extends JavaLogging implements RouterEngine
         {
             if (!(endpointType instanceof SerialType))
             {
-                Endpoint endpoint = EndpointFactory.getInstance(endpointType, this, ringBufferSize);
-                Future<?> future = POOL.submit(endpoint);
-                futureMap.put(future, endpoint);
+                startEndpoint(endpointType);
             }
         }
     }
 
+    private void startEndpoint(EndpointType endpointType)
+    {
+        Endpoint endpoint = EndpointFactory.getInstance(endpointType, this, ringBufferSize);
+        Future<?> future = POOL.submit(endpoint);
+        futureMap.put(future, endpoint);
+        config("started %s", endpoint);
+    }
     public void addSource(String src, Endpoint endpoint)
     {
         sources.put(src, endpoint);

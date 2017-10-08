@@ -43,7 +43,7 @@ public class PortScannerT
     public void testScan() throws IOException
     {
         PortScanner portScanner = new PortScanner()
-                .addChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK))
+                .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK))
                 .setPorts(SerialChannel.getFreePorts());
         Set<String> distinguishSet = new HashSet<>();
         distinguishSet.add("$GPRMC");

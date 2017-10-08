@@ -90,6 +90,13 @@ public class PortScanner extends JavaLogging
         }
         return this;
     }
+    public void stop()
+    {
+        if (scanFuture != null )
+        {
+            scanFuture.cancel(false);
+        }
+    }
     public boolean isScanning()
     {
         return scanFuture != null && !scanFuture.isDone();
@@ -116,7 +123,7 @@ public class PortScanner extends JavaLogging
             throw new IOException(ex);
         }
     }
-    public PortScanner addChannelSuppliers(Set<PortType> portTypes)
+    public PortScanner setChannelSuppliers(Set<PortType> portTypes)
     {
         this.portTypes = portTypes;
         return this;
