@@ -18,6 +18,10 @@ package org.vesalainen.nmea.router;
 
 import java.nio.channels.ScatteringByteChannel;
 import org.vesalainen.comm.channel.SerialChannel;
+import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
+import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
+import org.vesalainen.nmea.jaxb.router.SeatalkType;
+import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.router.seatalk.SeaTalkChannel;
 import org.vesalainen.util.function.IOFunction;
 
@@ -43,4 +47,26 @@ public enum PortType
         return channelFactory;
     }
     
+    public static PortType getPortType(SerialType serialType)
+    {
+        if (serialType instanceof SeatalkType)
+        {
+            return PortType.SEA_TALK;
+        }
+        else
+        {
+            if (serialType instanceof Nmea0183Type)
+            {
+                return PortType.NMEA;
+            }
+            else
+            {
+                if (serialType instanceof Nmea0183HsType)
+                {
+                    return PortType.NMEA_HS;
+                }
+            }
+        }
+        throw new IllegalArgumentException(serialType+" conflicts with PortType");
+    }
 }

@@ -37,12 +37,13 @@ import org.vesalainen.parsers.nmea.MessageType;
 import static org.vesalainen.parsers.nmea.MessageType.*;
 import org.vesalainen.parsers.nmea.TalkerId;
 import static org.vesalainen.parsers.nmea.TalkerId.*;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class ConfigCreator
+public class ConfigCreator extends JavaLogging
 {
     private RouterConfig config;
     private Set<String> names = new HashSet<>();
@@ -52,6 +53,7 @@ public class ConfigCreator
 
     public ConfigCreator()
     {
+        super(ConfigCreator.class);
     }
     
     public RouterConfig createConfig(File file) throws IOException
@@ -103,41 +105,48 @@ public class ConfigCreator
     }
     private void addDevice(ScanResult scanResult)
     {
-        SerialType serial = null;
-        switch (scanResult.getPortType())
+        if (scanResult.getFingerPrint().isEmpty())
         {
-            case NMEA:
-                serial = config.createNmea0183Type();
-                break;
-            case NMEA_HS:
-                serial = config.createNmea0183HsType();
-                break;
-            case SEA_TALK:
-                serial = config.createSeatalkType();
-                break;
-            default:
-                throw new UnsupportedOperationException(scanResult.getPortType()+" not supported");
+            config("empty %s", scanResult);
         }
-        Map<TalkerId,String> talkerIds = getTalkerIds(scanResult.getFingerPrint());
-        Map<MessageType,String> messageTypes = getMessageTypes(scanResult.getFingerPrint());
-        String name = createName(talkerIds.keySet(), messageTypes.keySet());
-        serial.setName(name);
-        serial.setDevice(scanResult.getPort());
-        serial.setEnable(true);
-        for (Entry<MessageType,String> entry : messageTypes.entrySet())
+        else
         {
-            RouteType route = config.createRouteTypeFor(serial);
-            route.setPrefix(entry.getValue());
-            route.setComment(entry.getKey().getDescription());
-            route.getTarget().add("Net");
-            if (entry.getKey().equals(VHW))
+            SerialType serial = null;
+            switch (scanResult.getPortType())
             {
-                providesSpeed = route;
+                case NMEA:
+                    serial = config.createNmea0183Type();
+                    break;
+                case NMEA_HS:
+                    serial = config.createNmea0183HsType();
+                    break;
+                case SEA_TALK:
+                    serial = config.createSeatalkType();
+                    break;
+                default:
+                    throw new UnsupportedOperationException(scanResult.getPortType()+" not supported");
             }
-        }
-        if (any(messageTypes.keySet(), VWR, MWD, MWV) && !messageTypes.containsKey(VHW))
-        {
-            needsSpeed = name;
+            Map<TalkerId,String> talkerIds = getTalkerIds(scanResult.getFingerPrint());
+            Map<MessageType,String> messageTypes = getMessageTypes(scanResult.getFingerPrint());
+            String name = createName(talkerIds.keySet(), messageTypes.keySet());
+            serial.setName(name);
+            serial.setDevice(scanResult.getPort());
+            serial.setEnable(true);
+            for (Entry<MessageType,String> entry : messageTypes.entrySet())
+            {
+                RouteType route = config.createRouteTypeFor(serial);
+                route.setPrefix(entry.getValue());
+                route.setComment(entry.getKey().getDescription());
+                route.getTarget().add("Net");
+                if (entry.getKey().equals(VHW))
+                {
+                    providesSpeed = route;
+                }
+            }
+            if (any(messageTypes.keySet(), VWR, MWD, MWV) && !messageTypes.containsKey(VHW))
+            {
+                needsSpeed = name;
+            }
         }
     }
     private String createName(Set<TalkerId> talkerIds, Set<MessageType> messageTypes)
@@ -214,7 +223,7 @@ public class ConfigCreator
             else
             {
                 int num = Integer.parseInt(name.substring(idx+1));
-                return createUniqueName(String.format("%s_%d", name, num+1));
+                return createUniqueName(String.format("%s_%d", name.substring(0, idx), num+1));
             }
         }
     }

@@ -17,7 +17,9 @@
 package org.vesalainen.nmea.router;
 
 import java.net.URL;
+import java.util.logging.Level;
 import org.junit.Test;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -28,14 +30,13 @@ public class RouterT
     
     public RouterT()
     {
+        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINE);
     }
 
     @Test
     public void test()
     {
-        URL url = RouterT.class.getClassLoader().getResource("router4.xml");
-        String filename = url.getFile();
-        CommandLine.main("-ll", "CONFIG", "-pl", "INFO", filename);
+        CommandLine.main("-ll", "CONFIG", "-pl", "INFO", "c:\\temp\\nmea-router.xml");
     }
     
 }

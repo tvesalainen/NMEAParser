@@ -33,11 +33,6 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>
-                                    jar-with-dependencies
-                                </descriptorRef>
-                            </descriptorRefs>
                             <archive>
                                 <manifest>
                                     <mainClass>org.vesalainen.nmea.router.CommandLine</mainClass>
@@ -94,6 +89,11 @@
             <groupId>org.vesalainen.lpg</groupId>
             <artifactId>javalpg</artifactId>
             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.vesalainen</groupId>
+            <artifactId>vfs</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.vesalainen</groupId>

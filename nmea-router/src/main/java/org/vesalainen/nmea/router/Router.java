@@ -21,18 +21,23 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import static java.util.logging.Level.*;
+import java.util.logging.Logger;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.math.Sets;
+import org.vesalainen.math.SymmetricDifferenceMap;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
-import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
-import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.RouteType;
-import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import static org.vesalainen.nmea.router.ThreadPool.POOL;
 import org.vesalainen.nmea.router.endpoint.EndpointFactory;
@@ -54,23 +59,22 @@ public class Router extends JavaLogging implements RouterEngine
     private Map<Future,Endpoint> futureMap = new HashMap<>();
     private Map<String,EndpointType> nameMap = new HashMap<>();
     private Map<SerialType,Set<String>> fingerPrintMap = new HashMap<>();
-    private Set<String> differenceSet = new HashSet<>();
+    private SymmetricDifferenceMap<String,SerialType> uniqueMap = new SymmetricDifferenceMap<>();
     private MapSet<PortType,SerialType> scanChoises = new EnumMapSet<>(PortType.class);
-    private Map<SerialType,Set<String>> lostMap = new HashMap<>();
+    private Set<SerialType> lostSet = new HashSet<>();
     private PortScanner portScanner;
     private final int ringBufferSize;
-    private final long checkDelay;
+    private final long monitorDelay;
     private final long closeDelay;
-    private final long fingerPrintDelay;
+    private ScheduledFuture<?> monitorFuture;
 
     public Router(RouterConfig config)
     {
         super(Router.class);
         this.config = config;
         ringBufferSize = config.getRingBufferSize();
-        checkDelay = config.getCheckDelay();
+        monitorDelay = config.getMonitorDelay();
         closeDelay = config.getCloseDelay();
-        fingerPrintDelay = config.getFingerPrintDelay();
     }
 
     public void start() throws IOException
@@ -83,78 +87,66 @@ public class Router extends JavaLogging implements RouterEngine
         if (allPorts.equals(allDevices))
         {
             startSerial();
+            QuickStartMonitor monitor = new QuickStartMonitor();
+            monitorFuture = POOL.schedule(monitor, monitorDelay, TimeUnit.MILLISECONDS);
         }
         else
         {
-            Sets.assign(Sets.symmetricDifference(fingerPrintMap.values()), differenceSet);
+            fingerPrintMap.forEach((k,s)->uniqueMap.add(s, k));
         }
         createScanChoises();
+        portScanner.setCheckDelay(monitorDelay);
+        portScanner.setCloseDelay(closeDelay);
+        portScanner.setFingerPrintDelay(Long.MAX_VALUE);
         portScanner.setPorts(SerialChannel.getFreePorts());
         portScanner.setChannelSuppliers(scanChoises.keySet());
-        portScanner.scan(this::foundPort, differenceSet);
+        portScanner.scan(this::foundPort, uniqueMap);
+        Restarter restarter = new Restarter();
+        ScheduledFuture<?> restarterFuture = POOL.scheduleWithFixedDelay(restarter, monitorDelay, monitorDelay, TimeUnit.MILLISECONDS);
+        try
+        {
+            restarterFuture.get();
+        }
+        catch (InterruptedException | ExecutionException ex)
+        {
+            throw new IOException(ex);
+        }
     }
     
     private void foundPort(ScanResult scanResult)
     {
-        SerialType serialType = null;
-        for (Entry<SerialType,Set<String>> entry : fingerPrintMap.entrySet())
+        try
         {
-            if (Sets.intersect(scanResult.getFingerPrint(), entry.getValue()))
-            {
-                serialType = entry.getKey();
-                break;
-            }
-        }
-        if (serialType != null)
-        {
+            config.changeDevice(scanResult.getSerialType(), scanResult.getPort());
+            SerialType serialType = scanResult.getSerialType();
+            config("found port %s", serialType);
             startEndpoint(serialType);
             scanChoises.removeItem(scanResult.getPortType(), serialType);
-            lostMap.remove(serialType);
-            Sets.assign(Sets.symmetricDifference(lostMap.values()), differenceSet);
+            lostSet.remove(serialType);
+            Set<String> set = fingerPrintMap.get(serialType);
+            uniqueMap.remove(set, serialType);
         }
-        else
+        catch (IOException ex)
         {
-            severe("no port for %s", scanResult);
+            log(SEVERE, ex, "%s %s", scanResult, ex.getMessage());
         }
     }
     private void createScanChoises()
     {
-        for (SerialType serialType : lostMap.keySet())
+        for (SerialType serialType : lostSet)
         {
-            scanChoises.add(getPortType(serialType), serialType);
+            scanChoises.add(PortType.getPortType(serialType), serialType);
         }
         config("scan choises %s", scanChoises);
-    }
-    private PortType getPortType(SerialType serialType)
-    {
-        if (serialType instanceof SeatalkType)
-        {
-            return PortType.SEA_TALK;
-        }
-        else
-        {
-            if (serialType instanceof Nmea0183Type)
-            {
-                return PortType.NMEA;
-            }
-            else
-            {
-                if (serialType instanceof Nmea0183HsType)
-                {
-                    return PortType.NMEA_HS;
-                }
-            }
-        }
-        throw new IllegalArgumentException(serialType+" conflicts with PortType");
     }
     private void takeFingerPrints()
     {
         for (EndpointType endpointType : config.getRouterEndpoints())
         {
             nameMap.put(endpointType.getName(), endpointType);
-            Set<String> fingerPrint = new HashSet<>();
             if (endpointType instanceof SerialType)
             {
+                Set<String> fingerPrint = new HashSet<>();
                 SerialType serialType = (SerialType) endpointType;
                 for (RouteType route : serialType.getRoute())
                 {
@@ -163,7 +155,7 @@ public class Router extends JavaLogging implements RouterEngine
                 fingerPrintMap.put(serialType, fingerPrint);
             }
         }
-        lostMap.putAll(fingerPrintMap);
+        lostSet.addAll(fingerPrintMap.keySet());
     }
 
     private void startSerial()
@@ -173,7 +165,7 @@ public class Router extends JavaLogging implements RouterEngine
             if (endpointType instanceof SerialType)
             {
                 startEndpoint(endpointType);
-                lostMap.remove(endpointType);
+                lostSet.remove(endpointType);
             }
         }
     }
@@ -212,13 +204,72 @@ public class Router extends JavaLogging implements RouterEngine
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private class ThreadMonitor implements Runnable
+    private class QuickStartMonitor implements Runnable
     {
 
         @Override
         public void run()
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            try
+            {
+                Iterator<Entry<Future, Endpoint>> iterator = futureMap.entrySet().iterator();
+                while (iterator.hasNext())
+                {
+                    Entry<Future, Endpoint> entry = iterator.next();
+                    Future future = entry.getKey();
+                    Endpoint endpoint = entry.getValue();
+                    if (endpoint.getEndpointType() instanceof SerialType)
+                    {
+                        if (handleSerial(future, endpoint))
+                        {
+                            iterator.remove();
+                        }
+                    }
+                }
+            }
+            catch (IOException ex)
+            {
+                log(SEVERE, ex, "monitor: %s", ex);
+            }
+        }
+
+        private boolean handleSerial(Future future, Endpoint endpoint) throws IOException
+        {
+            SerialType serialType = (SerialType) endpoint.getEndpointType();
+            Set<String> exp = fingerPrintMap.get(serialType);
+            Set<String> got = endpoint.getFingerPrint();
+            if (!Sets.intersect(exp, got))
+            {
+                config("%s: %s doesn't intersect with %s", endpoint, got, exp);
+                future.cancel(true);
+                lostSet.add(serialType);
+                uniqueMap.add(exp, serialType);
+                portScanner.addPort(serialType.getDevice());
+                return true;
+            }
+            return false;
+        }
+
+    }
+    private class Restarter implements Runnable
+    {
+
+        @Override
+        public void run()
+        {
+            Iterator<Entry<Future, Endpoint>> iterator = futureMap.entrySet().iterator();
+            while (iterator.hasNext())
+            {
+                Entry<Future, Endpoint> entry = iterator.next();
+                Future future = entry.getKey();
+                Endpoint endpoint = entry.getValue();
+                if (future.isDone())
+                {
+                    startEndpoint(endpoint.getEndpointType());
+                    iterator.remove();
+                    config("restarted %s", endpoint);
+                }
+            }
         }
         
     }

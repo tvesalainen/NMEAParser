@@ -17,7 +17,6 @@
 package org.vesalainen.nmea.router;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBException;

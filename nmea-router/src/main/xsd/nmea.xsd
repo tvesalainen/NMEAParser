@@ -20,9 +20,8 @@
         <xsd:attribute name="ctrlTcpPort" type="portType"/>
         <xsd:attribute name="allDevices" type="deviceListType"/>
         <xsd:attribute name="ringBufferSize" type="bufferSizeType"/>
-        <xsd:attribute name="checkDelay" type="delayType"/>
         <xsd:attribute name="closeDelay" type="delayType"/>
-        <xsd:attribute name="fingerPrintDelay" type="delayType"/>
+        <xsd:attribute name="monitorDelay" type="delayType"/>
     </xsd:complexType>
     <xsd:complexType name="tcpEndpointType">
         <xsd:complexContent>

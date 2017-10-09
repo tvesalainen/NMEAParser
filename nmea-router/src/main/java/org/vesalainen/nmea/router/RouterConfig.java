@@ -96,18 +96,9 @@ public class RouterConfig extends JavaLogging
 
     private void load(InputStream is) throws IOException, JAXBException
     {
-        try
-        {
-            digest = MessageDigest.getInstance("SHA-1");
-            DigestInputStream dis = new DigestInputStream(is, digest);
-            Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
-            nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(dis);
-            checkScriptSyntax();
-        }
-        catch (NoSuchAlgorithmException ex)
-        {
-            throw new IOException(ex);
-        }
+        Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
+        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(is);
+        checkScriptSyntax();
     }
 
     public MessageDigest getDigest()
@@ -179,31 +170,15 @@ public class RouterConfig extends JavaLogging
         }
         throw new IllegalArgumentException(name+" endpoint not found");
     }
-    public void changeDevice(String name, String newDevice) throws IOException
+    public void changeDevice(SerialType serial, String newDevice) throws IOException
     {
-        for (EndpointType endpoint : getRouterEndpoints())
+        String oldDevice = serial.getDevice();
+        if (!newDevice.equals(oldDevice))
         {
-            if (endpoint.getName().equals(name))
-            {
-                if (endpoint instanceof SerialType)
-                {
-                    SerialType serial = (SerialType) endpoint;
-                    String oldDevice = serial.getDevice();
-                    if (!newDevice.equals(oldDevice))
-                    {
-                        serial.setDevice(newDevice);
-                        config("%s device changed from %s to %s", name, oldDevice, newDevice);
-                        store();
-                        return;
-                    }
-                }
-                else
-                {
-                    throw new IllegalArgumentException(name+" is not serial endpoint");
-                }
-            }
+            serial.setDevice(newDevice);
+            config("%s device changed from %s to %s", serial.getName(), oldDevice, newDevice);
+            store();
         }
-        throw new IllegalArgumentException(name+" endpoint not found");
     }
     public int getRingBufferSize()
     {
@@ -217,16 +192,16 @@ public class RouterConfig extends JavaLogging
             return 128;
         }
     }
-    public long getCheckDelay()
+    public long getMonitorDelay()
     {
-        Long value = nmea.getValue().getCheckDelay();
+        Long value = nmea.getValue().getMonitorDelay();
         if (value != null)
         {
             return value.longValue();
         }
         else
         {
-            return 1000;
+            return 5000;
         }
     }
     public long getCloseDelay()
@@ -238,19 +213,7 @@ public class RouterConfig extends JavaLogging
         }
         else
         {
-            return 500;
-        }
-    }
-    public long getFingerPrintDelay()
-    {
-        Long value = nmea.getValue().getFingerPrintDelay();
-        if (value != null)
-        {
-            return value.longValue();
-        }
-        else
-        {
-            return 500;
+            return 1000;
         }
     }
     public List<String> getAllDevices()

@@ -38,6 +38,8 @@ import java.util.function.Consumer;
 import static java.util.logging.Level.*;
 import org.vesalainen.nio.RingBuffer;
 import org.vesalainen.nio.RingByteBuffer;
+import org.vesalainen.nmea.jaxb.router.EndpointType;
+import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.router.NMEAMatcher;
 import org.vesalainen.nmea.router.PortType;
 import org.vesalainen.util.CharSequences;
@@ -64,7 +66,7 @@ public class PortScanner extends JavaLogging
     private Map<String,Scanner> scanners = new HashMap<>();
     private ScheduledFuture<?> scanFuture;
     private Consumer<ScanResult> consumer;
-    private Set<String> distinguishSet;
+    private Map<String,SerialType> uniqueMap;
 
     public PortScanner()
     {
@@ -74,20 +76,6 @@ public class PortScanner extends JavaLogging
     public PortScanner setPorts(Collection<String> ports)
     {
         this.ports.addAll(ports);
-        return this;
-    }
-    /**
-     * Add new port for scan. If scan has been started but already stopped it is restarted.
-     * @param port
-     * @throws IOException 
-     */
-    public PortScanner addPort(String port) throws IOException
-    {
-        ports.add(port);
-        if (!isScanning() && consumer != null && distinguishSet != null)
-        {
-            scan(consumer, distinguishSet);
-        }
         return this;
     }
     public void stop()
@@ -153,11 +141,32 @@ public class PortScanner extends JavaLogging
             throw new IllegalArgumentException("closeDelay < checkPeriod < fingerPrintPeriod");
         }
     }
+    /**
+     * Add new port for scan. If scan has been started but already stopped it is restarted.
+     * @param port
+     * @throws IOException 
+     */
+    public PortScanner addPort(String port) throws IOException
+    {
+        boolean added = ports.add(port);
+        if (!isScanning() && consumer != null && uniqueMap != null)
+        {
+            scan(consumer, uniqueMap);
+        }
+        else
+        {
+            if (added && isScanning())
+            {
+                initialStartScanner(port, 0);
+            }
+        }
+        return this;
+    }
     public void scan(Consumer<ScanResult> consumer) throws IOException
     {
-        scan(consumer, Collections.EMPTY_SET);
+        scan(consumer, Collections.EMPTY_MAP);
     }
-    public void scan(Consumer<ScanResult> consumer, Set<String> distinguishSet) throws IOException
+    public void scan(Consumer<ScanResult> consumer, Map<String,SerialType> uniqueMap) throws IOException
     {
         if (isScanning())
         {
@@ -175,17 +184,21 @@ public class PortScanner extends JavaLogging
             return;
         }
         Objects.requireNonNull(consumer, "consumer");
-        Objects.requireNonNull(distinguishSet, "distinguishSet");
+        Objects.requireNonNull(uniqueMap, "uniqueMap");
         this.consumer = consumer;
-        this.distinguishSet = distinguishSet;
+        this.uniqueMap = uniqueMap;
         for (String port : ports)
         {
-            RepeatingIterator<PortType> it = new RepeatingIterator<>(portTypes);
-            channelIterators.put(port, it);
-            startScanner(port, 0);
+            initialStartScanner(port, 0);
         }
         Monitor monitor = new Monitor();
         scanFuture = POOL.scheduleWithFixedDelay(monitor, checkDelay, checkDelay, TimeUnit.MILLISECONDS);
+    }
+    private void initialStartScanner(String port, long delayMillis) throws IOException
+    {
+        RepeatingIterator<PortType> it = new RepeatingIterator<>(portTypes);
+        channelIterators.put(port, it);
+        startScanner(port, 0);
     }
     private void startScanner(String port, long delayMillis) throws IOException
     {
@@ -298,6 +311,7 @@ public class PortScanner extends JavaLogging
         private boolean mark = true;
         private Matcher.Status match;
         private long time;
+        private SerialType serialType;
 
         public Scanner(String port, PortType portType) throws IOException
         {
@@ -345,9 +359,13 @@ public class PortScanner extends JavaLogging
                                 {
                                     String prefix = ring.subSequence(0, idx).toString();
                                     fingerPrint.add(prefix);
-                                    if (distinguishSet.contains(prefix))
+                                    if (uniqueMap.containsKey(prefix))
                                     {
-                                        return null;
+                                        serialType = uniqueMap.get(prefix);
+                                        if (portType == PortType.getPortType(serialType))
+                                        {
+                                            return null;
+                                        }
                                     }
                                 }
                                 matched += ring.length();
@@ -392,6 +410,11 @@ public class PortScanner extends JavaLogging
             return count - matched;
         }
 
+        public SerialType getSerialType()
+        {
+            return serialType;
+        }
+
         @Override
         public String toString()
         {
@@ -403,6 +426,7 @@ public class PortScanner extends JavaLogging
     {
         private String port;
         private PortType portType;
+        private SerialType serialType;
         private Set<String> fingerPrint;
 
         public ScanResult(Scanner scanner)
@@ -410,6 +434,7 @@ public class PortScanner extends JavaLogging
             this.port = scanner.port;
             this.portType = scanner.portType;
             this.fingerPrint = scanner.fingerPrint;
+            this.serialType = scanner.serialType;
         }
 
         public String getPort()
@@ -425,6 +450,11 @@ public class PortScanner extends JavaLogging
         public Set<String> getFingerPrint()
         {
             return fingerPrint;
+        }
+
+        public SerialType getSerialType()
+        {
+            return serialType;
         }
 
         @Override

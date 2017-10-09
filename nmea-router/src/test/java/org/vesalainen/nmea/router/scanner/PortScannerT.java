@@ -18,12 +18,15 @@ package org.vesalainen.nmea.router.scanner;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.comm.channel.SerialChannel;
+import org.vesalainen.nmea.jaxb.router.SerialType;
 import static org.vesalainen.nmea.router.PortType.*;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -45,9 +48,9 @@ public class PortScannerT
         PortScanner portScanner = new PortScanner()
                 .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK))
                 .setPorts(SerialChannel.getFreePorts());
-        Set<String> distinguishSet = new HashSet<>();
-        distinguishSet.add("$GPRMC");
-        portScanner.scan((s)->System.err.println(s), distinguishSet);
+        Map<String,SerialType> uniqueMap = new HashMap<>();
+        uniqueMap.put("$GPRMC", null);
+        portScanner.scan((s)->System.err.println(s), uniqueMap);
         portScanner.waitScanner();
     }
     
