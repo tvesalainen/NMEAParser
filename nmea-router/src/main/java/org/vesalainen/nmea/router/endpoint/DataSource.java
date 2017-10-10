@@ -37,6 +37,7 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
     protected long readBytes;
     protected long writeCount;
     protected long writeBytes;
+    protected long errorBytes;
 
     public DataSource(String name)
     {
@@ -86,6 +87,12 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
     public long getWriteBytes()
     {
         return writeBytes;
+    }
+
+    @Override
+    public long getErrorBytes()
+    {
+        return errorBytes;
     }
 
 }

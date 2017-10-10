@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -34,10 +35,12 @@ import org.vesalainen.nmea.jaxb.router.FilterType;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.ScriptType;
 import org.vesalainen.nmea.router.NMEAMatcher;
+import org.vesalainen.nmea.router.NMEAReader;
 import org.vesalainen.nmea.router.Route;
 import org.vesalainen.nmea.router.Router;
 import org.vesalainen.nmea.router.filter.MessageFilter;
 import org.vesalainen.util.CharSequences;
+import org.vesalainen.util.HexDump;
 import org.vesalainen.util.Matcher;
 
 /**
@@ -182,79 +185,19 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     @Override
     public void run()
     {
-        boolean mark = true;
-        long lastRead;
-        long nowRead = 0;
-        this.ring = new RingByteBuffer(bufferSize, true);
+        String safeName = "uninitialised";
         try (T ch = createChannel())
         {
+            safeName = Thread.currentThread().getName();
+            Thread.currentThread().setName(name);
             channel = ch;
             config("started %s", channel);
             if (scriptEngine != null)
             {
                 scriptEngine.start();
             }
-            StringBuilder errMsg = new StringBuilder();
-            while (true)
-            {
-                lastRead = nowRead;
-                int count = ring.read(channel);;
-                nowRead = System.currentTimeMillis();
-                fine("handle %s read %d bytes", name, count);
-                if (count == -1)
-                {
-                    throw new EOFException(name);
-                }
-                if (ring.isFull())
-                {
-                    long elapsed = nowRead - lastRead;
-                    warning("buffer %s not big enough (%s) time from last read %d millis count %d", ring, name, elapsed, count);
-                }
-                readCount++;
-                readBytes += count;
-                if (matcher == null)
-                {
-                    warning("receive %s without matcher for %s", ring, name);
-                    return;
-                }
-                Matcher.Status match = null;
-                while (ring.hasRemaining())
-                {
-                    byte b = ring.get(mark);
-                    match = matcher.match(b);
-                    switch (match)
-                    {
-                        case Error:
-                            errMsg.append((char)b);
-                            mark = true;
-                            break;
-                        case Ok:
-                        case WillMatch:
-                            if (mark && errMsg.length() > 0)
-                            {
-                                warning("rejected %s", errMsg);
-                                errMsg.setLength(0);
-                            }
-                            mark = false;
-                            break;
-                        case Match:
-                            finer("read: %s", ring);
-                            matcher.getMatched().write(name, ring);
-                            if (scriptEngine != null)
-                            {
-                                scriptEngine.write(ring);
-                            }
-                            int idx = CharSequences.indexOf(ring, ',');
-                            if (idx != -1)
-                            {
-                                String prefix = ring.subSequence(0, idx).toString();
-                                fingerPrint.add(prefix);
-                            }
-                            mark = true;
-                            break;
-                    }
-                }
-            }
+            NMEAReader reader = new NMEAReader(name, matcher, channel, bufferSize, this::onOk, this::onError);
+            reader.read();
         }
         catch (Throwable ex)
         {
@@ -262,6 +205,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
         finally
         {
+            Thread.currentThread().setName(safeName);
             if (scriptEngine != null)
             {
                 scriptEngine.stop();
@@ -269,6 +213,31 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
     }
 
+    private void onOk(RingByteBuffer ring) throws IOException
+    {
+        readBytes += ring.length();
+        readCount++;
+        lastRead = System.currentTimeMillis();
+        finer("read: %s", ring);
+        matcher.getMatched().write(name, ring);
+        if (scriptEngine != null)
+        {
+            scriptEngine.write(ring);
+        }
+        int idx = CharSequences.indexOf(ring, ',');
+        if (idx != -1)
+        {
+            String prefix = ring.subSequence(0, idx).toString();
+            fingerPrint.add(prefix);
+        }
+    }
+    private void onError(byte[] errInput) throws IOException
+    {
+        lastRead = System.currentTimeMillis();
+        errorBytes += errInput.length;
+        warning("rejected %d bytes", errInput.length);
+        finest(()->HexDump.toHex(errInput));
+    }
     @Override
     public Date getLastRead()
     {

@@ -33,4 +33,9 @@ public interface DataSourceMXBean
     Date getLastRead();
     Date getLastWrite();
     Set<String> getFingerPrint();
+    long getErrorBytes();
+    default float getErrorPercent()
+    {
+        return 100*getErrorBytes()/getReadBytes();
+    }
 }

@@ -17,9 +17,11 @@
 package org.vesalainen.nmea.router.scanner;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.nmea.router.RouterConfig;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -30,6 +32,7 @@ public class ConfigCreatorT
     
     public ConfigCreatorT()
     {
+        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINE);
     }
 
     @Test

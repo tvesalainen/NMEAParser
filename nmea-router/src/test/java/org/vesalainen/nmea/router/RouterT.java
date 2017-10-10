@@ -30,7 +30,7 @@ public class RouterT
     
     public RouterT()
     {
-        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINE);
+        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINEST);
     }
 
     @Test

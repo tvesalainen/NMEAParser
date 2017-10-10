@@ -16,7 +16,6 @@
  */
 package org.vesalainen.nmea.router.scanner;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.Collection;
@@ -36,18 +35,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import static java.util.logging.Level.*;
-import org.vesalainen.nio.RingBuffer;
 import org.vesalainen.nio.RingByteBuffer;
-import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.router.NMEAMatcher;
+import org.vesalainen.nmea.router.NMEAReader;
 import org.vesalainen.nmea.router.PortType;
 import org.vesalainen.util.CharSequences;
-import org.vesalainen.util.Matcher;
 import org.vesalainen.util.RepeatingIterator;
 import org.vesalainen.util.logging.JavaLogging;
 import static org.vesalainen.nmea.router.ThreadPool.*;
 import org.vesalainen.util.AbstractProvisioner.Setting;
+import org.vesalainen.util.HexDump;
 
 /**
  *
@@ -55,7 +53,7 @@ import org.vesalainen.util.AbstractProvisioner.Setting;
  */
 public class PortScanner extends JavaLogging
 {
-    private static final int BUF_SIZE = 128;
+    static final int BUF_SIZE = 4096;
     private Set<PortType> portTypes;
     private long checkDelay = 5000;
     private long closeDelay = 1000;
@@ -299,19 +297,12 @@ public class PortScanner extends JavaLogging
         }
         
     }
-    private class Scanner implements Callable<Throwable>
+    private class Scanner extends BaseScanner implements Callable<Throwable>
     {
         private String port;
         private PortType portType;
-        private RingByteBuffer ring = new RingByteBuffer(BUF_SIZE, true);
         private NMEAMatcher<Boolean> matcher;
-        private Set<String> fingerPrint = new HashSet<>();
-        private int count;
-        private int matched;
-        private boolean mark = true;
-        private Matcher.Status match;
-        private long time;
-        private SerialType serialType;
+        protected SerialType serialType;
 
         public Scanner(String port, PortType portType) throws IOException
         {
@@ -330,50 +321,11 @@ public class PortScanner extends JavaLogging
             try (ScatteringByteChannel channel = portType.getChannelFactory().apply(port))
             {
                 config("started scanner for %s %s", port, channel);
-                while (true)
-                {
-                    int cnt = ring.read(channel);
-                    if (cnt == -1)
-                    {
-                        return new EOFException(channel.toString());
-                    }
-                    count += cnt;
-                    while (ring.hasRemaining())
-                    {
-                        byte b = ring.get(mark);
-                        match = matcher.match(b);
-                        switch (match)
-                        {
-                            case Error:
-                                finest("drop: '%1$c' %1$d 0x%1$02X %2$s", b & 0xff, (RingBuffer)ring);
-                                mark = true;
-                                break;
-                            case Ok:
-                            case WillMatch:
-                                mark = false;
-                                break;
-                            case Match:
-                                finer("read: %s", ring);
-                                int idx = CharSequences.indexOf(ring, ',');
-                                if (idx != -1)
-                                {
-                                    String prefix = ring.subSequence(0, idx).toString();
-                                    fingerPrint.add(prefix);
-                                    if (uniqueMap.containsKey(prefix))
-                                    {
-                                        serialType = uniqueMap.get(prefix);
-                                        if (portType == PortType.getPortType(serialType))
-                                        {
-                                            return null;
-                                        }
-                                    }
-                                }
-                                matched += ring.length();
-                                mark = true;
-                                break;
-                        }
-                    }
-                }
+                NMEAReader reader = new NMEAReader(port, matcher, channel, BUF_SIZE, this::onOk, this::onError);
+                reader.read();
+            }
+            catch (WrongPortTypeException ex)
+            {
             }
             catch (Throwable ex)
             {
@@ -383,8 +335,51 @@ public class PortScanner extends JavaLogging
             {
                 fine("scanner %s exit", port);
             }
+            return null;
         }
 
+        private void onOk(RingByteBuffer ring)
+        {
+            finer("read: %s", ring);
+            int idx = CharSequences.indexOf(ring, ',');
+            if (idx != -1)
+            {
+                String prefix = ring.subSequence(0, idx).toString();
+                fingerPrint.add(prefix);
+                if (uniqueMap.containsKey(prefix))
+                {
+                    serialType = uniqueMap.get(prefix);
+                    if (portType == PortType.getPortType(serialType))
+                    {
+                        throw new WrongPortTypeException();
+                    }
+                }
+            }
+            matched += ring.length();
+        }
+        private void onError(byte [] errInput)
+        {
+            finest(()->HexDump.toHex(errInput));
+        }
+        public SerialType getSerialType()
+        {
+            return serialType;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "Scanner{" + "port=" + port + ", fingerPrint=" + fingerPrint + ", count=" + count + ", matched=" + matched + '}';
+        }
+        
+    }
+    private class BaseScanner 
+    {
+        protected Set<String> fingerPrint = new HashSet<>();
+        protected int count;
+        protected long time;
+        protected int matched;
+        
         public long getElapsedTime()
         {
             return System.currentTimeMillis() - time;
@@ -410,17 +405,6 @@ public class PortScanner extends JavaLogging
             return count - matched;
         }
 
-        public SerialType getSerialType()
-        {
-            return serialType;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "Scanner{" + "port=" + port + ", fingerPrint=" + fingerPrint + ", count=" + count + ", matched=" + matched + '}';
-        }
-        
     }
     public static class ScanResult
     {
@@ -433,8 +417,8 @@ public class PortScanner extends JavaLogging
         {
             this.port = scanner.port;
             this.portType = scanner.portType;
-            this.fingerPrint = scanner.fingerPrint;
-            this.serialType = scanner.serialType;
+            this.fingerPrint = scanner.getFingerPrint();
+            this.serialType = scanner.getSerialType();
         }
 
         public String getPort()
@@ -463,5 +447,9 @@ public class PortScanner extends JavaLogging
             return "ScanResult{" + "port=" + port + ", portType=" + portType + ", fingerPrint=" + fingerPrint + '}';
         }
 
+    }
+    private class WrongPortTypeException extends RuntimeException
+    {
+        
     }
 }

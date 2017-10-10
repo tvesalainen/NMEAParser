@@ -17,15 +17,11 @@
 package org.vesalainen.nmea.router;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -33,6 +29,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import static javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.Unmarshaller.Listener;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
@@ -86,18 +83,13 @@ public class RouterConfig extends JavaLogging
         super(RouterConfig.class);
         this.file = file;
         nmea = objectFactory.createNmea(objectFactory.createNmeaType());
-        NmeaType type = nmea.getValue();
     }
     
     public void load() throws IOException, JAXBException
     {
-        load(new FileInputStream(file));
-    }
-
-    private void load(InputStream is) throws IOException, JAXBException
-    {
         Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
-        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(is);
+        unmarshaller.setListener(new Lst());
+        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(file);
         checkScriptSyntax();
     }
 
@@ -189,7 +181,7 @@ public class RouterConfig extends JavaLogging
         }
         else
         {
-            return 128;
+            return 4096;
         }
     }
     public long getMonitorDelay()
@@ -269,5 +261,23 @@ public class RouterConfig extends JavaLogging
             throw new RuntimeException(ex);
         }
     }
-    
+
+    private class Lst extends Listener
+    {
+
+        @Override
+        public void afterUnmarshal(Object target, Object parent)
+        {
+            finest("afterUnmarshal %s", target);
+            super.afterUnmarshal(target, parent); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void beforeUnmarshal(Object target, Object parent)
+        {
+            finest("beforeUnmarshal %s", target);
+            super.beforeUnmarshal(target, parent); //To change body of generated methods, choose Tools | Templates.
+        }
+        
+    }
 }

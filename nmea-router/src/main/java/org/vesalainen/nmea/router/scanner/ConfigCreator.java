@@ -24,6 +24,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
@@ -32,6 +36,7 @@ import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import static org.vesalainen.nmea.router.PortType.*;
 import org.vesalainen.nmea.router.RouterConfig;
+import static org.vesalainen.nmea.router.ThreadPool.POOL;
 import org.vesalainen.nmea.router.scanner.PortScanner.ScanResult;
 import org.vesalainen.parsers.nmea.MessageType;
 import static org.vesalainen.parsers.nmea.MessageType.*;
@@ -45,6 +50,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class ConfigCreator extends JavaLogging
 {
+    private static final String MULTICAST_ADDRESS = "224.0.0.3";
     private RouterConfig config;
     private Set<String> names = new HashSet<>();
     private boolean hasAis;
@@ -66,15 +72,10 @@ public class ConfigCreator extends JavaLogging
                 .setPorts(SerialChannel.getFreePorts());
         portScanner.scan(this::addDevice);
         
-        MulticastNMEAType net = config.createMulticastNMEAType();
-        net.setName("Net");
-        net.setAddress("224.0.0.3");
-        net.setEnable(true);
-        RouteType route = config.createRouteTypeFor("Net");
-        route.setPrefix("$");
-        route.getTarget().add("Listener");
-        route.setComment("Send all NMEA sentences to TCP Listener");
-
+        Set<String> fingerPrint = new HashSet<>();
+        NetScanner netScanner = new NetScanner(MULTICAST_ADDRESS, fingerPrint);
+        Future<Set<String>> netFuture = POOL.submit(netScanner);
+        
         TcpEndpointType listener = config.createTcpEndpointType();
         listener.setName("Listener");
         listener.setPort(10110);
@@ -100,6 +101,28 @@ public class ConfigCreator extends JavaLogging
             RouteType aisRoute = config.createRouteTypeFor(marineTraffic);
             aisRoute.setPrefix("AI");
             aisRoute.setComment("Send all AIS sentences to TCP Listener");
+        }
+        netFuture.cancel(true);
+        MulticastNMEAType net = config.createMulticastNMEAType();
+        net.setName("Net");
+        net.setAddress(MULTICAST_ADDRESS);
+        net.setEnable(true);
+        if (fingerPrint.isEmpty())
+        {
+            RouteType route = config.createRouteTypeFor(net);
+            route.setPrefix("$");
+            route.getTarget().add("Listener");
+            route.setComment("Send all NMEA sentences to TCP Listener");
+        }
+        else
+        {
+            Map<MessageType,String> messageTypes = getMessageTypes(fingerPrint);
+            for (Entry<MessageType,String> entry : messageTypes.entrySet())
+            {
+                RouteType route = config.createRouteTypeFor(net);
+                route.setPrefix(entry.getValue());
+                route.setComment(entry.getKey().getDescription());
+            }
         }
         return config;
     }

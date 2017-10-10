@@ -16,14 +16,23 @@
  */
 package org.vesalainen.nmea.router;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public final class ThreadPool
+public final class ThreadPool extends ScheduledThreadPoolExecutor
 {
-    public static final ScheduledExecutorService POOL = Executors.newScheduledThreadPool(100);
+    public static final ScheduledExecutorService POOL = new ThreadPool(100);
+
+    public ThreadPool(int corePoolSize)
+    {
+        super(corePoolSize);
+        setKeepAliveTime(1, TimeUnit.MINUTES);
+        allowCoreThreadTimeOut(true);
+    }
+
 }
