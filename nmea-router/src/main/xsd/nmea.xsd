@@ -19,7 +19,6 @@
         <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
         <xsd:attribute name="ctrlTcpPort" type="portType"/>
         <xsd:attribute name="allDevices" type="deviceListType"/>
-        <xsd:attribute name="ringBufferSize" type="bufferSizeType"/>
         <xsd:attribute name="closeDelay" type="delayType"/>
         <xsd:attribute name="monitorDelay" type="delayType"/>
     </xsd:complexType>
@@ -104,6 +103,7 @@
                 <xsd:attribute name="parity" type="parityType"/>
                 <xsd:attribute name="stops" type="stopsType"/>
                 <xsd:attribute name="flowControl" type="flowControlType"/>
+                <xsd:attribute name="maxRead" type="bufferSizeType"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>

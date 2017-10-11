@@ -28,9 +28,9 @@ import org.vesalainen.nmea.router.Router;
 class BroadcastEndpoint extends Endpoint<BroadcastType,UnconnectedDatagramChannel>
 {
 
-    public BroadcastEndpoint(BroadcastType broadcastType, Router router, int bufSize)
+    public BroadcastEndpoint(BroadcastType broadcastType, Router router)
     {
-        super(broadcastType, router, bufSize);
+        super(broadcastType, router);
     }
 
     @Override

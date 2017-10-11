@@ -34,6 +34,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import static java.util.logging.Level.*;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.SerialType;
@@ -166,6 +167,7 @@ public class PortScanner extends JavaLogging
     }
     public void scan(Consumer<ScanResult> consumer, Map<String,SerialType> uniqueMap) throws IOException
     {
+        config("started port scanner");
         if (isScanning())
         {
             throw new IllegalStateException("scan is already running");
@@ -174,12 +176,10 @@ public class PortScanner extends JavaLogging
         if (ports.isEmpty())
         {
             warning("no ports");
-            return;
         }
         if (portTypes == null || portTypes.isEmpty())
         {
             warning("no channel suppliers");
-            return;
         }
         Objects.requireNonNull(consumer, "consumer");
         Objects.requireNonNull(uniqueMap, "uniqueMap");
@@ -201,6 +201,7 @@ public class PortScanner extends JavaLogging
     private void startScanner(String port, long delayMillis) throws IOException
     {
         config("starting scanner for %s after %d millis", port, delayMillis);
+        config("scanned port types %s", portTypes);
         Iterator<PortType> it = channelIterators.get(port);
         if (it.hasNext())
         {
@@ -230,9 +231,9 @@ public class PortScanner extends JavaLogging
                 Future<Throwable> future = futures.get(port);
                 if (future.isDone())
                 {
-                    if (!future.isCancelled())
+                    if (!future.isCancelled() && scanner.getSerialType() != null)
                     {
-                        fine("finger print for %s because distinguish hit", port, fingerPrintDelay, scanner.getFingerPrint());
+                        fine("finger print for %s because unique hit", port, fingerPrintDelay, scanner.getFingerPrint());
                         ScanResult sr = new ScanResult(scanner);
                         consumer.accept(sr);
                         iterator.remove();
@@ -321,7 +322,7 @@ public class PortScanner extends JavaLogging
             try (ScatteringByteChannel channel = portType.getChannelFactory().apply(port))
             {
                 config("started scanner for %s %s", port, channel);
-                NMEAReader reader = new NMEAReader(port, matcher, channel, BUF_SIZE, this::onOk, this::onError);
+                NMEAReader reader = new NMEAReader(port, matcher, channel, 128, 10, this::onOk, this::onError);
                 reader.read();
             }
             catch (WrongPortTypeException ex)
@@ -357,7 +358,7 @@ public class PortScanner extends JavaLogging
             }
             matched += ring.length();
         }
-        private void onError(byte [] errInput)
+        private void onError(Supplier<byte[]> errInput)
         {
             finest(()->HexDump.toHex(errInput));
         }

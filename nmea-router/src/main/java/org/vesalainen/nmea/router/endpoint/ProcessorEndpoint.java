@@ -31,9 +31,9 @@ class ProcessorEndpoint extends Endpoint<ProcessorType,PipeChannel>
 
     private Processor processor;
 
-    public ProcessorEndpoint(ProcessorType processorType, Router router, int bufSize)
+    public ProcessorEndpoint(ProcessorType processorType, Router router)
     {
-        super(processorType, router, bufSize);
+        super(processorType, router);
     }
 
     @Override

@@ -28,9 +28,9 @@ import org.vesalainen.nmea.router.seatalk.SeaTalkChannel;
 public class SeaTalkEndpoint extends Endpoint<SeatalkType,SeaTalkChannel>
 {
 
-    public SeaTalkEndpoint(SeatalkType seatalkType, Router router, int bufSize)
+    public SeaTalkEndpoint(SeatalkType seatalkType, Router router)
     {
-        super(seatalkType, router, bufSize);
+        super(seatalkType, router);
     }
 
     @Override

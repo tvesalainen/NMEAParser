@@ -36,51 +36,51 @@ import org.vesalainen.nmea.router.Router;
  */
 public final class EndpointFactory
 {
-    public static Endpoint getInstance(EndpointType endpointType, Router router, int bufSize)
+    public static Endpoint getInstance(EndpointType endpointType, Router router)
     {
         if (endpointType instanceof TcpEndpointType)
         {
-            return new TCPListenerEndpoint((TcpEndpointType) endpointType, router, bufSize);
+            return new TCPListenerEndpoint((TcpEndpointType) endpointType, router);
         }
         if (endpointType instanceof ProcessorType)
         {
-            return new ProcessorEndpoint((ProcessorType) endpointType, router, bufSize);
+            return new ProcessorEndpoint((ProcessorType) endpointType, router);
         }
         if (endpointType instanceof MulticastNMEAType)
         {
-            return new MulticastNMEAEndpoint((MulticastNMEAType) endpointType, router, bufSize);
+            return new MulticastNMEAEndpoint((MulticastNMEAType) endpointType, router);
         }
         if (endpointType instanceof MulticastType)
         {
-            return new MulticastEndpoint((MulticastType) endpointType, router, bufSize);
+            return new MulticastEndpoint((MulticastType) endpointType, router);
         }
         if (endpointType instanceof BroadcastNMEAType)
         {
-            return new BroadcastNMEAEndpoint((BroadcastNMEAType) endpointType, router, bufSize);
+            return new BroadcastNMEAEndpoint((BroadcastNMEAType) endpointType, router);
         }
         if (endpointType instanceof BroadcastType)
         {
-            return new BroadcastEndpoint((BroadcastType) endpointType, router, bufSize);
+            return new BroadcastEndpoint((BroadcastType) endpointType, router);
         }
         if (endpointType instanceof DatagramType)
         {
-            return new DatagramEndpoint((DatagramType) endpointType, router, bufSize);
+            return new DatagramEndpoint((DatagramType) endpointType, router);
         }
         if (endpointType instanceof Nmea0183HsType)
         {
-            return new NmeaHsEndpoint((Nmea0183HsType) endpointType, router, bufSize);
+            return new NmeaHsEndpoint((Nmea0183HsType) endpointType, router);
         }
         if (endpointType instanceof Nmea0183Type)
         {
-            return new NmeaEndpoint((Nmea0183Type) endpointType, router, bufSize);
+            return new NmeaEndpoint((Nmea0183Type) endpointType, router);
         }
         if (endpointType instanceof SeatalkType)
         {
-            return new SeaTalkEndpoint((SeatalkType) endpointType, router, bufSize);
+            return new SeaTalkEndpoint((SeatalkType) endpointType, router);
         }
         if (endpointType instanceof SerialType)
         {
-            return new SerialEndpoint((SerialType) endpointType, router, bufSize);
+            return new SerialEndpoint((SerialType) endpointType, router);
         }
         throw new IllegalArgumentException(endpointType+" unknown");
     }

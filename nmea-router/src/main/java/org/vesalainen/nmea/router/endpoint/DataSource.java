@@ -42,14 +42,22 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
     public DataSource(String name)
     {
         this.name = name;
-        if (map.containsKey(name))
-        {
-            throw new IllegalArgumentException(name+" DataSource exists already");
-        }
-        map.put(name, this);
         setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.') + "." + name));
     }
-
+    /**
+     * Set this DataSource to be valid route target
+     */
+    protected void attach()
+    {
+        map.put(name, this);
+    }
+    /**
+     * Remove this DataSource from valid route targets
+     */
+    protected void detach()
+    {
+        map.remove(name);
+    }
     public static DataSource get(String name)
     {
         return map.get(name);

@@ -32,9 +32,18 @@ import org.vesalainen.nmea.router.Router;
 class SerialEndpoint<E extends SerialType> extends Endpoint<E, SerialChannel>
 {
 
-    public SerialEndpoint(E endpointType, Router router, int bufSize)
+    public SerialEndpoint(E serialType, Router router)
     {
-        super(endpointType, router, bufSize);
+        super(serialType, router);
+        Long mr = serialType.getMaxRead();
+        if (mr != null)
+        {
+            maxRead = mr.intValue();
+            if (maxRead > bufferSize)
+            {
+                bufferSize = maxRead;
+            }
+        }
     }
 
     protected Configuration createConfig()

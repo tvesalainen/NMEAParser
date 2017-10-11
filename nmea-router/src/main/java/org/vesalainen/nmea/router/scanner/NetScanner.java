@@ -20,6 +20,7 @@ import java.nio.channels.ScatteringByteChannel;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.router.NMEAMatcher;
@@ -51,7 +52,7 @@ class NetScanner implements Callable<Set<String>>
     {
         try (final ScatteringByteChannel channel = UnconnectedDatagramChannel.open(address, 10110, PortScanner.BUF_SIZE, true, false))
         {
-            NMEAReader reader = new NMEAReader(address, matcher, channel, PortScanner.BUF_SIZE, this::onOk, this::onError);
+            NMEAReader reader = new NMEAReader(address, matcher, channel, PortScanner.BUF_SIZE, PortScanner.BUF_SIZE, this::onOk, this::onError);
             reader.read();
         }
         finally
@@ -70,7 +71,7 @@ class NetScanner implements Callable<Set<String>>
         }
     }
 
-    private void onError(byte[] errInput)
+    private void onError(Supplier<byte[]> errInput)
     {
     }
     

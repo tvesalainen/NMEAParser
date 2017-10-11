@@ -19,8 +19,10 @@ package org.vesalainen.nmea.router;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.Objects;
+import java.util.function.Supplier;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.util.Matcher;
 import org.vesalainen.util.function.IOConsumer;
@@ -35,11 +37,12 @@ public class NMEAReader extends JavaLogging
     private String name;
     private NMEAMatcher matcher;
     private ScatteringByteChannel channel;
-    private int bufSize;
+    private int bufferSize;
+    private int maxRead;
     private IOConsumer<RingByteBuffer> onOk;
-    private IOConsumer<byte[]> onError;
+    private IOConsumer<Supplier<byte[]>> onError;
 
-    public NMEAReader(String name, NMEAMatcher matcher, ScatteringByteChannel channel, int bufSize, IOConsumer<RingByteBuffer> onOk, IOConsumer<byte[]> onError)
+    public NMEAReader(String name, NMEAMatcher matcher, ScatteringByteChannel channel, int bufSize, int maxRead, IOConsumer<RingByteBuffer> onOk, IOConsumer<Supplier<byte[]>> onError)
     {
         super(NMEAReader.class, name);
         Objects.requireNonNull(matcher, "matcher");
@@ -49,7 +52,8 @@ public class NMEAReader extends JavaLogging
         this.name = name;
         this.matcher = matcher;
         this.channel = channel;
-        this.bufSize = bufSize;
+        this.bufferSize = bufSize;
+        this.maxRead = maxRead;
         this.onOk = onOk;
         this.onError = onError;
     }
@@ -57,24 +61,20 @@ public class NMEAReader extends JavaLogging
     public void read() throws IOException
     {
         boolean mark = true;
-        long lastRead;
-        long nowRead = 0;
-        RingByteBuffer ring = new RingByteBuffer(bufSize, true);
+        RingByteBuffer ring = new RingByteBuffer(bufferSize, maxRead, true);
         ByteArrayOutputStream errInput = new ByteArrayOutputStream();
         while (true)
         {
-            lastRead = nowRead;
+            if (ring.isFull())
+            {
+                severe("%s buffer is too small %d", name, bufferSize);
+                throw new BufferUnderflowException();
+            }
             int count = ring.read(channel);
-            nowRead = System.currentTimeMillis();
-            fine("handle %s read %d bytes", name, count);
+            finest("handle %s read %d bytes", name, count);
             if (count == -1)
             {
                 throw new EOFException(name);
-            }
-            if (ring.isFull())
-            {
-                long elapsed = nowRead - lastRead;
-                warning("buffer %s not big enough (%s) time from last read %d millis count %d", ring, name, elapsed, count);
             }
             Matcher.Status match = null;
             while (ring.hasRemaining())
@@ -84,14 +84,21 @@ public class NMEAReader extends JavaLogging
                 switch (match)
                 {
                     case Error:
-                        errInput.write(b);
+                        if (ring.length() > 1)
+                        {
+                            ring.chars().forEach(errInput::write);
+                        }
+                        else
+                        {
+                            errInput.write(b);
+                        }
                         mark = true;
                         break;
                     case Ok:
                     case WillMatch:
                         if (mark && errInput.size()> 0)
                         {
-                            onError.apply(errInput.toByteArray());
+                            onError.apply(errInput::toByteArray);
                             errInput.reset();
                         }
                         mark = false;

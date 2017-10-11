@@ -172,18 +172,6 @@ public class RouterConfig extends JavaLogging
             store();
         }
     }
-    public int getRingBufferSize()
-    {
-        Long value = nmea.getValue().getRingBufferSize();
-        if (value != null)
-        {
-            return value.intValue();
-        }
-        else
-        {
-            return 4096;
-        }
-    }
     public long getMonitorDelay()
     {
         Long value = nmea.getValue().getMonitorDelay();

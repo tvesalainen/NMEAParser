@@ -30,13 +30,12 @@ public class RouterT
     
     public RouterT()
     {
-        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINEST);
     }
 
     @Test
     public void test()
     {
-        CommandLine.main("-ll", "CONFIG", "-pl", "INFO", "c:\\temp\\nmea-router.xml");
+        CommandLine.main("-ll", "FINE", "-pl", "FINE", "c:\\temp\\nmea-router.xml");
     }
     
 }

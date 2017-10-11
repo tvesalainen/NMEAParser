@@ -24,7 +24,6 @@ import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.WritableByteChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.logging.Logger;
 import org.vesalainen.comm.channel.SerialChannel;
@@ -45,7 +44,7 @@ import org.vesalainen.util.logging.JavaLogging;
 public class SeaTalkChannel extends SelectableChannel implements ScatteringByteChannel, GatheringByteChannel
 {
     private final SerialChannel channel;
-    private final RingByteBuffer readRing = new RingByteBuffer(100, true);
+    private final RingByteBuffer readRing = new RingByteBuffer(100, 1, true);
     private final ByteBufferOutputStream out = new ByteBufferOutputStream();
     private final SeaTalkMatcher matcher = new SeaTalkMatcher();
     private final SeaTalk2NMEA parser = SeaTalk2NMEA.newInstance();

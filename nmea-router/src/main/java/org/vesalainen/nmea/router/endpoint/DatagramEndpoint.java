@@ -28,9 +28,9 @@ import org.vesalainen.nmea.router.Router;
 class DatagramEndpoint extends Endpoint<DatagramType,UnconnectedDatagramChannel>
 {
 
-    public DatagramEndpoint(DatagramType datagramType, Router router, int bufSize)
+    public DatagramEndpoint(DatagramType datagramType, Router router)
     {
-        super(datagramType, router, bufSize);
+        super(datagramType, router);
     }
 
     @Override

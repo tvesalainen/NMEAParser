@@ -17,17 +17,17 @@
 package org.vesalainen.nmea.router.endpoint;
 
 import org.vesalainen.nmea.script.EndpointScriptEngine;
-import java.io.EOFException;
 import java.io.IOException;
+import static java.lang.Thread.NORM_PRIORITY;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
-import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import static java.util.logging.Level.*;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
@@ -41,7 +41,6 @@ import org.vesalainen.nmea.router.Router;
 import org.vesalainen.nmea.router.filter.MessageFilter;
 import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.HexDump;
-import org.vesalainen.util.Matcher;
 
 /**
  *
@@ -51,7 +50,8 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
 {
     protected final Router router;
     protected final E endpointType;
-    protected final int bufferSize;
+    protected int bufferSize = 128;
+    protected int maxRead = 128;
     protected T channel;
     protected NMEAMatcher<Route> matcher;
     protected RingByteBuffer ring;
@@ -61,12 +61,11 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected long lastWrite;
     protected Set<String> fingerPrint = new HashSet<>();
 
-    public Endpoint(E endpointType, Router router, int bufferSize)
+    public Endpoint(E endpointType, Router router)
     {
         super(endpointType.getName());
         this.router = router;
         this.endpointType = endpointType;
-        this.bufferSize = bufferSize;
         init();
         config("started %s", endpointType.getName());
     }
@@ -185,18 +184,21 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     @Override
     public void run()
     {
-        String safeName = "uninitialised";
+        Integer priority = endpointType.getPriority();
+        if (priority != null)
+        {
+            Thread.currentThread().setPriority(priority);
+        }
         try (T ch = createChannel())
         {
-            safeName = Thread.currentThread().getName();
-            Thread.currentThread().setName(name);
             channel = ch;
+            attach();
             config("started %s", channel);
             if (scriptEngine != null)
             {
                 scriptEngine.start();
             }
-            NMEAReader reader = new NMEAReader(name, matcher, channel, bufferSize, this::onOk, this::onError);
+            NMEAReader reader = new NMEAReader(name, matcher, channel, bufferSize, maxRead, this::onOk, this::onError);
             reader.read();
         }
         catch (Throwable ex)
@@ -205,10 +207,14 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
         finally
         {
-            Thread.currentThread().setName(safeName);
+            detach();
             if (scriptEngine != null)
             {
                 scriptEngine.stop();
+            }
+            if (priority != null)
+            {
+                Thread.currentThread().setPriority(NORM_PRIORITY);
             }
         }
     }
@@ -231,11 +237,12 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             fingerPrint.add(prefix);
         }
     }
-    private void onError(byte[] errInput) throws IOException
+    private void onError(Supplier<byte[]> errInput) throws IOException
     {
         lastRead = System.currentTimeMillis();
-        errorBytes += errInput.length;
-        warning("rejected %d bytes", errInput.length);
+        byte[] error = errInput.get();
+        errorBytes += error.length;
+        warning("rejected %d bytes", error.length);
         finest(()->HexDump.toHex(errInput));
     }
     @Override

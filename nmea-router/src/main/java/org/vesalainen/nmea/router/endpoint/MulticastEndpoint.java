@@ -28,9 +28,9 @@ import org.vesalainen.nmea.router.Router;
 class MulticastEndpoint extends Endpoint<MulticastType,UnconnectedDatagramChannel>
 {
 
-    public MulticastEndpoint(MulticastType multicastType, Router router, int bufSize)
+    public MulticastEndpoint(MulticastType multicastType, Router router)
     {
-        super(multicastType, router, bufSize);
+        super(multicastType, router);
     }
 
     @Override

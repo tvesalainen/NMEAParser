@@ -86,7 +86,10 @@ public final class Route extends JavaLogging
         for (String target : targetList)
         {
             DataSource dataSource = DataSource.get(target);
-            dataSource.write(ring);
+            if (dataSource != null)
+            {
+                dataSource.write(ring);
+            }
         }
         count++;
     }

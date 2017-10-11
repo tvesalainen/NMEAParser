@@ -28,9 +28,9 @@ import org.vesalainen.nmea.router.Router;
 public class NmeaEndpoint extends SerialEndpoint<Nmea0183Type>
 {
 
-    public NmeaEndpoint(Nmea0183Type nmea0183Type, Router router, int bufSize)
+    public NmeaEndpoint(Nmea0183Type nmea0183Type, Router router)
     {
-        super(nmea0183Type, router, bufSize);
+        super(nmea0183Type, router);
     }
 
     @Override

@@ -33,6 +33,11 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>
+                                    jar-with-dependencies
+                                </descriptorRef>
+                            </descriptorRefs>
                             <archive>
                                 <manifest>
                                     <mainClass>org.vesalainen.nmea.router.CommandLine</mainClass>

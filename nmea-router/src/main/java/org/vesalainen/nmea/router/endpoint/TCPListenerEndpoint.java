@@ -38,9 +38,9 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
 {
     private Set<TCPEndpoint> remotes = Collections.synchronizedSet(new HashSet<>());
     
-    public TCPListenerEndpoint(TcpEndpointType tcpEndpointType, Router router, int bufSize)
+    public TCPListenerEndpoint(TcpEndpointType tcpEndpointType, Router router)
     {
-        super(tcpEndpointType, router, bufSize);
+        super(tcpEndpointType, router);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
 
         public TCPEndpoint(SocketChannel socket, TcpEndpointType endpointType, Router router, int bufferSize)
         {
-            super(endpointType, router, bufferSize);
+            super(endpointType, router);
             this.socket = socket;
         }
         
