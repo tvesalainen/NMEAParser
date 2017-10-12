@@ -22,6 +22,7 @@ import static java.lang.Thread.NORM_PRIORITY;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -242,7 +243,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         lastRead = System.currentTimeMillis();
         byte[] error = errInput.get();
         errorBytes += error.length;
-        warning("rejected %d bytes", error.length);
+        warning("%s: rejected %s", name, new String(error, US_ASCII));
         finest(()->HexDump.toHex(errInput));
     }
     @Override

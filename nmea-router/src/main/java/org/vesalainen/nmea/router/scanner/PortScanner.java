@@ -19,7 +19,6 @@ package org.vesalainen.nmea.router.scanner;
 import java.io.IOException;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
+import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.router.NMEAMatcher;
@@ -65,7 +65,7 @@ public class PortScanner extends JavaLogging
     private Map<String,Scanner> scanners = new HashMap<>();
     private ScheduledFuture<?> scanFuture;
     private Consumer<ScanResult> consumer;
-    private Map<String,SerialType> uniqueMap;
+    private SymmetricDifferenceMatcher<String,SerialType> portMatcher;
 
     public PortScanner()
     {
@@ -145,27 +145,16 @@ public class PortScanner extends JavaLogging
      * @param port
      * @throws IOException 
      */
-    public PortScanner addPort(String port) throws IOException
+    public PortScanner addPort(String port)
     {
         boolean added = ports.add(port);
-        if (!isScanning() && consumer != null && uniqueMap != null)
-        {
-            scan(consumer, uniqueMap);
-        }
-        else
-        {
-            if (added && isScanning())
-            {
-                initialStartScanner(port, 0);
-            }
-        }
         return this;
     }
     public void scan(Consumer<ScanResult> consumer) throws IOException
     {
-        scan(consumer, Collections.EMPTY_MAP);
+        scan(consumer, SymmetricDifferenceMatcher.EMPTY_MATCHER);
     }
-    public void scan(Consumer<ScanResult> consumer, Map<String,SerialType> uniqueMap) throws IOException
+    public void scan(Consumer<ScanResult> consumer, SymmetricDifferenceMatcher<String,SerialType> portMatcher) throws IOException
     {
         config("started port scanner");
         if (isScanning())
@@ -182,9 +171,9 @@ public class PortScanner extends JavaLogging
             warning("no channel suppliers");
         }
         Objects.requireNonNull(consumer, "consumer");
-        Objects.requireNonNull(uniqueMap, "uniqueMap");
+        Objects.requireNonNull(portMatcher, "portMatcher");
         this.consumer = consumer;
-        this.uniqueMap = uniqueMap;
+        this.portMatcher = portMatcher;
         for (String port : ports)
         {
             initialStartScanner(port, 0);
@@ -347,9 +336,9 @@ public class PortScanner extends JavaLogging
             {
                 String prefix = ring.subSequence(0, idx).toString();
                 fingerPrint.add(prefix);
-                if (uniqueMap.containsKey(prefix))
+                serialType = portMatcher.match(fingerPrint);
+                if (serialType != null)
                 {
-                    serialType = uniqueMap.get(prefix);
                     if (portType == PortType.getPortType(serialType))
                     {
                         throw new WrongPortTypeException();
