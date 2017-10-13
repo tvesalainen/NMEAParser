@@ -48,6 +48,14 @@ public class NMEAChecksum implements Checksum
         }
     }
 
+    public void update(CharSequence seq)
+    {
+        int length = seq.length();
+        for (int ii=0;ii<length;ii++)
+        {
+            doUpdate(seq.charAt(ii));
+        }
+    }
     @Override
     public void update(byte[] b, int off, int len)
     {
@@ -68,11 +76,20 @@ public class NMEAChecksum implements Checksum
     {
         value = 0;
     }
-
+    /**
+     * Fills 5 byte length array with * checksum and crlf
+     * @param arr 
+     */
     public void fillSuffix(byte[] arr)
     {
         fillSuffix(arr, 0, arr.length);
     }
+    /**
+     * Fills 5 byte length array with * checksum and crlf
+     * @param arr
+     * @param offset
+     * @param length 
+     */
     public void fillSuffix(byte[] arr, int offset, int length)
     {
         if (length != 5)
@@ -84,6 +101,14 @@ public class NMEAChecksum implements Checksum
         arr[2] = toHex(value&0xf);
         arr[3] = '\r';
         arr[4] = '\n';
+    }
+    /**
+     * returns 5 char suffix
+     * @return 
+     */
+    public String getSuffix()
+    {
+        return "*"+(char)toHex(value>>4)+(char)toHex(value&0xf)+"\r\n";
     }
     private byte toHex(int v)
     {
