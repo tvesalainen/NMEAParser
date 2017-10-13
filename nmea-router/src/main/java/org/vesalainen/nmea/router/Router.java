@@ -27,13 +27,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import static java.util.logging.Level.*;
-import java.util.logging.Logger;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
@@ -45,6 +42,7 @@ import org.vesalainen.nmea.router.scanner.PortScanner;
 import org.vesalainen.nmea.router.scanner.PortScanner.ScanResult;
 import org.vesalainen.nmea.script.RouterEngine;
 import org.vesalainen.util.EnumMapSet;
+import org.vesalainen.util.LongMap;
 import org.vesalainen.util.MapSet;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -54,6 +52,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class Router extends JavaLogging implements RouterEngine
 {
+    private static final long RESTART_CONSTANT = 100000;
     private final RouterConfig config;
     private final Map<String,Endpoint> sources = new HashMap<>();
     private final Map<Future,Endpoint> futureMap = new ConcurrentHashMap<>();
@@ -63,7 +62,10 @@ public class Router extends JavaLogging implements RouterEngine
     private PortScanner portScanner;
     private final long monitorDelay;
     private final long closeDelay;
-    private ScheduledFuture<?> monitorFuture;
+    private final ExecutorCompletionService starter = new ExecutorCompletionService(POOL);
+    private final LongMap<EndpointType> startTimeMap = new LongMap<>();
+    private final Map<EndpointType,Endpoint> endpointMap = new HashMap<>();
+    private final Set<EndpointType> killed = new HashSet<>();
 
     public Router(RouterConfig config)
     {
@@ -88,21 +90,41 @@ public class Router extends JavaLogging implements RouterEngine
         if (allPorts.equals(allDevices))
         {
             startAllSerial();
-            monitorFuture = POOL.schedule(this::quickStartHandler, monitorDelay, TimeUnit.MILLISECONDS);
+            POOL.schedule(this::quickStartHandler, monitorDelay, TimeUnit.MILLISECONDS);
         }
         else
         {
+            config.updateAllDevices(allPorts);
             portScanner.setPorts(SerialChannel.getFreePorts());
             ensureScanning();
         }
-        ScheduledFuture<?> restarterFuture = POOL.scheduleWithFixedDelay(this::restarter, monitorDelay, monitorDelay, TimeUnit.MILLISECONDS);
-        try
+        while (true)
         {
-            restarterFuture.get();
-        }
-        catch (InterruptedException | ExecutionException ex)
-        {
-            throw new IOException(ex);
+            try
+            {
+                Future future = starter.take();
+                Endpoint endpoint = futureMap.get(future);
+                if (endpoint != null)
+                {
+                    EndpointType endpointType = endpoint.getEndpointType();
+                    if (!killed.contains(endpointType))
+                    {
+                        endpointMap.remove(endpointType);
+                        long elapsed = System.currentTimeMillis() - startTimeMap.getLong(endpointType);
+                        long delay = RESTART_CONSTANT / elapsed;
+                        POOL.schedule(()->startEndpoint(endpointType), delay, TimeUnit.MILLISECONDS);
+                        config("restart %s after %d millis", endpoint);
+                    }
+                }
+                else
+                {
+                    severe("%s not in futureMap", endpoint);
+                }
+            }
+            catch (InterruptedException ex)
+            {
+                return;
+            }
         }
     }
     private void ensureScanning() throws IOException
@@ -173,7 +195,9 @@ public class Router extends JavaLogging implements RouterEngine
     private void startEndpoint(EndpointType endpointType)
     {
         Endpoint endpoint = EndpointFactory.getInstance(endpointType, this);
-        Future<?> future = POOL.submit(endpoint);
+        endpointMap.put(endpointType, endpoint);
+        Future<?> future = starter.submit(endpoint, null);
+        startTimeMap.put(endpointType, System.currentTimeMillis());
         futureMap.put(future, endpoint);
         config("started %s", endpoint);
     }
@@ -184,20 +208,62 @@ public class Router extends JavaLogging implements RouterEngine
     @Override
     public int send(String target, ByteBuffer bb) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Endpoint endpoint = Endpoint.get(target);
+        if (endpoint != null)
+        {
+            return endpoint.write(bb);
+        }
+        return 0;
     }
 
     @Override
     public boolean kill(String target)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Endpoint endpoint = Endpoint.get(target);
+        if (endpoint != null)
+        {
+            EndpointType endpointType = endpoint.getEndpointType();
+            if (endpointType instanceof SerialType)
+            {
+                SerialType serialType = (SerialType) endpointType;
+                Future future = null;
+                for (Entry<Future,Endpoint> e : futureMap.entrySet())
+                {
+                    if (endpoint.equals(e.getValue()))
+                    {
+                        future = e.getKey();
+                        break;
+                    }
+                }
+                if (future != null)
+                {
+                    killed.add(serialType);
+                    future.cancel(true);
+                    futureMap.remove(future);
+                    portScanner.addPort(serialType.getDevice());
+                    return true;
+                }
+                else
+                {
+                    warning("%s was not running", target);
+                }
+            }
+            else
+            {
+                warning("%s not serial", target);
+            }
+        }
+        else
+        {
+            warning("%s to be killed not found", target);
+        }
+        return false;
     }
 
     private void quickStartHandler()
     {
         config("started quickStartHandler");
         Map<Endpoint,Set<String>> fingerPrints = new HashMap<>();
-        Map<SerialType,Future> cancelMap = new HashMap<>();
         try
         {
             synchronized(futureMap)
@@ -221,7 +287,6 @@ public class Router extends JavaLogging implements RouterEngine
                         {
                             Set<String> fingerPrint = endpoint.getFingerPrint();
                             fingerPrints.put(endpoint, fingerPrint);
-                            cancelMap.put(serialType, future);
                         }
                     }
                 }
@@ -237,10 +302,7 @@ public class Router extends JavaLogging implements RouterEngine
                     for (SerialType serialType : unresolved)
                     {
                         config("set %s for scanning", serialType);
-                        Future future = cancelMap.get(serialType);
-                        future.cancel(true);
-                        futureMap.remove(future);
-                        portScanner.addPort(serialType.getDevice());
+                        kill(serialType.getName());
                     }
                     ensureScanning();
                 }
@@ -257,23 +319,9 @@ public class Router extends JavaLogging implements RouterEngine
         scanChoises.removeItem(PortType.getPortType(serialType), serialType);
     }
 
-    private void restarter()
+    public RouterConfig getConfig()
     {
-        synchronized(futureMap)
-        {
-            Iterator<Entry<Future, Endpoint>> iterator = futureMap.entrySet().iterator();
-            while (iterator.hasNext())
-            {
-                Entry<Future, Endpoint> entry = iterator.next();
-                Future future = entry.getKey();
-                Endpoint endpoint = entry.getValue();
-                if (future.isDone())
-                {
-                    startEndpoint(endpoint.getEndpointType());
-                    iterator.remove();
-                    config("restarted %s", endpoint);
-                }
-            }
-        }
+        return config;
     }
+
 }

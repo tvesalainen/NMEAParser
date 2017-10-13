@@ -31,7 +31,6 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public abstract class DataSource extends JavaLogging implements Runnable, DataSourceMXBean
 {
-    private static final Map<String,DataSource> map = new HashMap<>();
     protected final String name;
     protected long readCount;
     protected long readBytes;
@@ -43,24 +42,6 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
     {
         this.name = name;
         setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.') + "." + name));
-    }
-    /**
-     * Set this DataSource to be valid route target
-     */
-    protected void attach()
-    {
-        map.put(name, this);
-    }
-    /**
-     * Remove this DataSource from valid route targets
-     */
-    protected void detach()
-    {
-        map.remove(name);
-    }
-    public static DataSource get(String name)
-    {
-        return map.get(name);
     }
 
     public abstract int write(ByteBuffer readBuffer) throws IOException;

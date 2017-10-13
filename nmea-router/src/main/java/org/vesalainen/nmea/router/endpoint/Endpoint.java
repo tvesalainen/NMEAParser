@@ -25,8 +25,10 @@ import java.nio.channels.ScatteringByteChannel;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
@@ -40,6 +42,7 @@ import org.vesalainen.nmea.router.NMEAReader;
 import org.vesalainen.nmea.router.Route;
 import org.vesalainen.nmea.router.Router;
 import org.vesalainen.nmea.router.filter.MessageFilter;
+import org.vesalainen.parsers.nmea.NMEA;
 import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.HexDump;
 
@@ -49,6 +52,7 @@ import org.vesalainen.util.HexDump;
  */
 public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteChannel & GatheringByteChannel> extends DataSource
 {
+    private static final Map<String,Endpoint> endpointMap = new HashMap<>();
     protected final Router router;
     protected final E endpointType;
     protected int bufferSize = 128;
@@ -193,7 +197,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         try (T ch = createChannel())
         {
             channel = ch;
-            attach();
+            endpointMap.put(name, this);
             config("started %s", channel);
             if (scriptEngine != null)
             {
@@ -208,7 +212,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
         finally
         {
-            detach();
+            endpointMap.remove(name);
             if (scriptEngine != null)
             {
                 scriptEngine.stop();
@@ -231,10 +235,9 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         {
             scriptEngine.write(ring);
         }
-        int idx = CharSequences.indexOf(ring, ',');
-        if (idx != -1)
+        String prefix = NMEA.getPrefix(ring).toString();
+        if (prefix != null)
         {
-            String prefix = ring.subSequence(0, idx).toString();
             fingerPrint.add(prefix);
         }
     }
@@ -242,6 +245,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     {
         lastRead = System.currentTimeMillis();
         byte[] error = errInput.get();
+        router.getConfig().checkRoute(endpointType, error);
         errorBytes += error.length;
         warning("%s: rejected %s", name, new String(error, US_ASCII));
         finest(()->HexDump.toHex(errInput));
@@ -269,6 +273,10 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         return endpointType;
     }
 
+    public static Endpoint get(String name)
+    {
+        return endpointMap.get(name);
+    }
     @Override
     public String toString()
     {

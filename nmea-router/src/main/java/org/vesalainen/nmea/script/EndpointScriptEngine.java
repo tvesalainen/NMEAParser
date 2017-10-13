@@ -26,9 +26,6 @@ import java.util.logging.Level;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
 import static org.vesalainen.nmea.router.ThreadPool.POOL;
-import org.vesalainen.nmea.script.RouterEngine;
-import org.vesalainen.nmea.script.ScriptParser;
-import org.vesalainen.nmea.script.ScriptStatement;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**

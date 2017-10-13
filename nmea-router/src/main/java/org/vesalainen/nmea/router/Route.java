@@ -16,11 +16,11 @@
  */
 package org.vesalainen.nmea.router;
 
-import org.vesalainen.nmea.router.endpoint.DataSource;
 import java.io.IOException;
 import java.util.List;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.RouteType;
+import org.vesalainen.nmea.router.endpoint.Endpoint;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -85,10 +85,10 @@ public final class Route extends JavaLogging
         lastWrote = System.currentTimeMillis();
         for (String target : targetList)
         {
-            DataSource dataSource = DataSource.get(target);
-            if (dataSource != null)
+            Endpoint endpoint = Endpoint.get(target);
+            if (endpoint != null)
             {
-                dataSource.write(ring);
+                endpoint.write(ring);
             }
         }
         count++;

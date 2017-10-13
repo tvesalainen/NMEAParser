@@ -45,6 +45,9 @@ import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.script.ScriptParser;
+import org.vesalainen.parsers.nmea.MessageType;
+import org.vesalainen.parsers.nmea.NMEA;
+import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -169,6 +172,31 @@ public class RouterConfig extends JavaLogging
         {
             serial.setDevice(newDevice);
             config("%s device changed from %s to %s", serial.getName(), oldDevice, newDevice);
+            store();
+        }
+    }
+    public void updateAllDevices(List<String> allPorts) throws IOException
+    {
+        List<String> allDevices = nmea.getValue().getAllDevices();
+        allDevices.clear();
+        allDevices.addAll(allPorts);
+        store();
+    }
+    public void checkRoute(EndpointType endpointType, byte[] error) throws IOException
+    {
+        CharSequence message = NMEA.findMessage(CharSequences.getAsciiCharSequence(error));
+        if (message != null && NMEA.isNMEAOrAIS(message))
+        {
+            String prefix = NMEA.getPrefix(message).toString();
+            RouteType route = objectFactory.createRouteType();
+            route.setPrefix(prefix);
+            MessageType messageType = NMEA.getMessageType(message);
+            if (messageType != null)
+            {
+                route.setComment(messageType.getDescription());
+            }
+            endpointType.getRoute().add(route);
+            config("new route %s to %s", prefix, endpointType.getName());
             store();
         }
     }
