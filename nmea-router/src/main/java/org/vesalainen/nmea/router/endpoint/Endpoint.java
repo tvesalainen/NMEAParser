@@ -19,6 +19,7 @@ package org.vesalainen.nmea.router.endpoint;
 import org.vesalainen.nmea.script.EndpointScriptEngine;
 import java.io.IOException;
 import static java.lang.Thread.NORM_PRIORITY;
+import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
@@ -31,7 +32,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import static java.util.logging.Level.*;
+import java.util.logging.Logger;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.ObjectName;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.FilterType;
@@ -194,6 +200,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         {
             Thread.currentThread().setPriority(priority);
         }
+        ObjectName objectName = null;
         try (T ch = createChannel())
         {
             channel = ch;
@@ -203,6 +210,8 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             {
                 scriptEngine.start();
             }
+            objectName = new ObjectName("org.vesalainen.nmea.router.endpoint:type="+name);
+            ManagementFactory.getPlatformMBeanServer().registerMBean(this, objectName);
             NMEAReader reader = new NMEAReader(name, matcher, channel, bufferSize, maxRead, this::onOk, this::onError);
             reader.read();
         }
@@ -221,6 +230,17 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             {
                 Thread.currentThread().setPriority(NORM_PRIORITY);
             }
+            if (objectName != null)
+            {
+                try
+                {
+                    ManagementFactory.getPlatformMBeanServer().unregisterMBean(objectName);
+                }
+                catch (InstanceNotFoundException | MBeanRegistrationException ex)
+                {
+                    log(SEVERE, ex, "unregisterMBean %s", ex.getMessage());
+                }
+            }
         }
     }
 
@@ -235,10 +255,10 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         {
             scriptEngine.write(ring);
         }
-        String prefix = NMEA.getPrefix(ring).toString();
+        CharSequence prefix = NMEA.getPrefix(ring);
         if (prefix != null)
         {
-            fingerPrint.add(prefix);
+            fingerPrint.add(prefix.toString());
         }
     }
     private void onError(Supplier<byte[]> errInput) throws IOException

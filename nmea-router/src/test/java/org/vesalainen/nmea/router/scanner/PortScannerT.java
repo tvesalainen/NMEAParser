@@ -18,16 +18,9 @@ package org.vesalainen.nmea.router.scanner;
 
 import java.io.IOException;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.vesalainen.comm.channel.SerialChannel;
-import org.vesalainen.math.SymmetricDifferenceMatcher;
-import org.vesalainen.nmea.jaxb.router.SerialType;
 import static org.vesalainen.nmea.router.PortType.*;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -47,8 +40,7 @@ public class PortScannerT
     public void testScan() throws IOException
     {
         PortScanner portScanner = new PortScanner()
-                .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK))
-                .setPorts(SerialChannel.getFreePorts());
+                .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK));
         portScanner.scan((s)->System.err.println(s));
         portScanner.waitScanner();
     }

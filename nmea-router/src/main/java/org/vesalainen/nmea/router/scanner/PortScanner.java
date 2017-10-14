@@ -18,7 +18,7 @@ package org.vesalainen.nmea.router.scanner;
 
 import java.io.IOException;
 import java.nio.channels.ScatteringByteChannel;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,6 +35,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
+import org.vesalainen.comm.channel.PortMonitor;
+import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.SerialType;
@@ -56,37 +58,49 @@ public class PortScanner extends JavaLogging
 {
     static final int BUF_SIZE = 4096;
     private Set<PortType> portTypes;
-    private long checkDelay = 5000;
+    private long monitorPeriod = 10000;
     private long closeDelay = 1000;
-    private long fingerPrintDelay = 10000;
-    private Set<String> ports = new HashSet<>();
+    private long fingerPrintDelay = 20000;
     private Map<String,Iterator<PortType>> channelIterators = new HashMap<>();
     private Map<String,Future<Throwable>> futures = new HashMap<>();
     private Map<String,Scanner> scanners = new HashMap<>();
-    private ScheduledFuture<?> scanFuture;
+    private ScheduledFuture<?> monitorFuture;
     private Consumer<ScanResult> consumer;
     private SymmetricDifferenceMatcher<String,SerialType> portMatcher;
+    private Set<String> dontScan;
+    private PortMonitor portMonitor;
+    private Set<String> ports = new HashSet<>();
 
     public PortScanner()
     {
-        super(PortScanner.class);
+        this(Collections.EMPTY_SET);
     }
 
-    public PortScanner setPorts(Collection<String> ports)
+    public PortScanner(Set<String> dontScan)
     {
-        this.ports.addAll(ports);
-        return this;
+        super(PortScanner.class);
+        this.dontScan = dontScan;
     }
+
     public void stop()
     {
-        if (scanFuture != null )
+        if (monitorFuture != null )
         {
-            scanFuture.cancel(false);
+            monitorFuture.cancel(false);
+            portMonitor.stop();
         }
     }
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        stop();
+        super.finalize();
+    }
+    
     public boolean isScanning()
     {
-        return scanFuture != null && !scanFuture.isDone();
+        return monitorFuture != null && !monitorFuture.isDone();
     }
     public void waitScanner() throws IOException
     {
@@ -94,13 +108,13 @@ public class PortScanner extends JavaLogging
     }
     public void waitScanner(long time, TimeUnit unit) throws IOException
     {
-        if (scanFuture == null)
+        if (monitorFuture == null)
         {
             return;
         }
         try
         {
-            scanFuture.get(time, unit);
+            monitorFuture.get(time, unit);
         }
         catch (CancellationException ex)
         {
@@ -118,7 +132,7 @@ public class PortScanner extends JavaLogging
     @Setting
     public PortScanner setCheckDelay(long checkDelay)
     {
-        this.checkDelay = checkDelay;
+        this.monitorPeriod = checkDelay;
         return this;
     }
     @Setting
@@ -135,20 +149,10 @@ public class PortScanner extends JavaLogging
     }
     private void checkDelays()
     {
-        if (!(closeDelay < checkDelay && checkDelay < fingerPrintDelay))
+        if (!(closeDelay < monitorPeriod && monitorPeriod < fingerPrintDelay))
         {
             throw new IllegalArgumentException("closeDelay < checkPeriod < fingerPrintPeriod");
         }
-    }
-    /**
-     * Add new port for scan. If scan has been started but already stopped it is restarted.
-     * @param port
-     * @throws IOException 
-     */
-    public PortScanner addPort(String port)
-    {
-        boolean added = ports.add(port);
-        return this;
     }
     public void scan(Consumer<ScanResult> consumer) throws IOException
     {
@@ -162,10 +166,6 @@ public class PortScanner extends JavaLogging
             throw new IllegalStateException("scan is already running");
         }
         checkDelays();
-        if (ports.isEmpty())
-        {
-            warning("no ports");
-        }
         if (portTypes == null || portTypes.isEmpty())
         {
             warning("no channel suppliers");
@@ -174,12 +174,11 @@ public class PortScanner extends JavaLogging
         Objects.requireNonNull(portMatcher, "portMatcher");
         this.consumer = consumer;
         this.portMatcher = portMatcher;
-        for (String port : ports)
-        {
-            initialStartScanner(port, 0);
-        }
-        Monitor monitor = new Monitor();
-        scanFuture = POOL.scheduleWithFixedDelay(monitor, checkDelay, checkDelay, TimeUnit.MILLISECONDS);
+        ports.addAll(SerialChannel.getFreePorts());
+        portMonitor = new PortMonitor(POOL, monitorPeriod, TimeUnit.MILLISECONDS);
+        portMonitor.addNewFreePortConsumer((p)->ports.add(p));
+        portMonitor.addRemovePortConsumer((p)->ports.remove(p));
+        monitorFuture = POOL.scheduleWithFixedDelay(this::monitor, 0, monitorPeriod, TimeUnit.MILLISECONDS);
     }
     private void initialStartScanner(String port, long delayMillis) throws IOException
     {
@@ -205,87 +204,94 @@ public class PortScanner extends JavaLogging
             throw new IllegalArgumentException("should not happen");
         }
     }
-    private class Monitor implements Runnable
+    public void monitor()
     {
-
-        @Override
-        public void run()
+        for (String port : ports)
         {
-            Iterator<String> iterator = ports.iterator();
-            while (iterator.hasNext())
+            if (!dontScan.contains(port))
             {
-                String port = iterator.next();
-                boolean rescan = false;
-                Scanner scanner = scanners.get(port);
-                Future<Throwable> future = futures.get(port);
-                if (future.isDone())
+                if (!scanners.containsKey(port))
                 {
-                    if (!future.isCancelled() && scanner.getSerialType() != null)
+                    try
                     {
-                        fine("finger print for %s because unique hit", port, fingerPrintDelay, scanner.getFingerPrint());
-                        ScanResult sr = new ScanResult(scanner);
-                        consumer.accept(sr);
-                        iterator.remove();
+                        initialStartScanner(port, 0);
                     }
-                    else
+                    catch (IOException ex)
                     {
-                        try
-                        {
-                            log(SEVERE, future.get(), "rescanning %s because stopped", port);
-                        }
-                        catch (InterruptedException | ExecutionException ex)
-                        {
-                            log(SEVERE, ex, "%s", ex.getMessage());
-                        }
-                        rescan = true;
+                        log(SEVERE, ex, "initialStartScanner %s", ex.getMessage());
                     }
                 }
                 else
                 {
-                    if (scanner.getElapsedTime() >= checkDelay && scanner.getFingerPrint().isEmpty())
+                    boolean rescan = false;
+                    Scanner scanner = scanners.get(port);
+                    Future<Throwable> future = futures.get(port);
+                    if (future.isDone())
                     {
-                        fine("rescanning %s because no finger print after %d millis", port, checkDelay);
-                        rescan = true;
+                        if (!future.isCancelled() && scanner.getSerialType() != null)
+                        {
+                            fine("finger print for %s because unique hit", port, fingerPrintDelay, scanner.getFingerPrint());
+                            ScanResult sr = new ScanResult(scanner);
+                            consumer.accept(sr);
+                            scanners.remove(port);
+                            futures.remove(port);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                log(SEVERE, future.get(), "rescanning %s because stopped", port);
+                            }
+                            catch (InterruptedException | ExecutionException ex)
+                            {
+                                log(SEVERE, ex, "%s", ex.getMessage());
+                            }
+                            rescan = true;
+                        }
                     }
                     else
                     {
-                        if (scanner.getElapsedTime() >= fingerPrintDelay)
+                        if (scanner.getElapsedTime() >= monitorPeriod && scanner.getFingerPrint().isEmpty())
                         {
-                            fine("finger print for %s after %d millis %s", port, fingerPrintDelay, scanner.getFingerPrint());
-                            ScanResult sr = new ScanResult(scanner);
-                            consumer.accept(sr);
-                            iterator.remove();
-                            future.cancel(true);
+                            fine("rescanning %s because no finger print after %d millis", port, monitorPeriod);
+                            rescan = true;
+                        }
+                        else
+                        {
+                            if (scanner.getElapsedTime() >= fingerPrintDelay)
+                            {
+                                fine("finger print for %s after %d millis %s", port, fingerPrintDelay, scanner.getFingerPrint());
+                                ScanResult sr = new ScanResult(scanner);
+                                consumer.accept(sr);
+                                future.cancel(true);
+                                scanners.remove(port);
+                                futures.remove(port);
+                            }
+                        }
+                    }
+                    if (rescan)
+                    {
+                        future.cancel(true);
+                        try
+                        {
+                            future.get();
+                        }
+                        catch (CancellationException | InterruptedException | ExecutionException ex)
+                        {
+                            fine("cancelled %s", scanner);
+                        }
+                        try
+                        {
+                            startScanner(port, closeDelay);
+                        }
+                        catch (IOException ex)
+                        {
+                            throw new RuntimeException(ex);
                         }
                     }
                 }
-                if (rescan)
-                {
-                    future.cancel(true);
-                    try
-                    {
-                        future.get();
-                    }
-                    catch (CancellationException | InterruptedException | ExecutionException ex)
-                    {
-                        fine("cancelled %s", scanner);
-                    }
-                    try
-                    {
-                        startScanner(port, closeDelay);
-                    }
-                    catch (IOException ex)
-                    {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            }
-            if (ports.isEmpty())
-            {
-                scanFuture.cancel(false);
             }
         }
-        
     }
     private class Scanner extends BaseScanner implements Callable<Throwable>
     {
@@ -349,7 +355,7 @@ public class PortScanner extends JavaLogging
         }
         private void onError(Supplier<byte[]> errInput)
         {
-            finest(()->HexDump.toHex(errInput));
+            fine(()->HexDump.toHex(errInput));
         }
         public SerialType getSerialType()
         {

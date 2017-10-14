@@ -24,10 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
@@ -56,6 +53,7 @@ public class ConfigCreator extends JavaLogging
     private boolean hasAis;
     private String needsSpeed;
     private RouteType providesSpeed;
+    private Set<String> scannedPorts = new HashSet<>();
 
     public ConfigCreator()
     {
@@ -67,9 +65,8 @@ public class ConfigCreator extends JavaLogging
         this.config = new RouterConfig(file);
         config.getNmeaType().getAllDevices().addAll(SerialChannel.getAllPorts());
         
-        PortScanner portScanner = new PortScanner()
-                .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK))
-                .setPorts(SerialChannel.getFreePorts());
+        PortScanner portScanner = new PortScanner(scannedPorts)
+                .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK));
         portScanner.scan(this::addDevice);
         
         Set<String> fingerPrint = new HashSet<>();
@@ -128,6 +125,7 @@ public class ConfigCreator extends JavaLogging
     }
     private void addDevice(ScanResult scanResult)
     {
+        scannedPorts.add(scanResult.getPort());
         if (scanResult.getFingerPrint().isEmpty())
         {
             config("empty %s", scanResult);

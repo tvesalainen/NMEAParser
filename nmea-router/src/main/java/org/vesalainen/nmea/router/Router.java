@@ -52,7 +52,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class Router extends JavaLogging implements RouterEngine
 {
-    private static final long RESTART_CONSTANT = 100000;
+    private static final long MAX_RESTART_DELAY = 100000;
     private final RouterConfig config;
     private final Map<String,Endpoint> sources = new HashMap<>();
     private final Map<Future,Endpoint> futureMap = new ConcurrentHashMap<>();
@@ -65,7 +65,6 @@ public class Router extends JavaLogging implements RouterEngine
     private final ExecutorCompletionService starter = new ExecutorCompletionService(POOL);
     private final LongMap<EndpointType> startTimeMap = new LongMap<>();
     private final Map<EndpointType,Endpoint> endpointMap = new HashMap<>();
-    private final Set<EndpointType> killed = new HashSet<>();
 
     public Router(RouterConfig config)
     {
@@ -95,7 +94,6 @@ public class Router extends JavaLogging implements RouterEngine
         else
         {
             config.updateAllDevices(allPorts);
-            portScanner.setPorts(SerialChannel.getFreePorts());
             ensureScanning();
         }
         while (true)
@@ -107,18 +105,11 @@ public class Router extends JavaLogging implements RouterEngine
                 if (endpoint != null)
                 {
                     EndpointType endpointType = endpoint.getEndpointType();
-                    if (!killed.contains(endpointType))
-                    {
-                        endpointMap.remove(endpointType);
-                        long elapsed = System.currentTimeMillis() - startTimeMap.getLong(endpointType);
-                        long delay = RESTART_CONSTANT / elapsed;
-                        POOL.schedule(()->startEndpoint(endpointType), delay, TimeUnit.MILLISECONDS);
-                        config("restart %s after %d millis", endpoint);
-                    }
-                }
-                else
-                {
-                    severe("%s not in futureMap", endpoint);
+                    endpointMap.remove(endpointType);
+                    long elapsed = System.currentTimeMillis() - startTimeMap.getLong(endpointType);
+                    long delay = elapsed > 0 ? MAX_RESTART_DELAY / elapsed : MAX_RESTART_DELAY;
+                    POOL.schedule(()->startEndpoint(endpointType), delay, TimeUnit.MILLISECONDS);
+                    config("restart %s after %d millis", endpoint, delay);
                 }
             }
             catch (InterruptedException ex)
@@ -237,10 +228,8 @@ public class Router extends JavaLogging implements RouterEngine
                 }
                 if (future != null)
                 {
-                    killed.add(serialType);
                     future.cancel(true);
                     futureMap.remove(future);
-                    portScanner.addPort(serialType.getDevice());
                     return true;
                 }
                 else

@@ -73,7 +73,8 @@ public class SeaTalk2NMEAT
     {
         List<String> allPorts = SerialChannel.getFreePorts();
         assertNotNull(allPorts);
-        for (String port : allPorts)
+        //for (String port : allPorts)
+        String port = "COM15";
         {
             try 
             {

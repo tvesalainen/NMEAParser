@@ -17,6 +17,7 @@
 package org.vesalainen.parsers.seatalk;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.CheckedOutputStream;
 import java.nio.channels.ScatteringByteChannel;
@@ -33,7 +34,6 @@ import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parsers.nmea.LocalNMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
 import org.vesalainen.util.logging.JavaLogging;
@@ -48,6 +48,7 @@ import org.vesalainen.util.logging.JavaLogging;
 @Rules(
 {
     @Rule(left = "statements", value = "(prefix statement)*"),
+    @Rule(left = "single", value = "prefix statement"),
     @Rule(left = "prefix", value = "linuxPrefix"),
     @Rule(left = "prefix", value = "winPrefix"),
     @Rule(left = "prefix", value = "noPrefix"),
@@ -281,6 +282,11 @@ public abstract class SeaTalk2NMEA extends JavaLogging
         CheckedOutputStream cos = new CheckedOutputStream(out, new NMEAChecksum());
         parse(channel, cos);
     }
+    @ParseMethod(start = "single", features = {SingleThread})
+    protected abstract void parse(
+            InputStream is,
+            @ParserContext("out") CheckedOutputStream out
+    ) throws IOException;
     @ParseMethod(start = "statements", features = {SingleThread})
     protected abstract void parse(
             CharSequence cs,

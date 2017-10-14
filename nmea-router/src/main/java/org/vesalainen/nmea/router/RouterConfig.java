@@ -165,7 +165,7 @@ public class RouterConfig extends JavaLogging
         }
         throw new IllegalArgumentException(name+" endpoint not found");
     }
-    public void changeDevice(SerialType serial, String newDevice) throws IOException
+    public synchronized void changeDevice(SerialType serial, String newDevice) throws IOException
     {
         String oldDevice = serial.getDevice();
         if (!newDevice.equals(oldDevice))
@@ -175,19 +175,26 @@ public class RouterConfig extends JavaLogging
             store();
         }
     }
-    public void updateAllDevices(List<String> allPorts) throws IOException
+    public synchronized void updateAllDevices(List<String> allPorts) throws IOException
     {
         List<String> allDevices = nmea.getValue().getAllDevices();
         allDevices.clear();
         allDevices.addAll(allPorts);
         store();
     }
-    public void checkRoute(EndpointType endpointType, byte[] error) throws IOException
+    public synchronized void checkRoute(EndpointType endpointType, byte[] error) throws IOException
     {
         CharSequence message = NMEA.findMessage(CharSequences.getAsciiCharSequence(error));
         if (message != null && NMEA.isNMEAOrAIS(message))
         {
             String prefix = NMEA.getPrefix(message).toString();
+            for (RouteType rt : endpointType.getRoute())
+            {
+                if (prefix.equals(rt.getPrefix()))
+                {
+                    return;
+                }
+            }
             RouteType route = objectFactory.createRouteType();
             route.setPrefix(prefix);
             MessageType messageType = NMEA.getMessageType(message);
@@ -235,7 +242,7 @@ public class RouterConfig extends JavaLogging
             store(writer);
         }
     }
-    public void store(Writer writer) throws IOException
+    public synchronized void store(Writer writer) throws IOException
     {
         try
         {

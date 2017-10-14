@@ -32,7 +32,7 @@ public class ConfigCreatorT
     
     public ConfigCreatorT()
     {
-        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINE);
+        JavaLogging.setConsoleHandler("org.vesalainen.nmea.router", Level.FINEST);
     }
 
     @Test
