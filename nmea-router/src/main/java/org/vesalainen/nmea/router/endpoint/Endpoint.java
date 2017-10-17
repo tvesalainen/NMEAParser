@@ -68,8 +68,6 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected RingByteBuffer ring;
     protected EndpointScriptEngine scriptEngine;
     protected List<MessageFilter> filterList;
-    protected long lastRead;
-    protected long lastWrite;
     protected Set<String> fingerPrint = new HashSet<>();
 
     public Endpoint(E endpointType, Router router)
@@ -195,52 +193,43 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     @Override
     public void run()
     {
-        Integer priority = endpointType.getPriority();
-        if (priority != null)
+        try
         {
-            Thread.currentThread().setPriority(priority);
-        }
-        ObjectName objectName = null;
-        try (T ch = createChannel())
-        {
-            channel = ch;
-            endpointMap.put(name, this);
-            config("started %s", channel);
-            if (scriptEngine != null)
+            Integer priority = endpointType.getPriority();
+            if (priority != null)
             {
-                scriptEngine.start();
+                Thread.currentThread().setPriority(priority);
             }
-            objectName = new ObjectName("org.vesalainen.nmea.router.endpoint:type="+name);
             ManagementFactory.getPlatformMBeanServer().registerMBean(this, objectName);
-            NMEAReader reader = new NMEAReader(name, matcher, channel, bufferSize, maxRead, this::onOk, this::onError);
-            reader.read();
+            try (T ch = createChannel())
+            {
+                channel = ch;
+                endpointMap.put(name, this);
+                config("started %s", channel);
+                if (scriptEngine != null)
+                {
+                    scriptEngine.start();
+                }
+                NMEAReader reader = new NMEAReader(name, matcher, channel, bufferSize, maxRead, this::onOk, this::onError);
+                reader.read();
+            }
+            finally
+            {
+                endpointMap.remove(name);
+                if (scriptEngine != null)
+                {
+                    scriptEngine.stop();
+                }
+                if (priority != null)
+                {
+                    Thread.currentThread().setPriority(NORM_PRIORITY);
+                }
+                ManagementFactory.getPlatformMBeanServer().unregisterMBean(objectName);
+            }
         }
         catch (Throwable ex)
         {
             log(SEVERE, ex, "%s stopped because of %s", name, ex);
-        }
-        finally
-        {
-            endpointMap.remove(name);
-            if (scriptEngine != null)
-            {
-                scriptEngine.stop();
-            }
-            if (priority != null)
-            {
-                Thread.currentThread().setPriority(NORM_PRIORITY);
-            }
-            if (objectName != null)
-            {
-                try
-                {
-                    ManagementFactory.getPlatformMBeanServer().unregisterMBean(objectName);
-                }
-                catch (InstanceNotFoundException | MBeanRegistrationException ex)
-                {
-                    log(SEVERE, ex, "unregisterMBean %s", ex.getMessage());
-                }
-            }
         }
     }
 
@@ -255,6 +244,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         {
             scriptEngine.write(ring);
         }
+        sendNotification(()->ring.getString(), ()->null);
         CharSequence prefix = NMEA.getPrefix(ring);
         if (prefix != null)
         {
@@ -269,17 +259,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         errorBytes += error.length;
         warning("%s: rejected %s", name, new String(error, US_ASCII));
         finest(()->HexDump.toHex(errInput));
-    }
-    @Override
-    public Date getLastRead()
-    {
-        return new Date(lastRead);
-    }
-
-    @Override
-    public Date getLastWrite()
-    {
-        return new Date(lastWrite);
+        sendNotification(()->new String(error, US_ASCII), ()->error);
     }
 
     @Override

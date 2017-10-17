@@ -18,18 +18,27 @@ package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Date;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
+import javax.management.ListenerNotFoundException;
+import javax.management.MBeanNotificationInfo;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotificationEmitter;
+import javax.management.NotificationFilter;
+import javax.management.NotificationListener;
+import javax.management.ObjectName;
+import org.vesalainen.management.SimpleNotificationEmitter;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.router.DataSourceMXBean;
+import static org.vesalainen.nmea.router.ThreadPool.POOL;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class DataSource extends JavaLogging implements Runnable, DataSourceMXBean
+public abstract class DataSource extends JavaLogging implements Runnable, DataSourceMXBean, NotificationEmitter
 {
     protected final String name;
     protected long readCount;
@@ -37,16 +46,71 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
     protected long writeCount;
     protected long writeBytes;
     protected long errorBytes;
+    protected long lastRead;
+    protected long lastWrite;
+    protected SimpleNotificationEmitter emitter;
+    protected ObjectName objectName;
 
     public DataSource(String name)
     {
         this.name = name;
+        try
+        {
+            this.objectName = new ObjectName("org.vesalainen.nmea.router.endpoint:type="+name);
+        }
+        catch (MalformedObjectNameException ex)
+        {
+            throw new RuntimeException(ex);
+        }
+        this.emitter = new SimpleNotificationEmitter(
+                POOL, 
+                "org.vesalainen.nmea.router.endpoint.notification", 
+                objectName, 
+                new MBeanNotificationInfo(
+                        new String[]{"org.vesalainen.nmea.router.endpoint.notification"},
+                        "javax.management.Notification",
+                        "NMEA router message/error")
+                );
         setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.') + "." + name));
     }
 
     public abstract int write(ByteBuffer readBuffer) throws IOException;
 
     public abstract int write(RingByteBuffer ring) throws IOException;
+
+    public synchronized void sendNotification(Supplier<String> textSupplier, Supplier<byte[]> userDataSupplier)
+    {
+        emitter.sendNotification(textSupplier, userDataSupplier);
+    }
+
+    public synchronized void sendNotification(String text, byte[] userData)
+    {
+        emitter.sendNotification(text, userData);
+    }
+
+    @Override
+    public synchronized void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws ListenerNotFoundException
+    {
+        emitter.removeNotificationListener(listener, filter, handback);
+    }
+
+    @Override
+    public synchronized void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws IllegalArgumentException
+    {
+        emitter.addNotificationListener(listener, filter, handback);
+    }
+
+    @Override
+    public synchronized void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException
+    {
+        emitter.removeNotificationListener(listener);
+    }
+
+    @Override
+    public MBeanNotificationInfo[] getNotificationInfo()
+    {
+        return emitter.getNotificationInfo();
+    }
 
     @Override
     public String getName()
@@ -82,6 +146,18 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
     public long getErrorBytes()
     {
         return errorBytes;
+    }
+
+    @Override
+    public Date getLastRead()
+    {
+        return new Date(lastRead);
+    }
+
+    @Override
+    public Date getLastWrite()
+    {
+        return new Date(lastWrite);
     }
 
 }

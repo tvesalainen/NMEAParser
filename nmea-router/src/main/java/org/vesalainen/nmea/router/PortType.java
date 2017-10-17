@@ -18,11 +18,12 @@ package org.vesalainen.nmea.router;
 
 import java.nio.channels.ScatteringByteChannel;
 import org.vesalainen.comm.channel.SerialChannel;
+import org.vesalainen.nio.channels.FilterChannel;
 import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
-import org.vesalainen.nmea.router.seatalk.SeaTalkChannel;
+import org.vesalainen.nmea.router.seatalk.SeaTalkInputStream;
 import org.vesalainen.util.function.IOFunction;
 
 /**
@@ -33,7 +34,14 @@ public enum PortType
 {
     NMEA((port)->new SerialChannel.Builder(port, SerialChannel.Speed.B4800).get()),
     NMEA_HS((port)->new SerialChannel.Builder(port, SerialChannel.Speed.B38400).get()),
-    SEA_TALK((port)->new SeaTalkChannel(port));
+    SEA_TALK((String port)->
+    {
+        SerialChannel sc = new SerialChannel
+                .Builder(port, SerialChannel.Speed.B4800)
+                .setParity(SerialChannel.Parity.SPACE)
+                .get();
+        return new FilterChannel(sc, 15, 0, SeaTalkInputStream::new, null);
+    });
     
     private IOFunction<String,ScatteringByteChannel> channelFactory;
 

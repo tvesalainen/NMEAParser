@@ -17,15 +17,17 @@
 package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
+import org.vesalainen.comm.channel.SerialChannel;
+import org.vesalainen.nio.channels.FilterChannel;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.router.Router;
-import org.vesalainen.nmea.router.seatalk.SeaTalkChannel;
+import org.vesalainen.nmea.router.seatalk.SeaTalkInputStream;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class SeaTalkEndpoint extends Endpoint<SeatalkType,SeaTalkChannel>
+public class SeaTalkEndpoint extends Endpoint<SeatalkType,FilterChannel>
 {
 
     public SeaTalkEndpoint(SeatalkType seatalkType, Router router)
@@ -34,10 +36,14 @@ public class SeaTalkEndpoint extends Endpoint<SeatalkType,SeaTalkChannel>
     }
 
     @Override
-    public SeaTalkChannel createChannel() throws IOException
+    public FilterChannel createChannel() throws IOException
     {
         String device = endpointType.getDevice();
-        return new SeaTalkChannel(device);
+        SerialChannel sc = new SerialChannel
+                .Builder(device, SerialChannel.Speed.B4800)
+                .setParity(SerialChannel.Parity.SPACE)
+                .get();
+        return new FilterChannel(sc, 15, 0, SeaTalkInputStream::new, null);
     }
     
 }

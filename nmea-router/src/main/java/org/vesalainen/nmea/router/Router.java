@@ -88,11 +88,13 @@ public class Router extends JavaLogging implements RouterEngine
         List<String> allPorts = SerialChannel.getAllPorts();
         if (allPorts.equals(allDevices))
         {
+            config("ports seems to be the same as last run - try same config");
             startAllSerial();
             POOL.schedule(this::quickStartHandler, monitorDelay, TimeUnit.MILLISECONDS);
         }
         else
         {
+            config("port configuration has changed - start scanner");
             config.updateAllDevices(allPorts);
             ensureScanning();
         }
@@ -122,17 +124,19 @@ public class Router extends JavaLogging implements RouterEngine
     {
         if (!portScanner.isScanning())
         {
-            portScanner.scan(this::foundPort, portMatcher);
+            portScanner.scan(this::resolvedPort, portMatcher);
+            config("started scanner");
         }
     }
-    private void foundPort(ScanResult scanResult)
+    private void resolvedPort(ScanResult scanResult)
     {
+        config("resolved port %s", scanResult);
         try
         {
             config.changeDevice(scanResult.getSerialType(), scanResult.getPort());
             SerialType serialType = scanResult.getSerialType();
-            config("found port %s", serialType);
-            startEndpoint(serialType);
+            POOL.schedule(()->startEndpoint(serialType), closeDelay, TimeUnit.MILLISECONDS);
+            config("starting resolved port %s after %d millis", scanResult.getPort(), closeDelay);
             scanChoises.removeItem(scanResult.getPortType(), serialType);
         }
         catch (IOException ex)
@@ -191,6 +195,12 @@ public class Router extends JavaLogging implements RouterEngine
         startTimeMap.put(endpointType, System.currentTimeMillis());
         futureMap.put(future, endpoint);
         config("started %s", endpoint);
+        if (portMatcher.getUnresolved().isEmpty())
+        {
+            portScanner.stop();
+            portScanner = null;
+            config("all ports resolved port scanner stopped");
+        }
     }
     public void addSource(String src, Endpoint endpoint)
     {
@@ -210,6 +220,7 @@ public class Router extends JavaLogging implements RouterEngine
     @Override
     public boolean kill(String target)
     {
+        config("killing %s", target);
         Endpoint endpoint = Endpoint.get(target);
         if (endpoint != null)
         {
@@ -230,6 +241,7 @@ public class Router extends JavaLogging implements RouterEngine
                 {
                     future.cancel(true);
                     futureMap.remove(future);
+                    config("killed %s", target);
                     return true;
                 }
                 else
@@ -290,8 +302,9 @@ public class Router extends JavaLogging implements RouterEngine
                 {
                     for (SerialType serialType : unresolved)
                     {
-                        config("set %s for scanning", serialType);
-                        kill(serialType.getName());
+                        String name = serialType.getName();
+                        config("set %s for scanning", name);
+                        kill(name);
                     }
                     ensureScanning();
                 }

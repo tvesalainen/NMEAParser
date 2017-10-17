@@ -20,46 +20,41 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.vesalainen.util.OperatingSystem;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import java.util.EnumSet;
+import java.util.zip.CheckedOutputStream;
+import static org.vesalainen.parser.ParserFeature.SingleThread;
+import org.vesalainen.parser.util.Input;
+import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parsers.nmea.NMEAChecksum;
+import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class SeaTalkInputStream extends FilterInputStream
+public class SeaTalkInputStream extends InputStream
 {
-    private enum State {PRE1, PRE2, COM, AT, DAT}; 
+    private static final SeaTalk2NMEA parser = SeaTalk2NMEA.newInstance();
+    private InputReader input;
     private byte[] buffer = new byte[128];
     private int pos;
     private int limit;
-    private OutputStream out;
-    private int prefix1 = 0xff;
-    private int prefix2;
-    public SeaTalkInputStream(InputStream in)
+    private CheckedOutputStream out;
+
+    public SeaTalkInputStream(InputStream in) throws IOException
     {
-        super(in);
-        this.out = new BufferOutputStream();
-        switch (OperatingSystem.getOperatingSystem())
-        {
-            case Windows:
-                prefix2 = 0xff;
-            case Linux:
-                prefix2 = 0x00;
-            default:
-                throw new UnsupportedOperationException(OperatingSystem.getOperatingSystem()+" not supported");
-        }
+        input = Input.getInstance(in, 16, ISO_8859_1, EnumSet.of(SingleThread));
+        input.setEof(()->true);
+        this.out = new CheckedOutputStream(new BufferOutputStream(), new NMEAChecksum());
     }
 
     @Override
-    public int read(byte[] b, int off, int len) throws IOException
+    public synchronized int read(byte[] b, int off, int len) throws IOException
     {
-        if (pos == limit)
+        while (pos == limit)
         {
             fill();
-        }
-        if (pos == limit)
-        {
-            return -1;
         }
         int count = Math.min(len, limit-pos);
         System.arraycopy(buffer, pos, b, off, count);
@@ -68,47 +63,20 @@ public class SeaTalkInputStream extends FilterInputStream
     }
 
     @Override
-    public int read() throws IOException
+    public synchronized int read() throws IOException
     {
-        if (pos == limit)
+        while (pos == limit)
         {
             fill();
-        }
-        if (pos == limit)
-        {
-            return -1;
         }
         return buffer[pos++];
     }
 
     private void fill() throws IOException
     {
-        State state = State.PRE1;
-        int cc = in.read();
-        while (cc != 0xff)
-        {
-            switch (state)
-            {
-                case PRE1:
-                    if (cc == prefix1)
-                    {
-                        state = State.PRE2;
-                    }
-                    break;
-                case PRE2:
-                    if (cc == prefix2)
-                    {
-                        state = State.COM;
-                    }
-                    break;
-                case COM:
-                    switch (cc)
-                    {
-                        
-                    }
-            }
-            cc = in.read();
-        }
+        pos = 0;
+        limit = 0;
+        parser.parse(input, out);
     }
     
     private class BufferOutputStream extends OutputStream
@@ -118,6 +86,13 @@ public class SeaTalkInputStream extends FilterInputStream
         public void write(int b) throws IOException
         {
             buffer[limit++] = (byte) b;
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException
+        {
+            System.arraycopy(b, off, buffer, limit, len);
+            limit += len;
         }
         
     }

@@ -17,11 +17,16 @@
 package org.vesalainen.nmea.router.seatalk;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import java.util.logging.Level;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialInputStream;
 import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -32,6 +37,7 @@ public class SeaTalkInputStreamT
     
     public SeaTalkInputStreamT()
     {
+        JavaLogging.setConsoleHandler("org.vesalainen", JavaLogging.DEBUG);
     }
 
     @Test
@@ -42,13 +48,14 @@ public class SeaTalkInputStreamT
                 .setParity(SerialChannel.Parity.SPACE);
         try (SerialChannel sc = builder.get())
         {
-            SerialInputStream sis = new SerialInputStream(sc, 100);
-            SeaTalkInputStream sea = new SeaTalkInputStream(sis);
-            int cc = sea.read();
-            while (cc != -1)
+            InputStream is = Channels.newInputStream(sc);
+            SeaTalkInputStream sea = new SeaTalkInputStream(is);
+            byte[] buf = new byte[10];
+            int rc = sea.read(buf);
+            while (rc != -1)
             {
-                System.err.print((char)cc);
-                cc = sea.read();
+                System.err.print(new String(buf, 0, rc, ISO_8859_1));
+                rc = sea.read(buf);
             }
         }
     }

@@ -17,11 +17,10 @@
 package org.vesalainen.parsers.seatalk;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.CheckedOutputStream;
 import java.nio.channels.ScatteringByteChannel;
-import java.util.logging.Level;
+import static java.util.logging.Level.*;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import static org.vesalainen.parser.ParserFeature.SingleThread;
@@ -36,10 +35,15 @@ import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
+import org.vesalainen.util.HexDump;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
- * Note! This class is not thread safe.
+ * A parser for Sea Talk protocol using Thomas Knaufs article.
+ * <p>
+ * 9-bit communication is solved with space parity. Command byte will cause an 
+ * error. Both Linux and Windows serial drivers can be configured to send error
+ * indication, which is used to locate the start of message.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @see <a href="http://www.thomasknauf.de/seatalk.htm">SeaTalk Technical Reference</a>
  */
@@ -51,6 +55,7 @@ import org.vesalainen.util.logging.JavaLogging;
     @Rule(left = "single", value = "prefix statement"),
     @Rule(left = "prefix", value = "linuxPrefix"),
     @Rule(left = "prefix", value = "winPrefix"),
+    @Rule(left = "prefix", value = "winPrefix2"),
     @Rule(left = "prefix", value = "noPrefix"),
     @Rule(left = "statement", value = "m00"),
     @Rule(left = "statement", value = "m01a"),
@@ -70,24 +75,28 @@ import org.vesalainen.util.logging.JavaLogging;
 })
 public abstract class SeaTalk2NMEA extends JavaLogging
 {
-    private static final String talkerId = "ST";
     private boolean haveBetterMTW;
     private boolean haveBetterVHW;
     
     @Rule("'\\xff\\xff'")
     protected void winPrefix()
     {
-        //System.err.println("win");
+        debug("winPrefix");
+    }
+    @Rule("'\\xff'")
+    protected void winPrefix2()
+    {
+        debug("winPrefix");
     }
     @Rule("'\\xff\\x00'")
     protected void linuxPrefix()
     {
-        //System.err.println("linux");
+        debug("linuxPrefix");
     }
     @Rule
     protected void noPrefix()
     {
-        //System.err.println("linux");
+        debug("noPrefix");
     }
     @Rule("'\\x00\\x02' b integer")
     protected void m00(
@@ -96,6 +105,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m00");
         int y = yz >> 4;
         int z = yz & 0xf;
         boolean anchorAlarm = (y & 8) == 8;
@@ -105,7 +115,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
         boolean shallowAlarm = (z & 1) == 1;
         if (yz != 0x60)
         {
-            log(Level.WARNING, Integer.toHexString(yz)+" "+defect+" "+xx);
+            warning("%x defect %x", yz, xx);
         }
         if (!defect)
         {
@@ -117,6 +127,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m01a");
         NMEAGen.txt(out, "Course Computer 400G");
     }
     @Rule("'\\x01\\x05\\x04\\xBA\\x20\\x28\\x01\\x00'")
@@ -124,6 +135,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m01b");
         NMEAGen.txt(out, "ST60 Tridata");
     }
     @Rule("'\\x01\\x05\\x70\\x99\\x10\\x28\\x01\\x00'")
@@ -131,6 +143,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m01c");
         NMEAGen.txt(out, "ST60 Log");
     }
     @Rule("'\\x01\\x05\\xF3\\x18\\x00\\x26\\x0F\\x06'")
@@ -138,6 +151,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m01d");
         NMEAGen.txt(out, "ST80 Masterview");
     }
     @Rule("'\\x01\\x05\\xFA\\x03\\x00\\x30\\x07\\x03'")
@@ -145,6 +159,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m01e");
         NMEAGen.txt(out, "ST80 Maxi Display");
     }
     @Rule("'\\x01\\x05\\xFF\\xFF\\xFF\\xD0\\x00\\x00'")
@@ -152,6 +167,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m01f");
         NMEAGen.txt(out, "Smart Controller Remote Control Handset");
     }
     @Rule("'\\x20\\x01' integer")
@@ -160,6 +176,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m20");
         if (!haveBetterVHW)
         {
             float knots = (float)xx/10;
@@ -173,6 +190,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m23");
         if (!haveBetterMTW)
         {
             NMEAGen.mtw(out, c);
@@ -184,6 +202,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m24");
     }
     @Rule("'\\x26\\x04' integer integer b")
     protected void m26(
@@ -193,6 +212,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m26");
         float knots = (float)xx/100;
         haveBetterVHW = true;
         NMEAGen.vhw(out, knots);
@@ -203,6 +223,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m27");
         haveBetterMTW = true;
         float temp = (float)(xx-100)/10;
         NMEAGen.mtw(out, temp);
@@ -213,6 +234,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m30");
         char i;
         switch (cc)
         {
@@ -252,13 +274,14 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
-        System.err.println(String.format("unknown 0x600x0c %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13));
+        debug("m60 %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", (short)c1, (short)c2, (short)c3, (short)c4, (short)c5, (short)c6, (short)c7, (short)c8, (short)c9, (short)c10, (short)c11, (short)c12, (short)c13);
     }
     @Rule("'\\x65\\x00\\x02'")
     protected void m65(
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException
     {
+        debug("m65");
     }
     @Rule("b b")
     protected int integer(char x2, char x1)
@@ -282,9 +305,9 @@ public abstract class SeaTalk2NMEA extends JavaLogging
         CheckedOutputStream cos = new CheckedOutputStream(out, new NMEAChecksum());
         parse(channel, cos);
     }
-    @ParseMethod(start = "single", features = {SingleThread})
-    protected abstract void parse(
-            InputStream is,
+    @ParseMethod(start = "single", size = 128, charSet = "ISO-8859-1" , features = {SingleThread})
+    public abstract void parse(
+            InputReader input,
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException;
     @ParseMethod(start = "statements", features = {SingleThread})
@@ -292,7 +315,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             CharSequence cs,
             @ParserContext("out") CheckedOutputStream out
     ) throws IOException;
-    @ParseMethod(start = "statements", size = 256, charSet = "US-ASCII" )
+    @ParseMethod(start = "statements", size = 256, charSet = "ISO-8859-1" )
     protected abstract void parse(
             ScatteringByteChannel channel,
             @ParserContext("out") CheckedOutputStream out
@@ -303,9 +326,22 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             @ParserContext(ParserConstants.THROWABLE) Throwable thr,
             @ParserContext("out") CheckedOutputStream out) throws IOException
     {
-        int columnNumber = reader.getColumnNumber();
-        int length = reader.getLength();
-        String input = reader.getInput();
+        int len = reader.getLength();
+        byte[] buf = new byte[len];
+        for (int ii=0;ii<len;ii++)
+        {
+            buf[ii] = (byte) reader.charAt(ii);
+        }
+        if (thr != null)
+        {
+            log(SEVERE, thr, "SeaTalk2NMEA.recover: \n%s", HexDump.toHex(buf));
+            throw new IOException(thr);
+        }
+        else
+        {
+            warning("SeaTalk2NMEA.recover:");
+            warning(HexDump.toHex(buf));
+        }
         reader.clear();
     }
 

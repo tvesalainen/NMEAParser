@@ -175,6 +175,7 @@ public class PortScanner extends JavaLogging
         this.consumer = consumer;
         this.portMatcher = portMatcher;
         ports.addAll(SerialChannel.getFreePorts());
+        config("scanning %s", ports);
         portMonitor = new PortMonitor(POOL, monitorPeriod, TimeUnit.MILLISECONDS);
         portMonitor.addNewFreePortConsumer((p)->ports.add(p));
         portMonitor.addRemovePortConsumer((p)->ports.remove(p));
@@ -215,6 +216,7 @@ public class PortScanner extends JavaLogging
                     try
                     {
                         initialStartScanner(port, 0);
+                        config("started scanner for new port %s", port);
                     }
                     catch (IOException ex)
                     {
