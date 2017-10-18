@@ -69,6 +69,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected EndpointScriptEngine scriptEngine;
     protected List<MessageFilter> filterList;
     protected Set<String> fingerPrint = new HashSet<>();
+    private NMEAReader reader;
 
     public Endpoint(E endpointType, Router router)
     {
@@ -210,7 +211,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
                 {
                     scriptEngine.start();
                 }
-                NMEAReader reader = new NMEAReader(name, matcher, channel, bufferSize, maxRead, this::onOk, this::onError);
+                reader = new NMEAReader(name, matcher, channel, bufferSize, maxRead, this::onOk, this::onError);
                 reader.read();
             }
             finally
@@ -266,6 +267,16 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     public Set<String> getFingerPrint()
     {
         return fingerPrint;
+    }
+
+    @Override
+    public int[] getDistribution()
+    {
+        if (reader != null)
+        {
+            return reader.getDistribution();
+        }
+        return null;
     }
 
     public E getEndpointType()

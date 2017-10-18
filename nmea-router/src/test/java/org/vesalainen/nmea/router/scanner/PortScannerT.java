@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import org.junit.Test;
 import org.vesalainen.comm.channel.SerialChannel;
 import static org.vesalainen.nmea.router.PortType.*;
+import static org.vesalainen.nmea.router.ThreadPool.POOL;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -39,7 +40,7 @@ public class PortScannerT
     @Test
     public void testScan() throws IOException
     {
-        PortScanner portScanner = new PortScanner()
+        PortScanner portScanner = new PortScanner(POOL)
                 .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK));
         portScanner.scan((s)->System.err.println(s));
         portScanner.waitScanner();

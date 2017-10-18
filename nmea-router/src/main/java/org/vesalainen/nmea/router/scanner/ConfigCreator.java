@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
@@ -33,12 +35,12 @@ import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import static org.vesalainen.nmea.router.PortType.*;
 import org.vesalainen.nmea.router.RouterConfig;
-import static org.vesalainen.nmea.router.ThreadPool.POOL;
 import org.vesalainen.nmea.router.scanner.PortScanner.ScanResult;
 import org.vesalainen.parsers.nmea.MessageType;
 import static org.vesalainen.parsers.nmea.MessageType.*;
 import org.vesalainen.parsers.nmea.TalkerId;
 import static org.vesalainen.parsers.nmea.TalkerId.*;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -48,6 +50,7 @@ import org.vesalainen.util.logging.JavaLogging;
 public class ConfigCreator extends JavaLogging
 {
     private static final String MULTICAST_ADDRESS = "224.0.0.3";
+    private ScheduledExecutorService pool = new CachedScheduledThreadPool();
     private RouterConfig config;
     private Set<String> names = new HashSet<>();
     private boolean hasAis;
@@ -65,13 +68,13 @@ public class ConfigCreator extends JavaLogging
         this.config = new RouterConfig(file);
         config.getNmeaType().getAllDevices().addAll(SerialChannel.getAllPorts());
         
-        PortScanner portScanner = new PortScanner(scannedPorts)
+        PortScanner portScanner = new PortScanner(pool, scannedPorts)
                 .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK));
         portScanner.scan(this::addDevice);
         
         Set<String> fingerPrint = new HashSet<>();
         NetScanner netScanner = new NetScanner(MULTICAST_ADDRESS, fingerPrint);
-        Future<Set<String>> netFuture = POOL.submit(netScanner);
+        Future<Set<String>> netFuture = pool.submit(netScanner);
         
         TcpEndpointType listener = config.createTcpEndpointType();
         listener.setName("Listener");
@@ -82,7 +85,8 @@ public class ConfigCreator extends JavaLogging
         listenerRoute.getTarget().add("Net");
         listenerRoute.setComment("E.g. Autopilot sentences from Open CPN");
         
-        portScanner.waitScanner();
+        portScanner.waitScanner(5, TimeUnit.MINUTES);
+        pool.shutdownNow();
         
         if (needsSpeed != null && providesSpeed != null)
         {
@@ -118,6 +122,7 @@ public class ConfigCreator extends JavaLogging
             {
                 RouteType route = config.createRouteTypeFor(net);
                 route.setPrefix(entry.getValue());
+                route.getTarget().add("Listener");
                 route.setComment(entry.getKey().getDescription());
             }
         }
@@ -159,6 +164,7 @@ public class ConfigCreator extends JavaLogging
                 route.setPrefix(entry.getValue());
                 route.setComment(entry.getKey().getDescription());
                 route.getTarget().add("Net");
+                route.getTarget().add("Listener");
                 if (entry.getKey().equals(VHW))
                 {
                     providesSpeed = route;

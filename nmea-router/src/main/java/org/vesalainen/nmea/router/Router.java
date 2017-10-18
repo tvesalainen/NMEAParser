@@ -76,7 +76,8 @@ public class Router extends JavaLogging implements RouterEngine
 
     public void start() throws IOException
     {
-        portScanner = new PortScanner();
+        config("starting %s", Version.getVersion());
+        portScanner = new PortScanner(POOL);
         populateSerialSet();
         populatePortMatcher();
         startNonSerial();
@@ -85,10 +86,12 @@ public class Router extends JavaLogging implements RouterEngine
         portScanner.setCloseDelay(closeDelay);
         portScanner.setFingerPrintDelay(Long.MAX_VALUE);
         List<String> allDevices = config.getAllDevices();
+        config("last ports %s", allDevices);
         List<String> allPorts = SerialChannel.getAllPorts();
+        config("ports now  %s", allPorts);
         if (allPorts.equals(allDevices))
         {
-            config("ports seems to be the same as last run - try same config");
+            config("ports seems to be the same as last run - try the same config");
             startAllSerial();
             POOL.schedule(this::quickStartHandler, monitorDelay, TimeUnit.MILLISECONDS);
         }

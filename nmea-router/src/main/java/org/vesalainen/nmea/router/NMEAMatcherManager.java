@@ -35,7 +35,7 @@ import org.vesalainen.util.MapSet;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
- *
+ * @deprecated 
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public final class NMEAMatcherManager extends JavaLogging

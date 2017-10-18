@@ -38,4 +38,5 @@ public interface DataSourceMXBean
     {
         return 100*getErrorBytes()/getReadBytes();
     }
+    int[] getDistribution();
 }

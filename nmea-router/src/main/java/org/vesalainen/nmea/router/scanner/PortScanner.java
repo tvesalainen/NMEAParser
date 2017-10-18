@@ -29,6 +29,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -46,7 +47,6 @@ import org.vesalainen.nmea.router.PortType;
 import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.RepeatingIterator;
 import org.vesalainen.util.logging.JavaLogging;
-import static org.vesalainen.nmea.router.ThreadPool.*;
 import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.HexDump;
 
@@ -57,6 +57,7 @@ import org.vesalainen.util.HexDump;
 public class PortScanner extends JavaLogging
 {
     static final int BUF_SIZE = 4096;
+    private ScheduledExecutorService pool;
     private Set<PortType> portTypes;
     private long monitorPeriod = 10000;
     private long closeDelay = 1000;
@@ -71,14 +72,15 @@ public class PortScanner extends JavaLogging
     private PortMonitor portMonitor;
     private Set<String> ports = new HashSet<>();
 
-    public PortScanner()
+    public PortScanner(ScheduledExecutorService pool)
     {
-        this(Collections.EMPTY_SET);
+        this(pool, Collections.EMPTY_SET);
     }
 
-    public PortScanner(Set<String> dontScan)
+    public PortScanner(ScheduledExecutorService pool, Set<String> dontScan)
     {
         super(PortScanner.class);
+        this.pool = pool;
         this.dontScan = dontScan;
     }
 
@@ -116,10 +118,10 @@ public class PortScanner extends JavaLogging
         {
             monitorFuture.get(time, unit);
         }
-        catch (CancellationException ex)
+        catch (CancellationException | TimeoutException ex)
         {
         }
-        catch (InterruptedException | ExecutionException | TimeoutException ex)
+        catch (InterruptedException | ExecutionException ex)
         {
             throw new IOException(ex);
         }
@@ -176,10 +178,10 @@ public class PortScanner extends JavaLogging
         this.portMatcher = portMatcher;
         ports.addAll(SerialChannel.getFreePorts());
         config("scanning %s", ports);
-        portMonitor = new PortMonitor(POOL, monitorPeriod, TimeUnit.MILLISECONDS);
+        portMonitor = new PortMonitor(pool, monitorPeriod, TimeUnit.MILLISECONDS);
         portMonitor.addNewFreePortConsumer((p)->ports.add(p));
         portMonitor.addRemovePortConsumer((p)->ports.remove(p));
-        monitorFuture = POOL.scheduleWithFixedDelay(this::monitor, 0, monitorPeriod, TimeUnit.MILLISECONDS);
+        monitorFuture = pool.scheduleWithFixedDelay(this::monitor, 0, monitorPeriod, TimeUnit.MILLISECONDS);
     }
     private void initialStartScanner(String port, long delayMillis) throws IOException
     {
@@ -197,7 +199,7 @@ public class PortScanner extends JavaLogging
             PortType portType = it.next();
             Scanner scanner = new Scanner(port, portType);
             scanners.put(port, scanner);
-            Future<Throwable> future = POOL.schedule(scanner, delayMillis, TimeUnit.MILLISECONDS);
+            Future<Throwable> future = pool.schedule(scanner, delayMillis, TimeUnit.MILLISECONDS);
             futures.put(port, future);
         }
         else
