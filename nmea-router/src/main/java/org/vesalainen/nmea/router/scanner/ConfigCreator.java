@@ -68,8 +68,7 @@ public class ConfigCreator extends JavaLogging
         this.config = new RouterConfig(file);
         config.getNmeaType().getAllDevices().addAll(SerialChannel.getAllPorts());
         
-        PortScanner portScanner = new PortScanner(pool, scannedPorts)
-                .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK));
+        PortScanner portScanner = new PortScanner(pool, scannedPorts);
         portScanner.scan(this::addDevice);
         
         Set<String> fingerPrint = new HashSet<>();

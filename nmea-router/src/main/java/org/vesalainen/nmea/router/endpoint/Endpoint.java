@@ -240,16 +240,21 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         readCount++;
         lastRead = System.currentTimeMillis();
         finer("read: %s", ring);
-        matcher.getMatched().write(name, ring);
+        String prefix = null;
+        CharSequence seqPrefix = NMEA.getPrefix(ring);
+        if (seqPrefix != null)
+        {
+            prefix = seqPrefix.toString();
+        }
+        matcher.getMatched().write(prefix, ring);
         if (scriptEngine != null)
         {
             scriptEngine.write(ring);
         }
         sendNotification(()->ring.getString(), ()->null);
-        CharSequence prefix = NMEA.getPrefix(ring);
         if (prefix != null)
         {
-            fingerPrint.add(prefix.toString());
+            fingerPrint.add(prefix);
         }
     }
     private void onError(Supplier<byte[]> errInput) throws IOException
@@ -270,7 +275,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     }
 
     @Override
-    public int[] getDistribution()
+    public List<String> getDistribution()
     {
         if (reader != null)
         {

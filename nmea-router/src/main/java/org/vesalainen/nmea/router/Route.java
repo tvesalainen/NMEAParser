@@ -21,6 +21,8 @@ import java.util.List;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
+import org.vesalainen.util.LongMap;
+import org.vesalainen.util.LongReference;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -29,6 +31,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public final class Route extends JavaLogging
 {
+    private static final LongMap<String> PREFIX_MAP = new LongMap<>();
     private final NMEAPrefix prefix;
     private final String[] targetList;
     private boolean backup;
@@ -80,18 +83,36 @@ public final class Route extends JavaLogging
         return prefix;
     }
 
-    public final void write(String origin, RingByteBuffer ring) throws IOException
+    public final void write(String prefix, RingByteBuffer ring) throws IOException
     {
-        lastWrote = System.currentTimeMillis();
-        for (String target : targetList)
+        if (canWrite(prefix))
         {
-            Endpoint endpoint = Endpoint.get(target);
-            if (endpoint != null)
+            lastWrote = System.currentTimeMillis();
+            for (String target : targetList)
             {
-                endpoint.write(ring);
+                Endpoint endpoint = Endpoint.get(target);
+                if (endpoint != null)
+                {
+                    endpoint.write(ring);
+                }
             }
+            count++;
+            PREFIX_MAP.put(prefix, lastWrote);
         }
-        count++;
+    }
+
+    private boolean canWrite(String prefix)
+    {
+        if (!backup)
+        {
+            return true;
+        }
+        LongReference ref = PREFIX_MAP.get(prefix);
+        if (ref == null)
+        {
+            return true;
+        }
+        return ref.getValue()+expireTime < System.currentTimeMillis();
     }
     
 }

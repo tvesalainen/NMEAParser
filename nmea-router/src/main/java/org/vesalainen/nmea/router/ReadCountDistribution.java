@@ -16,6 +16,9 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
@@ -23,19 +26,28 @@ package org.vesalainen.nmea.router;
 public class ReadCountDistribution
 {
     private int[] distribution;
+    private String format;
 
     public ReadCountDistribution(int count)
     {
         distribution = new int[count];
+        int precision = (int) Math.round(Math.log10(count))+1;
+        format = "%"+precision+"d: %d\n";
     }
     public void increment(int count)
     {
         distribution[count-1]++;
     }
 
-    public int[] getDistribution()
+    public List<String> getDistribution()
     {
-        return distribution;
+        List<String> list = new ArrayList<>();
+        int len = distribution.length;
+        for (int ii=0;ii<len;ii++)
+        {
+            list.add(String.format(format, ii+1, distribution[ii]));
+        }
+        return list;
     }
     
 }

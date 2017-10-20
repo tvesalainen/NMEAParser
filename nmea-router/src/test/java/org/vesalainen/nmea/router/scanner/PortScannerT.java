@@ -40,8 +40,7 @@ public class PortScannerT
     @Test
     public void testScan() throws IOException
     {
-        PortScanner portScanner = new PortScanner(POOL)
-                .setChannelSuppliers(EnumSet.of(NMEA, NMEA_HS, SEA_TALK));
+        PortScanner portScanner = new PortScanner(POOL);
         portScanner.scan((s)->System.err.println(s));
         portScanner.waitScanner();
     }

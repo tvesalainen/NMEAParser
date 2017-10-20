@@ -21,6 +21,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.channels.ScatteringByteChannel;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import org.vesalainen.nio.RingByteBuffer;
@@ -115,7 +116,7 @@ public class NMEAReader extends JavaLogging
         }
     }
 
-    public int[] getDistribution()
+    public List<String> getDistribution()
     {
         return distribution.getDistribution();
     }

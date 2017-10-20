@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -37,7 +38,7 @@ public class ReadCountDistributionTest
         d.increment(5);
         d.increment(3);
         d.increment(4);
-        int[] distribution = d.getDistribution();
+        List<String> distribution = d.getDistribution();
     }
     
 }

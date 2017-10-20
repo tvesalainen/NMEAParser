@@ -23,6 +23,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.security.MessageDigest;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -101,11 +103,18 @@ public class RouterConfig extends JavaLogging
         return digest;
     }
 
-    public List<EndpointType> getRouterEndpoints()
+    public Stream<EndpointType> getRouterEndpoints()
     {
-        return nmea.getValue().getTcpEndpointOrProcessorOrMulticast();
+        return nmea
+                .getValue()
+                .getTcpEndpointOrProcessorOrMulticast()
+                .stream()
+                .filter((e)->e.isEnable());
     }
-    
+    public void add(EndpointType endpointType)
+    {
+        nmea.getValue().getTcpEndpointOrProcessorOrMulticast().add(endpointType);
+    }
     public NmeaType getNmeaType()
     {
         return nmea.getValue();
@@ -113,37 +122,37 @@ public class RouterConfig extends JavaLogging
     public MulticastNMEAType createMulticastNMEAType()
     {
         MulticastNMEAType type = objectFactory.createMulticastNMEAType();
-        getRouterEndpoints().add(type);
+        add(type);
         return type;
     }
     public TcpEndpointType createTcpEndpointType()
     {
         TcpEndpointType listener = objectFactory.createTcpEndpointType();
-        getRouterEndpoints().add(listener);
+        add(listener);
         return listener;
     }
     public DatagramType createDatagramType()
     {
         DatagramType datagram = objectFactory.createDatagramType();
-        getRouterEndpoints().add(datagram);
+        add(datagram);
         return datagram;
     }
     public Nmea0183Type createNmea0183Type()
     {
         Nmea0183Type serial = objectFactory.createNmea0183Type();
-        getRouterEndpoints().add(serial);
+        add(serial);
         return serial;
     }
     public Nmea0183HsType createNmea0183HsType()
     {
         Nmea0183HsType serial = objectFactory.createNmea0183HsType();
-        getRouterEndpoints().add(serial);
+        add(serial);
         return serial;
     }
     public SeatalkType createSeatalkType()
     {
         SeatalkType serial = objectFactory.createSeatalkType();
-        getRouterEndpoints().add(serial);
+        add(serial);
         return serial;
     }
     public RouteType createRouteTypeFor(EndpointType endpoint)
@@ -155,15 +164,9 @@ public class RouterConfig extends JavaLogging
     public RouteType createRouteTypeFor(String name)
     {
         RouteType route = objectFactory.createRouteType();
-        for (EndpointType endpoint : getRouterEndpoints())
-        {
-            if (endpoint.getName().equals(name))
-            {
-                endpoint.getRoute().add(route);
-                return route;
-            }
-        }
-        throw new IllegalArgumentException(name+" endpoint not found");
+        Optional<EndpointType> opt = getRouterEndpoints().filter((e)->e.getName().equals(name)).findFirst();
+        opt.get().getRoute().add(route);
+        return route;
     }
     public synchronized void changeDevice(SerialType serial, String newDevice) throws IOException
     {
@@ -258,16 +261,15 @@ public class RouterConfig extends JavaLogging
 
     private void checkScriptSyntax()
     {
-        for (EndpointType et : getRouterEndpoints())
+        getRouterEndpoints().forEach((et)->
         {
-            String name = et.getName();
             ScriptType scriptType = et.getScript();
             if (scriptType != null)
             {
                 ScriptParser se = ScriptParser.newInstance();
                 se.check(scriptType.getValue());
             }
-        }
+        });
     }
 
     @Override

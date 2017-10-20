@@ -248,6 +248,7 @@ public class OldRouter extends JavaLogging implements Runnable, RouterEngine
         }
         MapList<Speed,EndpointType> endPointMap = new HashMapList<>();
         Bijection<Endpoint,EndpointType> endpointBijection = new HashBijection<>();
+        /*
         for (EndpointType et : config.getRouterEndpoints())
         {
             Endpoint endpoint = getInstance(et);
@@ -257,7 +258,7 @@ public class OldRouter extends JavaLogging implements Runnable, RouterEngine
                 SerialEndpoint se = (SerialEndpoint) endpoint;
                 endPointMap.add(se.getSpeed(), et);
             }
-        }
+        }*/
         matcherManager = new NMEAMatcherManager(endpointBijection, endPointMap);
         for (Entry<Endpoint, EndpointType> e : endpointBijection.entrySet())
         {
