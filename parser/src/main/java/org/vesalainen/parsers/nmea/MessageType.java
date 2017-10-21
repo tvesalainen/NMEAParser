@@ -111,7 +111,7 @@ public enum MessageType
     TXT("Text Transmission"),
     VBW("Dual Ground/Water Speed"),
     VDR("Set and Drift"),
-    VHW("Water Speed and Heading "),
+    VHW("Water Speed and Heading"),
     VLW("Dual Ground/Water Distance"),
     VPW("Speed – Measured Parallel to Wind"),
     VSD("UAIS Voyage Static Data"),

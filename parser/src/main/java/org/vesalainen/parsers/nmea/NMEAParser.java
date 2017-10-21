@@ -729,7 +729,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWaterTemperature(toCelcius(waterTemperature, unit));
+        data.setWaterTemperature(toCelsius(waterTemperature, unit));
     }
 
     @Rule("decimal c letter")
@@ -987,7 +987,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             char units,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setArrivalCircleRadius(distance(arrivalCircleRadius, units));
+        data.setArrivalCircleRadius(toNauticalMiles(arrivalCircleRadius, units));
     }
 
     @Rule("decimal c decimal")

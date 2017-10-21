@@ -24,7 +24,7 @@ import org.vesalainen.util.navi.Knots;
 import org.vesalainen.util.navi.Meters;
 
 /**
- *
+ * @deprecated Use NMEASentence
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class NMEAGen
@@ -52,15 +52,15 @@ public class NMEAGen
         putChecksum(out);
         put(out, "\r\n");
     }
-    public static void dbt(CheckedOutputStream out, float depth) throws IOException
+    public static void dbt(CheckedOutputStream out, float feet) throws IOException
     {
         put(out, '$');
         put(out, "SD");
         put(out, "DBT,");
-        float meters = toMeters(depth, Ft);
+        float meters = toMeters(feet, FT);
         put(out, Meters.toFeets(meters));
         put(out, ',');
-        put(out, Ft);
+        put(out, FT);
         put(out, ',');
         put(out, meters);
         put(out, ',');
@@ -68,7 +68,7 @@ public class NMEAGen
         put(out, ',');
         put(out, Meters.toFathoms(meters));
         put(out, ',');
-        put(out, Fath);
+        put(out, FATH);
         putChecksum(out);
         put(out, "\r\n");
     }
@@ -79,7 +79,7 @@ public class NMEAGen
         put(out, "VHW,,,,,");
         put(out, knots);
         put(out, ',');
-        put(out, Kts);
+        put(out, KTS);
         put(out, ',');
         put(out, Knots.toKiloMetersInHour(knots));
         put(out, ',');
@@ -106,7 +106,7 @@ public class NMEAGen
         put(out, ',');
         put(out, windSpeed);
         put(out, ',');
-        put(out, Kts);
+        put(out, KTS);
         put(out, ",A");
         putChecksum(out);
         put(out, "\r\n");
@@ -119,7 +119,7 @@ public class NMEAGen
         put(out, "MTW,");
         put(out, c);
         put(out, ',');
-        put(out, Celcius);
+        put(out, CELCIUS);
         putChecksum(out);
         put(out, "\r\n");
     }

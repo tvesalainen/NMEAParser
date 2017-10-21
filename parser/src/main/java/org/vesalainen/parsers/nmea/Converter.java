@@ -16,11 +16,12 @@
  */
 package org.vesalainen.parsers.nmea;
 
+import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.util.navi.Fathom;
 import org.vesalainen.util.navi.Feet;
 import org.vesalainen.util.navi.KilometersInHour;
 import org.vesalainen.util.navi.Knots;
-import org.vesalainen.util.navi.Velocity;
 
 /**
  *
@@ -28,37 +29,67 @@ import org.vesalainen.util.navi.Velocity;
  */
 public class Converter
 {
-    public static final char Kts = 'N';
+    public static final char KTS = 'N';
     public static final char M = 'M';
     public static final char KMH = 'K';
+    public static final char CELCIUS = 'C';
+    public static final char FATH = 'F';
+    public static final char FT = 'f';
+    public static final char N = 'N';
+    
     public static float toKnots(float velocity, char unit)
+    {
+        return (float) getSpeedType(unit).convertTo(velocity, Knot);
+    }
+    public static UnitType getSpeedType(char unit)
     {
         switch (unit)
         {
-            case Kts:
-                return velocity;
-            case M:
-                return (float) Velocity.toKnots(velocity);
+            case KTS:
+                return Knot;
             case KMH:
-                return (float) KilometersInHour.toKnots(velocity);
+                return UnitType.KMH;
             default:
                 throw new IllegalArgumentException(unit+" unknown expected N/M/K");
         }
     }
-
-    public static float toMetersPerSecond(float velocity, char unit)
+    public static UnitType getDepthType(char unit)
     {
         switch (unit)
         {
-            case Kts:
-                return (float) Knots.toMetersPerSecond(velocity);
             case M:
-                return velocity;
-            case KMH:
-                return (float) KilometersInHour.toMetersPerSecond(velocity);
+                return Meter;
+            case FATH:
+                return UnitType.Fathom;
+            case FT:
+                return UnitType.Foot;
             default:
                 throw new IllegalArgumentException(unit+" unknown expected N/M/K");
         }
+    }
+    public static UnitType getTempType(char unit)
+    {
+        switch (unit)
+        {
+            case CELCIUS:
+                return UnitType.Celsius;
+            default:
+                throw new IllegalArgumentException(unit+" unknown expected N/M/K");
+        }
+    }
+    public static UnitType getDistanceType(char unit)
+    {
+        switch (unit)
+        {
+            case N:
+                return UnitType.NM;
+            default:
+                throw new IllegalArgumentException(unit+" unknown expected N/M/K");
+        }
+    }
+    public static float toMetersPerSecond(float velocity, char unit)
+    {
+        return (float) getSpeedType(unit).convertTo(velocity, MS);
     }
 
     public static final char Left = 'L';
@@ -76,44 +107,19 @@ public class Converter
         }
     }
 
-    public static final char Celcius = 'C';
-    public static float toCelcius(float temp, char unit)
+    public static float toCelsius(float temp, char unit)
     {
-        switch (unit)
-        {
-            case Celcius:
-                return temp;
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected C");
-        }
+        return (float) getTempType(unit).convertTo(temp, UnitType.Celsius);
     }
 
-    public static final char Fath = 'F';
-    public static final char Ft = 'f';
     public static float toMeters(float depth, char unit)
     {
-        switch (unit)
-        {
-            case Fath:
-                return (float) Fathom.toMeters(depth);
-            case M:
-                return depth;
-            case Ft:
-                return (float) Feet.toMeters(depth);
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected f/M/F");
-        }
+        return (float) getDepthType(unit).convertTo(depth, Meter);
     }
 
-    public static float distance(float dist, char unit)
+    public static float toNauticalMiles(float dist, char unit)
     {
-        switch (unit)
-        {
-            case 'N':
-                return dist;
-            default:
-                throw new IllegalArgumentException(unit+" unknown expected N");
-        }
+        return (float) getDistanceType(unit).convertTo(dist, UnitType.NM);
     }
 
 }
