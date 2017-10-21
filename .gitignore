@@ -6,3 +6,6 @@ dist/
 doc-files/
 /target/
 /IcomManager/target/
+/nmea-router/target/
+/nmea-router/nbproject/
+/parser/nbproject/

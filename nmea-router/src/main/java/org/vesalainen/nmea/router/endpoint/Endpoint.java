@@ -234,7 +234,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
     }
 
-    private void onOk(RingByteBuffer ring) throws IOException
+    private void onOk(RingByteBuffer ring, long timestamp) throws IOException
     {
         readBytes += ring.length();
         readCount++;
@@ -251,7 +251,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         {
             scriptEngine.write(ring);
         }
-        sendNotification(()->ring.getString(), ()->null);
+        sendNotification(()->ring.getString(), ()->null, ()->timestamp);
         if (prefix != null)
         {
             fingerPrint.add(prefix);
@@ -265,7 +265,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         errorBytes += error.length;
         warning("%s: rejected %s", name, new String(error, US_ASCII));
         finest(()->HexDump.toHex(errInput));
-        sendNotification(()->new String(error, US_ASCII), ()->error);
+        sendNotification(()->new String(error, US_ASCII), ()->error, ()->lastRead);
     }
 
     @Override

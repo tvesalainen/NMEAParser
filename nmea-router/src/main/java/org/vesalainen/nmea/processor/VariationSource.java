@@ -28,12 +28,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import java.util.zip.CheckedOutputStream;
-import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.nmea.util.NMEAFilters;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
-import org.vesalainen.parsers.nmea.NMEAGen;
+import org.vesalainen.parsers.nmea.NMEASentence;
 
 /**
  *
@@ -48,8 +47,6 @@ public class VariationSource extends AbstractSampleConsumer
             };
     private final GatheringByteChannel channel;
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
-    private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
-    private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
     private long period = 1000;
     private TSAGeoMag geoMag = new TSAGeoMag();
     private GregorianCalendar calendar;
@@ -94,7 +91,9 @@ public class VariationSource extends AbstractSampleConsumer
             }
             fine("location %s", sample);
             double declination = geoMag.getDeclination(sample.getLatitude(), sample.getLongitude(), geoMag.decimalYear(calendar), 0);
-            NMEAGen.rmc(cout, declination);
+            NMEASentence rmc = NMEASentence.rmc(declination);
+            bb.clear();
+            rmc.writeTo(bb);
             bb.flip();
             channel.write(bb);
             finest("send RMC declination=%f", declination);

@@ -349,7 +349,7 @@ public class PortScanner extends JavaLogging
             return null;
         }
 
-        private void onOk(RingByteBuffer ring)
+        private void onOk(RingByteBuffer ring, long timestamp)
         {
             finer("read: %s", ring);
             int idx = CharSequences.indexOf(ring, ',');

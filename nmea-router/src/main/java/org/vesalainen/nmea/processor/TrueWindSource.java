@@ -23,14 +23,15 @@ import java.nio.channels.GatheringByteChannel;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import java.util.zip.CheckedOutputStream;
-import org.vesalainen.nio.channels.ByteBufferOutputStream;
+import org.vesalainen.math.UnitType;
+import org.vesalainen.nio.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.navi.TrueWind;
 import org.vesalainen.nmea.util.NMEAFilters;
 import org.vesalainen.nmea.util.NMEAMappers;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
-import org.vesalainen.parsers.nmea.NMEAGen;
+import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.navi.Velocity;
 
 /**
@@ -49,8 +50,6 @@ public class TrueWindSource extends AbstractSampleConsumer
     private final GatheringByteChannel channel;
     private final TrueWind trueWind = new TrueWind();
     private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
-    private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
-    private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
 
     public TrueWindSource(GatheringByteChannel channel, TrueWindSourceType trueWindSourceType)
     {
@@ -86,8 +85,10 @@ public class TrueWindSource extends AbstractSampleConsumer
             trueWind.calc();
             finest("%s", trueWind);
             int trueAngle = (int) trueWind.getTrueAngle();
-            float trueSpeed = (float) trueWind.getTrueSpeed();
-            NMEAGen.mwv(cout, trueAngle, trueSpeed, true);
+            double trueSpeed = trueWind.getTrueSpeed();
+            NMEASentence mwv = NMEASentence.mwv(trueAngle, trueSpeed, UnitType.Knot, true);
+            bb.clear();
+            mwv.writeTo(bb);
             bb.flip();
             channel.write(bb);
             finest("send MWV trueAngle=%d trueSpeed=%f", trueAngle, trueSpeed);

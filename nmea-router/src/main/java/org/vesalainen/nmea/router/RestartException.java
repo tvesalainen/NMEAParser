@@ -17,7 +17,7 @@
 package org.vesalainen.nmea.router;
 
 /**
- *
+ * @deprecated 
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class RestartException extends RuntimeException

@@ -20,10 +20,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
 import org.vesalainen.nmea.router.RestartException;
-import org.vesalainen.nmea.script.AbstractScriptObjectFactory;
-import org.vesalainen.nmea.script.RouterEngine;
-import org.vesalainen.nmea.script.ScriptStatement;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
+import org.vesalainen.parsers.nmea.NMEASentence;
 
 /**
  *
@@ -66,18 +64,9 @@ public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScr
 
     protected static ByteBuffer createMessage(String msg)
     {
-        byte[] bytes = msg.getBytes();
-        if (bytes.length < 5)
-        {
-            throw new IllegalArgumentException(msg+" is too short");
-        }
-        NMEAChecksum cs = new NMEAChecksum();
-        cs.update(bytes, 0, bytes.length);
-        ByteBuffer bb = ByteBuffer.allocate(bytes.length+5);
-        bb.put(bytes, 0, bytes.length);
-        cs.fillSuffix(bytes, 0, 5);
-        bb.put(bytes, 0, 5);
-        return bb;
+        NMEASentence sentence = NMEASentence.builder(msg).build();
+        byte[] buffer = sentence.getBuffer();
+        return ByteBuffer.wrap(buffer);
     }
 
     private static class Restarter<E> implements ScriptStatement<Void,E>

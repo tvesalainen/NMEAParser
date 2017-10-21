@@ -130,7 +130,7 @@ public class NMEASentence
      * @return
      * @throws IOException 
      */
-    public static NMEASentence mwv(int windAngle, float windSpeed, UnitType unit, boolean trueWind) throws IOException
+    public static NMEASentence mwv(int windAngle, double windSpeed, UnitType unit, boolean trueWind) throws IOException
     {
         return builder(UP, MWV)
                 .add(windAngle)

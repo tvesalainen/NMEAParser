@@ -125,7 +125,6 @@ public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
         time = 0;
         talkerId = null;
         messageType = null;
-        Recycler.recycle(map.values());
         map.clear();
         origin = null;
     }

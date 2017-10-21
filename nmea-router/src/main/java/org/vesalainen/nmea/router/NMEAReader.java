@@ -40,11 +40,11 @@ public class NMEAReader extends JavaLogging
     private ScatteringByteChannel channel;
     private int bufferSize;
     private int maxRead;
-    private IOConsumer<RingByteBuffer> onOk;
+    private OkConsumer onOk;
     private IOConsumer<Supplier<byte[]>> onError;
     private ReadCountDistribution distribution;
 
-    public NMEAReader(String name, NMEAMatcher matcher, ScatteringByteChannel channel, int bufSize, int maxRead, IOConsumer<RingByteBuffer> onOk, IOConsumer<Supplier<byte[]>> onError)
+    public NMEAReader(String name, NMEAMatcher matcher, ScatteringByteChannel channel, int bufSize, int maxRead, OkConsumer onOk, IOConsumer<Supplier<byte[]>> onError)
     {
         super(NMEAReader.class, name);
         Objects.requireNonNull(matcher, "matcher");
@@ -74,6 +74,7 @@ public class NMEAReader extends JavaLogging
                 throw new BufferUnderflowException();
             }
             int count = ring.read(channel);
+            long timestamp = System.currentTimeMillis();
             finest("handle %s read %d bytes", name, count);
             if (count == -1)
             {
@@ -108,7 +109,7 @@ public class NMEAReader extends JavaLogging
                         mark = false;
                         break;
                     case Match:
-                        onOk.apply(ring);
+                        onOk.apply(ring, timestamp);
                         mark = true;
                         break;
                 }
@@ -120,5 +121,9 @@ public class NMEAReader extends JavaLogging
     {
         return distribution.getDistribution();
     }
-    
+    @FunctionalInterface
+    public interface OkConsumer
+    {
+        void apply(RingByteBuffer bb, long timestamp) throws IOException;
+    }
 }

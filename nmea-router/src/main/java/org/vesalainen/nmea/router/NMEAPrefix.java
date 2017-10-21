@@ -19,7 +19,7 @@ package org.vesalainen.nmea.router;
 import java.util.Objects;
 
 /**
- *
+ * @deprecated 
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class NMEAPrefix

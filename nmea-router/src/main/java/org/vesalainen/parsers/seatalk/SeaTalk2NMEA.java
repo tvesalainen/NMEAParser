@@ -18,9 +18,9 @@ package org.vesalainen.parsers.seatalk;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.zip.CheckedOutputStream;
 import java.nio.channels.ScatteringByteChannel;
 import static java.util.logging.Level.*;
+import org.vesalainen.math.UnitType;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import static org.vesalainen.parser.ParserFeature.SingleThread;
@@ -35,6 +35,7 @@ import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAGen;
+import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.HexDump;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -102,7 +103,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
     protected void m00(
             char yz, 
             int xx, 
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m00");
@@ -119,87 +120,96 @@ public abstract class SeaTalk2NMEA extends JavaLogging
         }
         if (!defect)
         {
-            NMEAGen.dbt(out, (float)xx/10F);
+            NMEASentence dbt = NMEASentence.dbt(xx/10, UnitType.Foot);
+            dbt.writeTo(out);
         }
     }
     @Rule("'\\x01\\x05\\x00\\x00\\x00\\x60\\x01\\x00'")
     protected void m01a(
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m01a");
-        NMEAGen.txt(out, "Course Computer 400G");
+        NMEASentence txt = NMEASentence.txt("Course Computer 400G");
+        txt.writeTo(out);
     }
     @Rule("'\\x01\\x05\\x04\\xBA\\x20\\x28\\x01\\x00'")
     protected void m01b(
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m01b");
-        NMEAGen.txt(out, "ST60 Tridata");
+        NMEASentence txt = NMEASentence.txt("ST60 Tridata");
+        txt.writeTo(out);
     }
     @Rule("'\\x01\\x05\\x70\\x99\\x10\\x28\\x01\\x00'")
     protected void m01c(
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m01c");
-        NMEAGen.txt(out, "ST60 Log");
+        NMEASentence txt = NMEASentence.txt("ST60 Log");
+        txt.writeTo(out);
     }
     @Rule("'\\x01\\x05\\xF3\\x18\\x00\\x26\\x0F\\x06'")
     protected void m01d(
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m01d");
-        NMEAGen.txt(out, "ST80 Masterview");
+        NMEASentence txt = NMEASentence.txt("ST80 Masterview");
+        txt.writeTo(out);
     }
     @Rule("'\\x01\\x05\\xFA\\x03\\x00\\x30\\x07\\x03'")
     protected void m01e(
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m01e");
-        NMEAGen.txt(out, "ST80 Maxi Display");
+        NMEASentence txt = NMEASentence.txt("ST80 Maxi Display");
+        txt.writeTo(out);
     }
     @Rule("'\\x01\\x05\\xFF\\xFF\\xFF\\xD0\\x00\\x00'")
     protected void m01f(
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m01f");
-        NMEAGen.txt(out, "Smart Controller Remote Control Handset");
+        NMEASentence txt = NMEASentence.txt("Smart Controller Remote Control Handset");
+        txt.writeTo(out);
     }
     @Rule("'\\x20\\x01' integer")
     protected void m20(
             int xx, 
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m20");
         if (!haveBetterVHW)
         {
             float knots = (float)xx/10;
-            NMEAGen.vhw(out, knots);
+            NMEASentence vhw = NMEASentence.vhw(knots, UnitType.Knot);
+            vhw.writeTo(out);
         }
     }
     @Rule("'\\x23\\x01' b b")
     protected void m23(
             char c, 
             char f, 
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m23");
         if (!haveBetterMTW)
         {
-            NMEAGen.mtw(out, c);
+            NMEASentence mtw = NMEASentence.mtw(c, UnitType.Celsius);
+            mtw.writeTo(out);
         }
     }
     @Rule("'\\x24\\x02\\x00\\x00' b")
     protected void m24(
             char displayUnits,
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m24");
@@ -209,29 +219,31 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             int xx, 
             int yy,
             char de,
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m26");
         float knots = (float)xx/100;
         haveBetterVHW = true;
-        NMEAGen.vhw(out, knots);
+        NMEASentence vhw = NMEASentence.vhw(knots, UnitType.Knot);
+        vhw.writeTo(out);
     }
     @Rule("'\\x27\\x01' integer")
     protected void m27(
             int xx, 
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m27");
         haveBetterMTW = true;
         float temp = (float)(xx-100)/10;
-        NMEAGen.mtw(out, temp);
+        NMEASentence mtw = NMEASentence.mtw(temp, UnitType.Celsius);
+        mtw.writeTo(out);
     }
     @Rule("'\\x30\\x00' b")
     protected void m30(
             char cc, 
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m30");
@@ -254,7 +266,8 @@ public abstract class SeaTalk2NMEA extends JavaLogging
                 i = '?';
                 break;
         }
-        NMEAGen.txt(out, "Light L"+i);
+        NMEASentence txt = NMEASentence.txt("Light L"+i);
+        txt.writeTo(out);
     }
     @Rule("'\\x60\\x0c' b b b b b b b b b b b b b")
     protected void m60(
@@ -271,14 +284,14 @@ public abstract class SeaTalk2NMEA extends JavaLogging
             char c11,
             char c12,
             char c13,
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m60 %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", (short)c1, (short)c2, (short)c3, (short)c4, (short)c5, (short)c6, (short)c7, (short)c8, (short)c9, (short)c10, (short)c11, (short)c12, (short)c13);
     }
     @Rule("'\\x65\\x00\\x02'")
     protected void m65(
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException
     {
         debug("m65");
@@ -295,36 +308,26 @@ public abstract class SeaTalk2NMEA extends JavaLogging
     {
         return (SeaTalk2NMEA) GenClassFactory.loadGenInstance(SeaTalk2NMEA.class);
     }
-    public void parse(CharSequence cs, OutputStream out) throws IOException
-    {
-        CheckedOutputStream cos = new CheckedOutputStream(out, new NMEAChecksum());
-        parse(cs, cos);
-    }
-    public void parse(ScatteringByteChannel channel, OutputStream out) throws IOException
-    {
-        CheckedOutputStream cos = new CheckedOutputStream(out, new NMEAChecksum());
-        parse(channel, cos);
-    }
     @ParseMethod(start = "single", size = 128, charSet = "ISO-8859-1" , features = {SingleThread})
     public abstract void parse(
             InputReader input,
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException;
     @ParseMethod(start = "statements", features = {SingleThread})
-    protected abstract void parse(
+    public abstract void parse(
             CharSequence cs,
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException;
     @ParseMethod(start = "statements", size = 256, charSet = "ISO-8859-1" )
-    protected abstract void parse(
+    public abstract void parse(
             ScatteringByteChannel channel,
-            @ParserContext("out") CheckedOutputStream out
+            @ParserContext("out") OutputStream out
     ) throws IOException;
     @RecoverMethod
     public void recover(
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
             @ParserContext(ParserConstants.THROWABLE) Throwable thr,
-            @ParserContext("out") CheckedOutputStream out) throws IOException
+            @ParserContext("out") OutputStream out) throws IOException
     {
         int len = reader.getLength();
         byte[] buf = new byte[len];

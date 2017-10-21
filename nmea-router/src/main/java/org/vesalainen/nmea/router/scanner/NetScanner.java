@@ -61,7 +61,7 @@ class NetScanner implements Callable<Set<String>>
         }
     }
 
-    private void onOk(RingByteBuffer ring)
+    private void onOk(RingByteBuffer ring, long timestamp)
     {
         int idx = CharSequences.indexOf(ring, ',');
         if (idx != -1)

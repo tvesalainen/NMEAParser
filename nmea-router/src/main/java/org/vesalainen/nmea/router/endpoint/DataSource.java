@@ -19,6 +19,7 @@ package org.vesalainen.nmea.router.endpoint;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.management.ListenerNotFoundException;
@@ -78,14 +79,14 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
 
     public abstract int write(RingByteBuffer ring) throws IOException;
 
-    public synchronized void sendNotification(Supplier<String> textSupplier, Supplier<byte[]> userDataSupplier)
+    public synchronized void sendNotification(Supplier<String> textSupplier, Supplier<byte[]> userDataSupplier, LongSupplier timestampSupplier)
     {
-        emitter.sendNotification(textSupplier, userDataSupplier);
+        emitter.sendNotification(textSupplier, userDataSupplier, timestampSupplier);
     }
 
-    public synchronized void sendNotification(String text, byte[] userData)
+    public synchronized void sendNotification(String text, byte[] userData, long timestamp)
     {
-        emitter.sendNotification(text, userData);
+        emitter.sendNotification(text, userData, timestamp);
     }
 
     @Override
