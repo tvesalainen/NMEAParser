@@ -18,6 +18,7 @@ package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Locale;
@@ -29,14 +30,18 @@ import static org.vesalainen.parsers.nmea.TalkerId.*;
 import org.vesalainen.util.CharSequences;
 
 /**
- *
+ * A utility for creating NMEA sentences
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class NMEASentence
 {
     private byte[] buffer;
     private CharSequence seq;
-
+    /**
+     * Creates NMEASentence from string
+     * @param sentence
+     * @throws IOException 
+     */
     public NMEASentence(CharSequence sentence) throws IOException
     {
         if (!NMEA.isNMEAOrAIS(sentence))
@@ -46,7 +51,10 @@ public class NMEASentence
         buffer = sentence.toString().getBytes("NMEA");
         seq = CharSequences.getAsciiCharSequence(buffer);
     }
-
+    /**
+     * Creates NMEASentence from array
+     * @param buffer 
+     */
     public NMEASentence(byte[] buffer)
     {
         this.buffer = buffer;
@@ -165,65 +173,127 @@ public class NMEASentence
                 .add(msg)
                 .build();
     }
-
-    
+    /**
+     * Returns byte array containing the sentence. Changes to this buffer will
+     * affect
+     * @return 
+     */
+    public byte[] getBuffer()
+    {
+        return buffer;
+    }
+    /**
+     * Returns true if NMEA sentence
+     * @return 
+     */
     public boolean isNMEA()
     {
         return NMEA.isNMEA(seq);
     }
+    /**
+     * Returns true if AIS sentence
+     * @return 
+     */
     public boolean isAIS()
     {
         return NMEA.isAIS(seq);
     }
+    /**
+     * Returns true if proprietary sentence
+     * @return 
+     */
     public boolean isProprietary()
     {
         return NMEA.isProprietory(seq);
     }
+    /**
+     * Returns talker-id if NMEA/AIS sentence or null
+     * @return 
+     */
     public TalkerId getTalkerId()
     {
         return NMEA.getTalkerId(seq);
     }
+    /**
+     * Returns message-id if NMEA/AIS sentence or null
+     * @return 
+     */
     public MessageType getMessageType()
     {
         return NMEA.getMessageType(seq);
     }
+    /**
+     * Returns sentence prefix. (before first ',')
+     * @return 
+     */
     public CharSequence getPrefix()
     {
         return NMEA.getPrefix(seq);
     }
+    /**
+     * Write sentence to bb
+     * @param bb 
+     */
     public void writeTo(ByteBuffer bb)
     {
         bb.put(buffer);
     }
+    /**
+     * Write sentence to out
+     * @param out
+     * @throws IOException 
+     */
     public void writeTo(OutputStream out) throws IOException
     {
         out.write(buffer);
     }
+    /**
+     * Write sentence to out
+     * @param out
+     * @throws IOException 
+     */
     public void writeTo(Appendable out) throws IOException
     {
         out.append(seq);
     }
-
+    /**
+     * Returns sentence as string
+     * @return 
+     */
     @Override
     public String toString()
     {
         return seq.toString();
     }
-    
-    public static Builder builder(TalkerId talkerId, MessageType messageType) throws IOException
+    /**
+     * Creates NMEASentence builder. Builder is initialized with '$'/'!', talker-id
+     * and message-id
+     * @param talkerId
+     * @param messageType
+     * @return 
+     */
+    public static Builder builder(TalkerId talkerId, MessageType messageType)
     {
         return new Builder(talkerId, messageType);
     }
-    public static Builder builder(CharSequence prefix, CharSequence... fields) throws IOException
+    /**
+     * Creates NMEASentence builder. Builder is initialized with prefix which
+     * can contain the whole sentence until '*' including commas. Each field
+     * if present are concatenated and separated with commas
+     * @param prefix
+     * @param fields
+     * @return 
+     */
+    public static Builder builder(CharSequence prefix, CharSequence... fields)
     {
         return new Builder(prefix, fields);
     }
-    public static class Builder
+    public static final class Builder
     {
         private byte[] buffer = new byte[128];
         private int index;
 
-        public Builder(TalkerId talkerId, MessageType messageType) throws IOException
+        private Builder(TalkerId talkerId, MessageType messageType)
         {
             switch (messageType)
             {
@@ -235,42 +305,76 @@ public class NMEASentence
                     write('$');
                     break;
             }
-            write(talkerId.name().getBytes("NMEA"));
-            write(messageType.name().getBytes("NMEA"));
+            add(talkerId.name());
+            add(messageType.name());
         }
 
-        public Builder(CharSequence prefix, CharSequence... fields) throws IOException
+        private Builder(CharSequence prefix, CharSequence... fields)
         {
-            write(prefix.toString().getBytes("NMEA"));
+            add(prefix.toString());
             for (CharSequence field : fields)
             {
                 add(field);
             }
         }
-        
-        public Builder add() throws IOException
+        /**
+         * Add empty field
+         * @return 
+         */
+        public Builder add()
         {
             write(',');
             return this;
         }
-        public Builder add(CharSequence fld) throws IOException
+        /**
+         * Add string field
+         * @param fld
+         * @return 
+         */
+        public Builder add(CharSequence fld)
         {
             add();
-            write(fld.toString().getBytes("NMEA"));
+            try
+            {
+                write(fld.toString().getBytes("NMEA"));
+            }
+            catch (UnsupportedEncodingException ex)
+            {
+                throw new RuntimeException(ex);
+            }
             return this;
         }
-        public Builder add(double fld) throws IOException
+        /**
+         * Add double field
+         * @param fld
+         * @return 
+         */
+        public Builder add(double fld)
         {
             return add(String.format(Locale.US, "%.1f", fld));
         }
-        public Builder add(int fld) throws IOException
+        /**
+         * Add int field
+         * @param fld
+         * @return 
+         */
+        public Builder add(int fld)
         {
             return add(String.format(Locale.US, "%d", fld));
         }
-        public Builder add(char fld) throws IOException
+        /**
+         * Add char field
+         * @param fld
+         * @return 
+         */
+        public Builder add(char fld)
         {
             return add(String.valueOf(fld));
         }
+        /**
+         * Adds '*' starting suffix with checksum and returns NMEASentence.
+         * @return 
+         */
         public NMEASentence build()
         {
             NMEAChecksum checksum = new NMEAChecksum();
