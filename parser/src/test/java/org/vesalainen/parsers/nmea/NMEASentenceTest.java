@@ -101,4 +101,11 @@ public class NMEASentenceTest
         NMEASentence picoa = NMEASentence.builder("$PICOA,08,90,TXF,").build();
         assertEquals(exp, picoa.toString());
     }
+    @Test
+    public void testConstructor() throws IOException
+    {
+        String exp = "$PICOA,08,90,TXF,*1F\r\n";
+        NMEASentence picoa = new NMEASentence(exp);
+        assertEquals(exp, picoa.toString());
+    }
 }

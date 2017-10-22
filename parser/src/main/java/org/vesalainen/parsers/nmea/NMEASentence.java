@@ -36,6 +36,7 @@ import org.vesalainen.util.CharSequences;
 public class NMEASentence
 {
     private byte[] buffer;
+    private int length;
     private CharSequence seq;
     /**
      * Creates NMEASentence from string
@@ -55,10 +56,11 @@ public class NMEASentence
      * Creates NMEASentence from array
      * @param buffer 
      */
-    public NMEASentence(byte[] buffer)
+    private NMEASentence(byte[] buffer, int length)
     {
         this.buffer = buffer;
-        seq = CharSequences.getAsciiCharSequence(buffer);
+        this.length = length;
+        seq = CharSequences.getAsciiCharSequence(buffer, 0, length);
         if (!NMEA.isNMEAOrAIS(seq))
         {
             throw new IllegalArgumentException(seq+" not valid");
@@ -174,13 +176,12 @@ public class NMEASentence
                 .build();
     }
     /**
-     * Returns byte array containing the sentence. Changes to this buffer will
-     * affect
+     * Returns byte buffer containing the sentence.
      * @return 
      */
-    public byte[] getBuffer()
+    public ByteBuffer getByteBuffer()
     {
-        return buffer;
+        return ByteBuffer.wrap(buffer, 0, length);
     }
     /**
      * Returns true if NMEA sentence
@@ -236,7 +237,7 @@ public class NMEASentence
      */
     public void writeTo(ByteBuffer bb)
     {
-        bb.put(buffer);
+        bb.put(buffer, 0, length);
     }
     /**
      * Write sentence to out
@@ -245,7 +246,7 @@ public class NMEASentence
      */
     public void writeTo(OutputStream out) throws IOException
     {
-        out.write(buffer);
+        out.write(buffer, 0, length);
     }
     /**
      * Write sentence to out
@@ -254,7 +255,7 @@ public class NMEASentence
      */
     public void writeTo(Appendable out) throws IOException
     {
-        out.append(seq);
+        out.append(seq, 0, length);
     }
     /**
      * Returns sentence as string
@@ -305,13 +306,13 @@ public class NMEASentence
                     write('$');
                     break;
             }
-            add(talkerId.name());
-            add(messageType.name());
+            write(talkerId.name());
+            write(messageType.name());
         }
 
         private Builder(CharSequence prefix, CharSequence... fields)
         {
-            add(prefix.toString());
+            write(prefix);
             for (CharSequence field : fields)
             {
                 add(field);
@@ -381,10 +382,10 @@ public class NMEASentence
             checksum.update(buffer, 0, index);
             checksum.fillSuffix(buffer, index);
             index += 5;
-            return new NMEASentence(Arrays.copyOf(buffer, index));
+            return new NMEASentence(buffer, index);
         }
 
-        private void write(char c)
+        private void write(int c)
         {
             buffer[index++] = (byte) c;
         }
@@ -392,6 +393,11 @@ public class NMEASentence
         {
             System.arraycopy(b, 0, buffer, index, b.length);
             index += b.length;
+        }
+
+        private void write(CharSequence seq)
+        {
+            seq.chars().forEach(this::write);
         }
     }
 }
