@@ -115,7 +115,7 @@ public class Router extends JavaLogging implements RouterEngine
                 }
                 else
                 {
-                    config("killed task");
+                    config("cancelled task - not restarted");
                 }
             }
             catch (InterruptedException ex)
@@ -171,7 +171,9 @@ public class Router extends JavaLogging implements RouterEngine
             }
             for (RouteType route : serialType.getRoute())
             {
-                sdm.map(route.getPrefix(), serialType);
+                String prefix = route.getPrefix();
+                sdm.map(prefix, serialType);
+                config("add finger print %s -> %s", portType, prefix);
             }
         }
     }
@@ -246,6 +248,24 @@ public class Router extends JavaLogging implements RouterEngine
             if (endpointType instanceof SerialType)
             {
                 SerialType serialType = (SerialType) endpointType;
+                PortType portType = PortType.getPortType(serialType);
+                SymmetricDifferenceMatcher<String, SerialType> sdm = portMatcher.get(portType);
+                sdm.unmap(serialType);
+                config("removed %s from portMatcher", target);
+            }
+        }
+        return cancel(target);
+    }
+    public boolean cancel(String target)
+    {
+        config("cancelling %s", target);
+        Endpoint endpoint = Endpoint.get(target);
+        if (endpoint != null)
+        {
+            EndpointType endpointType = endpoint.getEndpointType();
+            if (endpointType instanceof SerialType)
+            {
+                SerialType serialType = (SerialType) endpointType;
                 Future future = null;
                 for (Entry<Future,Endpoint> e : futureMap.entrySet())
                 {
@@ -259,7 +279,7 @@ public class Router extends JavaLogging implements RouterEngine
                 {
                     future.cancel(true);
                     futureMap.remove(future);
-                    config("killed %s", target);
+                    config("cancelled %s", target);
                     return true;
                 }
                 else
@@ -274,7 +294,7 @@ public class Router extends JavaLogging implements RouterEngine
         }
         else
         {
-            warning("%s to be killed not found", target);
+            warning("%s to be cancelled not found", target);
         }
         return false;
     }
@@ -333,7 +353,7 @@ public class Router extends JavaLogging implements RouterEngine
                     {
                         String name = serialType.getName();
                         config("set %s for scanning", name);
-                        kill(name);
+                        cancel(name);
                     }
                     ensureScanning();
                 }
