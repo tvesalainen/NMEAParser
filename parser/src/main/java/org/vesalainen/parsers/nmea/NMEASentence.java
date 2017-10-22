@@ -352,7 +352,8 @@ public class NMEASentence
          */
         public Builder add(double fld)
         {
-            return add(String.format(Locale.US, "%.1f", fld));
+            add();
+            return write(String.format(Locale.US, "%.1f", fld));
         }
         /**
          * Add int field
@@ -361,7 +362,8 @@ public class NMEASentence
          */
         public Builder add(int fld)
         {
-            return add(String.format(Locale.US, "%d", fld));
+            add();
+            return write(String.valueOf(fld));
         }
         /**
          * Add char field
@@ -370,7 +372,8 @@ public class NMEASentence
          */
         public Builder add(char fld)
         {
-            return add(String.valueOf(fld));
+            add();
+            return write(fld);
         }
         /**
          * Adds '*' starting suffix with checksum and returns NMEASentence.
@@ -385,19 +388,22 @@ public class NMEASentence
             return new NMEASentence(buffer, index);
         }
 
-        private void write(int c)
+        private Builder write(int c)
         {
             buffer[index++] = (byte) c;
+            return this;
         }
-        private void write(byte[] b)
+        private Builder write(byte[] b)
         {
             System.arraycopy(b, 0, buffer, index, b.length);
             index += b.length;
+            return this;
         }
 
-        private void write(CharSequence seq)
+        private Builder write(CharSequence seq)
         {
             seq.chars().forEach(this::write);
+            return this;
         }
     }
 }
