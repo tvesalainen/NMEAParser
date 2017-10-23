@@ -24,6 +24,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -206,9 +207,10 @@ public class PortScanner extends JavaLogging
     }
     private void initialStartScanner(String port, long delayMillis) throws IOException
     {
+        config("initialStartScanner(%s, %d)", port, delayMillis);
         RepeatingIterator<PortType> it = new RepeatingIterator<>(portTypes);
         channelIterators.put(port, it);
-        startScanner(port, 0);
+        startScanner(port, delayMillis);
     }
     private void startScanner(String port, long delayMillis) throws IOException
     {
@@ -231,8 +233,9 @@ public class PortScanner extends JavaLogging
     }
     public void monitor()
     {
-        fine("start monitor ports=%s", ports);
-        for (String port : ports)
+        List<String> freePorts = SerialChannel.getFreePorts();
+        fine("monitor free ports=%s", freePorts);
+        for (String port : freePorts)
         {
             if (!dontScan.contains(port))
             {

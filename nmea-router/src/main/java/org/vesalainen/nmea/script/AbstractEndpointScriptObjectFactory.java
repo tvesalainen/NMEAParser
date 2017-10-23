@@ -65,7 +65,9 @@ public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScr
     protected static ByteBuffer createMessage(String msg)
     {
         NMEASentence sentence = NMEASentence.builder(msg).build();
-        return sentence.getByteBuffer();
+        ByteBuffer bb = sentence.getByteBuffer();
+        bb.position(bb.limit());
+        return bb;
     }
 
     private static class Restarter<E> implements ScriptStatement<Void,E>
@@ -124,7 +126,7 @@ public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScr
         @Override
         public Integer exec(E engine) throws IOException
         {
-            bb.clear();
+            bb.flip();
             return router.send(to, bb);
         }
 

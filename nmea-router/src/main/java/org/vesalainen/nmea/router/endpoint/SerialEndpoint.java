@@ -76,6 +76,7 @@ class SerialEndpoint<E extends SerialType> extends Endpoint<E, SerialChannel>
         }
         return configuration;
     }
+
     @Override
     public SerialChannel createChannel() throws IOException
     {

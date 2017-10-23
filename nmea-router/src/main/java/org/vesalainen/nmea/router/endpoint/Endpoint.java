@@ -25,19 +25,13 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import static java.util.logging.Level.*;
-import java.util.logging.Logger;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
-import javax.management.ObjectName;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.FilterType;
@@ -49,12 +43,13 @@ import org.vesalainen.nmea.router.Route;
 import org.vesalainen.nmea.router.Router;
 import org.vesalainen.nmea.router.filter.MessageFilter;
 import org.vesalainen.parsers.nmea.NMEA;
-import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.HexDump;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
+ * @param <E>
+ * @param <T>
  */
 public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteChannel & GatheringByteChannel> extends DataSource
 {
@@ -70,6 +65,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected List<MessageFilter> filterList;
     protected Set<String> fingerPrint = new HashSet<>();
     private NMEAReader reader;
+    private boolean routing;
 
     public Endpoint(E endpointType, Router router)
     {
@@ -188,7 +184,24 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
         return cnt;
     }
-
+    /**
+     * Set endpoint into routing state when first right sentence is received
+     * channel. 
+     */
+    private void setRouting()
+    {
+        if (!routing)
+        {
+            routing = true;
+            endpointMap.put(name, this);
+            config("started %s", channel);
+            if (scriptEngine != null)
+            {
+                scriptEngine.start();
+            }
+            config("%s is routing", name);
+        }
+    }
     public abstract T createChannel() throws IOException;
     
     @Override
@@ -205,12 +218,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             try (T ch = createChannel())
             {
                 channel = ch;
-                endpointMap.put(name, this);
                 config("started %s", channel);
-                if (scriptEngine != null)
-                {
-                    scriptEngine.start();
-                }
                 reader = new NMEAReader(name, matcher, channel, bufferSize, maxRead, this::onOk, this::onError);
                 reader.read();
             }
@@ -247,6 +255,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             prefix = seqPrefix.toString();
         }
         matcher.getMatched().write(prefix, ring);
+        setRouting();
         if (scriptEngine != null)
         {
             scriptEngine.write(ring);

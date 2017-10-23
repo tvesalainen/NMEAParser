@@ -127,9 +127,9 @@ public class EndpointScriptEngine extends JavaLogging implements Runnable
         {
             config("script %s interrupted", scriptName);
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
-            log(Level.SEVERE, ex.getMessage(), ex);
+            log(Level.SEVERE, ex, "script %s stopped %s", scriptName, ex.getMessage());
         }
     }
 
