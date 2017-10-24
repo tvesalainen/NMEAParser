@@ -73,7 +73,6 @@ public class PortScanner extends JavaLogging
     private Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> portMatcher;
     private Set<PortType> portTypes;
     private Set<String> dontScan;
-    private PortMonitor portMonitor;
     private Set<String> ports = new HashSet<>();
 
     public PortScanner(ScheduledExecutorService pool)
@@ -93,7 +92,6 @@ public class PortScanner extends JavaLogging
         if (monitorFuture != null )
         {
             monitorFuture.cancel(false);
-            portMonitor.stop();
         }
     }
 
@@ -190,20 +188,7 @@ public class PortScanner extends JavaLogging
         }
         ports.addAll(SerialChannel.getFreePorts());
         config("scanning %s", ports);
-        portMonitor = new PortMonitor(pool, monitorPeriod, TimeUnit.MILLISECONDS);
-        portMonitor.addNewFreePortConsumer(this::addPort);
-        portMonitor.addRemoveFreePortConsumer(this::removePort);
         monitorFuture = pool.scheduleWithFixedDelay(this::monitor, 0, monitorPeriod, TimeUnit.MILLISECONDS);
-    }
-    private void addPort(String port)
-    {
-        ports.add(port);
-        config("added new free port %s", port);
-    }
-    private void removePort(String port)
-    {
-        ports.remove(port);
-        config("removed free port %s", port);
     }
     private void initialStartScanner(String port, long delayMillis) throws IOException
     {
