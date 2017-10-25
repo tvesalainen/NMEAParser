@@ -36,7 +36,10 @@ public class ReadCountDistribution
     }
     public void increment(int count)
     {
-        distribution[count-1]++;
+        if (count > 0)
+        {
+            distribution[count-1]++;
+        }
     }
 
     public List<String> getDistribution()

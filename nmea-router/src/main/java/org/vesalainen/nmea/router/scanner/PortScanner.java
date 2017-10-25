@@ -157,16 +157,16 @@ public class PortScanner extends JavaLogging
     {
         scan(consumer, null);
     }
-    public void scan(Consumer<ScanResult> consumer, Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> portMatcher) throws IOException
+    public void scan(Consumer<ScanResult> consumer, Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> prtMtchr) throws IOException
     {
         Objects.requireNonNull(consumer, "consumer");
         this.consumer = consumer;
-        if (portMatcher != null)
+        if (prtMtchr != null)
         {
-            this.portMatcher = portMatcher;
-            this.portTypes = new ConditionalSet<>(portMatcher.keySet(), (PortType k)->
+            this.portMatcher = prtMtchr;
+            this.portTypes = new ConditionalSet<>(prtMtchr.keySet(), (PortType k)->
             {   // only unresolved port types
-                SymmetricDifferenceMatcher<String,SerialType> m = portMatcher.get(k);
+                SymmetricDifferenceMatcher<String,SerialType> m = prtMtchr.get(k);
                 return m!=null && !m.getUnresolved().isEmpty();
             });
         }
