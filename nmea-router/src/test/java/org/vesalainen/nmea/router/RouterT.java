@@ -35,7 +35,7 @@ public class RouterT
     @Test
     public void test()
     {
-        CommandLine.main("-ll", "FINE", "-pl", "FINE", "c:\\temp\\nmea-router.xml");
+        CommandLine.main("-lx", "c:\\temp\\log-config.xml", "c:\\temp\\nmea-router.xml");
     }
     
 }

@@ -71,17 +71,9 @@ public class CommandLine extends LoggingCommandLine
             cmdArgs.attachInstant(router);
             router.start();
         }
-        catch (RestartException ex)
-        {
-            log.info("restarted by "+ex.getMessage());
-        }
-        catch (ShutdownException ex)
-        {
-            log.info("shutdown by "+ex.getMessage());
-        }   
         catch (Throwable ex)
         {
-            log.log(Level.SEVERE, ex, "recovering...");
+            log.log(Level.SEVERE, ex, "stopped...");
         }
     }
 }

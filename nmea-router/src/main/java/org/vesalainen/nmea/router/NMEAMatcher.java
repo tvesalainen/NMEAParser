@@ -45,10 +45,11 @@ public class NMEAMatcher<T> extends WildcardMatcher<T>
     }
 
     @Override
-    public void addExpression(String expr, T attach, Regex.Option... options)
+    public NMEAMatcher<T> addExpression(String expr, T attach, Regex.Option... options)
     {
         super.addExpression(expr, attach, options);
         routes.add(attach);
+        return this;
     }
 
     public List<T> getRoutes()

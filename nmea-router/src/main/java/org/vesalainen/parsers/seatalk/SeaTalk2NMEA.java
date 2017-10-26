@@ -116,7 +116,8 @@ public abstract class SeaTalk2NMEA extends JavaLogging
         boolean shallowAlarm = (z & 1) == 1;
         if (yz != 0x60)
         {
-            warning("%x defect %x", yz, xx);
+            int ii = yz;
+            warning("%x defect %x", ii, xx);
         }
         if (!defect)
         {
@@ -343,7 +344,7 @@ public abstract class SeaTalk2NMEA extends JavaLogging
         else
         {
             warning("SeaTalk2NMEA.recover:");
-            warning(HexDump.toHex(buf));
+            warning(()->HexDump.toHex(buf));
         }
         reader.clear();
     }

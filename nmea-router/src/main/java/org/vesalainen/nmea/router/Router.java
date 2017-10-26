@@ -49,7 +49,7 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class Router extends JavaLogging implements RouterEngine
+public class Router extends JavaLogging implements RouterEngine, Runnable
 {
     private static final long MAX_RESTART_DELAY = 100000;
     private final RouterConfig config;
@@ -74,6 +74,7 @@ public class Router extends JavaLogging implements RouterEngine
 
     public void start() throws IOException
     {
+        Runtime.getRuntime().addShutdownHook(new Thread(this));
         config("starting %s", Version.getVersion());
         portScanner = new PortScanner(POOL);
         populateSerialSet();
@@ -103,6 +104,11 @@ public class Router extends JavaLogging implements RouterEngine
             try
             {
                 Future future = starter.take();
+                if (POOL.isShutdown())
+                {
+                    config("shutting down...");
+                    return;
+                }
                 Endpoint endpoint = futureMap.get(future);
                 if (endpoint != null)
                 {
@@ -372,6 +378,13 @@ public class Router extends JavaLogging implements RouterEngine
     public RouterConfig getConfig()
     {
         return config;
+    }
+
+    @Override
+    public void run()
+    {
+        config("started shutdown-hook");
+        POOL.shutdownNow();
     }
 
 }
