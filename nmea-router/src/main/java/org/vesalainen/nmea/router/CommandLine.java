@@ -18,10 +18,12 @@ package org.vesalainen.nmea.router;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBException;
 import org.vesalainen.nmea.router.scanner.ConfigCreator;
 import org.vesalainen.util.LoggingCommandLine;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -40,6 +42,8 @@ public class CommandLine extends LoggingCommandLine
     
     public static void main(String... args)
     {
+        RouterManager routerManager = new RouterManager();
+        Runtime.getRuntime().addShutdownHook(new Thread(routerManager));
         CommandLine cmdArgs = new CommandLine();
         cmdArgs.command(args);
         JavaLogging log = JavaLogging.getLogger(CommandLine.class);
@@ -65,15 +69,6 @@ public class CommandLine extends LoggingCommandLine
             ex.printStackTrace();
             System.exit(1);
         }
-        try
-        {
-            Router router = new Router(config);
-            cmdArgs.attachInstant(router);
-            router.start();
-        }
-        catch (Throwable ex)
-        {
-            log.log(Level.SEVERE, ex, "stopped...");
-        }
+        routerManager.start(cmdArgs, config);
     }
 }

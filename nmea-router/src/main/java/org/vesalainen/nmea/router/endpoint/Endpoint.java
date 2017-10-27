@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
 import org.vesalainen.nio.RingByteBuffer;
@@ -53,7 +54,7 @@ import org.vesalainen.util.HexDump;
  */
 public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteChannel & GatheringByteChannel> extends DataSource
 {
-    private static final Map<String,Endpoint> endpointMap = new HashMap<>();
+    protected static final Map<String,Endpoint> endpointMap = new ConcurrentHashMap<>();
     protected final Router router;
     protected final E endpointType;
     protected int bufferSize = 128;
@@ -185,7 +186,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         return cnt;
     }
     /**
-     * Set endpoint into routing state when first right sentence is received
+     * Set endpoint into routing state when first right sentence is received on
      * channel. 
      */
     private void setRouting()

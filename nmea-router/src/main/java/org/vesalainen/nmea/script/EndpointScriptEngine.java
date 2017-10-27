@@ -16,7 +16,6 @@
  */
 package org.vesalainen.nmea.script;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
@@ -24,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import org.vesalainen.nio.RingByteBuffer;
+import static org.vesalainen.nmea.router.RouterManager.POOL;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
-import static org.vesalainen.nmea.router.ThreadPool.POOL;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**

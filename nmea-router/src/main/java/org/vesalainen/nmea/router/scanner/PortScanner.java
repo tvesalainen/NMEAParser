@@ -39,7 +39,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
-import org.vesalainen.comm.channel.PortMonitor;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nio.RingByteBuffer;
@@ -218,76 +217,73 @@ public class PortScanner extends JavaLogging
     }
     public void monitor()
     {
-        List<String> freePorts = SerialChannel.getFreePorts();
-        fine("monitor free ports=%s", freePorts);
-        for (String port : freePorts)
+        try
         {
-            if (!dontScan.contains(port))
+            List<String> freePorts = SerialChannel.getFreePorts();
+            fine("monitor free ports=%s", freePorts);
+            for (String port : freePorts)
             {
-                if (!scanners.containsKey(port))
+                if (!dontScan.contains(port))
                 {
-                    try
+                    if (!scanners.containsKey(port))
                     {
-                        initialStartScanner(port, 0);
-                        config("started scanner for new port %s", port);
+                        try
+                        {
+                            initialStartScanner(port, 0);
+                            config("started scanner for new port %s", port);
+                        }
+                        catch (IOException ex)
+                        {
+                            log(SEVERE, ex, "initialStartScanner %s", ex.getMessage());
+                        }
                     }
-                    catch (IOException ex)
+                }
+            }
+            for (Scanner scanner : futures.keySet())
+            {
+                String port = scanner.port;
+                Future<?> future = futures.get(scanner);
+                if (future.isDone())
+                {
+                    if (!future.isCancelled() && scanner.getSerialType() != null)
                     {
-                        log(SEVERE, ex, "initialStartScanner %s", ex.getMessage());
+                        fine("finger print for %s because unique hit", port, fingerPrintDelay, scanner.getFingerPrint());
+                        ScanResult sr = new ScanResult(scanner);
+                        consumer.accept(sr);
+                    }
+                    scanners.remove(port);
+                    ports.remove(port);
+                    futures.remove(scanner);
+                }
+                else
+                {
+                    if (scanner.getElapsedTime() >= monitorPeriod && scanner.getFingerPrint().isEmpty())
+                    {
+                        fine("rescanning %s because no finger print after %d millis", port, monitorPeriod);
+                        future.cancel(true);
+                        scanners.remove(port);
+                        futures.remove(scanner);
+                        startScanner(port, closeDelay);
+                    }
+                    else
+                    {
+                        if (scanner.getElapsedTime() >= fingerPrintDelay)
+                        {
+                            fine("finger print for %s after %d millis %s", port, fingerPrintDelay, scanner.getFingerPrint());
+                            ScanResult sr = new ScanResult(scanner);
+                            consumer.accept(sr);
+                            future.cancel(true);
+                            scanners.remove(port);
+                            futures.remove(scanner);
+                        }
                     }
                 }
             }
         }
-        for (Scanner scanner : futures.keySet())
+        catch (IOException ex)
         {
-            String port = scanner.port;
-            boolean rescan = false;
-            Future<?> future = futures.get(scanner);
-            if (future.isDone())
-            {
-                if (!future.isCancelled() && scanner.getSerialType() != null)
-                {
-                    fine("finger print for %s because unique hit", port, fingerPrintDelay, scanner.getFingerPrint());
-                    ScanResult sr = new ScanResult(scanner);
-                    consumer.accept(sr);
-                }
-                scanners.remove(port);
-                ports.remove(port);
-                futures.remove(scanner);
-            }
-            else
-            {
-                if (scanner.getElapsedTime() >= monitorPeriod && scanner.getFingerPrint().isEmpty())
-                {
-                    fine("rescanning %s because no finger print after %d millis", port, monitorPeriod);
-                    rescan = true;
-                }
-                else
-                {
-                    if (scanner.getElapsedTime() >= fingerPrintDelay)
-                    {
-                        fine("finger print for %s after %d millis %s", port, fingerPrintDelay, scanner.getFingerPrint());
-                        ScanResult sr = new ScanResult(scanner);
-                        consumer.accept(sr);
-                        future.cancel(true);
-                        scanners.remove(port);
-                        futures.remove(scanner);
-                    }
-                }
-            }
-            if (rescan)
-            {
-                future.cancel(true);
-                try
-                {
-                    startScanner(port, closeDelay);
-                }
-                catch (IOException ex)
-                {
-                    log(SEVERE, ex, "startScanner %s", ex.getMessage());
-                    throw new RuntimeException(ex);
-                }
-            }
+            log(SEVERE, ex, "startScanner %s", ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
     private class Scanner extends BaseScanner implements Runnable

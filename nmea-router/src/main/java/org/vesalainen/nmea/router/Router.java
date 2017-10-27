@@ -37,7 +37,7 @@ import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
-import static org.vesalainen.nmea.router.ThreadPool.POOL;
+import static org.vesalainen.nmea.router.RouterManager.POOL;
 import org.vesalainen.nmea.router.endpoint.EndpointFactory;
 import org.vesalainen.nmea.router.scanner.PortScanner;
 import org.vesalainen.nmea.router.scanner.PortScanner.ScanResult;
@@ -49,7 +49,7 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class Router extends JavaLogging implements RouterEngine, Runnable
+public class Router extends JavaLogging implements RouterEngine
 {
     private static final long MAX_RESTART_DELAY = 100000;
     private final RouterConfig config;
@@ -74,7 +74,6 @@ public class Router extends JavaLogging implements RouterEngine, Runnable
 
     public void start() throws IOException
     {
-        Runtime.getRuntime().addShutdownHook(new Thread(this));
         config("starting %s", Version.getVersion());
         portScanner = new PortScanner(POOL);
         populateSerialSet();
@@ -378,13 +377,6 @@ public class Router extends JavaLogging implements RouterEngine, Runnable
     public RouterConfig getConfig()
     {
         return config;
-    }
-
-    @Override
-    public void run()
-    {
-        config("started shutdown-hook");
-        POOL.shutdownNow();
     }
 
 }

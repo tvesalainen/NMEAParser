@@ -17,12 +17,9 @@
 package org.vesalainen.nmea.router.scanner;
 
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.logging.Level;
 import org.junit.Test;
-import org.vesalainen.comm.channel.SerialChannel;
-import static org.vesalainen.nmea.router.PortType.*;
-import static org.vesalainen.nmea.router.ThreadPool.POOL;
+import static org.vesalainen.nmea.router.RouterManager.POOL;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**

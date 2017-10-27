@@ -32,7 +32,7 @@ import javax.management.ObjectName;
 import org.vesalainen.management.SimpleNotificationEmitter;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.router.DataSourceMXBean;
-import static org.vesalainen.nmea.router.ThreadPool.POOL;
+import static org.vesalainen.nmea.router.RouterManager.POOL;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**

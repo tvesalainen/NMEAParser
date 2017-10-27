@@ -28,7 +28,7 @@ import static java.util.logging.Level.SEVERE;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.router.Router;
-import static org.vesalainen.nmea.router.ThreadPool.POOL;
+import static org.vesalainen.nmea.router.RouterManager.POOL;
 
 /**
  *
@@ -116,12 +116,20 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         {
             try
             {
+                if (remotes.isEmpty())
+                {
+                    endpointMap.put(name, this);
+                }
                 remotes.add(this);
                 super.run();
             }
             finally
             {
                 remotes.remove(this);
+                if (remotes.isEmpty())
+                {
+                    endpointMap.remove(name);
+                }
             }
         }
         

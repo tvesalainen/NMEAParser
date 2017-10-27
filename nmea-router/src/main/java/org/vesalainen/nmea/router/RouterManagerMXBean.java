@@ -16,15 +16,12 @@
  */
 package org.vesalainen.nmea.router;
 
-import java.util.concurrent.ScheduledExecutorService;
-import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
-
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public final class ThreadPool
+public interface RouterManagerMXBean
 {
-    public static final ScheduledExecutorService POOL = new CachedScheduledThreadPool();
-
+    void restart();
+    void send(String msg, String to);
 }
