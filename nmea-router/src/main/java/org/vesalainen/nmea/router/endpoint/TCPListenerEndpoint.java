@@ -18,13 +18,17 @@ package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.logging.Level.SEVERE;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.router.Router;
@@ -37,6 +41,7 @@ import static org.vesalainen.nmea.router.RouterManager.POOL;
 public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
 {
     private Set<TCPEndpoint> remotes = Collections.synchronizedSet(new HashSet<>());
+    private AtomicInteger seq = new AtomicInteger();
     
     public TCPListenerEndpoint(TcpEndpointType tcpEndpointType, Router router)
     {
@@ -57,11 +62,12 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             int port = endpointType.getPort();
             InetSocketAddress socketAddress = new InetSocketAddress(port);
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.setOption(SO_REUSEADDR, true);
             serverSocketChannel.bind(socketAddress);
             while (true)
             {
                 SocketChannel socketChannel = serverSocketChannel.accept();
-                TCPEndpoint tcpEndpoint = new TCPEndpoint(socketChannel, endpointType, router, bufferSize);
+                TCPEndpoint tcpEndpoint = new TCPEndpoint(socketChannel, endpointType, router);
                 POOL.submit(tcpEndpoint);
             }
         }
@@ -97,18 +103,24 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
 
     private class TCPEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
     {
-        private SocketChannel socket;
+        private SocketChannel socketChannel;
 
-        public TCPEndpoint(SocketChannel socket, TcpEndpointType endpointType, Router router, int bufferSize)
+        public TCPEndpoint(SocketChannel socketChannel, TcpEndpointType endpointType, Router router)
         {
             super(endpointType, router);
-            this.socket = socket;
+            this.socketChannel = socketChannel;
         }
         
         @Override
         public SocketChannel createChannel() throws IOException
         {
-            return socket;
+            return socketChannel;
+        }
+
+        @Override
+        protected ObjectName getObjectName() throws MalformedObjectNameException
+        {
+            return new ObjectName("org.vesalainen.nmea.router.endpoint:type="+seq.incrementAndGet());
         }
 
         @Override
@@ -121,6 +133,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                     endpointMap.put(name, this);
                 }
                 remotes.add(this);
+                config("starting socket connection %s", socketChannel);
                 super.run();
             }
             finally

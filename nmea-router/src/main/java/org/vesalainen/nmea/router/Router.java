@@ -31,7 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import static java.util.logging.Level.*;
+import java.util.logging.Logger;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
@@ -63,6 +65,7 @@ public class Router extends JavaLogging implements RouterEngine
     private final ExecutorCompletionService starter = new ExecutorCompletionService(POOL);
     private final LongMap<EndpointType> startTimeMap = new LongMap<>();
     private final Map<EndpointType,Endpoint> endpointMap = new HashMap<>();
+    private List<String> portsNow;
 
     public Router(RouterConfig config)
     {
@@ -71,8 +74,13 @@ public class Router extends JavaLogging implements RouterEngine
         monitorDelay = config.getMonitorDelay();
         closeDelay = config.getCloseDelay();
     }
-
-    public void start() throws IOException
+    /**
+     * Starts router returns true if port configuration has changed during the
+     * run
+     * @return
+     * @throws IOException 
+     */
+    public boolean start() throws IOException
     {
         config("starting %s", Version.getVersion());
         portScanner = new PortScanner(POOL);
@@ -84,9 +92,9 @@ public class Router extends JavaLogging implements RouterEngine
         portScanner.setFingerPrintDelay(Long.MAX_VALUE);
         List<String> allDevices = config.getAllDevices();
         config("last ports %s", allDevices);
-        List<String> allPorts = SerialChannel.getAllPorts();
-        config("ports now  %s", allPorts);
-        if (allPorts.equals(allDevices))
+        portsNow = SerialChannel.getAllPorts();
+        config("ports now  %s", portsNow);
+        if (portsNow.equals(allDevices))
         {
             config("ports seems to be the same as last run - try the same config");
             startAllSerial();
@@ -95,7 +103,6 @@ public class Router extends JavaLogging implements RouterEngine
         else
         {
             config("port configuration has changed - start scanner");
-            config.updateAllDevices(allPorts);
             ensureScanning();
         }
         while (true)
@@ -103,29 +110,34 @@ public class Router extends JavaLogging implements RouterEngine
             try
             {
                 Future future = starter.take();
-                if (POOL.isShutdown())
+                portsNow = SerialChannel.getAllPorts();
+                if (portsNow.equals(allDevices))
                 {
-                    config("shutting down...");
-                    return;
-                }
-                Endpoint endpoint = futureMap.get(future);
-                if (endpoint != null)
-                {
-                    EndpointType endpointType = endpoint.getEndpointType();
-                    endpointMap.remove(endpointType);
-                    long elapsed = System.currentTimeMillis() - startTimeMap.getLong(endpointType);
-                    long delay = elapsed > 0 ? MAX_RESTART_DELAY / elapsed : MAX_RESTART_DELAY;
-                    POOL.schedule(()->startEndpoint(endpointType), delay, TimeUnit.MILLISECONDS);
-                    config("restart %s after %d millis", endpoint, delay);
+                    Endpoint endpoint = futureMap.get(future);
+                    if (endpoint != null)
+                    {
+                        EndpointType endpointType = endpoint.getEndpointType();
+                        endpointMap.remove(endpointType);
+                        long elapsed = System.currentTimeMillis() - startTimeMap.getLong(endpointType);
+                        long delay = elapsed > 0 ? MAX_RESTART_DELAY / elapsed : MAX_RESTART_DELAY;
+                        POOL.schedule(()->startEndpoint(endpointType), delay, TimeUnit.MILLISECONDS);
+                        config("restart %s after %d millis", endpoint, delay);
+                    }
+                    else
+                    {
+                        config("cancelled task - not restarted");
+                    }
                 }
                 else
                 {
-                    config("cancelled task - not restarted");
+                    severe("%s -> %s during run HW problem!", allDevices, portsNow);
+                    return true;    // port configuration has changed during the run
+                                    // hw problem
                 }
             }
             catch (InterruptedException ex)
             {
-                return;
+                return false;   
             }
         }
     }
@@ -212,6 +224,15 @@ public class Router extends JavaLogging implements RouterEngine
         config("started %s", endpoint);
         if (allResolved())
         {
+            try
+            {
+                config.updateAllDevices(portsNow);
+            }
+            catch (IOException ex)
+            {
+                throw new RuntimeException(ex);
+            }
+            config("updated config ports %s", portsNow);
             portScanner.stop();
             portScanner = null;
             config("all ports resolved port scanner stopped");
@@ -349,6 +370,8 @@ public class Router extends JavaLogging implements RouterEngine
                 }
                 if (allResolved())
                 {
+                    config.updateAllDevices(portsNow);
+                    config("updated config ports %s", portsNow);
                     config("all serial ports running");
                     portScanner = null;
                 }

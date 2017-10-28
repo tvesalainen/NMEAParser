@@ -28,6 +28,7 @@ import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
+import javax.xml.bind.JAXBException;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
@@ -82,7 +83,10 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
         {
             Router router = new Router(config);
             cmdArgs.attachInstant(router);
-            router.start();
+            if (router.start())
+            {
+                restart("port config changed");
+            }
         }
         catch (Throwable ex)
         {
@@ -91,14 +95,22 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
     }
     
     @Override
-    public void restart()
+    public void restart(String reason) throws IOException
     {
-        config("restarting");
+        severe("restarting because %s", reason);
         ScheduledExecutorService oldPool = POOL;
         POOL = new CachedScheduledThreadPool();
         config("created new thread pool");
         POOL.schedule(()->start(), 10, TimeUnit.SECONDS);
         config("scheduled router start");
+        try
+        {
+            config.load();
+        }
+        catch (JAXBException ex)
+        {
+            throw new IOException(ex);
+        }
         oldPool.shutdownNow();
     }
 

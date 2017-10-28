@@ -216,6 +216,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
                 Thread.currentThread().setPriority(priority);
             }
             ManagementFactory.getPlatformMBeanServer().registerMBean(this, objectName);
+            config("registerMBean %s", objectName);
             try (T ch = createChannel())
             {
                 channel = ch;
@@ -235,6 +236,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
                     Thread.currentThread().setPriority(NORM_PRIORITY);
                 }
                 ManagementFactory.getPlatformMBeanServer().unregisterMBean(objectName);
+                config("unregisterMBean %s", objectName);
             }
         }
         catch (Throwable ex)

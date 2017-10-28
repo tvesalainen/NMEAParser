@@ -57,7 +57,7 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
         this.name = name;
         try
         {
-            this.objectName = new ObjectName("org.vesalainen.nmea.router.endpoint:type="+name);
+            this.objectName = getObjectName();
         }
         catch (MalformedObjectNameException ex)
         {
@@ -75,6 +75,10 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
         setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.') + "." + name));
     }
 
+    protected ObjectName getObjectName() throws MalformedObjectNameException
+    {
+        return new ObjectName("org.vesalainen.nmea.router.endpoint:type="+name);
+    }
     public abstract int write(ByteBuffer readBuffer) throws IOException;
 
     public abstract int write(RingByteBuffer ring) throws IOException;

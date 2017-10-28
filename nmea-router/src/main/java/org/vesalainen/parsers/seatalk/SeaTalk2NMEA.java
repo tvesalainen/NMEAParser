@@ -33,8 +33,6 @@ import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
-import org.vesalainen.parsers.nmea.NMEAGen;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.HexDump;
 import org.vesalainen.util.logging.JavaLogging;

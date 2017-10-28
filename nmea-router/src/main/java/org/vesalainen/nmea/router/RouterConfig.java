@@ -73,11 +73,7 @@ public class RouterConfig extends JavaLogging
             objectFactory = new ObjectFactory();
             dataTypeFactory = DatatypeFactory.newInstance();
         }
-        catch (DatatypeConfigurationException ex)
-        {
-            throw new IllegalArgumentException(ex);
-        }
-        catch (JAXBException ex)
+        catch (DatatypeConfigurationException | JAXBException ex)
         {
             throw new IllegalArgumentException(ex);
         }

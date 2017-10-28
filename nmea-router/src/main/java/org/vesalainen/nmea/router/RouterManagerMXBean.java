@@ -16,12 +16,14 @@
  */
 package org.vesalainen.nmea.router;
 
+import java.io.IOException;
+
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public interface RouterManagerMXBean
 {
-    void restart();
+    void restart(String reason) throws IOException;
     void send(String msg, String to);
 }
