@@ -34,7 +34,7 @@ import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
  */
 public class SeaTalkInputStream extends InputStream
 {
-    private static final SeaTalk2NMEA parser = SeaTalk2NMEA.newInstance();
+    private final SeaTalk2NMEA parser = SeaTalk2NMEA.newInstance();
     private InputReader input;
     private byte[] buffer = new byte[128];
     private int pos;
