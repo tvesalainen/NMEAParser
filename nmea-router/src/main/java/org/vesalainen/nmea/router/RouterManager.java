@@ -22,15 +22,19 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import javax.xml.bind.JAXBException;
+import org.vesalainen.bean.BeanHelper;
+import org.vesalainen.comm.channel.LogPortMonitor;
+import org.vesalainen.comm.channel.PortMonitor;
+import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
 import org.vesalainen.parsers.nmea.NMEASentence;
+import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -44,10 +48,12 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
     private final ObjectName objectName;
     private CommandLine cmdArgs;
     private RouterConfig config;
+    private PortMonitor portMonitor;
 
     public RouterManager()
     {
         super(RouterManager.class);
+        portMonitor = new LogPortMonitor(POOL, 1, TimeUnit.SECONDS);
         try
         {
             this.objectName = new ObjectName("org.vesalainen.nmea.router:type=manager");
@@ -58,11 +64,11 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
             throw new RuntimeException(ex);
         }
     }
-
     void start(CommandLine cmdArgs, RouterConfig config)
     {
         this.cmdArgs = cmdArgs;
         this.config = config;
+        cmdArgs.attachInstant(this);
         config("initial start");
         POOL.schedule(()->start(), 0, TimeUnit.SECONDS);
         try
@@ -111,6 +117,7 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
         {
             throw new IOException(ex);
         }
+        cmdArgs.attachInstant(this);
         oldPool.shutdownNow();
     }
 

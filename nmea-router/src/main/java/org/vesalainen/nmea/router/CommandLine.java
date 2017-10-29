@@ -18,12 +18,9 @@ package org.vesalainen.nmea.router;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBException;
 import org.vesalainen.nmea.router.scanner.ConfigCreator;
 import org.vesalainen.util.LoggingCommandLine;
-import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**

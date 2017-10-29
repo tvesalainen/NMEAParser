@@ -21,6 +21,7 @@
         <xsd:attribute name="allDevices" type="deviceListType"/>
         <xsd:attribute name="closeDelay" type="delayType"/>
         <xsd:attribute name="monitorDelay" type="delayType"/>
+        <xsd:attribute name="nativeDebug" type="xsd:boolean"/>
     </xsd:complexType>
     <xsd:complexType name="tcpEndpointType">
         <xsd:complexContent>

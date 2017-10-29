@@ -25,7 +25,7 @@ import org.vesalainen.nmea.router.Router;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class NmeaHsEndpoint extends SerialEndpoint<Nmea0183HsType>
+public class NmeaHsEndpoint extends SerialChannelEndpoint<Nmea0183HsType>
 {
 
     public NmeaHsEndpoint(Nmea0183HsType nmea0183HsType, Router router)

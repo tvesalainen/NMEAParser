@@ -22,13 +22,10 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.logging.Level.SEVERE;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.router.Router;
@@ -40,7 +37,7 @@ import static org.vesalainen.nmea.router.RouterManager.POOL;
  */
 public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
 {
-    private Set<TCPEndpoint> remotes = Collections.synchronizedSet(new HashSet<>());
+    private AtomicInteger listenerCount = new AtomicInteger();
     private AtomicInteger seq = new AtomicInteger();
     
     public TCPListenerEndpoint(TcpEndpointType tcpEndpointType, Router router)
@@ -59,6 +56,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
     {
         try
         {
+            Endpoint.endpointMap.put(name, this);
             int port = endpointType.getPort();
             InetSocketAddress socketAddress = new InetSocketAddress(port);
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
@@ -75,16 +73,27 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         {
             log(SEVERE, ex, "%s stopped because of %s", name, ex);
         }
+        finally
+        {
+            Endpoint.endpointMap.remove(name);
+        }
     }
 
     @Override
     public int write(ByteBuffer bb) throws IOException
     {
         int count = 0;
-        for (TCPEndpoint tcpEndpoint : remotes)
+        if (listenerCount.get() > 0)
         {
-            int cnt = tcpEndpoint.write(bb);
-            count += cnt;
+            for (Entry<String, Endpoint> entry : endpointMap.entrySet())
+            {
+                String key = entry.getKey();
+                if (key.startsWith(name) && !key.equals(name))
+                {
+                    int cnt = entry.getValue().write(bb);
+                    count += cnt;
+                }
+            }
         }
         return count;
     }
@@ -93,10 +102,17 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
     public int write(RingByteBuffer ring) throws IOException
     {
         int count = 0;
-        for (TCPEndpoint tcpEndpoint : remotes)
+        if (listenerCount.get() > 0)
         {
-            int cnt = tcpEndpoint.write(ring);
-            count += cnt;
+            for (Entry<String, Endpoint> entry : endpointMap.entrySet())
+            {
+                String key = entry.getKey();
+                if (key.startsWith(name) && !key.equals(name))
+                {
+                    int cnt = entry.getValue().write(ring);
+                    count += cnt;
+                }
+            }
         }
         return count;
     }
@@ -107,7 +123,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
 
         public TCPEndpoint(SocketChannel socketChannel, TcpEndpointType endpointType, Router router)
         {
-            super(endpointType, router);
+            super(endpointType, router, "-"+seq.incrementAndGet());
             this.socketChannel = socketChannel;
         }
         
@@ -118,31 +134,17 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         }
 
         @Override
-        protected ObjectName getObjectName() throws MalformedObjectNameException
-        {
-            return new ObjectName("org.vesalainen.nmea.router.endpoint:type="+seq.incrementAndGet());
-        }
-
-        @Override
         public void run()
         {
             try
             {
-                if (remotes.isEmpty())
-                {
-                    endpointMap.put(name, this);
-                }
-                remotes.add(this);
+                listenerCount.incrementAndGet();
                 config("starting socket connection %s", socketChannel);
                 super.run();
             }
             finally
             {
-                remotes.remove(this);
-                if (remotes.isEmpty())
-                {
-                    endpointMap.remove(name);
-                }
+                listenerCount.decrementAndGet();
             }
         }
         

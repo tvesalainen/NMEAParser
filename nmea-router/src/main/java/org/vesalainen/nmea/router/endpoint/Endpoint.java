@@ -25,7 +25,6 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.NotCompliantMBeanException;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.FilterType;
@@ -66,11 +69,21 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected List<MessageFilter> filterList;
     protected Set<String> fingerPrint = new HashSet<>();
     private NMEAReader reader;
-    private boolean routing;
+    protected boolean routing = true;
 
     public Endpoint(E endpointType, Router router)
     {
-        super(endpointType.getName());
+        this(endpointType, router, "");
+    }
+    /**
+     * Creates Endpoint with name extension
+     * @param endpointType
+     * @param router
+     * @param ext 
+     */
+    public Endpoint(E endpointType, Router router, String ext)
+    {
+        super(endpointType.getName()+ext);
         this.router = router;
         this.endpointType = endpointType;
         init();
@@ -185,25 +198,24 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
         return cnt;
     }
-    /**
-     * Set endpoint into routing state when first right sentence is received on
-     * channel. 
-     */
-    private void setRouting()
+    protected abstract T createChannel() throws IOException;
+    protected void onStart() throws IOException
     {
-        if (!routing)
+        endpointMap.put(name, this);
+        if (scriptEngine != null)
         {
-            routing = true;
-            endpointMap.put(name, this);
-            config("started %s", channel);
-            if (scriptEngine != null)
-            {
-                scriptEngine.start();
-            }
-            config("%s is routing", name);
+            scriptEngine.start();
+        }
+        config("%s is routing", name);
+    }
+    protected void onStop() throws IOException
+    {
+        endpointMap.remove(name);
+        if (scriptEngine != null)
+        {
+            scriptEngine.stop();
         }
     }
-    public abstract T createChannel() throws IOException;
     
     @Override
     public void run()
@@ -215,8 +227,9 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             {
                 Thread.currentThread().setPriority(priority);
             }
-            ManagementFactory.getPlatformMBeanServer().registerMBean(this, objectName);
             config("registerMBean %s", objectName);
+            ManagementFactory.getPlatformMBeanServer().registerMBean(this, objectName);
+            onStart();
             try (T ch = createChannel())
             {
                 channel = ch;
@@ -226,11 +239,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             }
             finally
             {
-                endpointMap.remove(name);
-                if (scriptEngine != null)
-                {
-                    scriptEngine.stop();
-                }
+                onStop();
                 if (priority != null)
                 {
                     Thread.currentThread().setPriority(NORM_PRIORITY);
@@ -245,7 +254,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
     }
 
-    private void onOk(RingByteBuffer ring, long timestamp) throws IOException
+    protected void onOk(RingByteBuffer ring, long timestamp) throws IOException
     {
         readBytes += ring.length();
         readCount++;
@@ -258,7 +267,6 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             prefix = seqPrefix.toString();
         }
         matcher.getMatched().write(prefix, ring);
-        setRouting();
         if (scriptEngine != null)
         {
             scriptEngine.write(ring);
@@ -269,7 +277,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             fingerPrint.add(prefix);
         }
     }
-    private void onError(Supplier<byte[]> errInput) throws IOException
+    protected void onError(Supplier<byte[]> errInput) throws IOException
     {
         lastRead = System.currentTimeMillis();
         byte[] error = errInput.get();
@@ -278,6 +286,12 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         warning("%s: rejected %s", name, new String(error, US_ASCII));
         finest(()->HexDump.toHex(errInput));
         sendNotification(()->new String(error, US_ASCII), ()->error, ()->lastRead);
+    }
+
+    @Override
+    public String getChannel()
+    {
+        return channel.toString();
     }
 
     @Override

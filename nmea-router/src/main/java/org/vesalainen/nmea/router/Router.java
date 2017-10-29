@@ -31,9 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import static java.util.logging.Level.*;
-import java.util.logging.Logger;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
@@ -73,6 +71,7 @@ public class Router extends JavaLogging implements RouterEngine
         this.config = config;
         monitorDelay = config.getMonitorDelay();
         closeDelay = config.getCloseDelay();
+        SerialChannel.debug(config.isNativeDebug());
     }
     /**
      * Starts router returns true if port configuration has changed during the
@@ -83,6 +82,7 @@ public class Router extends JavaLogging implements RouterEngine
     public boolean start() throws IOException
     {
         config("starting %s", Version.getVersion());
+        portsNow = SerialChannel.getAllPorts();
         portScanner = new PortScanner(POOL);
         populateSerialSet();
         populatePortMatcher();
@@ -92,9 +92,8 @@ public class Router extends JavaLogging implements RouterEngine
         portScanner.setFingerPrintDelay(Long.MAX_VALUE);
         List<String> allDevices = config.getAllDevices();
         config("last ports %s", allDevices);
-        portsNow = SerialChannel.getAllPorts();
         config("ports now  %s", portsNow);
-        if (portsNow.equals(allDevices))
+        if (portsNow.equals(allDevices) && !portsNow.isEmpty())
         {
             config("ports seems to be the same as last run - try the same config");
             startAllSerial();

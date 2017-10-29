@@ -27,7 +27,7 @@ import org.vesalainen.nmea.router.seatalk.SeaTalkInputStream;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class SeaTalkEndpoint extends Endpoint<SeatalkType,FilterChannel>
+public class SeaTalkEndpoint extends SerialEndpoint<SeatalkType,FilterChannel>
 {
 
     public SeaTalkEndpoint(SeatalkType seatalkType, Router router)

@@ -17,73 +17,52 @@
 package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
-import org.vesalainen.comm.channel.SerialChannel;
-import org.vesalainen.comm.channel.SerialChannel.Builder;
-import org.vesalainen.comm.channel.SerialChannel.Configuration;
-import org.vesalainen.nmea.jaxb.router.FlowControlType;
-import org.vesalainen.nmea.jaxb.router.ParityType;
+import java.nio.channels.GatheringByteChannel;
+import java.nio.channels.ScatteringByteChannel;
+import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.router.Router;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
+ * @param <E>
+ * @param <T>
  */
-class SerialEndpoint<E extends SerialType> extends Endpoint<E, SerialChannel>
+public abstract class SerialEndpoint<E extends SerialType, T extends ScatteringByteChannel & GatheringByteChannel> extends Endpoint<E,T>
 {
 
-    public SerialEndpoint(E serialType, Router router)
+    public SerialEndpoint(E endpointType, Router router)
     {
-        super(serialType, router);
-        Long mr = serialType.getMaxRead();
-        if (mr != null)
-        {
-            maxRead = mr.intValue();
-            if (maxRead > bufferSize)
-            {
-                bufferSize = maxRead;
-            }
-        }
+        super(endpointType, router);
     }
-
-    protected Configuration createConfig()
+    
+    public SerialEndpoint(E endpointType, Router router, String ext)
     {
-        Configuration configuration = new Configuration();
-        Long speed = endpointType.getSpeed();
-        if (speed != null)
-        {
-            configuration.setSpeed(SerialChannel.getSpeed(speed.intValue()));
-        }
-        Integer bits = endpointType.getBits();
-        if (bits != null)
-        {
-            configuration.setDataBits(SerialChannel.getDataBits(bits));
-        }
-        ParityType parity = endpointType.getParity();
-        if (parity != null)
-        {
-            configuration.setParity(SerialChannel.getParity(parity.name()));
-        }
-        Integer stops = endpointType.getStops();
-        if (stops != null)
-        {
-            configuration.setStopBits(SerialChannel.getStopBits(stops));
-        }
-        FlowControlType flowControl = endpointType.getFlowControl();
-        if (flowControl != null)
-        {
-            configuration.setFlowControl(SerialChannel.getFlowControl(flowControl.name()));
-        }
-        return configuration;
+        super(endpointType, router, ext);
+        routing = false;
     }
 
     @Override
-    public SerialChannel createChannel() throws IOException
+    protected void onStart() throws IOException
     {
-        String device = endpointType.getDevice();
-        Configuration configuration = createConfig();
-        Builder builder = new SerialChannel.Builder(device, configuration);
-        return builder.get();
     }
     
+    @Override
+    protected void onOk(RingByteBuffer ring, long timestamp) throws IOException
+    {
+        super.onOk(ring, timestamp);
+        if (!routing)
+        {
+            routing = true;
+            endpointMap.put(name, this);
+            if (scriptEngine != null)
+            {
+                scriptEngine.start();
+            }
+            config("%s is routing", name);
+        }
+        
+    }
+
 }

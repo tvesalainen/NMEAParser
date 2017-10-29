@@ -283,6 +283,12 @@ public class RouterConfig extends JavaLogging
         }
     }
 
+    public boolean isNativeDebug()
+    {
+        Boolean nativeDebug = nmea.getValue().isNativeDebug();
+        return nativeDebug != null ? nativeDebug : false;
+    }
+
     private class Lst extends Listener
     {
 

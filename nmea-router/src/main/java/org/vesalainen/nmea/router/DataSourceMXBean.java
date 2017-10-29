@@ -40,4 +40,5 @@ public interface DataSourceMXBean
         return 100*getErrorBytes()/getReadBytes();
     }
     List<String> getDistribution();
+    String getChannel();
 }

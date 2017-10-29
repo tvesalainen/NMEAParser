@@ -80,7 +80,7 @@ public final class EndpointFactory
         }
         if (endpointType instanceof SerialType)
         {
-            return new SerialEndpoint((SerialType) endpointType, router);
+            return new SerialChannelEndpoint((SerialType) endpointType, router);
         }
         throw new IllegalArgumentException(endpointType+" unknown");
     }
