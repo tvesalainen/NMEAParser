@@ -19,6 +19,7 @@ package org.vesalainen.nmea.router.scanner;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ScatteringByteChannel;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
 import org.vesalainen.comm.channel.SerialChannel;
+import static org.vesalainen.comm.channel.SerialChannel.getAllPorts;
 import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.SerialType;
@@ -52,6 +54,7 @@ import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.ConditionalSet;
 import org.vesalainen.util.HexDump;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
@@ -60,7 +63,7 @@ import org.vesalainen.util.HexDump;
 public class PortScanner extends JavaLogging
 {
     static final int BUF_SIZE = 4096;
-    private ScheduledExecutorService pool;
+    private CachedScheduledThreadPool pool;
     private long monitorPeriod = 10000;
     private long closeDelay = 1000;
     private long fingerPrintDelay = 20000;
@@ -74,12 +77,12 @@ public class PortScanner extends JavaLogging
     private Set<String> dontScan;
     private Set<String> ports = new HashSet<>();
 
-    public PortScanner(ScheduledExecutorService pool)
+    public PortScanner(CachedScheduledThreadPool pool)
     {
         this(pool, Collections.EMPTY_SET);
     }
 
-    public PortScanner(ScheduledExecutorService pool, Set<String> dontScan)
+    public PortScanner(CachedScheduledThreadPool pool, Set<String> dontScan)
     {
         super(PortScanner.class);
         this.pool = pool;
@@ -189,16 +192,16 @@ public class PortScanner extends JavaLogging
         config("scanning %s", ports);
         monitorFuture = pool.scheduleWithFixedDelay(this::monitor, 0, monitorPeriod, TimeUnit.MILLISECONDS);
     }
-    private void initialStartScanner(String port, long delayMillis) throws IOException
+    private void initialStartScanner(String port) throws IOException
     {
-        config("initialStartScanner(%s, %d)", port, delayMillis);
+        config("initialStartScanner(%s)", port);
         RepeatingIterator<PortType> it = new RepeatingIterator<>(portTypes);
         channelIterators.put(port, it);
-        startScanner(port, delayMillis);
+        startScanner(port, null);
     }
-    private void startScanner(String port, long delayMillis) throws IOException
+    private void startScanner(String port, Future<?> after) throws IOException
     {
-        config("starting scanner for %s after %d millis", port, delayMillis);
+        config("starting scanner for %s after", port);
         config("scanning port types %s", portTypes);
         Iterator<PortType> it = channelIterators.get(port);
         if (it.hasNext())
@@ -206,7 +209,15 @@ public class PortScanner extends JavaLogging
             PortType portType = it.next();
             Scanner scanner = new Scanner(port, portType);
             scanners.put(port, scanner);
-            Future<?> future = pool.schedule(scanner, delayMillis, TimeUnit.MILLISECONDS);
+            Future<?> future;
+            if (after != null)
+            {
+                future = pool.submitAfter(after, scanner);
+            }
+            else
+            {
+                future = pool.submit(scanner);
+            }
             futures.put(scanner, future);
         }
         else
@@ -229,7 +240,7 @@ public class PortScanner extends JavaLogging
                     {
                         try
                         {
-                            initialStartScanner(port, 0);
+                            initialStartScanner(port);
                             config("started scanner for new port %s", port);
                         }
                         catch (IOException ex)
@@ -260,10 +271,11 @@ public class PortScanner extends JavaLogging
                     if (scanner.getElapsedTime() >= monitorPeriod && scanner.getFingerPrint().isEmpty())
                     {
                         fine("rescanning %s because no finger print after %d millis", port, monitorPeriod);
-                        future.cancel(true);
+                        boolean cancelled = future.cancel(true);
+                        fine("%s cancel=%s", port, cancelled);
                         scanners.remove(port);
                         futures.remove(scanner);
-                        startScanner(port, closeDelay);
+                        startScanner(port, future);
                     }
                     else
                     {
@@ -319,7 +331,7 @@ public class PortScanner extends JavaLogging
             }
             catch (ClosedByInterruptException ex)
             {
-                fine("%s port interrupted");
+                fine("%s port interrupted", port);
             }
             catch (Throwable ex)
             {

@@ -28,13 +28,10 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import javax.xml.bind.JAXBException;
-import org.vesalainen.bean.BeanHelper;
 import org.vesalainen.comm.channel.LogPortMonitor;
 import org.vesalainen.comm.channel.PortMonitor;
-import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import org.vesalainen.util.AbstractProvisioner.Setting;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -44,7 +41,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class RouterManager extends JavaLogging implements RouterManagerMXBean, Runnable
 {
-    public static ScheduledExecutorService POOL = new CachedScheduledThreadPool();
+    public static CachedScheduledThreadPool POOL = new CachedScheduledThreadPool();
     private final ObjectName objectName;
     private CommandLine cmdArgs;
     private RouterConfig config;

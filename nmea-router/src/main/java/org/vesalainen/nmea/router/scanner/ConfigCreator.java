@@ -50,7 +50,7 @@ import org.vesalainen.util.logging.JavaLogging;
 public class ConfigCreator extends JavaLogging
 {
     private static final String MULTICAST_ADDRESS = "224.0.0.3";
-    private ScheduledExecutorService pool = new CachedScheduledThreadPool();
+    private CachedScheduledThreadPool pool = new CachedScheduledThreadPool();
     private RouterConfig config;
     private Set<String> names = new HashSet<>();
     private boolean hasAis;
