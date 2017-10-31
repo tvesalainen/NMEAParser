@@ -196,10 +196,17 @@ public class RouterConfig extends JavaLogging
             }
             RouteType route = objectFactory.createRouteType();
             route.setPrefix(prefix);
-            MessageType messageType = NMEA.getMessageType(message);
-            if (messageType != null)
+            try
             {
-                route.setComment(messageType.getDescription());
+                MessageType messageType = NMEA.getMessageType(message);
+                if (messageType != null)
+                {
+                    route.setComment(messageType.getDescription());
+                }
+            }
+            catch (IllegalArgumentException ex)
+            {
+                warning("message %s unknown", message);
             }
             endpointType.getRoute().add(route);
             config("new route %s to %s", prefix, endpointType.getName());

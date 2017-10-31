@@ -90,10 +90,10 @@ public class Router extends JavaLogging implements RouterEngine
         portScanner.setCheckDelay(monitorDelay);
         portScanner.setCloseDelay(closeDelay);
         portScanner.setFingerPrintDelay(Long.MAX_VALUE);
-        List<String> allDevices = config.getAllDevices();
-        config("last ports %s", allDevices);
+        List<String> configDevices = config.getAllDevices();
+        config("last ports %s", configDevices);
         config("ports now  %s", portsNow);
-        if (portsNow.equals(allDevices) && !portsNow.isEmpty())
+        if (portsNow.equals(configDevices) && !portsNow.isEmpty())
         {
             config("ports seems to be the same as last run - try the same config");
             startAllSerial();
@@ -109,8 +109,7 @@ public class Router extends JavaLogging implements RouterEngine
             try
             {
                 Future future = starter.take();
-                portsNow = SerialChannel.getAllPorts();
-                if (portsNow.equals(allDevices))
+                if (portsNow.equals(SerialChannel.getAllPorts()))
                 {
                     Endpoint endpoint = futureMap.get(future);
                     if (endpoint != null)
@@ -129,7 +128,7 @@ public class Router extends JavaLogging implements RouterEngine
                 }
                 else
                 {
-                    severe("%s -> %s during run HW problem!", allDevices, portsNow);
+                    severe("%s -> %s during run HW problem!", configDevices, portsNow);
                     return true;    // port configuration has changed during the run
                                     // hw problem
                 }
@@ -155,8 +154,8 @@ public class Router extends JavaLogging implements RouterEngine
         {
             config.changeDevice(scanResult.getSerialType(), scanResult.getPort());
             SerialType serialType = scanResult.getSerialType();
-            POOL.schedule(()->startEndpoint(serialType), closeDelay, TimeUnit.MILLISECONDS);
-            config("starting resolved port %s after %d millis", scanResult.getPort(), closeDelay);
+            startEndpoint(serialType);
+            config("started resolved port %s", scanResult.getPort());
         }
         catch (IOException ex)
         {

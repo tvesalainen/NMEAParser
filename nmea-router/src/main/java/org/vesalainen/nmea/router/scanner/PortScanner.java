@@ -19,7 +19,6 @@ package org.vesalainen.nmea.router.scanner;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ScatteringByteChannel;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -33,7 +32,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -41,7 +39,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
 import org.vesalainen.comm.channel.SerialChannel;
-import static org.vesalainen.comm.channel.SerialChannel.getAllPorts;
 import org.vesalainen.math.SymmetricDifferenceMatcher;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.SerialType;
@@ -69,13 +66,12 @@ public class PortScanner extends JavaLogging
     private long fingerPrintDelay = 20000;
     private Map<String,Iterator<PortType>> channelIterators = new HashMap<>();
     private Map<Scanner,Future<?>> futures = new ConcurrentHashMap<>();
-    private Map<String,Scanner> scanners = new ConcurrentHashMap<>();
+    private Map<String,Future<?>> scanners = new ConcurrentHashMap<>();
     private ScheduledFuture<?> monitorFuture;
     private Consumer<ScanResult> consumer;
     private Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> portMatcher;
     private Set<PortType> portTypes;
     private Set<String> dontScan;
-    private Set<String> ports = new HashSet<>();
 
     public PortScanner(CachedScheduledThreadPool pool)
     {
@@ -87,6 +83,8 @@ public class PortScanner extends JavaLogging
         super(PortScanner.class);
         this.pool = pool;
         this.dontScan = dontScan;
+        pool.setRemoveCompleted(futures.values());
+        pool.setRemoveCompleted(scanners.values());
     }
 
     public void stop()
@@ -188,8 +186,6 @@ public class PortScanner extends JavaLogging
         {
             warning("no channel suppliers");
         }
-        ports.addAll(SerialChannel.getFreePorts());
-        config("scanning %s", ports);
         monitorFuture = pool.scheduleWithFixedDelay(this::monitor, 0, monitorPeriod, TimeUnit.MILLISECONDS);
     }
     private void initialStartScanner(String port) throws IOException
@@ -208,7 +204,6 @@ public class PortScanner extends JavaLogging
         {
             PortType portType = it.next();
             Scanner scanner = new Scanner(port, portType);
-            scanners.put(port, scanner);
             Future<?> future;
             if (after != null)
             {
@@ -219,6 +214,7 @@ public class PortScanner extends JavaLogging
                 future = pool.submit(scanner);
             }
             futures.put(scanner, future);
+            scanners.put(port, future);
         }
         else
         {
@@ -250,44 +246,31 @@ public class PortScanner extends JavaLogging
                     }
                 }
             }
-            for (Scanner scanner : futures.keySet())
+            Set<Scanner> snapShot = new HashSet<>(futures.keySet());
+            for (Scanner scanner : snapShot)
             {
+                config("SCANNER %s", scanner);
+            }
+            for (Scanner scanner : snapShot)
+            {
+                config("%s", scanner);
                 String port = scanner.port;
                 Future<?> future = futures.get(scanner);
-                if (future.isDone())
+                if (scanner.getElapsedTime() >= monitorPeriod && scanner.getFingerPrint().isEmpty())
                 {
-                    if (!future.isCancelled() && scanner.getSerialType() != null)
-                    {
-                        fine("finger print for %s because unique hit", port, fingerPrintDelay, scanner.getFingerPrint());
-                        ScanResult sr = new ScanResult(scanner);
-                        consumer.accept(sr);
-                    }
-                    scanners.remove(port);
-                    ports.remove(port);
-                    futures.remove(scanner);
+                    fine("rescanning %s because no finger print after %d millis", port, monitorPeriod);
+                    boolean cancelled = future.cancel(true);
+                    fine("%s cancel=%s", port, cancelled);
+                    startScanner(port, future);
                 }
                 else
                 {
-                    if (scanner.getElapsedTime() >= monitorPeriod && scanner.getFingerPrint().isEmpty())
+                    if (scanner.getElapsedTime() >= fingerPrintDelay && portMatcher.isEmpty())  // initial scanning
                     {
-                        fine("rescanning %s because no finger print after %d millis", port, monitorPeriod);
-                        boolean cancelled = future.cancel(true);
-                        fine("%s cancel=%s", port, cancelled);
-                        scanners.remove(port);
-                        futures.remove(scanner);
-                        startScanner(port, future);
-                    }
-                    else
-                    {
-                        if (scanner.getElapsedTime() >= fingerPrintDelay)
-                        {
-                            fine("finger print for %s after %d millis %s", port, fingerPrintDelay, scanner.getFingerPrint());
-                            ScanResult sr = new ScanResult(scanner);
-                            consumer.accept(sr);
-                            future.cancel(true);
-                            scanners.remove(port);
-                            futures.remove(scanner);
-                        }
+                        fine("finger print for %s after %d millis %s", port, fingerPrintDelay, scanner.getFingerPrint());
+                        ScanResult sr = new ScanResult(scanner);
+                        pool.submitAfter(future, ()->consumer.accept(sr));
+                        future.cancel(true);
                     }
                 }
             }
@@ -319,15 +302,18 @@ public class PortScanner extends JavaLogging
         @Override
         public void run()
         {
+            int identityHashCode = System.identityHashCode(this);
             try (ScatteringByteChannel channel = portType.getChannelFactory().apply(port))
             {
-                config("started scanner for %s %s", port, channel);
+                config("started scanner %d for %s %s", identityHashCode, port, channel);
                 NMEAReader reader = new NMEAReader(port, matcher, channel, 128, 10, this::onOk, this::onError);
                 reader.read();
             }
             catch (PortFoundException ex)
             {
-                fine("%s port found", port);
+                fine("finger print for %s because unique hit", port, fingerPrintDelay, getFingerPrint());
+                ScanResult sr = new ScanResult(this);
+                consumer.accept(sr);
             }
             catch (ClosedByInterruptException ex)
             {
@@ -339,7 +325,7 @@ public class PortScanner extends JavaLogging
             }
             finally
             {
-                fine("scanner %s exit", port);
+                fine("scanner %d %s exit", identityHashCode, port);
             }
         }
 
