@@ -45,12 +45,10 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
     private final ObjectName objectName;
     private CommandLine cmdArgs;
     private RouterConfig config;
-    private PortMonitor portMonitor;
 
     public RouterManager()
     {
         super(RouterManager.class);
-        portMonitor = new LogPortMonitor(POOL, 1, TimeUnit.SECONDS);
         try
         {
             this.objectName = new ObjectName("org.vesalainen.nmea.router:type=manager");
