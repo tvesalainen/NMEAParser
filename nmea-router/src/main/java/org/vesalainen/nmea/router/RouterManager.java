@@ -28,8 +28,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import javax.xml.bind.JAXBException;
-import org.vesalainen.comm.channel.LogPortMonitor;
-import org.vesalainen.comm.channel.PortMonitor;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;

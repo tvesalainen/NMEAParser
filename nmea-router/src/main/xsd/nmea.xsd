@@ -19,6 +19,7 @@
         <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
         <xsd:attribute name="ctrlTcpPort" type="portType"/>
         <xsd:attribute name="allDevices" type="deviceListType"/>
+        <xsd:attribute name="dontScan" type="deviceListType"/>
         <xsd:attribute name="closeDelay" type="delayType"/>
         <xsd:attribute name="monitorDelay" type="delayType"/>
         <xsd:attribute name="nativeDebug" type="xsd:boolean"/>

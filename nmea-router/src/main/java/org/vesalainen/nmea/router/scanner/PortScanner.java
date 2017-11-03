@@ -19,6 +19,7 @@ package org.vesalainen.nmea.router.scanner;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ScatteringByteChannel;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -78,11 +79,11 @@ public class PortScanner extends JavaLogging
         this(pool, Collections.EMPTY_SET);
     }
 
-    public PortScanner(CachedScheduledThreadPool pool, Set<String> dontScan)
+    public PortScanner(CachedScheduledThreadPool pool, Collection<String> dontScan)
     {
         super(PortScanner.class);
         this.pool = pool;
-        this.dontScan = dontScan;
+        this.dontScan = new HashSet<>(dontScan);
         pool.setRemoveCompleted(futures.values());
         pool.setRemoveCompleted(scanners.values());
     }
@@ -197,7 +198,7 @@ public class PortScanner extends JavaLogging
     }
     private void startScanner(String port, Future<?> after) throws IOException
     {
-        config("starting scanner for %s after", port);
+        config("starting scanner for %s after %s", port, after);
         config("scanning port types %s", portTypes);
         Iterator<PortType> it = channelIterators.get(port);
         if (it.hasNext())
@@ -227,7 +228,7 @@ public class PortScanner extends JavaLogging
         try
         {
             List<String> freePorts = SerialChannel.getFreePorts();
-            fine("monitor free ports=%s", freePorts);
+            fine("monitor free ports=%s exclude=%s", freePorts, dontScan);
             for (String port : freePorts)
             {
                 if (!dontScan.contains(port))

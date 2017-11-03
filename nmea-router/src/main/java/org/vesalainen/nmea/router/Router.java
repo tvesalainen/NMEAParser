@@ -72,6 +72,7 @@ public class Router extends JavaLogging implements RouterEngine
         monitorDelay = config.getMonitorDelay();
         closeDelay = config.getCloseDelay();
         SerialChannel.debug(config.isNativeDebug());
+        POOL.setLogLevel(ALL);
     }
     /**
      * Starts router returns true if port configuration has changed during the
@@ -83,7 +84,7 @@ public class Router extends JavaLogging implements RouterEngine
     {
         config("starting %s", Version.getVersion());
         portsNow = SerialChannel.getAllPorts();
-        portScanner = new PortScanner(POOL);
+        portScanner = new PortScanner(POOL, config.getDontScan());
         populateSerialSet();
         populatePortMatcher();
         startNonSerial();

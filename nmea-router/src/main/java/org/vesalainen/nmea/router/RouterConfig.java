@@ -241,6 +241,10 @@ public class RouterConfig extends JavaLogging
     {
         return nmea.getValue().getAllDevices();
     }
+    public List<String> getDontScan()
+    {
+        return nmea.getValue().getDontScan();
+    }
     public void store() throws IOException
     {
         try (FileWriter writer = new FileWriter(file))
