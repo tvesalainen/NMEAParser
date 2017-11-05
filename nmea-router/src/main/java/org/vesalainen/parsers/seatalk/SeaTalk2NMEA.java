@@ -35,6 +35,7 @@ import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.HexDump;
+import org.vesalainen.util.logging.AttachedLogger;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -72,11 +73,11 @@ import org.vesalainen.util.logging.JavaLogging;
     @Rule(left = "statement", value = "m60"),
     @Rule(left = "statement", value = "m65")
 })
-public abstract class SeaTalk2NMEA extends JavaLogging
+public abstract class SeaTalk2NMEA implements AttachedLogger
 {
     private boolean haveBetterMTW;
     private boolean haveBetterVHW;
-    
+
     @Rule("'\\xff\\xff'")
     protected void winPrefix()
     {
@@ -341,8 +342,8 @@ public abstract class SeaTalk2NMEA extends JavaLogging
         }
         else
         {
-            warning("SeaTalk2NMEA.recover:");
-            warning(()->HexDump.toHex(buf));
+            finest("SeaTalk2NMEA.recover:");
+            finest(()->HexDump.toHex(buf));
         }
         reader.clear();
     }

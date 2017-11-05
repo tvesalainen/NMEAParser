@@ -72,7 +72,7 @@ public class Router extends JavaLogging implements RouterEngine
         monitorDelay = config.getMonitorDelay();
         closeDelay = config.getCloseDelay();
         SerialChannel.debug(config.isNativeDebug());
-        POOL.setLogLevel(ALL);
+        POOL.setLogLevel(FINE);
     }
     /**
      * Starts router returns true if port configuration has changed during the

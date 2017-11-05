@@ -82,7 +82,7 @@ class SerialChannelEndpoint<E extends SerialType> extends SerialEndpoint<E, Seri
     {
         String device = endpointType.getDevice();
         Configuration configuration = createConfig();
-        Builder builder = new SerialChannel.Builder(device, configuration);
+        Builder builder = SerialChannel.builder(device, configuration);
         return builder.get();
     }
     

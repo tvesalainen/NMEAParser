@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -67,7 +68,6 @@ public class PortScanner extends JavaLogging
     private long fingerPrintDelay = 20000;
     private Map<String,Iterator<PortType>> channelIterators = new HashMap<>();
     private Map<Scanner,Future<?>> futures = new ConcurrentHashMap<>();
-    private Map<String,Future<?>> scanners = new ConcurrentHashMap<>();
     private ScheduledFuture<?> monitorFuture;
     private Consumer<ScanResult> consumer;
     private Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> portMatcher;
@@ -84,8 +84,6 @@ public class PortScanner extends JavaLogging
         super(PortScanner.class);
         this.pool = pool;
         this.dontScan = new HashSet<>(dontScan);
-        pool.setRemoveCompleted(futures.values());
-        pool.setRemoveCompleted(scanners.values());
     }
 
     public void stop()
@@ -194,9 +192,9 @@ public class PortScanner extends JavaLogging
         config("initialStartScanner(%s)", port);
         RepeatingIterator<PortType> it = new RepeatingIterator<>(portTypes);
         channelIterators.put(port, it);
-        startScanner(port, null);
+        startScannerAfter(port, null);
     }
-    private void startScanner(String port, Future<?> after) throws IOException
+    private void startScannerAfter(String port, Scanner after) throws IOException
     {
         config("starting scanner for %s after %s", port, after);
         config("scanning port types %s", portTypes);
@@ -208,14 +206,13 @@ public class PortScanner extends JavaLogging
             Future<?> future;
             if (after != null)
             {
-                future = pool.submitAfter(after, scanner);
+                future = pool.submitAfter(after::waitClose, scanner);
             }
             else
             {
                 future = pool.submit(scanner);
             }
             futures.put(scanner, future);
-            scanners.put(port, future);
         }
         else
         {
@@ -227,13 +224,14 @@ public class PortScanner extends JavaLogging
     {
         try
         {
+            futures.values().removeIf((f)->f.isDone());
             List<String> freePorts = SerialChannel.getFreePorts();
             fine("monitor free ports=%s exclude=%s", freePorts, dontScan);
             for (String port : freePorts)
             {
                 if (!dontScan.contains(port))
                 {
-                    if (!scanners.containsKey(port))
+                    if (!futures.keySet().stream().anyMatch((s)->s.port.equals(port)))
                     {
                         try
                         {
@@ -247,12 +245,7 @@ public class PortScanner extends JavaLogging
                     }
                 }
             }
-            Set<Scanner> snapShot = new HashSet<>(futures.keySet());
-            for (Scanner scanner : snapShot)
-            {
-                config("SCANNER %s", scanner);
-            }
-            for (Scanner scanner : snapShot)
+            for (Scanner scanner : futures.keySet())
             {
                 config("%s", scanner);
                 String port = scanner.port;
@@ -262,7 +255,7 @@ public class PortScanner extends JavaLogging
                     fine("rescanning %s because no finger print after %d millis", port, monitorPeriod);
                     boolean cancelled = future.cancel(true);
                     fine("%s cancel=%s", port, cancelled);
-                    startScanner(port, future);
+                    startScannerAfter(port, scanner);
                 }
                 else
                 {
@@ -270,7 +263,7 @@ public class PortScanner extends JavaLogging
                     {
                         fine("finger print for %s after %d millis %s", port, fingerPrintDelay, scanner.getFingerPrint());
                         ScanResult sr = new ScanResult(scanner);
-                        pool.submitAfter(future, ()->consumer.accept(sr));
+                        pool.submitAfter(scanner::waitClose, ()->consumer.accept(sr));
                         future.cancel(true);
                     }
                 }
@@ -287,7 +280,8 @@ public class PortScanner extends JavaLogging
         private String port;
         private PortType portType;
         private NMEAMatcher<Boolean> matcher;
-        protected SerialType serialType;
+        private SerialType serialType;
+        private CountDownLatch latch = new CountDownLatch(1);
 
         public Scanner(String port, PortType portType) throws IOException
         {
@@ -300,13 +294,17 @@ public class PortScanner extends JavaLogging
             time = System.currentTimeMillis();
         }
 
+        public boolean waitClose(long timeout, TimeUnit unit) throws InterruptedException
+        {
+            return latch.await(timeout, unit);
+        }
+
         @Override
         public void run()
         {
-            int identityHashCode = System.identityHashCode(this);
             try (ScatteringByteChannel channel = portType.getChannelFactory().apply(port))
             {
-                config("started scanner %d for %s %s", identityHashCode, port, channel);
+                config("started scanner for %s %s", port, channel);
                 NMEAReader reader = new NMEAReader(port, matcher, channel, 128, 10, this::onOk, this::onError);
                 reader.read();
             }
@@ -318,7 +316,7 @@ public class PortScanner extends JavaLogging
             }
             catch (ClosedByInterruptException ex)
             {
-                fine("%s port interrupted", port);
+                fine("%s interrupted", port);
             }
             catch (Throwable ex)
             {
@@ -326,7 +324,8 @@ public class PortScanner extends JavaLogging
             }
             finally
             {
-                fine("scanner %d %s exit", identityHashCode, port);
+                fine("scanner %s exit", port);
+                latch.countDown();
             }
         }
 
