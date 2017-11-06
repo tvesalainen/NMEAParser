@@ -105,7 +105,6 @@
                 <xsd:attribute name="parity" type="parityType"/>
                 <xsd:attribute name="stops" type="stopsType"/>
                 <xsd:attribute name="flowControl" type="flowControlType"/>
-                <xsd:attribute name="maxRead" type="bufferSizeType"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>

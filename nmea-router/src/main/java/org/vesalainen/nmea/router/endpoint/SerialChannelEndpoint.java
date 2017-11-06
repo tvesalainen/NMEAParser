@@ -35,15 +35,6 @@ class SerialChannelEndpoint<E extends SerialType> extends SerialEndpoint<E, Seri
     public SerialChannelEndpoint(E serialType, Router router)
     {
         super(serialType, router);
-        Long mr = serialType.getMaxRead();
-        if (mr != null)
-        {
-            maxRead = mr.intValue();
-            if (maxRead > bufferSize)
-            {
-                bufferSize = maxRead;
-            }
-        }
     }
 
     protected Configuration createConfig()
@@ -82,8 +73,9 @@ class SerialChannelEndpoint<E extends SerialType> extends SerialEndpoint<E, Seri
     {
         String device = endpointType.getDevice();
         Configuration configuration = createConfig();
-        Builder builder = SerialChannel.builder(device, configuration);
-        return builder.get();
+        return SerialChannel.builder(device, configuration)
+                .setCanonical(true)
+                .build();
     }
     
 }

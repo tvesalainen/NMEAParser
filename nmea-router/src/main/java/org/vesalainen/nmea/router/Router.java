@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -57,6 +56,7 @@ public class Router extends JavaLogging implements RouterEngine
     private final Map<Future,Endpoint> futureMap = new ConcurrentHashMap<>();
     private final Set<SerialType> serialSet = new HashSet<>();
     private final Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> portMatcher = new EnumMap<>(PortType.class);
+    private final Map<String,PortType> lastPortType = new HashMap<>();
     private PortScanner portScanner;
     private final long monitorDelay;
     private final long closeDelay;
@@ -84,9 +84,9 @@ public class Router extends JavaLogging implements RouterEngine
     {
         config("starting %s", Version.getVersion());
         portsNow = SerialChannel.getAllPorts();
-        portScanner = new PortScanner(POOL, config.getDontScan());
         populateSerialSet();
         populatePortMatcher();
+        portScanner = new PortScanner(POOL, config.getDontScan(), lastPortType);
         startNonSerial();
         portScanner.setCheckDelay(monitorDelay);
         portScanner.setCloseDelay(closeDelay);
@@ -94,17 +94,8 @@ public class Router extends JavaLogging implements RouterEngine
         List<String> configDevices = config.getAllDevices();
         config("last ports %s", configDevices);
         config("ports now  %s", portsNow);
-        if (portsNow.equals(configDevices) && !portsNow.isEmpty())
-        {
-            config("ports seems to be the same as last run - try the same config");
-            startAllSerial();
-            POOL.schedule(this::quickStartHandler, monitorDelay, TimeUnit.MILLISECONDS);
-        }
-        else
-        {
-            config("port configuration has changed - start scanner");
-            ensureScanning();
-        }
+        portScanner.scan(this::resolvedPort, portMatcher);
+        config("started scanner");
         while (true)
         {
             try
@@ -138,14 +129,6 @@ public class Router extends JavaLogging implements RouterEngine
             {
                 return false;   
             }
-        }
-    }
-    private void ensureScanning() throws IOException
-    {
-        if (!portScanner.isScanning())
-        {
-            portScanner.scan(this::resolvedPort, portMatcher);
-            config("started scanner");
         }
     }
     private void resolvedPort(ScanResult scanResult)
@@ -191,14 +174,7 @@ public class Router extends JavaLogging implements RouterEngine
                 sdm.map(prefix, serialType);
                 config("add finger print %s -> %s", portType, prefix);
             }
-        }
-    }
-
-    private void startAllSerial()
-    {
-        for (SerialType serialType : serialSet)
-        {
-            startEndpoint(serialType);
+            lastPortType.put(serialType.getDevice(), portType);
         }
     }
 
@@ -221,7 +197,7 @@ public class Router extends JavaLogging implements RouterEngine
         startTimeMap.put(endpointType, System.currentTimeMillis());
         futureMap.put(future, endpoint);
         config("started %s", endpoint);
-        if (allResolved())
+        if (allResolved() && portScanner != null)
         {
             try
             {
@@ -322,78 +298,6 @@ public class Router extends JavaLogging implements RouterEngine
             warning("%s to be cancelled not found", target);
         }
         return false;
-    }
-
-    private void quickStartHandler()
-    {
-        config("started quickStartHandler");
-        Map<PortType,Map<Endpoint,Set<String>>> fingerPrints = new EnumMap<>(PortType.class);
-        try
-        {
-            synchronized(futureMap)
-            {
-                Iterator<Entry<Future, Endpoint>> iterator = futureMap.entrySet().iterator();
-                while (iterator.hasNext())
-                {
-                    Entry<Future, Endpoint> entry = iterator.next();
-                    Future future = entry.getKey();
-                    Endpoint endpoint = entry.getValue();
-                    EndpointType endpointType = endpoint.getEndpointType();
-                    if (endpointType instanceof SerialType)
-                    {
-                        SerialType serialType = (SerialType) endpointType;
-                        config("checking %s", endpoint);
-                        if (future.isDone())
-                        {
-                            iterator.remove();
-                        }
-                        else
-                        {
-                            Set<String> fingerPrint = endpoint.getFingerPrint();
-                            PortType portType = PortType.getPortType(serialType);
-                            Map<Endpoint, Set<String>> map = fingerPrints.get(portType);
-                            if (map == null)
-                            {
-                                map = new HashMap<>();
-                                fingerPrints.put(portType, map);
-                            }
-                            map.put(endpoint, fingerPrint);
-                        }
-                    }
-                }
-                for (Entry<PortType, SymmetricDifferenceMatcher<String, SerialType>> entry : portMatcher.entrySet())
-                {
-                    Map<Endpoint, Set<String>> map = fingerPrints.get(entry.getKey());
-                    SymmetricDifferenceMatcher<String, SerialType> sdm = entry.getValue();
-                    sdm.match(map, this::matched);
-                }
-                if (allResolved())
-                {
-                    config.updateAllDevices(portsNow);
-                    config("updated config ports %s", portsNow);
-                    config("all serial ports running");
-                    portScanner = null;
-                }
-                else
-                {
-                    for (SerialType serialType : getUnresolved())
-                    {
-                        String name = serialType.getName();
-                        config("set %s for scanning", name);
-                        cancel(name);
-                    }
-                    ensureScanning();
-                }
-            }
-        }
-        catch (Throwable ex)
-        {
-            log(SEVERE, ex, "at quickStartHandler %s", ex.getMessage());
-        }
-    }
-    private void matched(SerialType serialType, Endpoint endpoint)
-    {
-        config("%s matches %s", serialType, endpoint);
     }
 
     public RouterConfig getConfig()

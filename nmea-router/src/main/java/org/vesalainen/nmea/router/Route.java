@@ -32,7 +32,6 @@ import org.vesalainen.util.logging.JavaLogging;
 public final class Route extends JavaLogging
 {
     private static final LongMap<String> PREFIX_MAP = new LongMap<>();
-    private final NMEAPrefix prefix;
     private final String[] targetList;
     private boolean backup;
     private long lastWrote;
@@ -44,14 +43,12 @@ public final class Route extends JavaLogging
     Route() // for test
     {
         super(Route.class);
-        this.prefix = null;
         this.targetList = null;
     }
     
     public Route(RouteType routeType)
     {
         super(Route.class);
-        this.prefix = new NMEAPrefix(routeType.getPrefix());
         List<String> targets = routeType.getTarget();
         if (targets != null)
         {
@@ -76,11 +73,6 @@ public final class Route extends JavaLogging
         {
             expireTime = expire;
         }
-    }
-
-    public NMEAPrefix getPrefix()
-    {
-        return prefix;
     }
 
     public final void write(String prefix, RingByteBuffer ring) throws IOException

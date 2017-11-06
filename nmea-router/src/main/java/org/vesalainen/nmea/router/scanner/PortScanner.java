@@ -73,17 +73,19 @@ public class PortScanner extends JavaLogging
     private Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> portMatcher;
     private Set<PortType> portTypes;
     private Set<String> dontScan;
+    private Map<String,PortType> lastPortType;
 
     public PortScanner(CachedScheduledThreadPool pool)
     {
-        this(pool, Collections.EMPTY_SET);
+        this(pool, Collections.EMPTY_SET, Collections.EMPTY_MAP);
     }
 
-    public PortScanner(CachedScheduledThreadPool pool, Collection<String> dontScan)
+    public PortScanner(CachedScheduledThreadPool pool, Collection<String> dontScan, Map<String,PortType> lastPortType)
     {
         super(PortScanner.class);
         this.pool = pool;
         this.dontScan = new HashSet<>(dontScan);
+        this.lastPortType = lastPortType;
     }
 
     public void stop()
@@ -189,8 +191,9 @@ public class PortScanner extends JavaLogging
     }
     private void initialStartScanner(String port) throws IOException
     {
-        config("initialStartScanner(%s)", port);
-        RepeatingIterator<PortType> it = new RepeatingIterator<>(portTypes);
+        PortType portType = lastPortType.get(port);
+        config("initialStartScanner(%s) starting with %s", port, portType);
+        RepeatingIterator<PortType> it = new RepeatingIterator<>(portTypes, portType);
         channelIterators.put(port, it);
         startScannerAfter(port, null);
     }
@@ -305,7 +308,7 @@ public class PortScanner extends JavaLogging
             try (ScatteringByteChannel channel = portType.getChannelFactory().apply(port))
             {
                 config("started scanner for %s %s", port, channel);
-                NMEAReader reader = new NMEAReader(port, matcher, channel, 128, 10, this::onOk, this::onError);
+                NMEAReader reader = new NMEAReader(port, matcher, channel, 128, this::onOk, this::onError);
                 reader.read();
             }
             catch (PortFoundException ex)
@@ -361,9 +364,9 @@ public class PortScanner extends JavaLogging
         @Override
         public String toString()
         {
-            return "Scanner{" + "port=" + port + ", fingerPrint=" + fingerPrint + ", count=" + count + ", matched=" + matched + '}';
+            return "Scanner{" + "port=" + port + ", portType=" + portType + '}';
         }
-        
+
     }
     private class BaseScanner 
     {

@@ -39,11 +39,14 @@ public class SeaTalkEndpoint extends SerialEndpoint<SeatalkType,FilterChannel>
     public FilterChannel createChannel() throws IOException
     {
         String device = endpointType.getDevice();
-        SerialChannel sc = new SerialChannel
-                .Builder(device, SerialChannel.Speed.B4800)
+        SerialChannel sc = SerialChannel
+                .builder(device)
+                .setSpeed(SerialChannel.Speed.B4800)
                 .setParity(SerialChannel.Parity.SPACE)
-                .get();
-        return new FilterChannel(sc, 15, 0, SeaTalkInputStream::new, null);
+                .setMin(15)
+                .setTime(1)
+                .build();
+        return new FilterChannel(sc, 128, 0, SeaTalkInputStream::new, null);
     }
     
 }

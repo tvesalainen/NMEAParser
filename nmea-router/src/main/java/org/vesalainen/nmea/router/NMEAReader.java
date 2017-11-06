@@ -39,12 +39,11 @@ public class NMEAReader extends JavaLogging
     private NMEAMatcher matcher;
     private ScatteringByteChannel channel;
     private int bufferSize;
-    private int maxRead;
     private OkConsumer onOk;
     private IOConsumer<Supplier<byte[]>> onError;
     private ReadCountDistribution distribution;
 
-    public NMEAReader(String name, NMEAMatcher matcher, ScatteringByteChannel channel, int bufSize, int maxRead, OkConsumer onOk, IOConsumer<Supplier<byte[]>> onError)
+    public NMEAReader(String name, NMEAMatcher matcher, ScatteringByteChannel channel, int bufSize, OkConsumer onOk, IOConsumer<Supplier<byte[]>> onError)
     {
         super(NMEAReader.class, name);
         Objects.requireNonNull(matcher, "matcher");
@@ -55,16 +54,15 @@ public class NMEAReader extends JavaLogging
         this.matcher = matcher;
         this.channel = channel;
         this.bufferSize = bufSize;
-        this.maxRead = maxRead;
         this.onOk = onOk;
         this.onError = onError;
-        this.distribution = new ReadCountDistribution(maxRead);
+        this.distribution = new ReadCountDistribution(bufSize);
     }
     
     public void read() throws IOException
     {
         boolean mark = true;
-        RingByteBuffer ring = new RingByteBuffer(bufferSize, maxRead, true);
+        RingByteBuffer ring = new RingByteBuffer(bufferSize, true);
         ByteArrayOutputStream errInput = new ByteArrayOutputStream();
         while (true)
         {
@@ -81,7 +79,7 @@ public class NMEAReader extends JavaLogging
                 throw new EOFException(name);
             }
             distribution.increment(count);
-            Matcher.Status match = null;
+            Matcher.Status match;
             while (ring.hasRemaining())
             {
                 byte b = ring.get(mark);
@@ -111,6 +109,7 @@ public class NMEAReader extends JavaLogging
                     case Match:
                         onOk.apply(ring, timestamp);
                         mark = true;
+                        ring.mark();
                         break;
                 }
             }

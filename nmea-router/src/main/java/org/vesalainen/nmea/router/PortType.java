@@ -32,15 +32,29 @@ import org.vesalainen.util.function.IOFunction;
  */
 public enum PortType
 {
-    NMEA((port)->new SerialChannel.Builder(port, SerialChannel.Speed.B4800).get()),
-    NMEA_HS((port)->new SerialChannel.Builder(port, SerialChannel.Speed.B38400).get()),
+    NMEA((port)->SerialChannel.builder(port)
+            .setSpeed(SerialChannel.Speed
+            .B4800)
+            .setCanonical(true)
+            .build()
+    ),
+    NMEA_HS((port)->SerialChannel
+            .builder(port)
+            .setSpeed(SerialChannel
+            .Speed.B38400)
+            .setCanonical(true)
+            .build()
+    ),
     SEA_TALK((String port)->
     {
-        SerialChannel sc = new SerialChannel
-                .Builder(port, SerialChannel.Speed.B4800)
+        SerialChannel sc = SerialChannel
+                .builder(port)
+                .setSpeed(SerialChannel.Speed.B4800)
                 .setParity(SerialChannel.Parity.SPACE)
-                .get();
-        return new FilterChannel(sc, 15, 0, SeaTalkInputStream::new, null);
+                .setMin(15)
+                .setTime(1)
+                .build();
+        return new FilterChannel(sc, 128, 0, SeaTalkInputStream::new, null);
     });
     
     private IOFunction<String,ScatteringByteChannel> channelFactory;

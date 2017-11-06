@@ -52,7 +52,7 @@ class NetScanner implements Callable<Set<String>>
     {
         try (final ScatteringByteChannel channel = UnconnectedDatagramChannel.open(address, 10110, PortScanner.BUF_SIZE, true, false))
         {
-            NMEAReader reader = new NMEAReader(address, matcher, channel, PortScanner.BUF_SIZE, PortScanner.BUF_SIZE, this::onOk, this::onError);
+            NMEAReader reader = new NMEAReader(address, matcher, channel, PortScanner.BUF_SIZE, this::onOk, this::onError);
             reader.read();
         }
         finally

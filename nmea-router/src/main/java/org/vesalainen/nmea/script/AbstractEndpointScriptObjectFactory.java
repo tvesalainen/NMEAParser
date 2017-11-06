@@ -19,7 +19,6 @@ package org.vesalainen.nmea.script;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
-import org.vesalainen.nmea.router.RestartException;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEASentence;
 
@@ -80,7 +79,7 @@ public abstract class AbstractEndpointScriptObjectFactory<E> extends AbstractScr
         @Override
         public Void exec(E engine) throws IOException, InterruptedException
         {
-            throw new RestartException("restarted by script");
+            throw new UnsupportedOperationException();
         }
         
         @Override

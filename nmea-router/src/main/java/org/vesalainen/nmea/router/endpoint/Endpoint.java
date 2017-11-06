@@ -61,7 +61,6 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected final Router router;
     protected final E endpointType;
     protected int bufferSize = 128;
-    protected int maxRead = 128;
     protected T channel;
     protected NMEAMatcher<Route> matcher;
     protected RingByteBuffer ring;
@@ -234,7 +233,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             {
                 channel = ch;
                 config("started %s", channel);
-                reader = new NMEAReader(name, matcher, channel, bufferSize, maxRead, this::onOk, this::onError);
+                reader = new NMEAReader(name, matcher, channel, bufferSize, this::onOk, this::onError);
                 reader.read();
             }
             finally

@@ -18,14 +18,13 @@ package org.vesalainen.nmea.router.scanner;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
@@ -68,7 +67,7 @@ public class ConfigCreator extends JavaLogging
         this.config = new RouterConfig(file);
         config.getNmeaType().getAllDevices().addAll(SerialChannel.getAllPorts());
         
-        PortScanner portScanner = new PortScanner(pool, scannedPorts);
+        PortScanner portScanner = new PortScanner(pool, scannedPorts, Collections.EMPTY_MAP);
         portScanner.scan(this::addDevice);
         
         Set<String> fingerPrint = new HashSet<>();
