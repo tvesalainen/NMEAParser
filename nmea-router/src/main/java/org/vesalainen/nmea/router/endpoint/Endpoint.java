@@ -32,10 +32,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
-import javax.management.NotCompliantMBeanException;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.FilterType;
@@ -129,7 +125,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
 
     protected NMEAMatcher<Route> createMatcher(EndpointType endpointType)
     {
-        NMEAMatcher<Route> wm = null;
+        NMEAMatcher<Route> wm = new NMEAMatcher<>();
         List<RouteType> route = endpointType.getRoute();
         if (!endpointType.getRoute().isEmpty())
         {
@@ -139,10 +135,6 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
                 String prefix = rt.getPrefix();
                 if (prefix != null && !prefix.isEmpty())
                 {
-                    if (wm == null)
-                    {
-                        wm = new NMEAMatcher<>();
-                    }
                     wm.addExpression(prefix, new Route(rt));
                 }
                 for (String trg : targetList)
@@ -151,10 +143,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
                 }
             }
         }
-        if (wm != null)
-        {
-            wm.compile();
-        }
+        wm.compile();
         return wm;
     }
 

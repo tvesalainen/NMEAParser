@@ -49,6 +49,15 @@ import org.vesalainen.util.logging.JavaLogging;
 public class ConfigCreator extends JavaLogging
 {
     private static final String MULTICAST_ADDRESS = "224.0.0.3";
+    private static final String MARINE_TRAFFIC = "MarineTraffic";
+    private static final String TCP_LISTENER = "Listener";
+    private static final String MULTICAST = "Net";
+    private static final String AIS = "AIS";
+    private static final String GPS = "GPS";
+    private static final String WIND = "Wind";
+    private static final String COMPASS = "Compass";
+    private static final String LOG = "Log";
+    private static final String SOUNDER = "Sounder";
     private CachedScheduledThreadPool pool = new CachedScheduledThreadPool();
     private RouterConfig config;
     private Set<String> names = new HashSet<>();
@@ -75,15 +84,15 @@ public class ConfigCreator extends JavaLogging
         Future<Set<String>> netFuture = pool.submit(netScanner);
         
         TcpEndpointType listener = config.createTcpEndpointType();
-        listener.setName("Listener");
+        listener.setName(TCP_LISTENER);
         listener.setPort(10110);
         listener.setEnable(true);
         RouteType listenerRoute = config.createRouteTypeFor(listener);
         listenerRoute.setPrefix("$");
-        listenerRoute.getTarget().add("Net");
+        listenerRoute.getTarget().add(MULTICAST);
         listenerRoute.setComment("E.g. Autopilot sentences from Open CPN");
         
-        portScanner.waitScanner(5, TimeUnit.MINUTES);
+        portScanner.waitScanner(2, TimeUnit.MINUTES);
         pool.shutdownNow();
         
         if (needsSpeed != null && providesSpeed != null)
@@ -93,24 +102,20 @@ public class ConfigCreator extends JavaLogging
         if (hasAis)
         {
             DatagramType marineTraffic = config.createDatagramType();
-            marineTraffic.setName("MarineTraffic");
+            marineTraffic.setName(MARINE_TRAFFIC);
             marineTraffic.setAddress("5.9.207.224");
             marineTraffic.setPort(5321);
-        
-            RouteType aisRoute = config.createRouteTypeFor(marineTraffic);
-            aisRoute.setPrefix("AI");
-            aisRoute.setComment("Send all AIS sentences to TCP Listener");
         }
         netFuture.cancel(true);
         MulticastNMEAType net = config.createMulticastNMEAType();
-        net.setName("Net");
+        net.setName(MULTICAST);
         net.setAddress(MULTICAST_ADDRESS);
         net.setEnable(true);
         if (fingerPrint.isEmpty())
         {
             RouteType route = config.createRouteTypeFor(net);
             route.setPrefix("$");
-            route.getTarget().add("Listener");
+            route.getTarget().add(TCP_LISTENER);
             route.setComment("Send all NMEA sentences to TCP Listener");
         }
         else
@@ -120,7 +125,7 @@ public class ConfigCreator extends JavaLogging
             {
                 RouteType route = config.createRouteTypeFor(net);
                 route.setPrefix(entry.getValue());
-                route.getTarget().add("Listener");
+                route.getTarget().add(TCP_LISTENER);
                 route.setComment(entry.getKey().getDescription());
             }
         }
@@ -161,11 +166,16 @@ public class ConfigCreator extends JavaLogging
                 RouteType route = config.createRouteTypeFor(serial);
                 route.setPrefix(entry.getValue());
                 route.setComment(entry.getKey().getDescription());
-                route.getTarget().add("Net");
-                route.getTarget().add("Listener");
+                route.getTarget().add(MULTICAST);
+                route.getTarget().add(TCP_LISTENER);
                 if (entry.getKey().equals(VHW))
                 {
                     providesSpeed = route;
+                }
+                if (entry.getKey().equals(VDM) || entry.getKey().equals(VDO))
+                {
+                    route.getTarget().add(MARINE_TRAFFIC);
+                    hasAis = true;
                 }
             }
             if (any(messageTypes.keySet(), VWR, MWD, MWV) && !messageTypes.containsKey(VHW))
@@ -178,37 +188,37 @@ public class ConfigCreator extends JavaLogging
     {
         if (any(talkerIds, AI) || any(messageTypes, VDM, VDO))
         {
-            return createUniqueName("AIS");
+            return createUniqueName(AIS);
         }
         else
         {
             if (any(talkerIds, GP) || any(messageTypes, RMC))
             {
-                return createUniqueName("GPS");
+                return createUniqueName(GPS);
             }
             else
             {
                 if (any(messageTypes, DBK, DBS, DBT))
                 {
-                    return createUniqueName("Sounder");
+                    return createUniqueName(SOUNDER);
                 }
                 else
                 {
                     if (any(messageTypes, VHW))
                     {
-                        return createUniqueName("Log");
+                        return createUniqueName(LOG);
                     }
                     else
                     {
                         if (any(messageTypes, VWR, MWD, MWV))
                         {
-                            return createUniqueName("Wind");
+                            return createUniqueName(WIND);
                         }
                         else
                         {
                             if (any(messageTypes, THS, HDG, HDM, HDT))
                             {
-                                return createUniqueName("Compass");
+                                return createUniqueName(COMPASS);
                             }
                             else
                             {

@@ -72,7 +72,7 @@ public class PortScanner extends JavaLogging
     private Consumer<ScanResult> consumer;
     private Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> portMatcher;
     private Set<PortType> portTypes;
-    private Set<String> dontScan;
+    private Collection<String> dontScan;
     private Map<String,PortType> lastPortType;
 
     public PortScanner(CachedScheduledThreadPool pool)
@@ -84,7 +84,7 @@ public class PortScanner extends JavaLogging
     {
         super(PortScanner.class);
         this.pool = pool;
-        this.dontScan = new HashSet<>(dontScan);
+        this.dontScan = dontScan;
         this.lastPortType = lastPortType;
     }
 
