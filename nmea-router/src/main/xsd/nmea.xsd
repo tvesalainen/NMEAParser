@@ -4,6 +4,7 @@
     <xsd:element name="nmea" type="nmeaType"/>
     <xsd:complexType name="nmeaType">
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="log-endpoint" type="logEndpointType"/>
             <xsd:element name="tcp-endpoint" type="tcpEndpointType"/>
             <xsd:element name="processor" type="processorType"/>
             <xsd:element name="multicast" type="multicastType"/>
@@ -23,6 +24,14 @@
         <xsd:attribute name="closeDelay" type="delayType"/>
         <xsd:attribute name="monitorDelay" type="delayType"/>
         <xsd:attribute name="nativeDebug" type="xsd:boolean"/>
+    </xsd:complexType>
+    <xsd:complexType name="logEndpointType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:attribute name="logName" type="xsd:string" use="required"/>
+                <xsd:attribute name="logLevel" type="xsd:string" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
     </xsd:complexType>
     <xsd:complexType name="tcpEndpointType">
         <xsd:complexContent>

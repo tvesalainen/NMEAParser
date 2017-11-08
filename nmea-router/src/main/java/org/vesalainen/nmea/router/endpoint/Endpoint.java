@@ -64,7 +64,6 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected List<MessageFilter> filterList;
     protected Set<String> fingerPrint = new HashSet<>();
     private NMEAReader reader;
-    protected boolean routing = true;
 
     public Endpoint(E endpointType, Router router)
     {
@@ -137,10 +136,6 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
                 {
                     wm.addExpression(prefix, new Route(rt));
                 }
-                for (String trg : targetList)
-                {
-                    router.addSource(trg, this);
-                }
             }
         }
         wm.compile();
@@ -148,7 +143,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     }
 
     @Override
-    public int write(RingByteBuffer ring) throws IOException
+    public int write(Endpoint src, RingByteBuffer ring) throws IOException
     {
         lastWrite = System.currentTimeMillis();
         int cnt = 0;
@@ -254,7 +249,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         {
             prefix = seqPrefix.toString();
         }
-        matcher.getMatched().write(prefix, ring);
+        matcher.getMatched().write(this, prefix, ring);
         if (scriptEngine != null)
         {
             scriptEngine.write(ring);

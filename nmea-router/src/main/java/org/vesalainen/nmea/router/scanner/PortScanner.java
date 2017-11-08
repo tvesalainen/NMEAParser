@@ -219,8 +219,8 @@ public class PortScanner extends JavaLogging
         }
         else
         {
-            severe("NO PORT TYPES!!!");
-            throw new IllegalArgumentException("should not happen");
+            config("all types scanned stopping scanner");
+            stop();
         }
     }
     public void monitor()

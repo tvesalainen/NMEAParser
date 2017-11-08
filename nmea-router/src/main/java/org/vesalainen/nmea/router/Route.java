@@ -18,6 +18,7 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.util.List;
+import static java.util.logging.Level.FINEST;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
@@ -75,7 +76,7 @@ public final class Route extends JavaLogging
         }
     }
 
-    public final void write(String prefix, RingByteBuffer ring) throws IOException
+    public final void write(Endpoint src, String prefix, RingByteBuffer ring) throws IOException
     {
         if (canWrite(prefix))
         {
@@ -85,7 +86,13 @@ public final class Route extends JavaLogging
                 Endpoint endpoint = Endpoint.get(target);
                 if (endpoint != null)
                 {
-                    endpoint.write(ring);
+                    endpoint.write(src, ring);
+                    if (isLoggable(FINEST))
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(ring);
+                        finest("%s->%s %s", src.getName(), target, sb.substring(0, sb.length()-2));
+                    }
                 }
             }
             count++;

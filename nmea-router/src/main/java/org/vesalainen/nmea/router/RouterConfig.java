@@ -103,13 +103,13 @@ public class RouterConfig extends JavaLogging
     {
         return nmea
                 .getValue()
-                .getTcpEndpointOrProcessorOrMulticast()
+                .getLogEndpointOrTcpEndpointOrProcessor()
                 .stream()
                 .filter((e)->e.isEnable());
     }
     public void add(EndpointType endpointType)
     {
-        nmea.getValue().getTcpEndpointOrProcessorOrMulticast().add(endpointType);
+        nmea.getValue().getLogEndpointOrTcpEndpointOrProcessor().add(endpointType);
     }
     public NmeaType getNmeaType()
     {

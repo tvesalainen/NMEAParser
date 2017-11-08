@@ -31,7 +31,7 @@ import org.vesalainen.nmea.router.Router;
  */
 public abstract class SerialEndpoint<E extends SerialType, T extends ScatteringByteChannel & GatheringByteChannel> extends Endpoint<E,T>
 {
-
+    private boolean routing;
     public SerialEndpoint(E endpointType, Router router)
     {
         super(endpointType, router);
@@ -40,7 +40,6 @@ public abstract class SerialEndpoint<E extends SerialType, T extends ScatteringB
     public SerialEndpoint(E endpointType, Router router, String ext)
     {
         super(endpointType, router, ext);
-        routing = false;
     }
 
     @Override

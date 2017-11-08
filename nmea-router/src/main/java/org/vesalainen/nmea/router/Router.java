@@ -52,7 +52,7 @@ public class Router extends JavaLogging implements RouterEngine
 {
     private static final long MAX_RESTART_DELAY = 100000;
     private final RouterConfig config;
-    private final Map<String,Endpoint> sources = new HashMap<>();
+    private final Map<String,EndpointType> endpointTypeMap = new HashMap<>();
     private final Map<Future,Endpoint> futureMap = new ConcurrentHashMap<>();
     private final Set<SerialType> serialSet = new HashSet<>();
     private final Map<PortType,SymmetricDifferenceMatcher<String,SerialType>> portMatcher = new EnumMap<>(PortType.class);
@@ -84,7 +84,7 @@ public class Router extends JavaLogging implements RouterEngine
     {
         config("starting %s", Version.getVersion());
         portsNow = SerialChannel.getAllPorts();
-        populateSerialSet();
+        populateEndpoints();
         populatePortMatcher();
         portScanner = new PortScanner(POOL, config.getDontScan(), lastPortType);
         startNonSerial();
@@ -146,7 +146,7 @@ public class Router extends JavaLogging implements RouterEngine
             log(SEVERE, ex, "%s %s", scanResult, ex.getMessage());
         }
     }
-    private void populateSerialSet()
+    private void populateEndpoints()
     {
         config.getRouterEndpoints().forEach((endpointType)->
         {
@@ -155,6 +155,7 @@ public class Router extends JavaLogging implements RouterEngine
                 SerialType serialType = (SerialType) endpointType;
                 serialSet.add(serialType);
             }
+            endpointTypeMap.put(endpointType.getName(), endpointType);
         });
     }
     private void populatePortMatcher()
@@ -197,7 +198,12 @@ public class Router extends JavaLogging implements RouterEngine
         startTimeMap.put(endpointType, System.currentTimeMillis());
         futureMap.put(future, endpoint);
         config("started %s", endpoint);
-        if (allResolved() && portScanner != null)
+        checkScannerState();
+    }
+    private synchronized void checkScannerState()
+    {
+        boolean allResolved = portMatcher.values().stream().allMatch((sdm)->sdm.getUnresolved().isEmpty());
+        if (allResolved && portScanner != null)
         {
             try
             {
@@ -213,19 +219,11 @@ public class Router extends JavaLogging implements RouterEngine
             config("all ports resolved port scanner stopped");
         }
     }
-    private boolean allResolved()
-    {
-        return portMatcher.values().stream().allMatch((sdm)->sdm.getUnresolved().isEmpty());
-    }
     private Set<SerialType> getUnresolved()
     {
         Set<SerialType> set = new HashSet<>();
         portMatcher.values().stream().map((sdm)->sdm.getUnresolved()).forEach((s)->set.addAll(s));
         return set;
-    }
-    public void addSource(String src, Endpoint endpoint)
-    {
-        sources.put(src, endpoint);
     }
     @Override
     public int send(String target, ByteBuffer bb) throws IOException
@@ -242,10 +240,9 @@ public class Router extends JavaLogging implements RouterEngine
     public boolean kill(String target)
     {
         config("killing %s", target);
-        Endpoint endpoint = Endpoint.get(target);
-        if (endpoint != null)
+        EndpointType endpointType = endpointTypeMap.get(target);
+        if (endpointType != null)
         {
-            EndpointType endpointType = endpoint.getEndpointType();
             if (endpointType instanceof SerialType)
             {
                 SerialType serialType = (SerialType) endpointType;
@@ -253,11 +250,12 @@ public class Router extends JavaLogging implements RouterEngine
                 SymmetricDifferenceMatcher<String, SerialType> sdm = portMatcher.get(portType);
                 sdm.unmap(serialType);
                 config("removed %s from portMatcher", target);
+                checkScannerState();
             }
         }
-        return cancel(target);
+        return cancelEndpoint(target);
     }
-    public boolean cancel(String target)
+    public boolean cancelEndpoint(String target)
     {
         config("cancelling %s", target);
         Endpoint endpoint = Endpoint.get(target);
@@ -266,7 +264,6 @@ public class Router extends JavaLogging implements RouterEngine
             EndpointType endpointType = endpoint.getEndpointType();
             if (endpointType instanceof SerialType)
             {
-                SerialType serialType = (SerialType) endpointType;
                 Future future = null;
                 for (Entry<Future,Endpoint> e : futureMap.entrySet())
                 {
@@ -295,7 +292,7 @@ public class Router extends JavaLogging implements RouterEngine
         }
         else
         {
-            warning("%s to be cancelled not found", target);
+            fine("%s not started", target);
         }
         return false;
     }
