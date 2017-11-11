@@ -99,7 +99,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
     }
 
     @Override
-    public int write(RingByteBuffer ring) throws IOException
+    public int write(Endpoint src, RingByteBuffer ring) throws IOException
     {
         int count = 0;
         if (listenerCount.get() > 0)
@@ -109,7 +109,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                 String key = entry.getKey();
                 if (key.startsWith(name) && !key.equals(name))
                 {
-                    int cnt = entry.getValue().write(ring);
+                    int cnt = entry.getValue().write(src, ring);
                     count += cnt;
                 }
             }
