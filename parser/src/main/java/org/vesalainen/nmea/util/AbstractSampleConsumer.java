@@ -16,8 +16,9 @@
  */
 package org.vesalainen.nmea.util;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
-import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -29,14 +30,16 @@ import org.vesalainen.util.logging.JavaLogging;
 public abstract class AbstractSampleConsumer extends JavaLogging implements Runnable
 {
     protected Stream<NMEASample> stream;
-    protected Thread thread;
+    protected ScheduledExecutorService executor;
+    private Future<?> future;
     /**
      * Creates consumer.
      * @param cls Implementation class for log naming.
      */
-    protected AbstractSampleConsumer(Class<? extends AbstractSampleConsumer> cls)
+    protected AbstractSampleConsumer(Class<? extends AbstractSampleConsumer> cls, ScheduledExecutorService executor)
     {
         super(cls);
+        this.executor = executor;
     }
     /**
      * Starts consumer
@@ -45,15 +48,14 @@ public abstract class AbstractSampleConsumer extends JavaLogging implements Runn
     public void start(NMEAService service)
     {
         init(service.stream(getProperties()));
-        thread = new Thread(this, this.getClass().getSimpleName());
-        thread.start();
+        future = executor.submit(this);
     }
     /**
      * Stops consumer.
      */
     public void stop()
     {
-        thread.interrupt();
+        future.cancel(true);
     }
     /**
      * Initializes sample stream. Default implementation assigns given stream. 

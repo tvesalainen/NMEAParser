@@ -23,6 +23,10 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -44,46 +48,64 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
 {
     protected ScatteringByteChannel in;
     protected GatheringByteChannel out;
+    protected ExecutorService executor;
     private final NMEADispatcher nmeaDispatcher;
     private AISDispatcher aisDispatcher;
     private final List<AutoCloseable> autoCloseables = new ArrayList<>();
     private Thread thread;
     private PropertySetterDispatcher dispatcher;
     private boolean liveClock = true;
+    private Future<?> future;
 
     public NMEAService(String address, int port) throws IOException
     {
-        this(UnconnectedDatagramChannel.open(address, port, 100, true, true));
+        this(address, port, Executors.newCachedThreadPool());
+    }
+    public NMEAService(String address, int port, ExecutorService executor) throws IOException
+    {
+        this(UnconnectedDatagramChannel.open(address, port, 100, true, true), executor);
     }
 
     public NMEAService(UnconnectedDatagramChannel channel) throws IOException
     {
-        this(channel, channel);
+        this(channel, Executors.newCachedThreadPool());
+    }
+    public NMEAService(UnconnectedDatagramChannel channel, ExecutorService executor) throws IOException
+    {
+        this(channel, channel, executor);
     }
 
     public NMEAService(DatagramChannel channel) throws IOException
     {
-        this(channel, channel);
+        this(channel, Executors.newCachedThreadPool());
+    }
+    public NMEAService(DatagramChannel channel, ExecutorService executor) throws IOException
+    {
+        this(channel, channel, executor);
     }
 
     public NMEAService(ScatteringByteChannel in, GatheringByteChannel out) throws IOException
     {
+        this(in, out, Executors.newCachedThreadPool());
+    }
+    public NMEAService(ScatteringByteChannel in, GatheringByteChannel out, ExecutorService executor) throws IOException
+    {
         setLogger(this.getClass());
         this.in = in;
         this.out = out;
+        this.executor = executor;
         dispatcher = new SimplePropertySetterDispatcher(new WeakMapSet<>());
         nmeaDispatcher = NMEADispatcher.getInstance(NMEADispatcher.class, dispatcher);
     }
     
     public void start()
     {
-        thread = new Thread(this, NMEAService.class.getSimpleName());
-        thread.start();
+        future = executor.submit(this);
     }
     
     public void stop()
     {
-        thread.interrupt();
+        future.cancel(true);
     }
 
     public Stream<NMEASample> stream(String... properties)

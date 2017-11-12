@@ -24,14 +24,13 @@ import java.nio.channels.GatheringByteChannel;
 import java.time.ZoneOffset;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-import java.util.zip.CheckedOutputStream;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.nmea.util.NMEAFilters;
 import org.vesalainen.nmea.util.NMEASample;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEASentence;
 
 /**
@@ -46,15 +45,17 @@ public class VariationSource extends AbstractSampleConsumer
         "clock"
             };
     private final GatheringByteChannel channel;
-    private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
     private long period = 1000;
     private TSAGeoMag geoMag = new TSAGeoMag();
     private GregorianCalendar calendar;
     private long nextCalendarUpdate;
+    private NMEASentence rmc;
+    private double declination;
+    private ByteBuffer bb;
 
-    public VariationSource(GatheringByteChannel channel, VariationSourceType variationSourceType)
+    public VariationSource(GatheringByteChannel channel, VariationSourceType variationSourceType, ScheduledExecutorService executor)
     {
-        super(VariationSource.class);
+        super(VariationSource.class, executor);
         this.channel = channel;
         Long per = variationSourceType.getPeriod();
         if (per != null)
@@ -79,7 +80,6 @@ public class VariationSource extends AbstractSampleConsumer
     @Override
     protected void process(NMEASample sample)
     {
-        bb.clear();
         try
         {
             if (calendar == null || nextCalendarUpdate < sample.getTime())
@@ -89,13 +89,15 @@ public class VariationSource extends AbstractSampleConsumer
                 calendar.setTimeInMillis(time);
                 nextCalendarUpdate = time+DayInMillis;
             }
-            fine("location %s", sample);
-            double declination = geoMag.getDeclination(sample.getLatitude(), sample.getLongitude(), geoMag.decimalYear(calendar), 0);
-            NMEASentence rmc = NMEASentence.rmc(declination);
-            bb.clear();
-            rmc.writeTo(bb);
-            bb.flip();
+            double decl = geoMag.getDeclination(sample.getLatitude(), sample.getLongitude(), geoMag.decimalYear(calendar), 0);
+            if (Math.abs(declination-decl) > 0.1)
+            {
+                declination = decl;
+                rmc = NMEASentence.rmc(declination);
+                bb = rmc.getByteBuffer();
+            }
             channel.write(bb);
+            bb.flip();
             finest("send RMC declination=%f", declination);
         }
         catch (IOException ex)

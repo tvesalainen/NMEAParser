@@ -105,7 +105,19 @@ public class RouterConfig extends JavaLogging
                 .getValue()
                 .getLogEndpointOrTcpEndpointOrProcessor()
                 .stream()
-                .filter((e)->e.isEnable());
+                .filter(this::checkEnabled);
+    }
+    private boolean checkEnabled(EndpointType endpointType)
+    {
+        if (endpointType.isEnable())
+        {
+            return true;
+        }
+        else
+        {
+            warning("%s is not enabled and therefore not started!", endpointType.getName());
+            return false;
+        }
     }
     public void add(EndpointType endpointType)
     {

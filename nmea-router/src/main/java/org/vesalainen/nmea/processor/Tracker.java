@@ -26,6 +26,9 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -57,9 +60,8 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
     private File directory;
     private final TrackOutput track;
     private int count;
-    private Timer timer;
-    private WatchDog closer;
     private boolean active;
+    private ScheduledFuture<?> scheduledfuture;
     /**
      * This is for testing
      * @param out
@@ -67,15 +69,19 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
      */
     Tracker(String dirStr) throws IOException
     {
-        super(Tracker.class);
+        this(dirStr, Executors.newScheduledThreadPool(3));
+    }
+    Tracker(String dirStr, ScheduledExecutorService executor) throws IOException
+    {
+        super(Tracker.class, executor);
         this.directory = new File(dirStr);
         track = new TrackOutput(directory)
                 .setBuffered(buffered);
     }
 
-    public Tracker(TrackerType trackerType) throws FileNotFoundException, IOException
+    public Tracker(TrackerType trackerType, ScheduledExecutorService executor) throws IOException
     {
-        super(Tracker.class);
+        super(Tracker.class, executor);
         Long bt = trackerType.getBearingTolerance();
         if (bt != null)
         {
@@ -125,15 +131,13 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
     public void start(NMEAService service)
     {
         super.start(service);
-        closer = new WatchDog();
-        timer = new Timer();
-        timer.scheduleAtFixedRate(closer, maxPassive, maxPassive);
+        scheduledfuture = executor.scheduleAtFixedRate(this::closer, maxPassive, maxPassive, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void stop()
     {
-        timer.cancel();
+        scheduledfuture.cancel(false);
         super.stop();
     }
 
@@ -188,25 +192,19 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
         }
     }
 
-    private class WatchDog extends TimerTask
+    public void closer()
     {
-
-        @Override
-        public void run()
+        try
         {
-            try
+            if (!active)
             {
-                if (!active)
-                {
-                    close();
-                }
-                active = false;
+                close();
             }
-            catch (Exception ex)
-            {
-                log(Level.WARNING, ex, "timed close failed %s", ex.getMessage());
-            }
+            active = false;
         }
-        
+        catch (Exception ex)
+        {
+            log(Level.WARNING, ex, "timed close failed %s", ex.getMessage());
+        }
     }
 }

@@ -21,6 +21,7 @@ import org.vesalainen.nio.channels.PipeChannel;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.processor.Processor;
 import org.vesalainen.nmea.router.Router;
+import static org.vesalainen.nmea.router.RouterManager.POOL;
 
 /**
  *
@@ -42,7 +43,7 @@ class ProcessorEndpoint extends Endpoint<ProcessorType,PipeChannel>
         PipeChannel[] peers = PipeChannel.createPeers();
         PipeChannel pc1 = peers[0];
         PipeChannel pc2 = peers[1];
-        processor = new Processor(endpointType, pc2, pc2);
+        processor = new Processor(endpointType, pc2, pc2, POOL);
         processor.start();
         return pc1;
     }

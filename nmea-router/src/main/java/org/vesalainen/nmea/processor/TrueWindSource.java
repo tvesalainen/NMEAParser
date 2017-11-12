@@ -20,17 +20,15 @@ import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-import java.util.zip.CheckedOutputStream;
 import org.vesalainen.math.UnitType;
-import org.vesalainen.nio.ByteBufferOutputStream;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.navi.TrueWind;
 import org.vesalainen.nmea.util.NMEAFilters;
 import org.vesalainen.nmea.util.NMEAMappers;
 import org.vesalainen.nmea.util.NMEASample;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.navi.Velocity;
 
@@ -49,11 +47,10 @@ public class TrueWindSource extends AbstractSampleConsumer
             };
     private final GatheringByteChannel channel;
     private final TrueWind trueWind = new TrueWind();
-    private final ByteBuffer bb = ByteBuffer.allocateDirect(100);
 
-    public TrueWindSource(GatheringByteChannel channel, TrueWindSourceType trueWindSourceType)
+    public TrueWindSource(GatheringByteChannel channel, TrueWindSourceType trueWindSourceType, ScheduledExecutorService executor)
     {
-        super(TrueWindSource.class);
+        super(TrueWindSource.class, executor);
         this.channel = channel;
     }
     
@@ -75,7 +72,6 @@ public class TrueWindSource extends AbstractSampleConsumer
     @Override
     protected void process(NMEASample sample)
     {
-        bb.clear();
         try
         {
             trueWind.setBoatSpeed(sample.getProperty("speedOverGround"));
@@ -87,10 +83,7 @@ public class TrueWindSource extends AbstractSampleConsumer
             int trueAngle = (int) trueWind.getTrueAngle();
             double trueSpeed = trueWind.getTrueSpeed();
             NMEASentence mwv = NMEASentence.mwv(trueAngle, trueSpeed, UnitType.Knot, true);
-            bb.clear();
-            mwv.writeTo(bb);
-            bb.flip();
-            channel.write(bb);
+            channel.write(mwv.getByteBuffer());
             finest("send MWV trueAngle=%d trueSpeed=%f", trueAngle, trueSpeed);
         }
         catch (IOException ex)

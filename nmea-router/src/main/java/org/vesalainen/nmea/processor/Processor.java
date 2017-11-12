@@ -22,9 +22,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
+import java.util.concurrent.ScheduledExecutorService;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
 import org.vesalainen.nmea.jaxb.router.SntpMulticasterType;
@@ -33,7 +31,6 @@ import org.vesalainen.nmea.jaxb.router.TimeSetterType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
-import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.parsers.nmea.NMEAService;
 
 /**
@@ -42,14 +39,12 @@ import org.vesalainen.parsers.nmea.NMEAService;
  */
 public class Processor extends NMEAService implements Runnable, AutoCloseable
 {
-    private final ScatteringByteChannel in;
-    private final GatheringByteChannel out;
     private ProcessorType processorType;
     private List<AbstractSampleConsumer> processes = new ArrayList<>();
 
-    public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out) throws IOException
+    public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out, ScheduledExecutorService executor) throws IOException
     {
-        super(in, out);
+        super(in, out, executor);
         this.in = in;
         this.out = out;
         this.processorType = processorType;
@@ -68,19 +63,19 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 {
                     VariationSourceType vst = (VariationSourceType) ob;
                     info("add VariationSource");
-                    process = new VariationSource(out, vst);
+                    process = new VariationSource(out, vst, (ScheduledExecutorService) executor);
                 }
                 if (ob instanceof TrueWindSourceType)
                 {
                     TrueWindSourceType vst = (TrueWindSourceType) ob;
                     info("add TrueWindSource");
-                    process = new TrueWindSource(out, vst);
+                    process = new TrueWindSource(out, vst, (ScheduledExecutorService) executor);
                 }
                 if (ob instanceof TrackerType)
                 {
                     TrackerType tt = (TrackerType) ob;
                     info("add Tracker");
-                    process = new Tracker(tt);
+                    process = new Tracker(tt, (ScheduledExecutorService) executor);
                 }
                 if (ob instanceof SntpBroadcasterType)
                 {
