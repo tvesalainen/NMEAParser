@@ -92,7 +92,7 @@ public class NMEAStreamTest
                     .filter(NMEAFilters.minDistanceFilter(0.01))
                     .peek((s)->{pl2.lineTo(s.getLongitude(), s.getLatitude());});
             NMEAFilters.bearingToleranceFilter(peek, 3.0)
-                    .forEach(Streams.recyclingConsumer((s)->{pl3.lineTo(s.getLongitude(), s.getLatitude());}));
+                    .forEach((s)->{pl3.lineTo(s.getLongitude(), s.getLatitude());});
             plotter.drawPolyline(pl1);
             plotter.drawPolyline(pl2);
             plotter.drawPolyline(pl3);

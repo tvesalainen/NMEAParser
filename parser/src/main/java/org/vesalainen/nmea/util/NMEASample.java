@@ -27,14 +27,12 @@ import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.TalkerId;
 import org.vesalainen.util.FloatMap;
 import org.vesalainen.util.FloatReference;
-import org.vesalainen.util.Recyclable;
-import org.vesalainen.util.Recycler;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
+public class NMEASample implements Comparable<NMEASample>, WayPoint
 {
     private long time;
     private TalkerId talkerId;
@@ -119,16 +117,6 @@ public class NMEASample implements Recyclable, Comparable<NMEASample>, WayPoint
         this.origin = origin;
     }
     
-    @Override
-    public void clear()
-    {
-        time = 0;
-        talkerId = null;
-        messageType = null;
-        map.clear();
-        origin = null;
-    }
-
     @Override
     public String toString()
     {

@@ -45,7 +45,7 @@ public class NMEASamplerT
             //service.setLiveClock(false);
             service.start();
             Stream<NMEASample> stream = service.stream("latitude", "longitude");
-            stream.forEach(Streams.recyclingConsumer((s)->System.err.println(s)));
+            stream.forEach((s)->System.err.println(s));
         }
         catch (IOException ex)
         {

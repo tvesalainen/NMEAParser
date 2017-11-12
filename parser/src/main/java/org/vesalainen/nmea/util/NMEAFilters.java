@@ -58,7 +58,7 @@ public class NMEAFilters
      */
     public static final Predicate<NMEASample> periodicFilter(long period, TimeUnit unit)
     {
-        return Streams.recyclingPredicate(new PeriodicFilter(unit.toMillis(period)));
+        return new PeriodicFilter(unit.toMillis(period));
     }
     private static class PeriodicFilter implements Predicate<NMEASample>
     {
@@ -101,7 +101,7 @@ public class NMEAFilters
      */
     public static final Predicate<NMEASample> containsAllFilter(String... properties)
     {
-        return Streams.recyclingPredicate(new ContainsAllFilter(properties));
+        return new ContainsAllFilter(properties);
     }
     private static class ContainsAllFilter implements Predicate<NMEASample>
     {
@@ -249,7 +249,6 @@ public class NMEAFilters
                     else
                     {
                         JavaLogging.getLogger(BearingToleranceSpliterator.class).finest("%s skipped because of bearing", middle);
-                        Recycler.recycle(middle);
                         middle = wp;
                     }
                 }
@@ -288,7 +287,7 @@ public class NMEAFilters
      */
     public static final Predicate<NMEASample> minDistanceFilter(double minDistance)
     {
-        return Streams.recyclingPredicate(new MinDistanceFilter(minDistance));
+        return new MinDistanceFilter(minDistance);
     }
     private static class MinDistanceFilter implements Predicate<NMEASample>
     {
@@ -339,7 +338,7 @@ public class NMEAFilters
      */
     public static final Predicate<NMEASample> locationFilter(float maxAcceleration)
     {
-        return Streams.recyclingPredicate(new LocationFilter(maxAcceleration));
+        return new LocationFilter(maxAcceleration);
     }
     private static class LocationFilter extends AccelerationFilter
     {
@@ -381,7 +380,7 @@ public class NMEAFilters
      */
     public static final Predicate<NMEASample> propertyAccelerationFilter(String property, float maxAcceleration)
     {
-        return Streams.recyclingPredicate(new PropertyAccelerationFilter(property, maxAcceleration));
+        return new PropertyAccelerationFilter(property, maxAcceleration);
     }
     private static class PropertyAccelerationFilter extends AccelerationFilter
     {
@@ -472,7 +471,7 @@ public class NMEAFilters
      */
     public static final Predicate<NMEASample> rangeFilter(String property, float min, float max)
     {
-        return Streams.recyclingPredicate(new RangeFilter(property, min, max));
+        return new RangeFilter(property, min, max);
     }
     private static class RangeFilter implements Predicate<NMEASample>
     {
@@ -516,7 +515,7 @@ public class NMEAFilters
      */
     public static final Predicate<NMEASample> timeFilter()
     {
-        return Streams.recyclingPredicate(new TimeFilter());
+        return new TimeFilter();
     }
     private static class TimeFilter implements Predicate<NMEASample>
     {
