@@ -74,6 +74,10 @@ public class NMEAReader extends JavaLogging
             int count = ring.read(channel);
             long timestamp = System.currentTimeMillis();
             finest("handle %s read %d bytes", name, count);
+            if (count == 0)
+            {
+                throw new IOException(name+" return 0 in read");
+            }
             if (count == -1)
             {
                 throw new EOFException(name);
