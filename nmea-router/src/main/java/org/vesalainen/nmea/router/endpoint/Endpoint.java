@@ -159,7 +159,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
                     }
                 }
             }
-            cnt = ring.write(channel);
+            cnt = ring.writeTo(channel);
             finer("write %s = %d", ring, cnt);
             writeCount++;
             writeBytes += cnt;

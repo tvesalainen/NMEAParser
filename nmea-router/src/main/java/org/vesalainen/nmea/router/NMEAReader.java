@@ -71,7 +71,7 @@ public class NMEAReader extends JavaLogging
                 severe("%s buffer is too small %d", name, bufferSize);
                 throw new BufferUnderflowException();
             }
-            int count = ring.read(channel);
+            int count = ring.fill(channel);
             long timestamp = System.currentTimeMillis();
             finest("handle %s read %d bytes", name, count);
             if (count == 0)
@@ -113,7 +113,7 @@ public class NMEAReader extends JavaLogging
                     case Match:
                         onOk.apply(ring, timestamp);
                         mark = true;
-                        ring.mark();
+                        ring.discard();
                         break;
                 }
             }

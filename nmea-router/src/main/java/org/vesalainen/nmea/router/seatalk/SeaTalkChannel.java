@@ -31,7 +31,7 @@ import org.vesalainen.comm.channel.SerialChannel.Builder;
 import org.vesalainen.comm.channel.SerialChannel.Configuration;
 import org.vesalainen.nio.RingBuffer;
 import org.vesalainen.nio.RingByteBuffer;
-import org.vesalainen.nio.channels.ByteBufferOutputStream;
+import org.vesalainen.nio.ByteBufferOutputStream;
 import org.vesalainen.parsers.seatalk.SeaTalk2NMEA;
 import org.vesalainen.util.OrMatcher;
 import org.vesalainen.util.SimpleMatcher;
@@ -44,7 +44,7 @@ import org.vesalainen.util.logging.JavaLogging;
 public class SeaTalkChannel extends SelectableChannel implements ScatteringByteChannel, GatheringByteChannel
 {
     private final SerialChannel channel;
-    private final RingByteBuffer readRing = new RingByteBuffer(100, 10, true);
+    private final RingByteBuffer readRing = new RingByteBuffer(100, true);
     private final ByteBufferOutputStream out = new ByteBufferOutputStream();
     private final SeaTalkMatcher matcher = new SeaTalkMatcher();
     private final SeaTalk2NMEA parser = SeaTalk2NMEA.newInstance();
@@ -158,7 +158,7 @@ public class SeaTalkChannel extends SelectableChannel implements ScatteringByteC
     {
         int remaining = out.getRemaining();
         log.finest("out remaining = %d", remaining);
-        readRing.read(channel);
+        readRing.fill(channel);
         log.finest("ring remaining = %d", readRing.remaining());
         boolean canWrite = false;
         if (!readRing.isFull())
