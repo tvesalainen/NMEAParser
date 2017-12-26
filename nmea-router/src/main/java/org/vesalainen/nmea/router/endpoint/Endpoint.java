@@ -249,12 +249,13 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         {
             prefix = seqPrefix.toString();
         }
-        matcher.getMatched().write(this, prefix, ring);
+        Route route = matcher.getMatched();
+        route.write(this, prefix, ring);
         if (scriptEngine != null)
         {
             scriptEngine.write(ring);
         }
-        sendNotification(()->ring.getString(), ()->null, ()->timestamp);
+        sendNotification(()->ring.getString(), ()->route.toString(), ()->timestamp);
         if (prefix != null)
         {
             fingerPrint.add(prefix);

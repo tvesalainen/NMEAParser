@@ -123,8 +123,8 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
     private class TCPEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
     {
         private SocketChannel socketChannel;
-        //private SynchronizedRingByteBuffer syncBuffer = new SynchronizedRingByteBuffer(1024, true);
-        //private Future<?> proxyFuture;
+        private SynchronizedRingByteBuffer syncBuffer = new SynchronizedRingByteBuffer(1024, true);
+        private Future<?> proxyFuture;
 
         public TCPEndpoint(SocketChannel socketChannel, TcpEndpointType endpointType, Router router)
         {
@@ -137,13 +137,15 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         {
             return socketChannel;
         }
-/*
+
         @Override
         public int write(Endpoint src, RingByteBuffer ring) throws IOException
         {
             try
             {
+                finest("write=%s", ring.getString());
                 int rc = syncBuffer.tryFillAll(ring);
+                finest("wrote rc=%d %s", rc, syncBuffer);
                 return rc;
             }
             catch (InterruptedException ex)
@@ -160,12 +162,14 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                 {
                     syncBuffer.waitRemaining();
                     syncBuffer.getAll(false);
+                    finest("proxy %s", syncBuffer);
                     super.write(this, syncBuffer);
                     syncBuffer.discard();
                 }
             }
             catch (InterruptedException ex)
             {
+                finest("interrupted");
             }
             catch (IOException ex)
             {
@@ -173,7 +177,6 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                 log(SEVERE, ex, "%s %s", name, ex.getMessage());
             }
         }
-*/
         @Override
         public void run()
         {
@@ -181,7 +184,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             {
                 listenerCount.incrementAndGet();
                 config("starting socket connection %s", socketChannel);
-                //proxyFuture = POOL.submit(this::proxy);
+                proxyFuture = POOL.submit(this::proxy);
                 super.run();
             }
             catch (Exception ex)
@@ -190,7 +193,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             finally
             {
-                //proxyFuture.cancel(true);
+                proxyFuture.cancel(true);
                 listenerCount.decrementAndGet();
             }
         }

@@ -40,6 +40,7 @@ public final class Route extends JavaLogging
     private long expireTime = 1500;
     private int count;
     private int backupCount;
+    private String toString;
 
     Route() // for test
     {
@@ -51,6 +52,7 @@ public final class Route extends JavaLogging
     {
         super(Route.class);
         List<String> targets = routeType.getTarget();
+        toString = targets.toString();
         if (targets != null)
         {
             targetList = new String[targets.size()];
@@ -112,6 +114,12 @@ public final class Route extends JavaLogging
             return true;
         }
         return ref.getValue()+expireTime < System.currentTimeMillis();
+    }
+
+    @Override
+    public String toString()
+    {
+        return toString;
     }
     
 }

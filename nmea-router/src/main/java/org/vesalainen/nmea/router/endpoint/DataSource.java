@@ -83,12 +83,12 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
 
     public abstract int write(Endpoint src, RingByteBuffer ring) throws IOException;
 
-    public synchronized void sendNotification(Supplier<String> textSupplier, Supplier<byte[]> userDataSupplier, LongSupplier timestampSupplier)
+    public synchronized void sendNotification(Supplier<String> textSupplier, Supplier<?> userDataSupplier, LongSupplier timestampSupplier)
     {
         emitter.sendNotification(textSupplier, userDataSupplier, timestampSupplier);
     }
 
-    public synchronized void sendNotification(String text, byte[] userData, long timestamp)
+    public synchronized void sendNotification(String text, Object userData, long timestamp)
     {
         emitter.sendNotification(text, userData, timestamp);
     }
