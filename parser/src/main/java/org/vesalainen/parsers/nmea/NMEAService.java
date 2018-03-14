@@ -21,12 +21,12 @@ import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -37,6 +37,7 @@ import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEASampler;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
+import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.util.WeakMapSet;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -56,6 +57,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     private PropertySetterDispatcher dispatcher;
     private boolean liveClock = true;
     private Future<?> future;
+    private GPSClock clock;
 
     public NMEAService(String address, int port) throws IOException
     {
@@ -139,7 +141,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     }
     public void addNMEAObserver(PropertySetter propertySetter, String... prefixes)
     {
-        nmeaDispatcher.addObserver(propertySetter, prefixes);
+        nmeaDispatcher. addObserver(propertySetter, prefixes);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
@@ -198,6 +200,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         return nmeaDispatcher.hasObservers() ||
                 (aisDispatcher != null && aisDispatcher.hasObservers());
     }
+    
     @Override
     public void run()
     {
@@ -210,7 +213,9 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
                 UnconnectedDatagramChannel udc = (UnconnectedDatagramChannel) in;
                 origin = ()->{return udc.getFromAddress();};
             }
-            parser.parse(in, liveClock, origin, nmeaDispatcher, aisDispatcher);
+            clock = new GPSClock(liveClock);
+            setClockSupplier(()->clock);
+            parser.parse(in, clock, origin, nmeaDispatcher, aisDispatcher);
         }
         catch (Exception ex)
         {

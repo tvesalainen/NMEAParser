@@ -1576,12 +1576,15 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     }
     public <I> void parse(I input, boolean liveClock, Supplier origin, NMEAObserver data, AISObserver aisData) throws IOException
     {
+        parse(input, new GPSClock(liveClock), origin, data, aisData);
+    }
+    public <I> void parse(I input, GPSClock gpsClock, Supplier origin, NMEAObserver data, AISObserver aisData) throws IOException
+    {
         if (data == null)
         {
             data = new AbstractNMEAObserver();
         }
         data.start(null);
-        GPSClock gpsClock = new GPSClock(liveClock);
         data.setClock(gpsClock);
         gpsClock.start(null);
         data.commit("Set clock");

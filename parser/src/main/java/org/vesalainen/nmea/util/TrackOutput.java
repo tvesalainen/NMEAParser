@@ -105,7 +105,7 @@ public class TrackOutput extends JavaLogging implements AutoCloseable
             }
             compressor = null;
         }
-        fine("close tracker file");
+        finest("close tracker file");
     }
 
     public TrackOutput setBuffered(boolean buffered)

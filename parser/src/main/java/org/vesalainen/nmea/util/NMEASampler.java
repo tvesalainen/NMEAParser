@@ -29,7 +29,7 @@ import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEADispatcher;
 import org.vesalainen.parsers.nmea.TalkerId;
-import org.vesalainen.util.Lists;
+import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.stream.ObserverSpliterator;
 
 /**
@@ -88,7 +88,7 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
      */
     public void addProperties(String... properties)
     {
-        this.properties.addAll(Lists.create(properties));
+        this.properties.addAll(CollectionHelp.create(properties));
         dispatcher.addObserver(this, properties);
     }
     /**
@@ -98,7 +98,7 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
     public void removeProperties(String... properties)
     {
         dispatcher.removeObserver(this, properties);
-        this.properties.removeAll(Lists.create(properties));
+        this.properties.removeAll(CollectionHelp.create(properties));
     }
     /**
      * Creates a stream from observer. Behavior of two or more running streams
