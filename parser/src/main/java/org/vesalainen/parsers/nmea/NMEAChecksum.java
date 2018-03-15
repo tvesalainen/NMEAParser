@@ -18,6 +18,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.util.zip.Checksum;
+import org.vesalainen.parser.util.InputReader;
 
 /**
  * @author Timo Vesalainen
@@ -26,6 +27,7 @@ public class NMEAChecksum implements Checksum
 {
     private boolean on;
     private int value;
+    private int lastInputEnd;
     @Override
     public void update(int b)
     {
@@ -33,18 +35,22 @@ public class NMEAChecksum implements Checksum
     }
     private void doUpdate(int b)
     {
-        if (b == '*')
+        switch (b)
         {
-            on = false;
-        }
-        if (on)
-        {
-            value ^= b;
-        }
-        if (b == '$' || b == '!')
-        {
-            value = 0;
-            on = true;
+            case '*':
+                on = false;
+                break;
+            case '$':
+            case '!':
+                value = 0;
+                on = true;
+                break;
+            default:
+                if (on)
+                {
+                    value ^= b;
+                }
+                break;
         }
     }
 
@@ -55,6 +61,16 @@ public class NMEAChecksum implements Checksum
         {
             doUpdate(seq.charAt(ii));
         }
+    }
+    public void updateInput(InputReader input)
+    {
+        int end = input.getEnd();
+        assert end >= lastInputEnd;
+        for (int ii=lastInputEnd;ii<end;ii++)
+        {
+            update(input.get(ii));
+        }
+        lastInputEnd = end;
     }
     @Override
     public void update(byte[] b, int off, int len)
@@ -75,6 +91,7 @@ public class NMEAChecksum implements Checksum
     public void reset()
     {
         value = 0;
+        lastInputEnd = 0;
     }
     /**
      * Fills 5 byte length array with * checksum and crlf
