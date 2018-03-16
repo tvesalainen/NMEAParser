@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import java.util.zip.CheckedOutputStream;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.comm.channel.SerialChannel.Builder;
+import static org.vesalainen.comm.channel.SerialChannel.Speed.B4800;
 import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
@@ -85,7 +86,7 @@ $PICOA,90,00,TXF,7.053000*08
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class IcomManager extends AbstractNMEAObserver implements Runnable 
+public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoCloseable 
 {
     private int id;
     private Thread thread;
@@ -98,9 +99,9 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable
     private final Map<String,String> map = new HashMap<>();
     private String waitKey;
 
-    private IcomManager(SerialChannel serialChannel)
+    public IcomManager(int id, String port) throws IOException
     {
-        this(0, serialChannel);
+        this(id, SerialChannel.builder(port).setSpeed(B4800).build());
     }
 
     public IcomManager(int id, SerialChannel serialChannel)
@@ -111,11 +112,13 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable
 
     public static IcomManager getInstance() throws IOException, InterruptedException
     {
+        return getInstance(0);
+    }
+    public static IcomManager getInstance(int id) throws IOException, InterruptedException
+    {
         for (String port : SerialChannel.getFreePorts())
         {
-            Builder builder = new Builder(port, 4800);
-            SerialChannel sc = builder.get();
-            IcomManager manager = new IcomManager(sc);
+            IcomManager manager = new IcomManager(id, port);
             if (manager.parse())
             {
                 return manager;
@@ -209,5 +212,11 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable
             Logger.getLogger(IcomManager.class.getName()).log(Level.SEVERE, null, ex);
         }
             
+    }
+
+    @Override
+    public void close() throws IOException, InterruptedException
+    {
+        setRemote(false);
     }
 }
