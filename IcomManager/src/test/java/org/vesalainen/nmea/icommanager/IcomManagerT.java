@@ -27,10 +27,12 @@ public class IcomManagerT
     {
         try
         {
-            IcomManager manager = IcomManager.getInstance();
-            manager.setRemote(true);
-            manager.setReceiveFrequency(8.502);
-            //manager.setRemote(false);
+            try (IcomManager manager = IcomManager.getInstance(0, "COM5"))
+            {
+                manager.setRemote(true);
+                manager.setMode("USB");
+                manager.setFrequency(8.502);
+            }
         }
         catch (IOException ex)
         {

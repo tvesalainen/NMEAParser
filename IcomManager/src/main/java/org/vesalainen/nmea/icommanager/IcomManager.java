@@ -6,7 +6,6 @@
 package org.vesalainen.nmea.icommanager;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -15,14 +14,12 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.CheckedOutputStream;
 import org.vesalainen.comm.channel.SerialChannel;
-import org.vesalainen.comm.channel.SerialChannel.Builder;
 import static org.vesalainen.comm.channel.SerialChannel.Speed.B4800;
-import org.vesalainen.nio.channels.ByteBufferOutputStream;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
-import org.vesalainen.parsers.nmea.NMEAChecksum;
 import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.parsers.nmea.NMEASentence;
+import static org.vesalainen.parsers.nmea.NMEASentence.builder;
 
 /**
  * $PICOA,90,00,REMOTE,ON*58
@@ -93,9 +90,6 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
     private final SerialChannel serialChannel;
     private Semaphore initSemaphore = new Semaphore(0);
     private Semaphore syncSemaphore = new Semaphore(0);
-    private final ByteBuffer bb = ByteBuffer.allocate(100); //.allocateDirect(100); TODO
-    private final ByteBufferOutputStream out = new ByteBufferOutputStream(bb);
-    private final CheckedOutputStream cout = new CheckedOutputStream(out, new NMEAChecksum());
     private final Map<String,String> map = new HashMap<>();
     private String waitKey;
 
@@ -127,13 +121,34 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
         return null;
     }
     
+    public static IcomManager getInstance(int id, String port) throws IOException, InterruptedException
+    {
+        IcomManager manager = new IcomManager(id, port);
+        if (manager.parse())
+        {
+            return manager;
+        }
+        throw new IllegalArgumentException(port+" is not icom port");
+    }
     public boolean setRemote(boolean on) throws IOException, InterruptedException
     {
         return cmd("REMOTE", on);
     }
-    public boolean setReceiveFrequency(double mHz) throws IOException, InterruptedException
+    public boolean setFrequency(double mHz) throws IOException, InterruptedException
+    {
+        return setReceiverFrequency(mHz) && setTransmitterFrequency(mHz);
+    }
+    public boolean setReceiverFrequency(double mHz) throws IOException, InterruptedException
     {
         return cmd("RXF", mHz);
+    }
+    public boolean setTransmitterFrequency(double mHz) throws IOException, InterruptedException
+    {
+        return cmd("TXF", mHz);
+    }
+    public boolean setMode(String mode) throws IOException, InterruptedException
+    {
+        return cmd("MODE", mode);
     }
     private boolean cmd(String key, double value) throws IOException, InterruptedException
     {
@@ -145,23 +160,32 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
     }
     private boolean cmd(String key, String value) throws IOException, InterruptedException
     {
-        bb.clear();
-        IcomNMEAGen.set(cout, id, key, value);
-        bb.flip();
-        System.err.println(new String(bb.array()));
-        serialChannel.write(bb);
+        NMEASentence cmd = builder("$PICOA", "90")
+                .add(String.format("%02d", id))
+                .add(key)
+                .add(value)
+                .build();
+        cmd.writeTo(serialChannel);
         waitKey = key;
         return syncSemaphore.tryAcquire(1, TimeUnit.SECONDS);
     }
     protected boolean parse() throws InterruptedException, IOException
     {
-        thread = new Thread(this);
-        thread.start();
-        bb.clear();
-        IcomNMEAGen.all(cout, id);
-        bb.flip();
-        serialChannel.write(bb);
-        return initSemaphore.tryAcquire(5, TimeUnit.SECONDS);
+        try
+        {
+            thread = new Thread(this);
+            thread.start();
+            NMEASentence all = builder("$PICOA", "90")
+                    .add(String.format("%02d", id))
+                    .add("ALL")
+                    .build();
+            all.writeTo(serialChannel);
+            return initSemaphore.tryAcquire(5, TimeUnit.SECONDS);
+        }
+        finally
+        {
+            initSemaphore = null;
+        }
     }
 
     @Override
@@ -195,7 +219,6 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
         if (initSemaphore != null && "ICOA".equals(type))
         {
             initSemaphore.release();
-            initSemaphore = null;
         }
     }
     
