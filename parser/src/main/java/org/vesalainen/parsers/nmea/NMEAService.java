@@ -207,7 +207,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         try
         {
             NMEAParser parser = NMEAParser.newInstance();
-            Supplier<InetSocketAddress> origin = null;
+            Supplier<InetSocketAddress> origin = ()->null;
             if (in instanceof UnconnectedDatagramChannel)
             {
                 UnconnectedDatagramChannel udc = (UnconnectedDatagramChannel) in;

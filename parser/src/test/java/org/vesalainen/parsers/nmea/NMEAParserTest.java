@@ -17,28 +17,28 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.channels.ScatteringByteChannel;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 import static org.junit.Assert.*;
 import org.junit.Test;
+import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.util.navi.Knots;
 
 /**
  * TODO
    RMM
-   RTE
-   TXT
    VHW
-   VWR
    WCV
    WNC
-   WPL
-   XTE
    XTR
-   ZDA
 
  * 
  * @author Timo Vesalainen
@@ -1332,8 +1332,9 @@ public class NMEAParserTest
         try
         {
             String[] nmeas = new String[] {
-                "$GPVTG,94.9,T,117.9,M,0.0,N,0.0,K,A*4d\r\n",
-                "$GPVTG,94.9,117.9,0.0,0.0*48\r\n"
+                "$GPVTG,94.9,T,117.9,M,0.0,N,0.0,K,A*19\r\n",
+                "$GPVTG,94.9,117.9,0.0,0.0*68\r\n"
+
             };
             for (String nmea : nmeas)
             {
@@ -1462,6 +1463,23 @@ public class NMEAParserTest
     }
 
     @Test
+    public void ths() throws IOException
+    {
+        String[] nmeas = new String[] {
+            "$HCTHS,322.6,A*2E\r\n",
+            "$HCTHS,322.4,A*2C\r\n"
+        };
+        for (String nmea : nmeas)
+        {
+            System.err.println(nmea);
+            SimpleStorage ss = new SimpleStorage();
+            NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+            parser.parse(nmea, tc, null);
+            NMEAContentHelper nch = new NMEAContentHelper(nmea);
+            assertEquals(ss.getFloat("trueHeading"), nch.getFloat(1), 1e-8);
+        }
+    }
+    @Test
     public void err0()
     {
         try
@@ -1559,6 +1577,92 @@ public class NMEAParserTest
         {
             ex.printStackTrace();
             fail(ex.getMessage());
+        }
+    }
+
+    public class NMEAParserImpl extends NMEAParser
+    {
+
+        public char letter(char c)
+        {
+            return ' ';
+        }
+
+        public char alphaNum(char c)
+        {
+            return ' ';
+        }
+
+        public char letterNotP(char c)
+        {
+            return ' ';
+        }
+
+        public char hexAlpha(char x)
+        {
+            return ' ';
+        }
+
+        public int integer(int i)
+        {
+            return 0;
+        }
+
+        public int digit2(int i)
+        {
+            return 0;
+        }
+
+        public int hex(int i)
+        {
+            return 0;
+        }
+
+        public float decimal(float f)
+        {
+            return 0.0F;
+        }
+
+        public void c()
+        {
+        }
+
+        public void skip()
+        {
+        }
+
+        public void parse(URL url, NMEAClock clock, Supplier origin, NMEAObserver data, AISContext aisContext) throws IOException
+        {
+        }
+
+        public void parse(ScatteringByteChannel channel, NMEAClock clock, Supplier origin, NMEAObserver data, AISContext aisContext) throws IOException
+        {
+        }
+
+        public void parse(String text, NMEAClock clock, Supplier origin, NMEAObserver data, AISContext aisContext) throws IOException
+        {
+        }
+
+        public void parse(InputStream is, NMEAClock clock, Supplier origin, NMEAObserver data, AISContext aisContext) throws IOException
+        {
+        }
+
+        @Override
+        public String getToken(int number)
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public String getRule(int number)
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public String getExpected(int number)
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
     }
 

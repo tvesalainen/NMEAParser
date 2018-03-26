@@ -80,6 +80,7 @@ public class NMEATest
     {
         assertTrue(NMEA.isNMEAOrAIS("$GPBWC,010003,1248.4128,S,03827.6978,W,338.4,T,1.5,M,0.314,N,BA01,A*61\r\n"));
         assertTrue(NMEA.isNMEAOrAIS("!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n"));
+        assertTrue(NMEA.isNMEAOrAIS("$GPVTG,277.3,T,281.7,M,0.0,N,0.1,K,D*2A\r\n"));
     }
     
 }

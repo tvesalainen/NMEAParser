@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Level;
-import java.util.zip.Checksum;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import static org.vesalainen.parser.ParserFeature.*;
@@ -39,7 +38,6 @@ import org.vesalainen.parser.annotation.RecoverMethod;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
-import org.vesalainen.parser.util.ChecksumProvider;
 import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.ais.AISContext;
@@ -194,7 +192,7 @@ import org.vesalainen.parsers.nmea.time.GPSClock;
     @Rule(left = "speed", value = "c skip?"),
     @Rule(left = "windAngle")
 })
-public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, ChecksumProvider
+public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, ChecksumProvider
 {
     private static final LocalNMEAChecksum localChecksum = new LocalNMEAChecksum();
 
@@ -1421,11 +1419,13 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             @ParserContext("aisContext") AISContext aisContext
             )
     {
-        NMEAChecksum checksum = (NMEAChecksum) getChecksum();
+        NMEAChecksum checksum = getChecksum();
+        checksum.updateInput(input);
         if (sum != checksum.getValue())
         {
             clock.rollback("checksum");
-            String reason = input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
+            Object org = origin != null ? origin.get() : null;
+            String reason = org+" "+input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
             data.rollback(reason);
             warning(reason);
             if (aisContext != null && aisContext.isAisMessage())
@@ -1580,6 +1580,8 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     }
     public <I> void parse(I input, GPSClock gpsClock, Supplier origin, NMEAObserver data, AISObserver aisData) throws IOException
     {
+        NMEAChecksum checksum = getChecksum();
+        checksum.reset();
         if (data == null)
         {
             data = new AbstractNMEAObserver();
@@ -1641,7 +1643,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         }
     }
     @ParseMethod(start = "statements", size = 1024, charSet = "US-ASCII",
-            features={WideIndex, UseChecksum, UseDirectBuffer}
+            features={WideIndex, /*UseChecksum,*/ UseDirectBuffer}
     )
     protected abstract void parse(
             URL url,
@@ -1652,7 +1654,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             ) throws IOException;
 
     @ParseMethod(start = "statements", size = 1024, charSet = "US-ASCII",
-            features={WideIndex, UseChecksum, UseDirectBuffer}
+            features={WideIndex, /*UseChecksum,*/ UseDirectBuffer}
     )
     protected abstract void parse(
             ScatteringByteChannel channel,
@@ -1663,7 +1665,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             ) throws IOException;
 
     @ParseMethod(start = "statements", size = 1024, 
-            features={WideIndex, UseChecksum}
+            features={WideIndex, /*UseChecksum*/}
     )
     protected abstract void parse(
             String text,
@@ -1674,7 +1676,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             ) throws IOException;
 
     @ParseMethod(start = "statements", size = 8192, charSet = "US-ASCII",
-            features={WideIndex, UseChecksum}
+            features={WideIndex, /*UseChecksum*/}
     )
     protected abstract void parse(
             InputStream is,
@@ -1689,8 +1691,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         return (NMEAParser) GenClassFactory.loadGenInstance(NMEAParser.class);
     }
 
-    @Override
-    public Checksum getChecksum()
+    public NMEAChecksum getChecksum()
     {
         return localChecksum.get();
     }

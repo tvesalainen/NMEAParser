@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.nio.channels.ByteChannel;
 import java.util.Locale;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
@@ -35,8 +35,7 @@ import org.vesalainen.util.CharSequences;
  */
 public class NMEASentence
 {
-    private byte[] buffer;
-    private int length;
+    private ByteBuffer buffer;
     private CharSequence seq;
     /**
      * Creates NMEASentence from string
@@ -49,18 +48,17 @@ public class NMEASentence
         {
             throw new IllegalArgumentException(sentence+" not valid");
         }
-        buffer = sentence.toString().getBytes("NMEA");
+        buffer = ByteBuffer.wrap(sentence.toString().getBytes("NMEA"));
         seq = CharSequences.getAsciiCharSequence(buffer);
     }
     /**
      * Creates NMEASentence from array
      * @param buffer 
      */
-    private NMEASentence(byte[] buffer, int length)
+    private NMEASentence(byte[] buffer, int offset, int length)
     {
-        this.buffer = buffer;
-        this.length = length;
-        seq = CharSequences.getAsciiCharSequence(buffer, 0, length);
+        this.buffer = ByteBuffer.wrap(buffer, offset, length);
+        seq = CharSequences.getAsciiCharSequence(buffer, offset, length);
         if (!NMEA.isNMEAOrAIS(seq))
         {
             throw new IllegalArgumentException(seq+" not valid");
@@ -181,7 +179,7 @@ public class NMEASentence
      */
     public ByteBuffer getByteBuffer()
     {
-        return ByteBuffer.wrap(buffer, 0, length);
+        return buffer.duplicate();
     }
     /**
      * Returns true if NMEA sentence
@@ -237,7 +235,8 @@ public class NMEASentence
      */
     public void writeTo(ByteBuffer bb)
     {
-        bb.put(buffer, 0, length);
+        bb.put(buffer);
+        buffer.flip();
     }
     /**
      * Write sentence to out
@@ -246,7 +245,7 @@ public class NMEASentence
      */
     public void writeTo(OutputStream out) throws IOException
     {
-        out.write(buffer, 0, length);
+        out.write(buffer.array(), 0, buffer.limit());
     }
     /**
      * Write sentence to out
@@ -255,7 +254,12 @@ public class NMEASentence
      */
     public void writeTo(Appendable out) throws IOException
     {
-        out.append(seq, 0, length);
+        out.append(seq);
+    }
+    public void writeTo(ByteChannel channel) throws IOException
+    {
+        channel.write(buffer);
+        buffer.flip();
     }
     /**
      * Returns sentence as string
@@ -385,7 +389,7 @@ public class NMEASentence
             checksum.update(buffer, 0, index);
             checksum.fillSuffix(buffer, index);
             index += 5;
-            return new NMEASentence(buffer, index);
+            return new NMEASentence(buffer, 0, index);
         }
 
         private Builder write(int c)
