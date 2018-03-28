@@ -20,6 +20,8 @@ import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import static org.vesalainen.parsers.nmea.NMEASentence.builder;
+import static org.vesalainen.parsers.nmea.NMEASentence.builder;
+import org.vesalainen.util.logging.AttachedLogger;
 
 /**
  * $PICOA,90,00,REMOTE,ON*58
@@ -83,7 +85,7 @@ $PICOA,90,00,TXF,7.053000*08
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoCloseable 
+public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoCloseable, AttachedLogger
 {
     private int id;
     private Thread thread;
@@ -102,6 +104,7 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
     {
         this.id = id;
         this.serialChannel = serialChannel;
+        config("started IcomManager(%d, %s)", id, serialChannel);
     }
 
     public static IcomManager getInstance() throws IOException, InterruptedException
@@ -130,35 +133,80 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
         }
         throw new IllegalArgumentException(port+" is not icom port");
     }
-    public boolean setRemote(boolean on) throws IOException, InterruptedException
+    public void setRemote(boolean on) throws IOException, InterruptedException
     {
-        return cmd("REMOTE", on);
+        cmd("REMOTE", on);
     }
-    public boolean setFrequency(double mHz) throws IOException, InterruptedException
+    public void setFrequency(double mHz) throws IOException, InterruptedException
     {
-        return setReceiverFrequency(mHz) && setTransmitterFrequency(mHz);
+        setReceiverFrequency(mHz);
+        setTransmitterFrequency(mHz);
     }
-    public boolean setReceiverFrequency(double mHz) throws IOException, InterruptedException
+    public void setReceiverFrequency(double mHz) throws IOException, InterruptedException
     {
-        return cmd("RXF", mHz);
+        cmd("RXF", mHz);
     }
-    public boolean setTransmitterFrequency(double mHz) throws IOException, InterruptedException
+    public void setTransmitterFrequency(double mHz) throws IOException, InterruptedException
     {
-        return cmd("TXF", mHz);
+        cmd("TXF", mHz);
     }
-    public boolean setMode(String mode) throws IOException, InterruptedException
+    public void setMode(String mode) throws IOException, InterruptedException
     {
-        return cmd("MODE", mode);
+        cmd("MODE", mode);
     }
-    private boolean cmd(String key, double value) throws IOException, InterruptedException
+    public void setAutomaticGainControl(boolean on) throws IOException, InterruptedException
     {
-        return cmd(key, String.format(Locale.US, "%f", value));
+        cmd("AGC", on);
     }
-    private boolean cmd(String key, boolean value) throws IOException, InterruptedException
+    public void setSquelch(boolean on) throws IOException, InterruptedException
     {
-        return cmd(key, value ? "ON" : "OFF");
+        cmd("SQLC", on);
     }
-    private boolean cmd(String key, String value) throws IOException, InterruptedException
+    public void setNoiseBlanker(boolean on) throws IOException, InterruptedException
+    {
+        cmd("NB", on);
+    }
+    public void setSpeaker(boolean on) throws IOException, InterruptedException
+    {
+        cmd("SP", on);
+    }
+    public void setDim(boolean on) throws IOException, InterruptedException
+    {
+        cmd("DIM", on);
+    }
+    public void setRFGain(int gain) throws IOException, InterruptedException
+    {
+        cmd("RFG", gain);
+    }
+    private String cmd(String key, int value) throws IOException, InterruptedException
+    {
+        String rsv = cmd(key, String.format(Locale.US, "%d", value));
+        if (value != Integer.parseInt(rsv))
+        {
+            throw new IllegalArgumentException(key+" failed");
+        }
+        return rsv;
+    }
+    private String cmd(String key, double value) throws IOException, InterruptedException
+    {
+        String rsv = cmd(key, String.format(Locale.US, "%f", value));
+        if (value != Double.parseDouble(rsv))
+        {
+            throw new IllegalArgumentException(key+" failed");
+        }
+        return rsv;
+    }
+    private String cmd(String key, boolean value) throws IOException, InterruptedException
+    {
+        String val = value ? "ON" : "OFF";
+        String rsv = cmd(key, val);
+        if (!val.equals(rsv))
+        {
+            throw new IllegalArgumentException(key+" failed");
+        }
+        return rsv;
+    }
+    private String cmd(String key, String value) throws IOException, InterruptedException
     {
         NMEASentence cmd = builder("$PICOA", "90")
                 .add(String.format("%02d", id))
@@ -166,8 +214,13 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
                 .add(value)
                 .build();
         cmd.writeTo(serialChannel);
+        fine("%s", cmd);
         waitKey = key;
-        return syncSemaphore.tryAcquire(1, TimeUnit.SECONDS);
+        if (!syncSemaphore.tryAcquire(1, TimeUnit.SECONDS))
+        {
+            throw new IllegalArgumentException(cmd+" failed");
+        }
+        return map.get(key);
     }
     protected boolean parse() throws InterruptedException, IOException
     {
@@ -180,6 +233,7 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
                     .add("ALL")
                     .build();
             all.writeTo(serialChannel);
+            fine("%s", all);
             return initSemaphore.tryAcquire(5, TimeUnit.SECONDS);
         }
         finally
@@ -191,7 +245,6 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
     @Override
     public void commit(String reason)
     {
-        System.err.println(reason);
     }
 
     @Override
@@ -203,6 +256,7 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
     @Override
     public void setProprietaryData(List<CharSequence> data)
     {
+        fine("%s", data);
         String key = data.get(2).toString();
         String value = data.size() >= 4 ? data.get(3).toString() : null;
         map.put(key, value);

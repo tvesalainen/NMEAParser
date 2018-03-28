@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -20,6 +21,7 @@ public class IcomManagerT
     
     public IcomManagerT()
     {
+        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINE);
     }
 
     @Test
@@ -30,7 +32,11 @@ public class IcomManagerT
             try (IcomManager manager = IcomManager.getInstance(0, "COM5"))
             {
                 manager.setRemote(true);
-                manager.setMode("USB");
+                manager.setMode("J3E");
+                manager.setAutomaticGainControl(false);
+                manager.setSquelch(false);
+                manager.setNoiseBlanker(true);
+                manager.setRFGain(5);
                 manager.setFrequency(8.502);
             }
         }
