@@ -336,16 +336,19 @@ public class NMEASentence
          * @param fld
          * @return 
          */
-        public Builder add(CharSequence fld)
+        public Builder add(CharSequence... fld)
         {
-            add();
-            try
+            for (CharSequence f : fld)
             {
-                write(fld.toString().getBytes("NMEA"));
-            }
-            catch (UnsupportedEncodingException ex)
-            {
-                throw new RuntimeException(ex);
+                add();
+                try
+                {
+                    write(fld.toString().getBytes("NMEA"));
+                }
+                catch (UnsupportedEncodingException ex)
+                {
+                    throw new RuntimeException(ex);
+                }
             }
             return this;
         }
