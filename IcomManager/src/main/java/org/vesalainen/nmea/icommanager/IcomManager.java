@@ -182,7 +182,7 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
         if (rfgS != null)
         {
             int rfg = Integer.parseInt(rfgS)+adj;
-            if (rfg > 0 && rfg <= 10)
+            if (rfg > 0 && rfg < 10)
             {
                 setRFGain(rfg);
             }

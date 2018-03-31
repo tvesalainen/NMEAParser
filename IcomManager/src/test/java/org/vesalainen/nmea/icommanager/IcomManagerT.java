@@ -32,12 +32,7 @@ public class IcomManagerT
             try (IcomManager manager = IcomManager.getInstance(0, "COM5"))
             {
                 manager.setRemote(true);
-                manager.setMode("J3E");
-                manager.setAutomaticGainControl(false);
-                manager.setSquelch(false);
-                manager.setNoiseBlanker(true);
-                manager.setRFGain(5);
-                manager.setFrequency(8.502);
+                manager.adjustRFGain(1);
             }
         }
         catch (IOException ex)
