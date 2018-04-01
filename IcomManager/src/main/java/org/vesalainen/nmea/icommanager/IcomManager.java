@@ -176,7 +176,7 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
     {
         cmd("RFG", gain);
     }
-    public void adjustRFGain(int adj) throws IOException, InterruptedException
+    public int adjustRFGain(int adj) throws IOException, InterruptedException
     {
         String rfgS = map.get("RFG");
         if (rfgS != null)
@@ -186,7 +186,9 @@ public class IcomManager extends AbstractNMEAObserver implements Runnable, AutoC
             {
                 setRFGain(rfg);
             }
+            return rfg;
         }
+        return -1;
     }
     private String cmd(String key, int value) throws IOException, InterruptedException
     {
