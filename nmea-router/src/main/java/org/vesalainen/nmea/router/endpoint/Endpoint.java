@@ -265,7 +265,6 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     {
         lastRead = System.currentTimeMillis();
         byte[] error = errInput.get();
-        router.getConfig().checkRoute(endpointType, error);
         errorBytes += error.length;
         warning("%s: rejected %s", name, new String(error, US_ASCII));
         finest(()->HexDump.toHex(errInput));

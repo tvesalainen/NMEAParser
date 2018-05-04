@@ -193,38 +193,6 @@ public class RouterConfig extends JavaLogging
         allDevices.addAll(allPorts);
         store();
     }
-    public synchronized void checkRoute(EndpointType endpointType, byte[] error) throws IOException
-    {
-        CharSequence message = NMEA.findMessage(CharSequences.getAsciiCharSequence(error));
-        if (message != null && NMEA.isNMEAOrAIS(message))
-        {
-            String prefix = NMEA.getPrefix(message).toString();
-            for (RouteType rt : endpointType.getRoute())
-            {
-                if (prefix.equals(rt.getPrefix()))
-                {
-                    return;
-                }
-            }
-            RouteType route = objectFactory.createRouteType();
-            route.setPrefix(prefix);
-            try
-            {
-                MessageType messageType = NMEA.getMessageType(message);
-                if (messageType != null)
-                {
-                    route.setComment(messageType.getDescription());
-                }
-            }
-            catch (IllegalArgumentException ex)
-            {
-                warning("message %s unknown", message);
-            }
-            endpointType.getRoute().add(route);
-            config("new route %s to %s", prefix, endpointType.getName());
-            store();
-        }
-    }
     public long getMonitorDelay()
     {
         Long value = nmea.getValue().getMonitorDelay();
