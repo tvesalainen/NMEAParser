@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 import java.util.stream.Stream;
-import org.vesalainen.io.CompressedInput;
+import org.vesalainen.io.ObjectCompressedInput;
 
 /**
  *
@@ -33,7 +33,7 @@ import org.vesalainen.io.CompressedInput;
 public class TrackInput implements AutoCloseable
 {
     private final TrackPoint trackPoint = new TrackPoint();
-    private CompressedInput<TrackPoint> input;
+    private ObjectCompressedInput<TrackPoint> input;
 
     public TrackInput(String filename) throws IOException
     {
@@ -49,7 +49,7 @@ public class TrackInput implements AutoCloseable
         {
             is = new BufferedInputStream(is);
         }
-        input = new CompressedInput<>(is, trackPoint);
+        input = new ObjectCompressedInput<>(is, trackPoint);
     }
     /**
      * Returns the UUID of compressed track

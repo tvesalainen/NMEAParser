@@ -24,7 +24,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
-import org.vesalainen.io.CompressedOutput;
+import org.vesalainen.io.ObjectCompressedOutput;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -38,7 +38,7 @@ public class TrackOutput extends JavaLogging implements AutoCloseable
     private boolean buffered;
 
     private String format;
-    private CompressedOutput<TrackPoint> compressor;
+    private ObjectCompressedOutput<TrackPoint> compressor;
     private File file;
     private boolean open;
     /**
@@ -89,7 +89,7 @@ public class TrackOutput extends JavaLogging implements AutoCloseable
         {
             out = new BufferedOutputStream(out);
         }
-        compressor = new CompressedOutput<>(out, trackPoint);
+        compressor = new ObjectCompressedOutput<>(out, trackPoint);
     }
 
     @Override
