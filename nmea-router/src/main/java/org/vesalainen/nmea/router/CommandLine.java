@@ -18,6 +18,7 @@ package org.vesalainen.nmea.router;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 import javax.xml.bind.JAXBException;
 import org.vesalainen.nmea.router.scanner.ConfigCreator;
 import org.vesalainen.util.LoggingCommandLine;
@@ -45,9 +46,9 @@ public class CommandLine extends LoggingCommandLine
         cmdArgs.command(args);
         JavaLogging log = JavaLogging.getLogger(CommandLine.class);
         File configfile = (File) cmdArgs.getArgument("configuration file");
-        RouterConfig config = new RouterConfig(configfile);
         try
         {
+            RouterConfig config = new RouterConfig(configfile);
             if (!configfile.exists())
             {
                 log.config("Config file %s doesn't exist. Creating...", configfile);
@@ -60,12 +61,13 @@ public class CommandLine extends LoggingCommandLine
             {
                 config.load();
             }
+            routerManager.start(cmdArgs, config);
         }
         catch (IOException | SecurityException | JAXBException ex)
         {
             ex.printStackTrace();
-            System.exit(1);
+            log.log(Level.SEVERE, ex, "command-line %s", ex.getMessage());
+            System.exit(2);
         }
-        routerManager.start(cmdArgs, config);
     }
 }
