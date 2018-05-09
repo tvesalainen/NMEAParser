@@ -343,7 +343,7 @@ public class NMEASentence
                 add();
                 try
                 {
-                    write(fld.toString().getBytes("NMEA"));
+                    write(f.toString().getBytes("NMEA"));
                 }
                 catch (UnsupportedEncodingException ex)
                 {
