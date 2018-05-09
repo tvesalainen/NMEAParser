@@ -27,7 +27,7 @@ import org.vesalainen.util.logging.JavaLogging;
  * method.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class AbstractSampleConsumer extends JavaLogging implements Runnable
+public abstract class AbstractSampleConsumer extends JavaLogging implements Runnable, Stoppable
 {
     protected Stream<NMEASample> stream;
     protected ScheduledExecutorService executor;
@@ -53,6 +53,7 @@ public abstract class AbstractSampleConsumer extends JavaLogging implements Runn
     /**
      * Stops consumer.
      */
+    @Override
     public void stop()
     {
         future.cancel(true);

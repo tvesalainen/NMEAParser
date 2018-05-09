@@ -21,12 +21,12 @@ import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -39,6 +39,7 @@ import org.vesalainen.nmea.util.NMEASampler;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
 import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.util.WeakMapSet;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -49,7 +50,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
 {
     protected ScatteringByteChannel in;
     protected GatheringByteChannel out;
-    protected ExecutorService executor;
+    protected CachedScheduledThreadPool executor;
     private final NMEADispatcher nmeaDispatcher;
     private AISDispatcher aisDispatcher;
     private final List<AutoCloseable> autoCloseables = new ArrayList<>();
@@ -61,36 +62,36 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
 
     public NMEAService(String address, int port) throws IOException
     {
-        this(address, port, Executors.newCachedThreadPool());
+        this(address, port, new CachedScheduledThreadPool());
     }
-    public NMEAService(String address, int port, ExecutorService executor) throws IOException
+    public NMEAService(String address, int port, CachedScheduledThreadPool executor) throws IOException
     {
         this(UnconnectedDatagramChannel.open(address, port, 100, true, true), executor);
     }
 
     public NMEAService(UnconnectedDatagramChannel channel) throws IOException
     {
-        this(channel, Executors.newCachedThreadPool());
+        this(channel, new CachedScheduledThreadPool());
     }
-    public NMEAService(UnconnectedDatagramChannel channel, ExecutorService executor) throws IOException
+    public NMEAService(UnconnectedDatagramChannel channel, CachedScheduledThreadPool executor) throws IOException
     {
         this(channel, channel, executor);
     }
 
     public NMEAService(DatagramChannel channel) throws IOException
     {
-        this(channel, Executors.newCachedThreadPool());
+        this(channel, new CachedScheduledThreadPool());
     }
-    public NMEAService(DatagramChannel channel, ExecutorService executor) throws IOException
+    public NMEAService(DatagramChannel channel, CachedScheduledThreadPool executor) throws IOException
     {
         this(channel, channel, executor);
     }
 
     public NMEAService(ScatteringByteChannel in, GatheringByteChannel out) throws IOException
     {
-        this(in, out, Executors.newCachedThreadPool());
+        this(in, out, new CachedScheduledThreadPool());
     }
-    public NMEAService(ScatteringByteChannel in, GatheringByteChannel out, ExecutorService executor) throws IOException
+    public NMEAService(ScatteringByteChannel in, GatheringByteChannel out, CachedScheduledThreadPool executor) throws IOException
     {
         setLogger(this.getClass());
         this.in = in;
@@ -141,7 +142,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     }
     public void addNMEAObserver(PropertySetter propertySetter, String... prefixes)
     {
-        nmeaDispatcher. addObserver(propertySetter, prefixes);
+        nmeaDispatcher.addObserver(propertySetter, prefixes);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
