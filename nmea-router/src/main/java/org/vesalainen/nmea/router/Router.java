@@ -86,7 +86,6 @@ public class Router extends JavaLogging implements RouterEngine
         populateEndpoints();
         populatePortMatcher();
         portScanner = new PortScanner(POOL, config.getDontScan(), lastPortType);
-        startNonSerial();
         portScanner.setCheckDelay(monitorDelay);
         portScanner.setCloseDelay(closeDelay);
         portScanner.setFingerPrintDelay(Long.MAX_VALUE);
@@ -95,6 +94,7 @@ public class Router extends JavaLogging implements RouterEngine
         config("ports now  %s", portsNow);
         portScanner.scan(this::resolvedPort, portMatcher);
         config("started scanner");
+        startNonSerial();
         while (true)
         {
             try

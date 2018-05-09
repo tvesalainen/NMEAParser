@@ -23,6 +23,7 @@ import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import org.vesalainen.nmea.jaxb.router.CompressedLogType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
 import org.vesalainen.nmea.jaxb.router.SntpMulticasterType;
@@ -31,7 +32,9 @@ import org.vesalainen.nmea.jaxb.router.TimeSetterType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
+import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAService;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
@@ -40,9 +43,9 @@ import org.vesalainen.parsers.nmea.NMEAService;
 public class Processor extends NMEAService implements Runnable, AutoCloseable
 {
     private ProcessorType processorType;
-    private List<AbstractSampleConsumer> processes = new ArrayList<>();
+    private List<Stoppable> processes = new ArrayList<>();
 
-    public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out, ScheduledExecutorService executor) throws IOException
+    public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out, CachedScheduledThreadPool executor) throws IOException
     {
         super(in, out, executor);
         this.in = in;
@@ -58,6 +61,16 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
         {
             for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
             {
+                if (ob instanceof CompressedLogType)
+                {
+                    info("add CompressedLog");
+                    CompressedLogType type = (CompressedLogType) ob;
+                    CompressedLog compressedLog = new CompressedLog(type, executor);
+                    processes.add(compressedLog);
+                    addNMEAObserver(compressedLog);
+                    
+                    continue;
+                }
                 AbstractSampleConsumer process = null;
                 if (ob instanceof VariationSourceType)
                 {
