@@ -23,7 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -67,11 +69,9 @@ public class CompressedLog extends AbstractPropertySetter implements AttachedLog
             compressor.addFloat(prop);
         }
         compressor.ready();
-        if (!props.contains("clock"))
-        {
-            props.add("clock");
-        }
-        properties = CollectionHelp.toArray(props, String.class);
+        Set<String> pset = new HashSet<>(props);
+        pset.add("clock");
+        properties = CollectionHelp.toArray(pset, String.class);
         Long updateSeconds = type.getUpdateSeconds();
         long delay = updateSeconds != null ? updateSeconds.longValue() : 1;
         future = executor.scheduleWithFixedDelay(this::update, delay, delay, TimeUnit.SECONDS);
