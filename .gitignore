@@ -3,6 +3,8 @@
 build/
 dist/
 *.jasm
+*.trc
+*.mea
 doc-files/
 /target/
 /IcomManager/target/
