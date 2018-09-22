@@ -106,21 +106,30 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
     ) throws IOException
     {
         debug("m00");
+        UnitType unit = UnitType.Foot;
         int y = yz >> 4;
         int z = yz & 0xf;
-        boolean anchorAlarm = (y & 8) == 8;
-        boolean metric = (y & 4) == 4;
-        boolean defect = (z & 4) == 4;
-        boolean deepAlarm = (z & 2) == 2;
-        boolean shallowAlarm = (z & 1) == 1;
-        if (yz != 0x60)
+        if ((y & 8) == 8)
         {
-            int ii = yz;
-            warning("%x defect %x", ii, xx);
+            warning("%x anchor alarm %x", (int)yz, xx);
         }
+        if ((y & 4) == 4)
+        {
+            unit = UnitType.Meter;
+            warning("%x metric %x", (int)yz, xx);
+        }
+        if ((z & 2) == 2)
+        {
+            warning("%x deep alarm %x", (int)yz, xx);
+        }
+        if ((z & 1) == 1)
+        {
+            warning("%x shallow alarm %x", (int)yz, xx);
+        }
+        boolean defect = (z & 4) == 4;
         if (!defect)
         {
-            NMEASentence dbt = NMEASentence.dbt(xx/10, UnitType.Foot);
+            NMEASentence dbt = NMEASentence.dbt(xx/10, unit);
             dbt.writeTo(out);
         }
     }
