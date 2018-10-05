@@ -171,7 +171,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             {
                 finest("interrupted");
             }
-            catch (IOException ex)
+            catch (Throwable ex)
             {
                 log(SEVERE, ex, "%s %s", name, ex.getMessage());
             }
@@ -186,7 +186,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                 proxyFuture = POOL.submit(this::proxy);
                 super.run();
             }
-            catch (Exception ex)
+            catch (Throwable ex)
             {
                 log(SEVERE, ex, "%s %s", name, ex.getMessage());
             }
