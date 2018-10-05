@@ -173,7 +173,6 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             catch (IOException ex)
             {
-                ex.printStackTrace();
                 log(SEVERE, ex, "%s %s", name, ex.getMessage());
             }
         }
@@ -189,7 +188,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             catch (Exception ex)
             {
-                ex.printStackTrace();
+                log(SEVERE, ex, "%s %s", name, ex.getMessage());
             }
             finally
             {
