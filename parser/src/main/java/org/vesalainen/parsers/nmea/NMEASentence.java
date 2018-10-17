@@ -118,8 +118,7 @@ public class NMEASentence
                 .add().add().add().add()
                 .add(unit.convertTo(speed, Knot))
                 .add(KTS)
-                .add(unit.convertTo(speed, UnitType.KMH))
-                .add(Converter.KMH)
+                .add().add()
                 .build();
     }
     /**
