@@ -266,7 +266,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         lastRead = System.currentTimeMillis();
         byte[] error = errInput.get();
         errorBytes += error.length;
-        warning("%s: rejected %s", name, new String(error, US_ASCII));
+        fine("%s: rejected %s", name, new String(error, US_ASCII));
         finest(()->HexDump.toHex(errInput));
         sendNotification(()->new String(error, US_ASCII), ()->error, ()->lastRead);
     }
