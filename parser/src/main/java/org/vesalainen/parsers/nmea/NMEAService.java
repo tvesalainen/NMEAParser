@@ -220,9 +220,9 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         }
         catch (Exception ex)
         {
-            log(Level.SEVERE, "", ex);
+            log(Level.SEVERE, ex, "");
         }
-        log(Level.SEVERE, "Processor dies!!!");
+        log(Level.SEVERE, "NMEA Service dies!!!");
     }
 
     @Override
