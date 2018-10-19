@@ -23,6 +23,7 @@ import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
@@ -56,11 +57,20 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
     @Override
     public void start()
     {
-        super.start();
         try
         {
             for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
             {
+                if (ob instanceof AisLogType)
+                {
+                    info("add AIS Log");
+                    AisLogType type = (AisLogType) ob;
+                    AISLog aisLog = new AISLog(type);
+                    processes.add(aisLog);
+                    addAISObserver(aisLog);
+                    
+                    continue;
+                }
                 if (ob instanceof CompressedLogType)
                 {
                     info("add CompressedLog");
@@ -125,6 +135,7 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 process.start(this);
                 processes.add(process);
             }
+            super.start();
         }
         catch (IOException ex)
         {

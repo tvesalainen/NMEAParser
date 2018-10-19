@@ -47,7 +47,8 @@
                     <xsd:element name="variation-source" type="variation-sourceType"/>
                     <xsd:element name="true-wind-source" type="true-wind-sourceType"/>
                     <xsd:element name="tracker" type="trackerType"/>
-                    <xsd:element name="compressedLog" type="compressedLogType"/>
+                    <xsd:element name="compressed-log" type="compressedLogType"/>
+                    <xsd:element name="ais-log" type="aisLogType"/>
                     <xsd:element name="sntp-broadcaster" type="sntp-broadcasterType"/>
                     <xsd:element name="sntp-multicaster" type="sntp-multicasterType"/>
                     <xsd:element name="sntp-server" type="sntp-serverType"/>
@@ -156,6 +157,9 @@
         <xsd:attribute name="properties" type="propertyListType"/>
         <xsd:attribute name="bufferSize" type="xsd:unsignedInt"/>
         <xsd:attribute name="updateSeconds" type="xsd:unsignedInt"/>
+    </xsd:complexType>
+    <xsd:complexType name="aisLogType">
+        <xsd:attribute name="directory" type="xsd:string" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="timeSetterType">
         <xsd:attribute name="cmd" type="xsd:string" use="required"/>

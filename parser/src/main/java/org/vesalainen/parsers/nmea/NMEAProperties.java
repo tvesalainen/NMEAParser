@@ -26,7 +26,7 @@ public class NMEAProperties extends AbstractProperties
     
     private NMEAProperties()
     {
-        super(create(NMEAObserver.class));
+        super(createNMEACAt(NMEAObserver.class));
     }
     
     public static NMEAProperties getInstance()

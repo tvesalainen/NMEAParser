@@ -17,7 +17,9 @@
 package org.vesalainen.nmea.router;
 
 import java.net.URL;
+import java.util.logging.Level;
 import org.junit.Test;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -28,6 +30,7 @@ public class ProcessorT
     
     public ProcessorT()
     {
+        //JavaLogging.setConsoleHandler("org.vesalainen", Level.CONFIG);
     }
 
     @Test

@@ -173,7 +173,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             catch (Throwable ex)
             {
-                log(SEVERE, ex, "%s %s", name, ex.getMessage());
+                log(SEVERE, ex, "Stopping proxy %s %s", name, ex.getMessage());
             }
         }
         @Override
@@ -188,7 +188,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             catch (Throwable ex)
             {
-                log(SEVERE, ex, "%s %s", name, ex.getMessage());
+                log(SEVERE, ex, "Stopping %s %s", name, ex.getMessage());
             }
             finally
             {

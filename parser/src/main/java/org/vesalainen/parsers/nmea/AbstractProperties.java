@@ -38,7 +38,7 @@ public abstract class AbstractProperties
         this.map = map;
     }
     
-    protected static Map<String,Prop> create(Class<?> cls)
+    protected static Map<String,Prop> createNMEACAt(Class<?> cls)
     {
         Map<String,Prop> map = new HashMap<>();
         for (Method method : cls.getMethods())
@@ -49,6 +49,24 @@ public abstract class AbstractProperties
                 continue;
             }
             NMEACategory nmeaCategory = nmeaCat.value();
+            String property = BeanHelper.getProperty(method);
+            Unit unit = method.getAnnotation(Unit.class);
+            Class<?> type = method.getParameterTypes()[0];
+            map.put(property, new Prop(property, unit, nmeaCategory, type));
+        }
+        return map;
+    }
+    protected static Map<String,Prop> createAll(Class<?> cls)
+    {
+        Map<String,Prop> map = new HashMap<>();
+        for (Method method : cls.getMethods())
+        {
+            NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
+            NMEACategory nmeaCategory = null;
+            if (nmeaCat != null)
+            {
+                nmeaCategory = nmeaCat.value();
+            }
             String property = BeanHelper.getProperty(method);
             Unit unit = method.getAnnotation(Unit.class);
             Class<?> type = method.getParameterTypes()[0];

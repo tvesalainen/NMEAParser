@@ -106,7 +106,6 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
     ) throws IOException
     {
         debug("m00");
-        UnitType unit = UnitType.Foot;
         int y = yz >> 4;
         int z = yz & 0xf;
         if ((y & 8) == 8)
@@ -115,8 +114,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         }
         if ((y & 4) == 4)
         {
-            unit = UnitType.Meter;
-            warning("%x metric %x", (int)yz, xx);
+            debug("%x metric %x", (int)yz, xx);
         }
         if ((z & 2) == 2)
         {
@@ -129,7 +127,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         boolean defect = (z & 4) == 4;
         if (!defect)
         {
-            NMEASentence dbt = NMEASentence.dbt(xx/10, unit);
+            NMEASentence dbt = NMEASentence.dbt(xx/10, UnitType.Foot);
             dbt.writeTo(out);
         }
     }
