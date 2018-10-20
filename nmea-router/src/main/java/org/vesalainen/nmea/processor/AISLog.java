@@ -16,11 +16,19 @@
  */
 package org.vesalainen.nmea.processor;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import static java.nio.file.StandardOpenOption.*;
 import java.time.Clock;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.logging.Level;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.util.Stoppable;
@@ -30,6 +38,7 @@ import org.vesalainen.parsers.nmea.ais.MessageTypes;
 import org.vesalainen.parsers.nmea.ais.NavigationStatus;
 import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.logging.AttachedLogger;
+import org.vesalainen.util.navi.Location;
 
 /**
  *
@@ -38,7 +47,7 @@ import org.vesalainen.util.logging.AttachedLogger;
 public class AISLog extends AbstractPropertySetter implements AttachedLogger, Stoppable
 {
     private Path dir;
-    private Properties props = new Properties();
+    private Properties properties = new Properties();
     private String[] prefixes;
     private Clock clock;
     private NavigationStatus status;
@@ -180,19 +189,102 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void commit(String reason)
     {
-        props.clear();
+        try
+        {
+            String mmsi = properties.getProperty("mmsi");
+            if (mmsi != null)
+            {
+                Path dat = dir.resolve(mmsi+".dat");
+                Path log = dir.resolve(mmsi+".log");
+                Properties props = new Properties();
+                if (Files.exists(dat))
+                {
+                    try (Reader r = Files.newBufferedReader(dat))
+                    {
+                        props.load(r);
+                    }
+                    catch (IOException ex)
+                    {
+                        log(Level.SEVERE, ex, "loading %s", dat);
+                        return;
+                    }
+                }
+                if (update(props, properties))
+                {
+                    try (BufferedWriter w = Files.newBufferedWriter(dat))
+                    {
+                        props.store(w, clock.toString());
+                    }
+                    catch (IOException ex)
+                    {
+                        log(Level.SEVERE, ex, "storing %s", dat);
+                        return;
+                    }
+                }
+                try (BufferedWriter w = Files.newBufferedWriter(log, CREATE, APPEND);
+                        PrintWriter pw = new PrintWriter(w))
+                {
+                    switch (type)
+                    {
+                        case PositionReportClassA:
+                        case PositionReportClassAAssignedSchedule:
+                        case PositionReportClassAResponseToInterrogation:
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %.1f %.1f\n",
+                                    type.ordinal(),
+                                    clock,
+                                    new Location(lat, lon),
+                                    course,
+                                    speed,
+                                    heading,
+                                    turn
+                                    );
+                            break;
+                        case StandardClassBCSPositionReport:
+                        case ExtendedClassBEquipmentPositionReport:
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f\n",
+                                    type.ordinal(),
+                                    clock,
+                                    new Location(lat, lon),
+                                    course,
+                                    speed
+                                    );
+                            break;
+                        default:
+                            pw.format(Locale.US, "Msg%d %s %s\n",
+                                    type.ordinal(),
+                                    clock,
+                                    properties
+                                    );
+                            break;
+                    }
+                }
+                catch (IOException ex)
+                {
+                    log(Level.SEVERE, ex, "storing %s", log);
+                    return;
+                }
+            }
+            else
+            {
+                warning("mmsi missing %s", properties);
+            }
+        }
+        finally
+        {
+            properties.clear();
+        }
     }
 
     @Override
     public void rollback(String reason)
     {
-        props.clear();
+        properties.clear();
     }
 
     @Override
     protected void setProperty(String property, Object arg)
     {
-        props.setProperty(property, arg.toString());
+        properties.setProperty(property, arg.toString());
     }
 
     @Override
@@ -204,6 +296,22 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void stop()
     {
+    }
+
+    private boolean update(Properties fps, Properties nps)
+    {
+        boolean changed = false;
+        for (String property : nps.stringPropertyNames())
+        {
+            String np = nps.getProperty(property);
+            String fp = fps.getProperty(property);
+            if (!np.equals(fp))
+            {
+                fps.setProperty(property, np);
+                changed = true;
+            }
+        }
+        return changed;
     }
 
     

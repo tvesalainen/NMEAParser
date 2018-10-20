@@ -38,7 +38,7 @@ public class ProcessorT
     {
         URL url = ProcessorT.class.getClassLoader().getResource("processor.xml");
         String filename = url.getFile();
-        CommandLine.main("-ll", "INFO", "-pl", "INFO", filename);
+        CommandLine.main("-ll", "FINE", "-pl", "CONFIG", filename);
     }
     
 }
