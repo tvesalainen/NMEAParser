@@ -185,7 +185,7 @@ public class PortScanner extends JavaLogging
         checkDelays();
         if (portTypes == null || portTypes.isEmpty())
         {
-            warning("no channel suppliers");
+            warning("no serial port configured");
         }
         monitorFuture = pool.scheduleWithFixedDelay(this::monitor, 0, monitorPeriod, TimeUnit.MILLISECONDS);
     }
