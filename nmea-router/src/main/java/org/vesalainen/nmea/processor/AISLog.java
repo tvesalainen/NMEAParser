@@ -20,16 +20,23 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.math.BigInteger;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import java.time.Clock;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.code.AbstractPropertySetter;
+import org.vesalainen.nio.channels.ChannelHelper;
+import org.vesalainen.nio.channels.GZIPChannel;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.ais.AISProperties;
@@ -37,6 +44,7 @@ import org.vesalainen.parsers.nmea.ais.ManeuverIndicator;
 import org.vesalainen.parsers.nmea.ais.MessageTypes;
 import org.vesalainen.parsers.nmea.ais.NavigationStatus;
 import org.vesalainen.util.CollectionHelp;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.AttachedLogger;
 import org.vesalainen.util.navi.Location;
 
@@ -46,7 +54,9 @@ import org.vesalainen.util.navi.Location;
  */
 public class AISLog extends AbstractPropertySetter implements AttachedLogger, Stoppable
 {
+    private CachedScheduledThreadPool executor;
     private Path dir;
+    private long maxLogSize = 1024*1024;
     private Properties properties = new Properties();
     private String[] prefixes;
     private Clock clock;
@@ -71,12 +81,18 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private boolean assignedMode;
     private boolean band;
     
-    AISLog(AisLogType type)
+    AISLog(AisLogType type, CachedScheduledThreadPool executor)
     {
+        this.executor = executor;
         String dirName = type.getDirectory();
         Objects.requireNonNull(dirName, "ais-log directory");
         dir = Paths.get(dirName);
         prefixes = CollectionHelp.toArray(AISProperties.getInstance().getAllProperties(), String.class);
+        BigInteger mls = type.getMaxLogSize();
+        if (mls != null)
+        {
+            maxLogSize = mls.longValueExact();
+        }
     }
 
     @Override
@@ -196,6 +212,13 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
             {
                 Path dat = dir.resolve(mmsi+".dat");
                 Path log = dir.resolve(mmsi+".log");
+                Path tmp = Files.createTempFile(mmsi, ".log");
+                if (Files.exists(log) && Files.size(log) >= maxLogSize)
+                {
+                    Files.move(log, tmp, REPLACE_EXISTING);
+                    Compressor compressor = new Compressor(tmp, log);
+                    executor.submit(compressor);
+                }
                 Properties props = new Properties();
                 if (Files.exists(dat))
                 {
@@ -269,6 +292,10 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                 warning("mmsi missing %s", properties);
             }
         }
+        catch (IOException ex)
+        {
+            log(Level.SEVERE, ex, "");
+        }        
         finally
         {
             properties.clear();
@@ -314,5 +341,43 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
         return changed;
     }
 
-    
+    private class Compressor implements Runnable
+    {
+        private Path tmp;
+        private Path log;
+
+        public Compressor(Path tmp, Path log)
+        {
+            this.tmp = tmp;
+            this.log = log;
+        }
+        
+        @Override
+        public void run()
+        {
+            Path trg = null;
+            int ver = 1;
+            String base = log.getFileName().toString();
+            while (true)
+            {
+                trg = log.resolveSibling(base+"."+ver+".gz");
+                if (!Files.exists(trg))
+                {
+                    break;
+                }
+                ver++;
+            }
+            try (FileChannel in = FileChannel.open(tmp, READ);
+                    GZIPChannel out = new GZIPChannel(trg, CREATE, WRITE))
+            {
+                MappedByteBuffer map = in.map(FileChannel.MapMode.READ_ONLY, 0, Files.size(tmp));
+                ChannelHelper.writeAll(out, map);
+            }
+            catch (IOException ex)
+            {
+                log(Level.SEVERE, ex, "compress %s -> %s", tmp, trg);
+            }
+        }
+        
+    }
 }

@@ -65,7 +65,7 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 {
                     info("add AIS Log");
                     AisLogType type = (AisLogType) ob;
-                    AISLog aisLog = new AISLog(type);
+                    AISLog aisLog = new AISLog(type, executor);
                     processes.add(aisLog);
                     addAISObserver(aisLog);
                     

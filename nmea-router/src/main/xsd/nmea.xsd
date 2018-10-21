@@ -160,6 +160,7 @@
     </xsd:complexType>
     <xsd:complexType name="aisLogType">
         <xsd:attribute name="directory" type="xsd:string" use="required"/>
+        <xsd:attribute name="maxLogSize" type="xsd:unsignedLong"/>
     </xsd:complexType>
     <xsd:complexType name="timeSetterType">
         <xsd:attribute name="cmd" type="xsd:string" use="required"/>
