@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -212,9 +213,9 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
             {
                 Path dat = dir.resolve(mmsi+".dat");
                 Path log = dir.resolve(mmsi+".log");
-                Path tmp = Files.createTempFile(mmsi, ".log");
                 if (Files.exists(log) && Files.size(log) >= maxLogSize)
                 {
+                    Path tmp = Files.createTempFile(dir, mmsi, ".log");
                     Files.move(log, tmp, REPLACE_EXISTING);
                     Compressor compressor = new Compressor(tmp, log);
                     executor.submit(compressor);
@@ -367,11 +368,18 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                 }
                 ver++;
             }
-            try (FileChannel in = FileChannel.open(tmp, READ);
+            try (FileChannel in = FileChannel.open(tmp, READ, DELETE_ON_CLOSE);
                     GZIPChannel out = new GZIPChannel(trg, CREATE, WRITE))
             {
-                MappedByteBuffer map = in.map(FileChannel.MapMode.READ_ONLY, 0, Files.size(tmp));
-                ChannelHelper.writeAll(out, map);
+                ByteBuffer bb = ByteBuffer.allocate(4096);
+                int rc = in.read(bb);
+                while (rc > 0)
+                {
+                    bb.flip();
+                    ChannelHelper.writeAll(out, bb);
+                    bb.clear();
+                    rc = in.read(bb);
+                }
             }
             catch (IOException ex)
             {
