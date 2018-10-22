@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,11 +29,11 @@ import java.nio.file.Paths;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import java.time.Clock;
+import java.time.ZonedDateTime;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nio.channels.ChannelHelper;
 import org.vesalainen.nio.channels.GZIPChannel;
@@ -75,12 +74,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private float heading;
     private boolean accuracy;
     private boolean raim;
-    private boolean msg22;
-    private boolean dsc;
-    private boolean csUnit;
-    private boolean display;
     private boolean assignedMode;
-    private boolean band;
     
     AISLog(AisLogType type, CachedScheduledThreadPool executor)
     {
@@ -162,6 +156,9 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
             case "radioStatus":
                 radio = arg;
                 break;
+            case "partNumber":
+                // ignore
+                break;
             default:
                 super.set(property, arg);
                 break;
@@ -179,23 +176,8 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
             case "raim":
                 raim = arg;
                 break;
-            case "msg22":
-                msg22 = arg;
-                break;
-            case "dsc":
-                dsc = arg;
-                break;
-            case "csUnit":
-                csUnit = arg;
-                break;
-            case "display":
-                display = arg;
-                break;
             case "assignedMode":
                 assignedMode = arg;
-                break;
-            case "band":
-                band = arg;
                 break;
             default:
                 super.set(property, arg);
@@ -245,6 +227,8 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                         return;
                     }
                 }
+                boolean logExists = Files.exists(log);
+                ZonedDateTime timestamp = ZonedDateTime.now(clock);
                 try (BufferedWriter w = Files.newBufferedWriter(log, CREATE, APPEND);
                         PrintWriter pw = new PrintWriter(w))
                 {
@@ -253,30 +237,41 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                         case PositionReportClassA:
                         case PositionReportClassAAssignedSchedule:
                         case PositionReportClassAResponseToInterrogation:
-                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %.1f %.1f\n",
+                            if (!logExists)
+                            {
+                                pw.format(Locale.US, "#Msg  Timestamp Location, Course Speed Heading Turn Status Maneuver\r\n");
+                            }
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %.1f %.1f %s %s\r\n",
                                     type.ordinal(),
-                                    clock,
+                                    timestamp.withSecond(second),
                                     new Location(lat, lon),
                                     course,
                                     speed,
                                     heading,
-                                    turn
+                                    turn,
+                                    status,
+                                    maneuver
                                     );
                             break;
                         case StandardClassBCSPositionReport:
                         case ExtendedClassBEquipmentPositionReport:
-                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f\n",
+                            if (!logExists)
+                            {
+                                pw.format(Locale.US, "#Msg  Timestamp Location, Course Speed Assigned\r\n");
+                            }
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %b\r\n",
                                     type.ordinal(),
-                                    clock,
+                                    timestamp.withSecond(second),
                                     new Location(lat, lon),
                                     course,
-                                    speed
+                                    speed,
+                                    assignedMode
                                     );
                             break;
                         default:
-                            pw.format(Locale.US, "Msg%d %s %s\n",
+                            pw.format(Locale.US, "Msg%d %s %s\r\n",
                                     type.ordinal(),
-                                    clock,
+                                    timestamp,
                                     properties
                                     );
                             break;
@@ -326,17 +321,21 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     {
     }
 
-    private boolean update(Properties fps, Properties nps)
+    private boolean update(Properties stored, Properties received)
     {
         boolean changed = false;
-        for (String property : nps.stringPropertyNames())
+        for (String property : received.stringPropertyNames())
         {
-            String np = nps.getProperty(property);
-            String fp = fps.getProperty(property);
-            if (!np.equals(fp))
+            String fresh = received.getProperty(property);
+            String db = stored.getProperty(property);
+            if (!fresh.equals(db))
             {
-                fps.setProperty(property, np);
+                stored.setProperty(property, fresh);
                 changed = true;
+                if (db != null)
+                {
+                    warning("AIS: %s replaced %s -> %s", property, db, fresh);
+                }
             }
         }
         return changed;
