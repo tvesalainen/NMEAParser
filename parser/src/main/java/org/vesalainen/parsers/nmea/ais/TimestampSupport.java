@@ -36,6 +36,10 @@ public class TimestampSupport
      */
     public static Temporal adjustIntoSecond(Temporal temporal, int second)
     {
+        if (second >= 60)
+        {
+            return temporal;
+        }
         Temporal with = temporal.with(SECOND_OF_MINUTE, second);
         if (temporal.until(with, SECONDS) > 0)
         {
