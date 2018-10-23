@@ -43,6 +43,7 @@ import org.vesalainen.parsers.nmea.ais.AISProperties;
 import org.vesalainen.parsers.nmea.ais.ManeuverIndicator;
 import org.vesalainen.parsers.nmea.ais.MessageTypes;
 import org.vesalainen.parsers.nmea.ais.NavigationStatus;
+import org.vesalainen.parsers.nmea.ais.TimestampSupport;
 import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.AttachedLogger;
@@ -243,7 +244,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                             }
                             pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %.1f %.1f %s %s\r\n",
                                     type.ordinal(),
-                                    timestamp.withSecond(second),
+                                    TimestampSupport.adjustIntoSecond(timestamp, second),
                                     new Location(lat, lon),
                                     course,
                                     speed,
@@ -261,7 +262,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                             }
                             pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %b\r\n",
                                     type.ordinal(),
-                                    timestamp.withSecond(second),
+                                    TimestampSupport.adjustIntoSecond(timestamp, second),
                                     new Location(lat, lon),
                                     course,
                                     speed,
