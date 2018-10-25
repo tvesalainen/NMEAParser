@@ -64,6 +64,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private NavigationStatus status;
     private ManeuverIndicator maneuver;
     private MessageTypes type;
+    private int alt;
     private int repeat;
     private int second;
     private int radio;
@@ -76,6 +77,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private boolean accuracy;
     private boolean raim;
     private boolean assignedMode;
+    private char channel;
     
     AISLog(AisLogType type, CachedScheduledThreadPool executor)
     {
@@ -89,6 +91,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
         {
             maxLogSize = mls.longValueExact();
         }
+        reset();
     }
 
     @Override
@@ -148,6 +151,9 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     {
         switch (property)
         {
+            case "altitude":
+                alt = arg;
+                break;
             case "repeatIndicator":
                 repeat = arg;
                 break;
@@ -187,8 +193,26 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     }
 
     @Override
+    public void set(String property, char arg)
+    {
+        switch (property)
+        {
+            case "channel":
+                channel = arg;
+                break;
+            default:
+                super.set(property, arg);
+                break;
+        }
+    }
+
+    @Override
     public void commit(String reason)
     {
+        if (channel == 0)
+        {
+            return; // record only transmitted own messages
+        }
         try
         {
             String mmsi = properties.getProperty("mmsi");
@@ -240,9 +264,9 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                         case PositionReportClassAResponseToInterrogation:
                             if (!logExists)
                             {
-                                pw.format(Locale.US, "#Msg  Timestamp Location, Course Speed Heading Turn Status Maneuver\r\n");
+                                pw.print("#Msg  Timestamp Location Course Speed Heading Turn Status Maneuver Channel\r\n");
                             }
-                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %.1f %.1f %s %s\r\n",
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %.1f %.1f %s %s %c\r\n",
                                     type.ordinal(),
                                     TimestampSupport.adjustIntoSecond(timestamp, second),
                                     new Location(lat, lon),
@@ -251,21 +275,39 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                                     heading,
                                     turn,
                                     status,
-                                    maneuver
+                                    maneuver,
+                                    channel
+                                    );
+                            break;
+                        case StandardSARAircraftPositionReport:
+                            if (!logExists)
+                            {
+                                pw.print("#Msg  Timestamp Location Course Speed Altitude Channel Assigned\r\n");
+                            }
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %d %c %b\r\n",
+                                    type.ordinal(),
+                                    TimestampSupport.adjustIntoSecond(timestamp, second),
+                                    new Location(lat, lon),
+                                    course,
+                                    speed,
+                                    alt,
+                                    channel,
+                                    assignedMode
                                     );
                             break;
                         case StandardClassBCSPositionReport:
                         case ExtendedClassBEquipmentPositionReport:
                             if (!logExists)
                             {
-                                pw.format(Locale.US, "#Msg  Timestamp Location, Course Speed Assigned\r\n");
+                                pw.print("#Msg  Timestamp Location Course Speed Channel Assigned\r\n");
                             }
-                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %b\r\n",
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %c %b\r\n",
                                     type.ordinal(),
                                     TimestampSupport.adjustIntoSecond(timestamp, second),
                                     new Location(lat, lon),
                                     course,
                                     speed,
+                                    channel,
                                     assignedMode
                                     );
                             break;
@@ -284,27 +326,44 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                     return;
                 }
             }
-            else
-            {
-                warning("mmsi missing %s", properties);
-            }
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
-            log(Level.SEVERE, ex, "");
+            log(Level.SEVERE, ex, "%s", properties);
         }        
         finally
         {
-            properties.clear();
+            reset();
         }
     }
 
     @Override
     public void rollback(String reason)
     {
-        properties.clear();
+        reset();
     }
 
+    private void reset()
+    {
+        properties.clear();
+        status = null;
+        maneuver = null;
+        type = null;
+        alt = -1;
+        repeat = -1;
+        second = 60;
+        radio = 0;
+        lat = 0;
+        lon = 0;
+        turn = 0;
+        speed = -1;
+        course = -1;
+        heading = -1;
+        accuracy = false;
+        raim = false;
+        assignedMode = false;
+        channel = 0;
+    }
     @Override
     protected void setProperty(String property, Object arg)
     {
