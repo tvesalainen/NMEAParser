@@ -58,6 +58,13 @@ public interface AISObserver extends Transactional
      */
     void setMmsi(int mmsi);
     /**
+     * Radio channel code. AIS uses the high
+     * side of the duplex from two VHF radio channels: AIS Channel A is
+     * 161.975Mhz (87B); AIS Channel B is 162.025Mhz (88B).
+     * @param channel 
+     */
+    public void setChannel(char channel);
+    /**
      * Navigation Status
      * @param navigationStatus 
      */
@@ -1134,4 +1141,5 @@ public interface AISObserver extends Transactional
      * @param arg 
      */
     void setSerialNumber(int arg);
+
 }

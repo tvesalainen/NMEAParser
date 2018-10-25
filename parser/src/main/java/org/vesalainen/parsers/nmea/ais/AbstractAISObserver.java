@@ -51,6 +51,11 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
+    public void setChannel(char channel)
+    {
+    }
+
+    @Override
     public void setNavigationStatus(NavigationStatus navigationStatus)
     {
         
