@@ -1130,7 +1130,7 @@ public interface AISObserver extends Transactional
      * Mothership MMSI
      * @param arg 
      */
-    void setMotherShipMMSI(int arg);
+    void setMothershipMMSI(int arg);
     /**
      * Unit Model Code
      * @param arg 

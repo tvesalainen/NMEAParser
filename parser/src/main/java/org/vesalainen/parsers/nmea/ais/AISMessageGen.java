@@ -21,6 +21,7 @@ import org.vesalainen.parsers.mmsi.MMSIEntry;
 import org.vesalainen.parsers.mmsi.MMSIParser;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEASentence;
+import org.vesalainen.parsers.nmea.ais.AISCache.CacheEntry;
 import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
 
 /**
@@ -29,31 +30,43 @@ import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
  */
 public class AISMessageGen
 {
-    public static NMEASentence msg24A(Properties properties)
+    public static NMEASentence msg24B(CacheEntry entry)
     {
-        return new Bldr(StaticDataReport, properties)
+        return new Bldr(StaticAndVoyageRelatedData, entry.getProperties())
+                .integer(2, "aisVersion")
+                .integer(30, "imoNumber")
+                .string(42, "callSign")
+                .string(120, "vesselName")
+                .integer(8, CodesForShipType.class, "shipType")
+                .dimensions()
+                .integer(4, EPFDFixTypes.class, "epfd")
+    }
+    public static NMEASentence msg24A(CacheEntry entry)
+    {
+        return new Bldr(StaticDataReport, entry.getProperties())
                 .integer(2, 0)
                 .string(120, "vesselName")
                 .spare(8)
                 .build1();
     }
-    public static NMEASentence msg24B(Properties properties)
+    public static NMEASentence msg24B(CacheEntry entry)
     {
-        new Bldr(StaticDataReport, properties)
+        Bldr bldr = new Bldr(StaticDataReport, entry.getProperties())
                 .integer(2, 1)
                 .integer(8, CodesForShipType.class, "shipType")
-                
-        int mmsi = getMMSI(properties);
-        MMSIParser mp = MMSIParser.getInstance();
-        MMSIEntry me = mp.parse(mmsi);
-        if (me.getType() == MMSIType.CraftAssociatedWithParentShip)
+                .string(18, "vendorId")
+                .integer(4, "unitModelCode")
+                .integer(20, "serialNumber")
+                .string(42, "callSign");
+        if (entry.getMMSIType() == MMSIType.CraftAssociatedWithParentShip)
         {
-            
+            bldr.integer(30, "mothershipMMSI");
         }
         else
         {
-            
+            bldr.dimensions();
         }
+        return bldr.build1();
     }
     private static int getMMSI(Properties properties)
     {
@@ -85,13 +98,17 @@ public class AISMessageGen
             }
             return arr[0];
         }
+        private Bldr dimensions()
+        {
+            integer(9, Integer.parseInt(getProperty("dimensionToBow")));
+            integer(9, Integer.parseInt(getProperty("dimensionToStern")));
+            integer(6, Integer.parseInt(getProperty("dimensionToPort")));
+            integer(6, Integer.parseInt(getProperty("dimensionToStarboard")));
+            return this;
+        }
         private Bldr integer(int bits, Class<? extends Enum> ecls, String property)
         {
-            String prop = properties.getProperty(property);
-            if (prop == null)
-            {
-                throw new IllegalArgumentException(prop+" not found");
-            }
+            String prop = getProperty(property);
             for (Enum e : ecls.getEnumConstants())
             {
                 if (e.name().equals(prop))
@@ -109,22 +126,14 @@ public class AISMessageGen
         }
         private Bldr integer(int bits, String property)
         {
-            String prop = properties.getProperty(property);
-            if (prop == null)
-            {
-                throw new IllegalArgumentException(prop+" not found");
-            }
+            String prop = getProperty(property);
             int value = Integer.parseInt(prop);
             builder.integer(bits, value);
             return this;
         }
         private Bldr bool(int bits, String property)
         {
-            String prop = properties.getProperty(property);
-            if (prop == null)
-            {
-                throw new IllegalArgumentException(prop+" not found");
-            }
+            String prop = getProperty(property);
             switch (prop.toLowerCase())
             {
                 case "true":
@@ -140,15 +149,19 @@ public class AISMessageGen
         }
         private Bldr string(int bits, String property)
         {
+            String prop = getProperty(property);
+            builder.string(bits, prop);
+            return this;
+        }
+        private String getProperty(String property)
+        {
             String prop = properties.getProperty(property);
             if (prop == null)
             {
                 throw new IllegalArgumentException(prop+" not found");
             }
-            builder.string(bits, prop);
-            return this;
+            return prop;
         }
-
         public Bldr string(int bits, CharSequence txt)
         {
             builder.string(bits, txt);

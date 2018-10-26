@@ -157,7 +157,7 @@ public class TC extends AbstractAISObserver
     }
 
     @Override
-    public void setMotherShipMMSI(int arg)
+    public void setMothershipMMSI(int arg)
     {
         this.mothershipMMSI = arg;
     }

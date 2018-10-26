@@ -1283,7 +1283,7 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setMotherShipMMSI(int arg)
+    public void setMothershipMMSI(int arg)
     {
     }
 

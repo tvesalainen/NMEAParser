@@ -3201,13 +3201,13 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void mothershipMmsi(int arg, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setMotherShipMMSI(arg);
+        aisData.setMothershipMMSI(arg);
     }
     protected void mothershipDim(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
         if (MMSIType.getType(mmsiStore.get()) == CraftAssociatedWithParentShip)
         {
-            aisData.setMotherShipMMSI(arg.parseIntRadix2());
+            aisData.setMothershipMMSI(arg.parseIntRadix2());
         }
         else
         {

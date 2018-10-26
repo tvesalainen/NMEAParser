@@ -18,11 +18,14 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Clock;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.NMEASentence;
+import static org.vesalainen.parsers.nmea.ais.CodesForShipType.Sailing;
 
 /**
  *
@@ -30,24 +33,44 @@ import org.vesalainen.parsers.nmea.NMEASentence;
  */
 public class AISMessageGenTest
 {
+    Properties properties = new Properties();
+    AISCache cache = new AISCache(Clock.systemUTC(), 100, TimeUnit.DAYS, (m)->new Properties());
 
-    public AISMessageGenTest()
+    public AISMessageGenTest() throws IOException
     {
+        InputStream is = AISMessageGenTest.class.getResourceAsStream("/230123250.dat");
+        properties.load(is);
+        cache.update(properties);
     }
 
     @Test
     public void testMsg24A() throws IOException
     {
-        Properties props = new Properties();
-        InputStream is = AISMessageGenTest.class.getResourceAsStream("/230123250.dat");
-        props.load(is);
-        NMEASentence msg24A = AISMessageGen.msg24A(props);
+        NMEASentence msg24A = AISMessageGen.msg24A(cache.getEntry(230123250));
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
         parser.parse(msg24A.toString(), null, tc);
         assertEquals(230123250, tc.mmsi);
         assertEquals("IIRIS", tc.shipname);
         
+    }
+    @Test
+    public void testMsg24B() throws IOException
+    {
+        NMEASentence msg24B = AISMessageGen.msg24B(cache.getEntry(230123250));
+        NMEAParser parser = NMEAParser.newInstance();
+        TC tc = new TC();
+        parser.parse(msg24B.toString(), null, tc);
+        assertEquals(230123250, tc.mmsi);
+        assertEquals(Sailing, tc.shipType);
+        assertEquals("NVC", tc.vendorid);
+        assertEquals(1, tc.model);
+        assertEquals(35090, tc.serial);
+        assertEquals("OJ3231", tc.callSign);
+        assertEquals(12, tc.dimensionToBow);
+        assertEquals(0, tc.dimensionToStern);
+        assertEquals(4, tc.dimensionToPort);
+        assertEquals(0, tc.dimensionToStarboard);
     }
     
 }
