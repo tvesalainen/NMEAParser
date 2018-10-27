@@ -1331,7 +1331,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void dte(boolean dte, @ParserContext("aisData") AISObserver aisData)
     {
-        aisData.setDte(!dte);
+        aisData.setDte(dte);
     }
 
     protected void seqno(int seq, @ParserContext("aisData") AISObserver aisData)
