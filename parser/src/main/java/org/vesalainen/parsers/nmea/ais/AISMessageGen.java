@@ -28,6 +28,24 @@ import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
  */
 public class AISMessageGen
 {
+    public static NMEASentence[] msg1(CacheEntry entry)
+    {
+        return new Bldr(PositionReportClassA, entry.getProperties())
+                .integer(4, NavigationStatus.class, "navigationStatus")
+                .rot()
+                .decimal(10, 10, "speed")
+                .bool("positionAccuracy")
+                .decimal(28, 600000, "longitude")
+                .decimal(27, 600000, "latitude")
+                .decimal(12, 10, "course")
+                .integer(9, "heading")
+                .integer(6, "second")
+                .integer(2, ManeuverIndicator.class, "maneuver")
+                .spare(3)
+                .bool("raim")
+                .integer(19, "radioStatus")
+                .build();
+    }
     public static NMEASentence[] msg5(CacheEntry entry)
     {
         return new Bldr(StaticAndVoyageRelatedData, entry.getProperties())
@@ -42,21 +60,43 @@ public class AISMessageGen
                 .integer(5, "etaDay")
                 .integer(5, "etaHour")
                 .integer(6, "etaMinute")
-                .decimal(8, 1, "draught")
+                .decimal(8, 10, "draught")
                 .string(120, "destination")
                 .bool("dte")
                 .spare(1)
                 .build();
     }
-    public static NMEASentence msg24A(CacheEntry entry)
+    public static NMEASentence[] msg18(CacheEntry entry)
+    {
+        return new Bldr(StandardClassBCSPositionReport, entry.getProperties())
+                .spare(8)
+                .decimal(10, 10, "speed")
+                .bool("positionAccuracy")
+                .decimal(28, 600000, "longitude")
+                .decimal(27, 600000, "latitude")
+                .decimal(12, 10, "course")
+                .integer(9, "heading")
+                .integer(6, "second")
+                .spare(2)
+                .bool("csUnit")
+                .bool("display")
+                .bool("dsc")
+                .bool("band")
+                .bool("msg22")
+                .bool("assignedMode")
+                .bool("raim")
+                .integer(20, "radioStatus")
+                .build();
+    }
+    public static NMEASentence[] msg24A(CacheEntry entry)
     {
         return new Bldr(StaticDataReport, entry.getProperties())
                 .integer(2, 0)
                 .string(120, "vesselName")
                 .spare(8)
-                .build1();
+                .build();
     }
-    public static NMEASentence msg24B(CacheEntry entry)
+    public static NMEASentence[] msg24B(CacheEntry entry)
     {
         Bldr bldr = new Bldr(StaticDataReport, entry.getProperties())
                 .integer(2, 1)
@@ -73,7 +113,7 @@ public class AISMessageGen
         {
             bldr.dimensions();
         }
-        return bldr.build1();
+        return bldr.build();
     }
     private static int getMMSI(Properties properties)
     {
@@ -137,11 +177,18 @@ public class AISMessageGen
             builder.spare(bits);
             return this;
         }
-        private Bldr decimal(int bits, int precision, String property)
+        private Bldr rot()
+        {
+            String prop = getProperty("rateOfTurn");
+            float value = Float.parseFloat(prop);
+            builder.rot(value);
+            return this;
+        }
+        private Bldr decimal(int bits, float coef, String property)
         {
             String prop = getProperty(property);
             float value = Float.parseFloat(prop);
-            builder.decimal(bits, value, precision);
+            builder.decimal(bits, value, coef);
             return this;
         }
         private Bldr integer(int bits, String property)

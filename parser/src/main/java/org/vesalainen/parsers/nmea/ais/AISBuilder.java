@@ -103,6 +103,19 @@ public final class AISBuilder
         }
         return this;
     }
+    public AISBuilder rot(float rot)
+    {
+        float abs = Math.abs(rot);
+        if (abs <= 708)
+        {
+            integer(8, (int) Math.round(Math.signum(rot)*4.733*Math.sqrt(abs)));
+        }
+        else
+        {
+            integer(8, (int) (Math.signum(rot)*127));
+        }
+        return this;
+    }
     public AISBuilder bool(boolean b)
     {
         sb.append(b ? '1' : '0');
@@ -112,9 +125,9 @@ public final class AISBuilder
     {
         return integer(bits, 0);
     }
-    public AISBuilder decimal(int bits, float value, int precision)
+    public AISBuilder decimal(int bits, float value, float coef)
     {
-        return integer(bits, (int) (value*Math.pow(10, precision)));
+        return integer(bits, (int) Math.round(value*coef));
     }
     public AISBuilder integer(int bits, int value)
     {

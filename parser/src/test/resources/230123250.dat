@@ -1,22 +1,35 @@
-#2018-10-25T09:07:33.000
-#Thu Oct 25 01:07:48 GMT-08:00 2018
-callSign=OJ3231
-dimensionToStern=0
-ownMessage=true
+#2018-10-26T12:01:32.000
+#Fri Oct 26 04:01:47 GMT-08:00 2018
 unitModelCode=1
-dimensionToStarboard=0
-shipType=Sailing
-msg22=true
-dimensionToPort=4
-serialNumber=35090
-dsc=true
-csUnit=true
-display=false
-mmsi=230123250
-vendorId=NVC
+radioStatus=393222
+course=252.1
+raim=true
+positionAccuracy=true
 dimensionToBow=12
-band=true
+serialNumber=35090
+msg22=true
+dsc=true
+assignedMode=false
+partNumber=0
+mmsi=230123250
+longitude=-124.707214
+dimensionToPort=4
 vesselName=IIRIS
+band=true
+messageType=Static Data Report
+dimensionToStarboard=0
+latitude=-6.16368
+ownMessage=true
+shipType=Sailing
+callSign=OJ3231
+display=false
+speed=4.6
+repeatIndicator=0
+csUnit=true
+vendorId=NVC
+second=23
+dimensionToStern=0
+channel=A
 epfd=GPS
 etaMonth=11
 etaDay=4
@@ -27,4 +40,8 @@ draught=1.7
 aisVersion=0
 imoNumber=123456789
 dte=false
+navigationStatus=UnderWaySailing
+maneuver=NoSpecialManeuver
+rateOfTurn=-2
+heading=250
 

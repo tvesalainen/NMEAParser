@@ -27,6 +27,8 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import static org.vesalainen.parsers.nmea.ais.CodesForShipType.Sailing;
 import static org.vesalainen.parsers.nmea.ais.EPFDFixTypes.GPS;
+import static org.vesalainen.parsers.nmea.ais.ManeuverIndicator.NoSpecialManeuver;
+import static org.vesalainen.parsers.nmea.ais.NavigationStatus.UnderWaySailing;
 
 /**
  *
@@ -44,6 +46,27 @@ public class AISMessageGenTest
         cache.update(properties);
     }
 
+    @Test
+    public void testMsg1() throws IOException
+    {
+        NMEASentence[] msg1 = AISMessageGen.msg1(cache.getEntry(230123250));
+        NMEAParser parser = NMEAParser.newInstance();
+        TC tc = new TC();
+        parser.parse(msg1[0].toString(), null, tc);
+        assertEquals(230123250, tc.mmsi);
+        assertEquals(UnderWaySailing, tc.navigationStatus);
+        assertEquals(-2, tc.rateOfTurn, 1);
+        assertEquals(4.6, tc.speed, 1e-3);
+        assertEquals(true, tc.accuracy);
+        assertEquals(-124.707214, tc.longitude, 1e-5);
+        assertEquals(-6.16368, tc.latitude, 1e-5);
+        assertEquals(252.1, tc.course, 1e-2);
+        assertEquals(250, tc.heading);
+        assertEquals(23, tc.second);
+        assertEquals(NoSpecialManeuver, tc.maneuver);
+        assertEquals(true, tc.raim);
+        assertEquals(393222, tc.radio);
+    }
     @Test
     public void testMsg5() throws IOException
     {
@@ -71,12 +94,36 @@ public class AISMessageGenTest
         assertEquals(false, tc.dte);
     }
     @Test
-    public void testMsg24A() throws IOException
+    public void testMsg18() throws IOException
     {
-        NMEASentence msg24A = AISMessageGen.msg24A(cache.getEntry(230123250));
+        NMEASentence[] msg18 = AISMessageGen.msg18(cache.getEntry(230123250));
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
-        parser.parse(msg24A.toString(), null, tc);
+        parser.parse(msg18[0].toString(), null, tc);
+        assertEquals(230123250, tc.mmsi);
+        assertEquals(4.6, tc.speed, 1e-3);
+        assertEquals(true, tc.accuracy);
+        assertEquals(-124.707214, tc.longitude, 1e-5);
+        assertEquals(-6.16368, tc.latitude, 1e-5);
+        assertEquals(252.1, tc.course, 1e-2);
+        assertEquals(250, tc.heading);
+        assertEquals(23, tc.second);
+        assertEquals(true, tc.cs);
+        assertEquals(false, tc.display);
+        assertEquals(true, tc.dsc);
+        assertEquals(true, tc.band);
+        assertEquals(true, tc.msg22);
+        assertEquals(false, tc.assigned);
+        assertEquals(true, tc.raim);
+        assertEquals(393222, tc.radio);
+    }
+    @Test
+    public void testMsg24A() throws IOException
+    {
+        NMEASentence[] msg24A = AISMessageGen.msg24A(cache.getEntry(230123250));
+        NMEAParser parser = NMEAParser.newInstance();
+        TC tc = new TC();
+        parser.parse(msg24A[0].toString(), null, tc);
         assertEquals(230123250, tc.mmsi);
         assertEquals("IIRIS", tc.shipname);
         
@@ -84,10 +131,10 @@ public class AISMessageGenTest
     @Test
     public void testMsg24B() throws IOException
     {
-        NMEASentence msg24B = AISMessageGen.msg24B(cache.getEntry(230123250));
+        NMEASentence[] msg24B = AISMessageGen.msg24B(cache.getEntry(230123250));
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
-        parser.parse(msg24B.toString(), null, tc);
+        parser.parse(msg24B[0].toString(), null, tc);
         assertEquals(230123250, tc.mmsi);
         assertEquals(Sailing, tc.shipType);
         assertEquals("NVC", tc.vendorid);

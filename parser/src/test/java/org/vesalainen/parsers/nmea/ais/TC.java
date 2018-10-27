@@ -147,6 +147,13 @@ public class TC extends AbstractAISObserver
     int mothershipMMSI = -1;
     int model = -1;
     int serial = -1;
+    ManeuverIndicator maneuver;
+
+    @Override
+    public void setManeuver(ManeuverIndicator maneuverIndicator)
+    {
+        maneuver = maneuverIndicator;
+    }
 
     @Override
     public void setEtaMinute(int minute)
