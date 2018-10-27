@@ -211,7 +211,7 @@ public interface AISObserver extends Transactional
      */
     void setDestination(String destination);
     /**
-     * Data terminal ready 
+     * Data terminal ready. Note! True is not ready.
      * @param ready
      */
     void setDte(boolean ready);

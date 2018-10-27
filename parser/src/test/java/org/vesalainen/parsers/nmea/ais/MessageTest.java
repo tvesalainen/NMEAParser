@@ -611,7 +611,7 @@ public class MessageTest
                 assertEquals((float)ach.getInt(89, 116)/600000.0 , tc.latitude, Epsilon);
                 assertEquals((float)ach.getUInt(116, 128)/10, tc.course, Epsilon);
                 assertEquals(ach.getUInt(128, 134), tc.second);
-                assertEquals(!ach.getBoolean(142), tc.dte);
+                assertEquals(ach.getBoolean(142), tc.dte);
                 assertEquals(ach.getBoolean(146), tc.assigned);
                 assertEquals(ach.getBoolean(147), tc.raim);
                 assertEquals(ach.getUInt(148, 168), tc.radio);
@@ -870,7 +870,7 @@ public class MessageTest
                 assertEquals(ach.getUInt(295, 301), tc.dimensionToStarboard);
                 assertEquals(EPFDFixTypes.values()[ach.getUInt(301, 305)], tc.epfd);
                 assertEquals(ach.getBoolean(305), tc.raim);
-                assertEquals(ach.getBoolean(306), !tc.dte);
+                assertEquals(ach.getBoolean(306), tc.dte);
                 assertEquals(ach.getBoolean(307), tc.assigned);
                 assertNull(tc.error);
             }

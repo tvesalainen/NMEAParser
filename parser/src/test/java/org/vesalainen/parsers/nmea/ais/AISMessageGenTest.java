@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import static org.vesalainen.parsers.nmea.ais.CodesForShipType.Sailing;
+import static org.vesalainen.parsers.nmea.ais.EPFDFixTypes.GPS;
 
 /**
  *
@@ -43,6 +44,32 @@ public class AISMessageGenTest
         cache.update(properties);
     }
 
+    @Test
+    public void testMsg5() throws IOException
+    {
+        NMEASentence[] msg5 = AISMessageGen.msg5(cache.getEntry(230123250));
+        NMEAParser parser = NMEAParser.newInstance();
+        TC tc = new TC();
+        parser.parse(msg5[0].toString()+msg5[1].toString(), null, tc);
+        assertEquals(230123250, tc.mmsi);
+        assertEquals(0, tc.aisVersion);
+        assertEquals(123456789, tc.imoNumber);
+        assertEquals("OJ3231", tc.callSign);
+        assertEquals("IIRIS", tc.shipname);
+        assertEquals(Sailing, tc.shipType);
+        assertEquals(12, tc.dimensionToBow);
+        assertEquals(0, tc.dimensionToStern);
+        assertEquals(4, tc.dimensionToPort);
+        assertEquals(0, tc.dimensionToStarboard);
+        assertEquals(GPS, tc.epfd);
+        assertEquals(11, tc.eta_month);
+        assertEquals(4, tc.eta_day);
+        assertEquals(11, tc.eta_hour);
+        assertEquals(12, tc.eta_minute);
+        assertEquals(1.7, tc.draught, 1e-3);
+        assertEquals("NUKU HIVA", tc.destination);
+        assertEquals(false, tc.dte);
+    }
     @Test
     public void testMsg24A() throws IOException
     {

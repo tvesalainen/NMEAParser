@@ -17,3 +17,14 @@ vendorId=NVC
 dimensionToBow=12
 band=true
 vesselName=IIRIS
+epfd=GPS
+etaMonth=11
+etaDay=4
+etaHour=11
+etaMinute=12
+destination=NUKU\ HIVA
+draught=1.7
+aisVersion=0
+imoNumber=123456789
+dte=false
+
