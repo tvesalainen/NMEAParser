@@ -1297,4 +1297,24 @@ public class AbstractAISObserver implements AISObserver
     {
     }
 
+    @Override
+    public void setEtaMonth(int month)
+    {
+    }
+
+    @Override
+    public void setEtaDay(int day)
+    {
+    }
+
+    @Override
+    public void setEtaHour(int hour)
+    {
+    }
+
+    @Override
+    public void setEtaMinute(int minute)
+    {
+    }
+
 }

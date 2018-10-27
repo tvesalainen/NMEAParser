@@ -17,8 +17,6 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.util.Properties;
-import org.vesalainen.parsers.mmsi.MMSIEntry;
-import org.vesalainen.parsers.mmsi.MMSIParser;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.ais.AISCache.CacheEntry;
@@ -30,7 +28,7 @@ import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
  */
 public class AISMessageGen
 {
-    public static NMEASentence msg24B(CacheEntry entry)
+    public static NMEASentence[] msg5(CacheEntry entry)
     {
         return new Bldr(StaticAndVoyageRelatedData, entry.getProperties())
                 .integer(2, "aisVersion")
@@ -40,6 +38,15 @@ public class AISMessageGen
                 .integer(8, CodesForShipType.class, "shipType")
                 .dimensions()
                 .integer(4, EPFDFixTypes.class, "epfd")
+                .integer(4, "etaMonth")
+                .integer(5, "etaDay")
+                .integer(5, "etaHour")
+                .integer(6, "etaMinute")
+                .decimal(8, 1, "draught")
+                .string(120, "destination")
+                .bool("dte")
+                .spare(1)
+                .build();
     }
     public static NMEASentence msg24A(CacheEntry entry)
     {
@@ -98,6 +105,12 @@ public class AISMessageGen
             }
             return arr[0];
         }
+
+        public NMEASentence[] build()
+        {
+            return builder.build();
+        }
+        
         private Bldr dimensions()
         {
             integer(9, Integer.parseInt(getProperty("dimensionToBow")));
@@ -124,6 +137,13 @@ public class AISMessageGen
             builder.spare(bits);
             return this;
         }
+        private Bldr decimal(int bits, int precision, String property)
+        {
+            String prop = getProperty(property);
+            float value = Float.parseFloat(prop);
+            builder.decimal(bits, value, precision);
+            return this;
+        }
         private Bldr integer(int bits, String property)
         {
             String prop = getProperty(property);
@@ -131,7 +151,7 @@ public class AISMessageGen
             builder.integer(bits, value);
             return this;
         }
-        private Bldr bool(int bits, String property)
+        private Bldr bool(String property)
         {
             String prop = getProperty(property);
             switch (prop.toLowerCase())

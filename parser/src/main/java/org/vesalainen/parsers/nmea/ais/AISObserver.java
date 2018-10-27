@@ -1141,5 +1141,25 @@ public interface AISObserver extends Transactional
      * @param arg 
      */
     void setSerialNumber(int arg);
+    /**
+     * ETA month (UTC) 1-12, 0=N/A (default)
+     * @param month 
+     */
+    public void setEtaMonth(int month);
+    /**
+     * ETA day (UTC) 1-31, 0=N/A (default)
+     * @param arg 
+     */
+    public void setEtaDay(int day);
+    /**
+     * ETA hour (UTC) 0-23, 24=N/A (default)
+     * @param hour 
+     */
+    public void setEtaHour(int hour);
+    /**
+     * ETA minute (UTC) 0-59, 60=N/A (default)
+     * @param minute 
+     */
+    public void setEtaMinute(int minute);
 
 }

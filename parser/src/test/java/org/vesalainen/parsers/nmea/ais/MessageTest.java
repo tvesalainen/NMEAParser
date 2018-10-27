@@ -203,15 +203,11 @@ public class MessageTest
                 assertEquals(ach.getUInt(258, 264), tc.dimensionToPort);
                 assertEquals(ach.getUInt(264, 270), tc.dimensionToStarboard);
                 assertEquals(EPFDFixTypes.values()[ach.getUInt(270, 274)], tc.epfd);
-                assertEquals(ach.getUInt(274, 278), tc.month);
-                assertEquals(ach.getUInt(278, 283), tc.day);
+                assertEquals(ach.getUInt(274, 278), tc.eta_month);
+                assertEquals(ach.getUInt(278, 283), tc.eta_day);
                 int hour = ach.getUInt(283, 288);
-                if (hour == 24)
-                {
-                    hour = -1;
-                }
-                assertEquals(hour, tc.hour);
-                assertEquals(ach.getUInt(288, 294), tc.minute);
+                assertEquals(hour, tc.eta_hour);
+                assertEquals(ach.getUInt(288, 294), tc.eta_minute);
                 assertEquals((float)ach.getUInt(294, 302)/10, tc.draught, Epsilon);
                 assertEquals(ach.getString(302, 422), tc.destination);
                 assertNull(tc.error);

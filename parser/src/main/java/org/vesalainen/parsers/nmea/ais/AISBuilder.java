@@ -112,6 +112,10 @@ public final class AISBuilder
     {
         return integer(bits, 0);
     }
+    public AISBuilder decimal(int bits, float value, int precision)
+    {
+        return integer(bits, (int) (value*Math.pow(10, precision)));
+    }
     public AISBuilder integer(int bits, int value)
     {
         for (int ii=bits-1;ii>=0;ii--)

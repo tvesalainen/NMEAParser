@@ -50,6 +50,10 @@ public class TC extends AbstractAISObserver
     int dimensionToPort = -1;
     int dimensionToStern = -1;
     int dimensionToBow = -1;
+    int eta_minute = -1;
+    int eta_hour = -1;
+    int eta_day = -1;
+    int eta_month = -1;
     int minute = -1;
     int hour = -1;
     int day = -1;
@@ -144,6 +148,30 @@ public class TC extends AbstractAISObserver
     int model = -1;
     int serial = -1;
 
+    @Override
+    public void setEtaMinute(int minute)
+    {
+        eta_minute = minute;
+    }
+
+    @Override
+    public void setEtaHour(int hour)
+    {
+        eta_hour = hour;
+    }
+
+    @Override
+    public void setEtaDay(int day)
+    {
+        eta_day = day;
+    }
+
+    @Override
+    public void setEtaMonth(int month)
+    {
+        eta_month = month;
+    }
+    
     @Override
     public void setSerialNumber(int arg)
     {

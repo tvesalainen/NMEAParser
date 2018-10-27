@@ -474,6 +474,10 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Terminal(left="ceast1", expression="[01]{8}", doc="Current Vector component East (v) #1", reducer="org.vesalainen.parsers.nmea.ais.AISParser ceast1_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="shipname", expression="[01]{120}", doc="Vessel Name", reducer="org.vesalainen.parsers.nmea.ais.AISParser shipname(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="ceast2", expression="[01]{8}", doc="Current Vector component East (v) #2", reducer="org.vesalainen.parsers.nmea.ais.AISParser ceast2_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="eta_month", expression="[01]{4}", doc="ETA Month (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser eta_month(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="eta_day", expression="[01]{5}", doc="ETA Day (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser eta_day(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="eta_hour", expression="[01]{5}", doc="ETA Hour (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser eta_hour(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
+,@Terminal(left="eta_minute", expression="[01]{6}", doc="ETA Minute (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser eta_minute(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 })
 @Rules({
 @Rule(left="23Messages", value={"(23Content end)+"})
@@ -499,7 +503,7 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Rule(left="Type18StandardClassBCSPositionReport", value={"repeat", "mmsi", "reserved", "speed_U1_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "heading_9", "second", "regional_2", "cs", "display", "dsc", "band", "msg22", "assigned", "raim", "radio_20"})
 ,@Rule(left="IMO289ClearanceTimeToEnterPort", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid18", "linkage", "month", "day_5", "hour", "minute_6", "portname", "destination_30", "lon_I3_25", "lat_I3_24", "('[01]{43}')?"})
 ,@Rule(left="21Content", value={"Type21AidToNavigationReport2"})
-,@Rule(left="Type5StaticAndVoyageRelatedData", value={"repeat", "mmsi", "ais_version", "imo", "callsign", "shipname", "shiptype", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "month", "day_5", "hour", "minute_6", "draught", "destination_120", "dte", "('[01]{1}')?"})
+,@Rule(left="Type5StaticAndVoyageRelatedData", value={"repeat", "mmsi", "ais_version", "imo", "callsign", "shipname", "shiptype", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "eta_month", "eta_day", "eta_hour", "eta_minute", "draught", "destination_120", "dte", "('[01]{1}')?"})
 ,@Rule(left="Type15Interrogation2", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1", "'[01]{2}'", "type1_2", "offset1_2", "('[01]{2}')?"})
 ,@Rule(left="message", value={"27"})
 ,@Rule(left="Type20DataLinkManagementMessage4", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11", "offset3", "number3", "timeout3", "increment3", "offset4", "number4", "timeout4", "increment4"})
@@ -1193,6 +1197,23 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         {
             aisData.setYear(year);
         }
+    }
+
+    protected void eta_month(int month, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setEtaMonth(month);
+    }
+    protected void eta_day(int day, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setEtaDay(day);
+    }
+    protected void eta_hour(int hour, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setEtaHour(hour);
+    }
+    protected void eta_minute(int minute, @ParserContext("aisData") AISObserver aisData)
+    {
+        aisData.setEtaMinute(minute);
     }
 
     protected void month(int month, @ParserContext("aisData") AISObserver aisData)
