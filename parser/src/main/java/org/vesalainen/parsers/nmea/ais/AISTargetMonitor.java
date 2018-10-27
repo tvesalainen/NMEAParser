@@ -28,16 +28,16 @@ import org.vesalainen.util.Transactional;
 /**
  * @author Timo Vesalainen
  */
-public class VesselMonitor extends AbstractPropertySetter implements Transactional
+public class AISTargetMonitor extends AbstractPropertySetter implements Transactional
 {
     public static final String Clock = "clock";
     public static final String Mmsi = "mmsi";
-    private final Map<Integer,Vessel> map = new HashMap<>();
+    private final Map<Integer,AISTarget> map = new HashMap<>();
     private Clock clock;
-    private Vessel target;
+    private AISTarget target;
     private final BoatMonitor boat;
 
-    public VesselMonitor(BoatMonitor boat)
+    public AISTargetMonitor(BoatMonitor boat)
     {
         this.boat = boat;
     }
@@ -77,7 +77,7 @@ public class VesselMonitor extends AbstractPropertySetter implements Transaction
                 target = map.get(arg);
                 if (target == null)
                 {
-                    target = new Vessel(clock, arg);
+                    target = new AISTarget(clock, arg);
                     map.put(arg, target);
                 }
                 break;

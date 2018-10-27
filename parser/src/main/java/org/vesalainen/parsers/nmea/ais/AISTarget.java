@@ -27,7 +27,7 @@ import org.vesalainen.util.Transactional;
 /**
  * @author Timo Vesalainen
  */
-public class Vessel extends AbstractPropertySetter implements Transactional
+public class AISTarget extends AbstractPropertySetter implements Transactional
 {
     public static final String RateOfTurn = "rateOfTurn";
     public static final String Speed = "speed";
@@ -109,7 +109,7 @@ public class Vessel extends AbstractPropertySetter implements Transactional
     protected boolean assigned;
     protected boolean raim;
 
-    public Vessel(Clock clock,int mmsi)
+    public AISTarget(Clock clock,int mmsi)
     {
         this.clock = clock;
         this.mmsi = mmsi;
