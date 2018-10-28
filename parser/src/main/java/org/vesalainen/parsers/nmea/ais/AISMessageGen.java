@@ -19,7 +19,7 @@ package org.vesalainen.parsers.nmea.ais;
 import java.util.Properties;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import org.vesalainen.parsers.nmea.ais.AISCache.CacheEntry;
+import org.vesalainen.parsers.nmea.ais.AISMonitor.CacheEntry;
 import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
 
 /**

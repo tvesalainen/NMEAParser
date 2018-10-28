@@ -32,16 +32,16 @@ import org.vesalainen.util.TimeToLiveSet;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class AISCache
+public class AISMonitor
 {
-    private static AISCache CACHE;
+    private static AISMonitor CACHE;
     private MMSIParser mmsiParser = MMSIParser.getInstance();
 
     private TimeToLiveSet<Integer> ttlSet;
     private Map<Integer,CacheEntry> map = new WeakHashMap<>();
     private Function<String,Properties> loader;
 
-    public AISCache(Clock clock, long timeout, TimeUnit unit, Function<String, Properties> loader)
+    public AISMonitor(Clock clock, long timeout, TimeUnit unit, Function<String, Properties> loader)
     {
         this.ttlSet = new TimeToLiveSet<>(clock, timeout, unit);
         this.loader = loader;
@@ -81,14 +81,14 @@ public class AISCache
         return ttlSet.stream().map((k)->map.get(k));
     }
 
-    public static AISCache getInstance()
+    public static AISMonitor getInstance()
     {
         return CACHE;
     }
 
-    public static void setInstance(AISCache CACHE)
+    public static void setInstance(AISMonitor CACHE)
     {
-        AISCache.CACHE = CACHE;
+        AISMonitor.CACHE = CACHE;
     }
     
     public class CacheEntry
