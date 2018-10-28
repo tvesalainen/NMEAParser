@@ -31,38 +31,38 @@ public class AISMessageGen
     public static NMEASentence[] msg1(CacheEntry entry)
     {
         return new Bldr(PositionReportClassA, entry.getProperties())
-                .integer(4, NavigationStatus.class, "navigationStatus")
+                .integer(4, NavigationStatus.class, "navigationStatus", NavigationStatus.NotDefinedDefault)
                 .rot()
-                .decimal(10, 10, "speed")
-                .bool("positionAccuracy")
-                .decimal(28, 600000, "longitude")
-                .decimal(27, 600000, "latitude")
-                .decimal(12, 10, "course")
-                .integer(9, "heading")
-                .integer(6, "second")
-                .integer(2, ManeuverIndicator.class, "maneuver")
+                .decimal(10, 10, "speed", 1023)
+                .bool("positionAccuracy", false)
+                .decimal(28, 600000, "longitude", 181)
+                .decimal(27, 600000, "latitude", 91)
+                .decimal(12, 10, "course", 360)
+                .integer(9, "heading", 511)
+                .integer(6, "second", 60)
+                .integer(2, ManeuverIndicator.class, "maneuver", ManeuverIndicator.NotAvailableDefault)
                 .spare(3)
-                .bool("raim")
-                .integer(19, "radioStatus")
+                .bool("raim", false)
+                .integer(19, "radioStatus", 0)
                 .build();
     }
     public static NMEASentence[] msg5(CacheEntry entry)
     {
         return new Bldr(StaticAndVoyageRelatedData, entry.getProperties())
-                .integer(2, "aisVersion")
+                .integer(2, "aisVersion", 0)
                 .integer(30, "imoNumber")
                 .string(42, "callSign")
                 .string(120, "vesselName")
-                .integer(8, CodesForShipType.class, "shipType")
+                .integer(8, CodesForShipType.class, "shipType", CodesForShipType.NotAvailableDefault)
                 .dimensions()
-                .integer(4, EPFDFixTypes.class, "epfd")
-                .integer(4, "etaMonth")
-                .integer(5, "etaDay")
-                .integer(5, "etaHour")
-                .integer(6, "etaMinute")
+                .integer(4, EPFDFixTypes.class, "epfd", EPFDFixTypes.UndefinedDefault)
+                .integer(4, "etaMonth", 0)
+                .integer(5, "etaDay", 0)
+                .integer(5, "etaHour", 24)
+                .integer(6, "etaMinute", 60)
                 .decimal(8, 10, "draught")
                 .string(120, "destination")
-                .bool("dte")
+                .bool("dte", true)
                 .spare(1)
                 .build();
     }
@@ -70,13 +70,13 @@ public class AISMessageGen
     {
         return new Bldr(StandardClassBCSPositionReport, entry.getProperties())
                 .spare(8)
-                .decimal(10, 10, "speed")
-                .bool("positionAccuracy")
-                .decimal(28, 600000, "longitude")
-                .decimal(27, 600000, "latitude")
-                .decimal(12, 10, "course")
-                .integer(9, "heading")
-                .integer(6, "second")
+                .decimal(10, 10, "speed", 1023)
+                .bool("positionAccuracy", false)
+                .decimal(28, 600000, "longitude", 181)
+                .decimal(27, 600000, "latitude", 91)
+                .decimal(12, 10, "course", 360)
+                .integer(9, "heading", 511)
+                .integer(6, "second", 60)
                 .spare(2)
                 .bool("csUnit")
                 .bool("display")
@@ -100,7 +100,7 @@ public class AISMessageGen
     {
         Bldr bldr = new Bldr(StaticDataReport, entry.getProperties())
                 .integer(2, 1)
-                .integer(8, CodesForShipType.class, "shipType")
+                .integer(8, CodesForShipType.class, "shipType", CodesForShipType.NotAvailableDefault)
                 .string(18, "vendorId")
                 .integer(4, "unitModelCode")
                 .integer(20, "serialNumber")
@@ -153,15 +153,15 @@ public class AISMessageGen
         
         private Bldr dimensions()
         {
-            integer(9, Integer.parseInt(getProperty("dimensionToBow")));
-            integer(9, Integer.parseInt(getProperty("dimensionToStern")));
-            integer(6, Integer.parseInt(getProperty("dimensionToPort")));
-            integer(6, Integer.parseInt(getProperty("dimensionToStarboard")));
+            integer(9, Integer.parseInt(properties.getProperty("dimensionToBow", "0")));
+            integer(9, Integer.parseInt(properties.getProperty("dimensionToStern", "0")));
+            integer(6, Integer.parseInt(properties.getProperty("dimensionToPort", "0")));
+            integer(6, Integer.parseInt(properties.getProperty("dimensionToStarboard", "0")));
             return this;
         }
-        private Bldr integer(int bits, Class<? extends Enum> ecls, String property)
+        private Bldr integer(int bits, Class<? extends Enum> ecls, String property, Enum defaultValue)
         {
-            String prop = getProperty(property);
+            String prop = properties.getProperty(property, defaultValue.name());
             for (Enum e : ecls.getEnumConstants())
             {
                 if (e.name().equals(prop))
@@ -179,28 +179,43 @@ public class AISMessageGen
         }
         private Bldr rot()
         {
-            String prop = getProperty("rateOfTurn");
-            float value = Float.parseFloat(prop);
+            String prop = properties.getProperty("rateOfTurn", "Nan");
+            float value = !prop.equals("Nan") ? Float.parseFloat(prop) : Float.NaN;
             builder.rot(value);
             return this;
         }
         private Bldr decimal(int bits, float coef, String property)
         {
-            String prop = getProperty(property);
+            check(property);
+            return decimal(bits, coef, property, Float.NaN);
+        }
+        private Bldr decimal(int bits, float coef, String property, float defaultValue)
+        {
+            String prop = properties.getProperty(property, Float.toString(defaultValue));
             float value = Float.parseFloat(prop);
             builder.decimal(bits, value, coef);
             return this;
         }
         private Bldr integer(int bits, String property)
         {
-            String prop = getProperty(property);
+            check(property);
+            return integer(bits, property, -1);
+        }
+        private Bldr integer(int bits, String property, int defaultValue)
+        {
+            String prop = properties.getProperty(property, Integer.toString(defaultValue));
             int value = Integer.parseInt(prop);
             builder.integer(bits, value);
             return this;
         }
         private Bldr bool(String property)
         {
-            String prop = getProperty(property);
+            check(property);
+            return bool(property, true);
+        }
+        private Bldr bool(String property, boolean defaultValue)
+        {
+            String prop = properties.getProperty(property, Boolean.toString(defaultValue));
             switch (prop.toLowerCase())
             {
                 case "true":
@@ -216,18 +231,21 @@ public class AISMessageGen
         }
         private Bldr string(int bits, String property)
         {
-            String prop = getProperty(property);
+            check(property);
+            return string(bits, property, null);
+        }
+        private Bldr string(int bits, String property, String defaultValue)
+        {
+            String prop = properties.getProperty(property, defaultValue);
             builder.string(bits, prop);
             return this;
         }
-        private String getProperty(String property)
+        private void check(String property)
         {
-            String prop = properties.getProperty(property);
-            if (prop == null)
+            if (!properties.containsKey(property))
             {
-                throw new IllegalArgumentException(prop+" not found");
+                throw new IllegalArgumentException(property+" not found");
             }
-            return prop;
         }
         public Bldr string(int bits, CharSequence txt)
         {

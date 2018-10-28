@@ -105,14 +105,21 @@ public final class AISBuilder
     }
     public AISBuilder rot(float rot)
     {
-        float abs = Math.abs(rot);
-        if (abs <= 708)
+        if (!Float.isNaN(rot))
         {
-            integer(8, (int) Math.round(Math.signum(rot)*4.733*Math.sqrt(abs)));
+            float abs = Math.abs(rot);
+            if (abs <= 708)
+            {
+                integer(8, (int) Math.round(Math.signum(rot)*4.733*Math.sqrt(abs)));
+            }
+            else
+            {
+                integer(8, (int) (Math.signum(rot)*127));
+            }
         }
         else
         {
-            integer(8, (int) (Math.signum(rot)*127));
+            integer(8, 128);
         }
         return this;
     }
