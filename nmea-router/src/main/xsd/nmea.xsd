@@ -37,6 +37,7 @@
         <xsd:complexContent>
             <xsd:extension base="endpointType">
                 <xsd:attribute name="port" type="portType" use="required"/>
+                <xsd:attribute name="aisFastBoot" type="xsd:boolean"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>

@@ -25,14 +25,13 @@ import java.nio.channels.SocketChannel;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.SynchronizedRingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.router.Router;
 import static org.vesalainen.nmea.router.RouterManager.POOL;
+import org.vesalainen.parsers.nmea.ais.AISMonitor;
 
 /**
  *
@@ -70,6 +69,10 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                 SocketChannel socketChannel = serverSocketChannel.accept();
                 TCPEndpoint tcpEndpoint = new TCPEndpoint(socketChannel, endpointType, router);
                 POOL.submit(tcpEndpoint);
+                if (endpointType.isAisFastBoot() != null && endpointType.isAisFastBoot())
+                {
+                    AISMonitor.fastBoot(socketChannel);
+                }
             }
         }
         catch (Throwable ex)

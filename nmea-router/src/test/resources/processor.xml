@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
-    <tcp-endpoint name="TCP" port="12345" enable="true"/>
+    <tcp-endpoint name="TCP" port="12345" enable="true" aisFastBoot="true"/>
     <processor name="Proc" enable="true">
         <true-wind-source/>
         <tracker directory="c:\\temp" />

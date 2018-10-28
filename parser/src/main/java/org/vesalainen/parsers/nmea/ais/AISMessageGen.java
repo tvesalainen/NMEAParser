@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEASentence;
@@ -40,6 +41,24 @@ public class AISMessageGen
                 .decimal(12, 10, "course", 360)
                 .integer(9, "heading", 511)
                 .integer(6, "second", 60)
+                .integer(2, ManeuverIndicator.class, "maneuver", ManeuverIndicator.NotAvailableDefault)
+                .spare(3)
+                .bool("raim", false)
+                .integer(19, "radioStatus", 0)
+                .build();
+    }
+    public static NMEASentence[] msg1(CacheEntry entry, int second, double latitude, double longitude)
+    {
+        return new Bldr(PositionReportClassA, entry.getProperties())
+                .integer(4, NavigationStatus.class, "navigationStatus", NavigationStatus.NotDefinedDefault)
+                .rot()
+                .decimal(10, 10, "speed", 1023)
+                .bool(false)
+                .integer(28, (int)(600000*longitude))
+                .integer(27, (int)(600000*latitude))
+                .decimal(12, 10, "course", 360)
+                .integer(9, "heading", 511)
+                .integer(6, second)
                 .integer(2, ManeuverIndicator.class, "maneuver", ManeuverIndicator.NotAvailableDefault)
                 .spare(3)
                 .bool("raim", false)
@@ -77,6 +96,28 @@ public class AISMessageGen
                 .decimal(12, 10, "course", 360)
                 .integer(9, "heading", 511)
                 .integer(6, "second", 60)
+                .spare(2)
+                .bool("csUnit")
+                .bool("display")
+                .bool("dsc")
+                .bool("band")
+                .bool("msg22")
+                .bool("assignedMode")
+                .bool("raim")
+                .integer(20, "radioStatus")
+                .build();
+    }
+    public static NMEASentence[] msg18(CacheEntry entry, int second, double latitude, double longitude)
+    {
+        return new Bldr(StandardClassBCSPositionReport, entry.getProperties())
+                .spare(8)
+                .decimal(10, 10, "speed", 1023)
+                .bool(false)
+                .integer(28, (int)(600000*longitude))
+                .integer(27, (int)(600000*latitude))
+                .decimal(12, 10, "course", 360)
+                .integer(9, "heading", 511)
+                .integer(6, second)
                 .spare(2)
                 .bool("csUnit")
                 .bool("display")
@@ -244,7 +285,7 @@ public class AISMessageGen
         {
             if (!properties.containsKey(property))
             {
-                throw new IllegalArgumentException(property+" not found");
+                throw new NoSuchElementException(property+" not found");
             }
         }
         public Bldr string(int bits, CharSequence txt)

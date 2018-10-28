@@ -33,12 +33,14 @@ import java.time.ZonedDateTime;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nio.channels.ChannelHelper;
 import org.vesalainen.nio.channels.GZIPChannel;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.util.Stoppable;
+import org.vesalainen.parsers.nmea.ais.AISMonitor;
 import org.vesalainen.parsers.nmea.ais.AISProperties;
 import org.vesalainen.parsers.nmea.ais.ManeuverIndicator;
 import org.vesalainen.parsers.nmea.ais.MessageTypes;
@@ -55,15 +57,18 @@ import org.vesalainen.util.navi.Location;
  */
 public class AISLog extends AbstractPropertySetter implements AttachedLogger, Stoppable
 {
+    private AISMonitor cache;
     private CachedScheduledThreadPool executor;
     private Path dir;
     private long maxLogSize = 1024*1024;
     private Properties properties = new Properties();
+    private Properties allProperties = new Properties();
     private String[] prefixes;
     private Clock clock;
     private NavigationStatus status;
     private ManeuverIndicator maneuver;
     private MessageTypes type;
+    private int heading;
     private int alt;
     private int repeat;
     private int second;
@@ -73,7 +78,6 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private float turn;
     private float speed;
     private float course;
-    private float heading;
     private boolean accuracy;
     private boolean raim;
     private boolean assignedMode;
@@ -97,10 +101,13 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void set(String property, Object arg)
     {
+        allProperties.setProperty(property, arg.toString());
         switch (property)
         {
             case "clock":
                 clock = (Clock) arg;
+                cache = new AISMonitor(executor, clock, 15, TimeUnit.MINUTES, this::propertiesFor);
+                AISMonitor.setInstance(cache);
                 break;
             case "messageType":
                 type = (MessageTypes) arg;
@@ -120,6 +127,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void set(String property, float arg)
     {
+        allProperties.setProperty(property, Float.toString(arg));
         switch (property)
         {
             case "latitude":
@@ -128,7 +136,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
             case "longitude":
                 lon = arg;
                 break;
-            case "turn":
+            case "rateOfTurn":
                 turn = arg;
                 break;
             case "speed":
@@ -136,9 +144,6 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                 break;
             case "course":
                 course = arg;
-                break;
-            case "heading":
-                heading = arg;
                 break;
             default:
                 super.set(property, arg);
@@ -149,8 +154,12 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void set(String property, int arg)
     {
+        allProperties.setProperty(property, Integer.toString(arg));
         switch (property)
         {
+            case "heading":
+                heading = arg;
+                break;
             case "altitude":
                 alt = arg;
                 break;
@@ -175,6 +184,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void set(String property, boolean arg)
     {
+        allProperties.setProperty(property, Boolean.toString(arg));
         switch (property)
         {
             case "positionAccuracy":
@@ -195,6 +205,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void set(String property, char arg)
     {
+        allProperties.setProperty(property, Character.toString(arg));
         switch (property)
         {
             case "channel":
@@ -206,6 +217,23 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
         }
     }
 
+    private Properties propertiesFor(String mmsi)
+    {
+        Properties p = new Properties();
+        Path dat = dir.resolve(mmsi+".dat");
+        if (Files.exists(dat))
+        {
+            try (Reader r = Files.newBufferedReader(dat))
+            {
+                p.load(r);
+            }
+            catch (IOException ex)
+            {
+                log(Level.SEVERE, ex, "loading %s", dat);
+            }
+        }
+        return p;
+    }
     @Override
     public void commit(String reason)
     {
@@ -215,31 +243,31 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
         }
         try
         {
-            String mmsi = properties.getProperty("mmsi");
-            if (mmsi != null)
+            String mmsiString = properties.getProperty("mmsi");
+            if (mmsiString != null)
             {
-                Path dat = dir.resolve(mmsi+".dat");
-                Path log = dir.resolve(mmsi+".log");
+                ZonedDateTime timestamp = ZonedDateTime.now(clock);
+                if (second != -1)
+                {
+                    timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
+                }
+                Integer mmsi = Integer.valueOf(mmsiString);
+                Path dat = dir.resolve(mmsiString+".dat");
+                Path log = dir.resolve(mmsiString+".log");
                 if (Files.exists(log) && Files.size(log) >= maxLogSize)
                 {
-                    Path tmp = Files.createTempFile(dir, mmsi, ".log");
+                    Path tmp = Files.createTempFile(dir, mmsiString, ".log");
                     Files.move(log, tmp, REPLACE_EXISTING);
                     Compressor compressor = new Compressor(tmp, log);
                     executor.submit(compressor);
                 }
+                AISMonitor.CacheEntry entry = cache.getEntry(mmsi);
                 Properties props = new Properties();
-                if (Files.exists(dat))
+                if (entry != null)
                 {
-                    try (Reader r = Files.newBufferedReader(dat))
-                    {
-                        props.load(r);
-                    }
-                    catch (IOException ex)
-                    {
-                        log(Level.SEVERE, ex, "loading %s", dat);
-                        return;
-                    }
+                    props.putAll(entry.getProperties());
                 }
+                cache.update(type, timestamp, allProperties, lat, lon, speed, course, turn);
                 if (update(props, properties))
                 {
                     try (BufferedWriter w = Files.newBufferedWriter(dat))
@@ -253,7 +281,6 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                     }
                 }
                 boolean logExists = Files.exists(log);
-                ZonedDateTime timestamp = ZonedDateTime.now(clock);
                 try (BufferedWriter w = Files.newBufferedWriter(log, CREATE, APPEND);
                         PrintWriter pw = new PrintWriter(w))
                 {
@@ -266,9 +293,9 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                             {
                                 pw.print("#Msg  Timestamp Location Course Speed Heading Turn Status Maneuver Channel\r\n");
                             }
-                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %.1f %.1f %s %s %c\r\n",
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %d %.1f %s %s %c\r\n",
                                     type.ordinal(),
-                                    TimestampSupport.adjustIntoSecond(timestamp, second),
+                                    timestamp,
                                     new Location(lat, lon),
                                     course,
                                     speed,
@@ -286,7 +313,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                             }
                             pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %d %c %b\r\n",
                                     type.ordinal(),
-                                    TimestampSupport.adjustIntoSecond(timestamp, second),
+                                    timestamp,
                                     new Location(lat, lon),
                                     course,
                                     speed,
@@ -299,14 +326,15 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                         case ExtendedClassBEquipmentPositionReport:
                             if (!logExists)
                             {
-                                pw.print("#Msg  Timestamp Location Course Speed Channel Assigned\r\n");
+                                pw.print("#Msg  Timestamp Location Course Speed Heading Channel Assigned\r\n");
                             }
-                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %c %b\r\n",
+                            pw.format(Locale.US, "Msg%d %s %s, %.1f %.1f %d %c %b\r\n",
                                     type.ordinal(),
-                                    TimestampSupport.adjustIntoSecond(timestamp, second),
+                                    timestamp,
                                     new Location(lat, lon),
                                     course,
                                     speed,
+                                    heading,
                                     channel,
                                     assignedMode
                                     );
@@ -345,13 +373,14 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
 
     private void reset()
     {
+        allProperties.clear();
         properties.clear();
         status = null;
         maneuver = null;
         type = null;
         alt = -1;
         repeat = -1;
-        second = 60;
+        second = -1;
         radio = 0;
         lat = 0;
         lon = 0;
