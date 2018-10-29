@@ -18,6 +18,7 @@ package org.vesalainen.nmea.processor;
 
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
@@ -65,7 +66,7 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 {
                     info("add AIS Log");
                     AisLogType type = (AisLogType) ob;
-                    AISLog aisLog = new AISLog(type, executor);
+                    AISLog aisLog = new AISLog(type, (ByteChannel) out, executor);
                     processes.add(aisLog);
                     addAISObserver(aisLog);
                     

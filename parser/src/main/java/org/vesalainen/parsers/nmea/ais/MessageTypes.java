@@ -138,8 +138,25 @@ public enum MessageTypes
         this.description = description;
     }
 
+    @Override
     public String toString()
     {
         return description;
+    }
+    
+    public boolean isPositionReport()
+    {
+        switch (this)
+        {
+            case PositionReportClassA:
+            case PositionReportClassAAssignedSchedule:
+            case PositionReportClassAResponseToInterrogation:
+            case StandardSARAircraftPositionReport:
+            case StandardClassBCSPositionReport:
+            case ExtendedClassBEquipmentPositionReport:
+                return true;
+            default:
+                return false;
+        }
     }
 }

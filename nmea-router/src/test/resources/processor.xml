@@ -7,6 +7,7 @@
         <compressedLog directory="c:\\temp" properties="latitude longitude"/>
         <ais-log directory="c:\\temp" maxLogSize="4096" />
         <route prefix="$UPMWV" target="Net"/>
+        <route prefix="!AI" target="TCP"/>
     </processor>
     <multicast-nmea-0183 name="Net" address="224.0.0.3" enable="true">
         <route prefix="$GPRMC" target="Proc TCP"/>

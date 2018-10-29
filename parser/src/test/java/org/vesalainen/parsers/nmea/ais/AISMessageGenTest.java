@@ -37,7 +37,7 @@ import static org.vesalainen.parsers.nmea.ais.NavigationStatus.UnderWaySailing;
 public class AISMessageGenTest
 {
     Properties properties = new Properties();
-    AISMonitor cache = new AISMonitor(null, Clock.systemUTC(), 100, TimeUnit.DAYS, (m)->new Properties());
+    AISMonitor cache = new AISMonitor(null, null, Clock.systemUTC(), 100, TimeUnit.DAYS, (m)->new Properties());
 
     public AISMessageGenTest() throws IOException
     {

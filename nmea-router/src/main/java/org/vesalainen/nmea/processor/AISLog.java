@@ -22,7 +22,9 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.FileChannel;
+import java.nio.channels.GatheringByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +41,7 @@ import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nio.channels.ChannelHelper;
 import org.vesalainen.nio.channels.GZIPChannel;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
+import org.vesalainen.nmea.jaxb.router.AisMonitorType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.ais.AISMonitor;
 import org.vesalainen.parsers.nmea.ais.AISProperties;
@@ -57,7 +60,8 @@ import org.vesalainen.util.navi.Location;
  */
 public class AISLog extends AbstractPropertySetter implements AttachedLogger, Stoppable
 {
-    private AISMonitor cache;
+    private AisLogType aisLogType;
+    private AISMonitor monitor;
     private CachedScheduledThreadPool executor;
     private Path dir;
     private long maxLogSize = 1024*1024;
@@ -82,9 +86,12 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private boolean raim;
     private boolean assignedMode;
     private char channel;
+    private final ByteChannel out;
     
-    AISLog(AisLogType type, CachedScheduledThreadPool executor)
+    AISLog(AisLogType type, ByteChannel channel, CachedScheduledThreadPool executor)
     {
+        this.aisLogType = type;
+        this.out = channel;
         this.executor = executor;
         String dirName = type.getDirectory();
         Objects.requireNonNull(dirName, "ais-log directory");
@@ -106,8 +113,26 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
         {
             case "clock":
                 clock = (Clock) arg;
-                cache = new AISMonitor(executor, clock, 15, TimeUnit.MINUTES, this::propertiesFor);
-                AISMonitor.setInstance(cache);
+                Long ttlMinutes = null;
+                Boolean refreshStaticData = null;
+                Long interpolateSeconds = null;
+                AisMonitorType aisMonitorType = aisLogType.getAisMonitor();
+                if (aisMonitorType != null)
+                {
+                    ttlMinutes = aisMonitorType.getTtlMinutes();
+                    refreshStaticData = aisMonitorType.isRefreshStaticData();
+                    interpolateSeconds = aisMonitorType.getInterpolateSeconds();
+                }
+                monitor = new AISMonitor(
+                        out, 
+                        executor, 
+                        clock, 
+                        ttlMinutes != null ? ttlMinutes.intValue() : 10, 
+                        refreshStaticData != null ? refreshStaticData : false, 
+                        interpolateSeconds != null ? interpolateSeconds.intValue() : -1, 
+                        this::propertiesFor
+                );
+                AISMonitor.setInstance(monitor);
                 break;
             case "messageType":
                 type = (MessageTypes) arg;
@@ -237,6 +262,13 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void commit(String reason)
     {
+        if (
+                "true".equals(allProperties.getProperty("ownMessage", "false")) &&
+                type.isPositionReport()
+                )
+        {
+            monitor.updateOwn(lat, lon, speed, course, turn);
+        }
         if (channel == 0)
         {
             return; // record only transmitted own messages
@@ -261,13 +293,13 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                     Compressor compressor = new Compressor(tmp, log);
                     executor.submit(compressor);
                 }
-                AISMonitor.CacheEntry entry = cache.getEntry(mmsi);
+                AISMonitor.CacheEntry entry = monitor.getEntry(mmsi);
                 Properties props = new Properties();
                 if (entry != null)
                 {
                     props.putAll(entry.getProperties());
                 }
-                cache.update(type, timestamp, allProperties, lat, lon, speed, course, turn);
+                monitor.update(type, timestamp, allProperties, lat, lon, speed, course, turn);
                 if (update(props, properties))
                 {
                     try (BufferedWriter w = Files.newBufferedWriter(dat))

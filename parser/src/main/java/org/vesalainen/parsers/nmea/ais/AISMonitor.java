@@ -18,8 +18,6 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.nio.channels.ByteChannel;
-import java.nio.channels.SocketChannel;
-import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Map;
@@ -28,9 +26,7 @@ import java.util.Properties;
 import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.vesalainen.navi.cpa.Vessel;
 import org.vesalainen.parsers.mmsi.MMSIEntry;
@@ -53,19 +49,40 @@ public class AISMonitor extends JavaLogging
 
     private CachedScheduledThreadPool executor;
     private Clock clock;
+    private boolean refreshStaticData;
+    private int interpolateSeconds;
     private TimeToLiveSet<Integer> ttlSet;
     private Map<Integer,CacheEntry> map = new WeakHashMap<>();
     private Function<String,Properties> loader;
+    private Vessel ownVessel;
+    private final ByteChannel channel;
 
-    public AISMonitor(CachedScheduledThreadPool executor, Clock clock, long timeout, TimeUnit unit, Function<String, Properties> loader)
+    public AISMonitor(ByteChannel channel, CachedScheduledThreadPool executor, Clock clock, long ttlMinutes, boolean refreshStaticData, int interpolateSeconds, Function<String, Properties> loader)
     {
         super(AISMonitor.class);
+        this.channel = channel;
         this.executor = executor;
         this.clock = clock;
-        this.ttlSet = new TimeToLiveSet<>(clock, timeout, unit);
+        this.refreshStaticData = refreshStaticData;
+        this.interpolateSeconds = interpolateSeconds;
+        this.ttlSet = new TimeToLiveSet<>(clock, ttlMinutes, TimeUnit.MINUTES);
         this.loader = loader;
     }
     
+    public void updateOwn(
+            double latitude, 
+            double longitude, 
+            double speed, 
+            double bearing, 
+            double rateOfTurn
+    )
+    {
+        if (ownVessel == null)
+        {
+            ownVessel = new Vessel();
+        }
+        ownVessel.update(clock.millis(), latitude, longitude, speed, bearing, rateOfTurn);
+    }
     public void update(
                 MessageTypes type, 
                 ZonedDateTime timestamp,
@@ -88,6 +105,10 @@ public class AISMonitor extends JavaLogging
                 entry = new CacheEntry();
                 map.put(mmsi, entry);
                 entry.update(loader.apply(mmsiString));
+                if (refreshStaticData)
+                {
+                    entry.sendStaticData(channel);
+                }
             }
             entry.update(properties);
             entry.update(type, timestamp, latitude, longitude, speed, bearing, rateOfTurn);
@@ -147,23 +168,9 @@ public class AISMonitor extends JavaLogging
         {
             if (vessel != null)
             {
-                ZonedDateTime zdt = ZonedDateTime.now(clock);
-                int second = zdt.getSecond();
-                long millis = clock.millis();
-                double estimatedLatitude = vessel.estimatedLatitude(millis);
-                double estimatedLongitude = vessel.estimatedLongitude(millis);
                 try 
                 {
-                    if (deviceClass == 'B')
-                    {
-                        NMEASentence[] msg18 = AISMessageGen.msg18(this, second, estimatedLatitude, estimatedLongitude);
-                        msg18[0].writeTo(channel);
-                    }
-                    else
-                    {
-                        NMEASentence[] msg1 = AISMessageGen.msg1(this, second, estimatedLatitude, estimatedLongitude);
-                        msg1[0].writeTo(channel);
-                    }
+                    sendPositionEstimate(channel);
                 }
                 catch (NoSuchElementException nse)
                 {
@@ -172,21 +179,7 @@ public class AISMonitor extends JavaLogging
             }
             try 
             {
-                if (deviceClass == 'B')
-                {
-                    NMEASentence[] msg24A = AISMessageGen.msg24A(this);
-                    msg24A[0].writeTo(channel);
-                    NMEASentence[] msg24B = AISMessageGen.msg24B(this);
-                    msg24B[0].writeTo(channel);
-                }
-                else
-                {
-                    NMEASentence[] msg5 = AISMessageGen.msg5(this);
-                    for (NMEASentence ns : msg5)
-                    {
-                        ns.writeTo(channel);
-                    }
-                }
+                sendStaticData(channel);
             }
             catch (NoSuchElementException nse)
             {
@@ -208,31 +201,22 @@ public class AISMonitor extends JavaLogging
         )
         {
             detectClass(type);
-            switch (type)
+            if (type.isPositionReport())
             {
-                case PositionReportClassA:
-                case PositionReportClassAAssignedSchedule:
-                case PositionReportClassAResponseToInterrogation:
-                case StandardSARAircraftPositionReport:
-                case StandardClassBCSPositionReport:
-                case ExtendedClassBEquipmentPositionReport:
-                    long millis = timestamp.toInstant().toEpochMilli(); // this is sync with second
-                    if (vessel == null)
-                    {
-                        vessel = new Vessel();
-                    }
-                    else
-                    {
-                        warning("delta %s", new Location(
-                                latitude-vessel.estimatedLatitude(millis),
-                                longitude-vessel.estimatedLongitude(millis)
-                                        )
-                                );
-                    }
-                    vessel.update(millis, latitude, longitude, speed, bearing, rateOfTurn);
-                    break;
-                default:
-                    break;
+                long millis = timestamp.toInstant().toEpochMilli(); // this is synced with second
+                if (vessel == null)
+                {
+                    vessel = new Vessel();
+                }
+                else
+                {
+                    warning("delta %s", new Location(
+                            latitude-vessel.estimatedLatitude(millis),
+                            longitude-vessel.estimatedLongitude(millis)
+                                    )
+                            );
+                }
+                vessel.update(millis, latitude, longitude, speed, bearing, rateOfTurn);
             }
         }
 
@@ -269,6 +253,63 @@ public class AISMonitor extends JavaLogging
                 case ExtendedClassBEquipmentPositionReport:
                     deviceClass = 'B';
                     break;
+            }
+        }
+
+        private void sendStaticData(ByteChannel ch)
+        {
+            try
+            {
+                if (properties.containsKey("vesselName"))   // has static data
+                {
+                    if (properties.containsKey("imoNumber"))    // is class A
+                    {
+                        NMEASentence[] msg5 = AISMessageGen.msg5(this);
+                        for (NMEASentence ns : msg5)
+                        {
+                            ns.writeTo(ch);
+                        }
+                    }
+                    else
+                    {
+                        NMEASentence[] msg24A = AISMessageGen.msg24A(this);
+                        msg24A[0].writeTo(channel);
+                        if (properties.containsKey("callSign"))
+                        {
+                            NMEASentence[] msg24B = AISMessageGen.msg24B(this);
+                            msg24B[0].writeTo(channel);
+                        }
+                    }
+                }
+            }
+            catch (IOException ex)
+            {
+                log(SEVERE, ex, "");
+            }
+        }
+
+        private void sendPositionEstimate(ByteChannel channel)
+        {
+            try
+            {
+                ZonedDateTime zdt = ZonedDateTime.now(clock);
+                int second = zdt.getSecond();
+                long millis = clock.millis();
+                Location estimatedLocation = vessel.estimatedLocation(millis);
+                if (deviceClass == 'B')
+                {
+                    NMEASentence[] msg18 = AISMessageGen.msg18(this, second, estimatedLocation.getLatitude(), estimatedLocation.getLongitude());
+                    msg18[0].writeTo(channel);
+                }
+                else
+                {
+                    NMEASentence[] msg1 = AISMessageGen.msg1(this, second, estimatedLocation.getLatitude(), estimatedLocation.getLongitude());
+                    msg1[0].writeTo(channel);
+                }
+            }
+            catch (IOException ex)
+            {
+                log(SEVERE, ex, "");
             }
         }
         
