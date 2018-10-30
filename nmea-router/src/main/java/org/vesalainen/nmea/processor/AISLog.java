@@ -275,20 +275,19 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
         }
         try
         {
-            String mmsiString = properties.getProperty("mmsi");
-            if (mmsiString != null)
+            String mmsi = properties.getProperty("mmsi");
+            if (mmsi != null)
             {
                 ZonedDateTime timestamp = ZonedDateTime.now(clock);
                 if (second != -1)
                 {
                     timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
                 }
-                Integer mmsi = Integer.valueOf(mmsiString);
-                Path dat = dir.resolve(mmsiString+".dat");
-                Path log = dir.resolve(mmsiString+".log");
+                Path dat = dir.resolve(mmsi+".dat");
+                Path log = dir.resolve(mmsi+".log");
                 if (Files.exists(log) && Files.size(log) >= maxLogSize)
                 {
-                    Path tmp = Files.createTempFile(dir, mmsiString, ".log");
+                    Path tmp = Files.createTempFile(dir, mmsi, ".log");
                     Files.move(log, tmp, REPLACE_EXISTING);
                     Compressor compressor = new Compressor(tmp, log);
                     executor.submit(compressor);
@@ -440,6 +439,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void stop()
     {
+        monitor.stop();
     }
 
     private boolean update(Properties stored, Properties received)

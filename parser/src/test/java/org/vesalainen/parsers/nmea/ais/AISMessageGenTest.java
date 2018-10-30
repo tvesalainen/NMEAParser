@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.parsers.nmea.NMEAParser;
@@ -37,7 +36,7 @@ import static org.vesalainen.parsers.nmea.ais.NavigationStatus.UnderWaySailing;
 public class AISMessageGenTest
 {
     Properties properties = new Properties();
-    AISMonitor cache = new AISMonitor(null, null, Clock.systemUTC(), 100, TimeUnit.DAYS, (m)->new Properties());
+    AISMonitor cache = new AISMonitor(null, null, Clock.systemUTC(), 100, true, 0, (m)->new Properties());
 
     public AISMessageGenTest() throws IOException
     {
@@ -49,7 +48,7 @@ public class AISMessageGenTest
     @Test
     public void testMsg1() throws IOException
     {
-        NMEASentence[] msg1 = AISMessageGen.msg1(cache.getEntry(230123250));
+        NMEASentence[] msg1 = AISMessageGen.msg1(cache.getEntry("230123250"));
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
         parser.parse(msg1[0].toString(), null, tc);
@@ -70,7 +69,7 @@ public class AISMessageGenTest
     @Test
     public void testMsg1_2() throws IOException
     {
-        NMEASentence[] msg1 = AISMessageGen.msg1(cache.getEntry(230123250), 33, -9, -140);
+        NMEASentence[] msg1 = AISMessageGen.msg1(cache.getEntry("230123250"), 33, -9, -140);
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
         parser.parse(msg1[0].toString(), null, tc);
@@ -91,7 +90,7 @@ public class AISMessageGenTest
     @Test
     public void testMsg5() throws IOException
     {
-        NMEASentence[] msg5 = AISMessageGen.msg5(cache.getEntry(230123250));
+        NMEASentence[] msg5 = AISMessageGen.msg5(cache.getEntry("230123250"));
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
         parser.parse(msg5[0].toString()+msg5[1].toString(), null, tc);
@@ -117,7 +116,7 @@ public class AISMessageGenTest
     @Test
     public void testMsg18() throws IOException
     {
-        NMEASentence[] msg18 = AISMessageGen.msg18(cache.getEntry(230123250));
+        NMEASentence[] msg18 = AISMessageGen.msg18(cache.getEntry("230123250"));
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
         parser.parse(msg18[0].toString(), null, tc);
@@ -141,7 +140,7 @@ public class AISMessageGenTest
     @Test
     public void testMsg18_2() throws IOException
     {
-        NMEASentence[] msg18 = AISMessageGen.msg18(cache.getEntry(230123250), 33, -9, -140);
+        NMEASentence[] msg18 = AISMessageGen.msg18(cache.getEntry("230123250"), 33, -9, -140);
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
         parser.parse(msg18[0].toString(), null, tc);
@@ -165,7 +164,7 @@ public class AISMessageGenTest
     @Test
     public void testMsg24A() throws IOException
     {
-        NMEASentence[] msg24A = AISMessageGen.msg24A(cache.getEntry(230123250));
+        NMEASentence[] msg24A = AISMessageGen.msg24A(cache.getEntry("230123250"));
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
         parser.parse(msg24A[0].toString(), null, tc);
@@ -176,7 +175,7 @@ public class AISMessageGenTest
     @Test
     public void testMsg24B() throws IOException
     {
-        NMEASentence[] msg24B = AISMessageGen.msg24B(cache.getEntry(230123250));
+        NMEASentence[] msg24B = AISMessageGen.msg24B(cache.getEntry("230123250"));
         NMEAParser parser = NMEAParser.newInstance();
         TC tc = new TC();
         parser.parse(msg24B[0].toString(), null, tc);

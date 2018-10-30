@@ -5,7 +5,9 @@
         <true-wind-source/>
         <tracker directory="c:\\temp" />
         <compressedLog directory="c:\\temp" properties="latitude longitude"/>
-        <ais-log directory="c:\\temp" maxLogSize="4096" />
+        <ais-log directory="c:\\temp" maxLogSize="4096" >
+            <ais-monitor refreshStaticData="true" interpolateSeconds="2" />
+        </ais-log>
         <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>
     </processor>

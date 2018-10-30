@@ -24,15 +24,18 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.WeakHashMap;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import static java.util.logging.Level.SEVERE;
 import java.util.stream.Stream;
 import org.vesalainen.navi.cpa.Vessel;
+import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.mmsi.MMSIEntry;
 import org.vesalainen.parsers.mmsi.MMSIParser;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEASentence;
+import org.vesalainen.util.TimeToLiveMap;
 import org.vesalainen.util.TimeToLiveSet;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
@@ -42,7 +45,7 @@ import org.vesalainen.util.navi.Location;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class AISMonitor extends JavaLogging
+public class AISMonitor extends JavaLogging implements Stoppable
 {
     private static AISMonitor MONITOR;
     private MMSIParser mmsiParser = MMSIParser.getInstance();
@@ -51,11 +54,11 @@ public class AISMonitor extends JavaLogging
     private Clock clock;
     private boolean refreshStaticData;
     private int interpolateSeconds;
-    private TimeToLiveSet<Integer> ttlSet;
-    private Map<Integer,CacheEntry> map = new WeakHashMap<>();
+    private TimeToLiveMap<String,CacheEntry> map;
     private Function<String,Properties> loader;
     private Vessel ownVessel;
     private final ByteChannel channel;
+    private ScheduledFuture<?> interpolatorFuture;
 
     public AISMonitor(ByteChannel channel, CachedScheduledThreadPool executor, Clock clock, long ttlMinutes, boolean refreshStaticData, int interpolateSeconds, Function<String, Properties> loader)
     {
@@ -65,8 +68,12 @@ public class AISMonitor extends JavaLogging
         this.clock = clock;
         this.refreshStaticData = refreshStaticData;
         this.interpolateSeconds = interpolateSeconds;
-        this.ttlSet = new TimeToLiveSet<>(clock, ttlMinutes, TimeUnit.MINUTES);
+        this.map = new TimeToLiveMap<>(clock, ttlMinutes, TimeUnit.MINUTES);
         this.loader = loader;
+        if (interpolateSeconds > 0)
+        {
+            interpolatorFuture = executor.scheduleWithFixedDelay(new Interpolator(), interpolateSeconds, interpolateSeconds, TimeUnit.SECONDS);
+        }
     }
     
     public void updateOwn(
@@ -94,17 +101,15 @@ public class AISMonitor extends JavaLogging
                 double rateOfTurn
     )
     {
-        String mmsiString = properties.getProperty("mmsi");
-        if (mmsiString != null)
+        String mmsi = properties.getProperty("mmsi");
+        if (mmsi != null)
         {
-            Integer mmsi = Integer.valueOf(mmsiString);
-            ttlSet.refresh(mmsi);
             CacheEntry entry = map.get(mmsi);
             if (entry == null)
             {
                 entry = new CacheEntry();
                 map.put(mmsi, entry);
-                entry.update(loader.apply(mmsiString));
+                entry.update(loader.apply(mmsi));
                 if (refreshStaticData)
                 {
                     entry.sendStaticData(channel);
@@ -114,21 +119,16 @@ public class AISMonitor extends JavaLogging
             entry.update(type, timestamp, latitude, longitude, speed, bearing, rateOfTurn);
         }
     }
-    public CacheEntry getEntry(Integer mmsi)
+    public CacheEntry getEntry(String mmsi)
     {
-        ttlSet.refresh(mmsi);
         CacheEntry entry = map.get(mmsi);
         if (entry == null)
         {
             entry = new CacheEntry();
             map.put(mmsi, entry);
-            entry.update(loader.apply(mmsi.toString()));
+            entry.update(loader.apply(mmsi));
         }
         return entry;
-    }
-    public Stream<CacheEntry> activeVessels()
-    {
-        return ttlSet.stream().map((k)->map.get(k));
     }
 
     public static AISMonitor getInstance()
@@ -153,6 +153,12 @@ public class AISMonitor extends JavaLogging
         FastBooter fastBooter = new FastBooter(channel);
         executor.submit(fastBooter);
     }    
+
+    @Override
+    public void stop()
+    {
+        interpolatorFuture.cancel(false);
+    }
     public class CacheEntry
     {
         private char deviceClass;
@@ -314,6 +320,30 @@ public class AISMonitor extends JavaLogging
         }
         
     }
+    private class Interpolator implements Runnable
+    {
+
+        @Override
+        public void run()
+        {
+            try
+            {
+                for (String mmsi : map.keySet())
+                {
+                    CacheEntry entry = map.get(mmsi);
+                    //if (!entry.isOwn())
+                    {
+                        entry.sendPositionEstimate(channel);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log(SEVERE, ex, "AIS interpolator failed");
+            }
+        }
+        
+    }
     private class FastBooter implements Runnable
     {
         private ByteChannel channel;
@@ -328,7 +358,7 @@ public class AISMonitor extends JavaLogging
         {
             try
             {
-                for (Integer mmsi : ttlSet)
+                for (String mmsi : map.keySet())
                 {
                     CacheEntry entry = map.get(mmsi);
                     //if (!entry.isOwn())
@@ -339,7 +369,7 @@ public class AISMonitor extends JavaLogging
             }
             catch (Exception ex)
             {
-                log(SEVERE, ex, "fast boot failed");
+                log(SEVERE, ex, "AIS fast boot failed");
             }
         }
         
