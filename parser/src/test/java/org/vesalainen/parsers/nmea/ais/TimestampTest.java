@@ -32,15 +32,13 @@ public class TimestampTest
     {
     }
 
-    /**
-     * Test of adjustIntoSecond method, of class TimestampSupport.
-     */
     @Test
     public void testAdjustIntoSecond()
     {
         ZonedDateTime zdt0 = ZonedDateTime.of(2018, 10, 23, 10, 11, 12, 0, ZoneId.of("Z"));
         ZonedDateTime zdt1 = ZonedDateTime.of(2018, 10, 23, 10, 11, 9, 0, ZoneId.of("Z"));
         ZonedDateTime zdt2 = ZonedDateTime.of(2018, 10, 23, 10, 10, 14, 0, ZoneId.of("Z"));
+        assertEquals(zdt0, TimestampSupport.adjustIntoSecond(zdt0, 12));
         assertEquals(zdt1, TimestampSupport.adjustIntoSecond(zdt0, 9));
         assertEquals(zdt2, TimestampSupport.adjustIntoSecond(zdt0, 14));
     }

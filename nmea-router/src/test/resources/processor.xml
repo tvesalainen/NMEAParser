@@ -4,7 +4,7 @@
     <processor name="Proc" enable="true">
         <true-wind-source/>
         <tracker directory="c:\\temp" />
-        <compressedLog directory="c:\\temp" properties="latitude longitude"/>
+        <compressed-log directory="c:\\temp" properties="latitude longitude"/>
         <ais-log directory="c:\\temp" maxLogSize="4096" >
             <ais-monitor refreshStaticData="true" interpolateSeconds="2" />
         </ais-log>
@@ -15,5 +15,18 @@
         <route prefix="$GPRMC" target="Proc TCP"/>
         <route prefix="$IIMWV" target="Proc"/>
         <route prefix="!AI" target="Proc"/>
+        <route prefix="$YXXDR" target=""/>
+        <route prefix="$GPGLL" target=""/>
+        <route prefix="$GPRMB" target=""/>
+        <route prefix="$GPGGA" target=""/>
+        <route prefix="$GPZDA" target=""/>
+        <route prefix="$GPVTG" target=""/>
+        <route prefix="$GPDTM" target=""/>
+        <route prefix="$HC" target=""/>
+        <route prefix="$TIROT" target=""/>
+        <route prefix="$AG" target=""/>
+        <route prefix="$VH" target=""/>
+        <route prefix="$YC" target=""/>
+        <route prefix="$VW" target=""/>
     </multicast-nmea-0183>
 </nmea>

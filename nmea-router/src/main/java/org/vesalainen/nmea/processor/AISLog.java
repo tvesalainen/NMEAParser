@@ -24,7 +24,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.FileChannel;
-import java.nio.channels.GatheringByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,7 +35,6 @@ import java.time.ZonedDateTime;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nio.channels.ChannelHelper;
@@ -86,9 +85,9 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private boolean raim;
     private boolean assignedMode;
     private char channel;
-    private final ByteChannel out;
+    private final WritableByteChannel out;
     
-    AISLog(AisLogType type, ByteChannel channel, CachedScheduledThreadPool executor)
+    AISLog(AisLogType type, WritableByteChannel channel, CachedScheduledThreadPool executor)
     {
         this.aisLogType = type;
         this.out = channel;
@@ -279,9 +278,10 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
             if (mmsi != null)
             {
                 ZonedDateTime timestamp = ZonedDateTime.now(clock);
+                info("%s %d", timestamp, second);
                 if (second != -1)
                 {
-                    timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
+                    //timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
                 }
                 Path dat = dir.resolve(mmsi+".dat");
                 Path log = dir.resolve(mmsi+".log");

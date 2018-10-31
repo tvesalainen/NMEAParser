@@ -18,6 +18,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.nio.channels.ByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Map;
@@ -57,10 +58,10 @@ public class AISMonitor extends JavaLogging implements Stoppable
     private TimeToLiveMap<String,CacheEntry> map;
     private Function<String,Properties> loader;
     private Vessel ownVessel;
-    private final ByteChannel channel;
+    private final WritableByteChannel channel;
     private ScheduledFuture<?> interpolatorFuture;
 
-    public AISMonitor(ByteChannel channel, CachedScheduledThreadPool executor, Clock clock, long ttlMinutes, boolean refreshStaticData, int interpolateSeconds, Function<String, Properties> loader)
+    public AISMonitor(WritableByteChannel channel, CachedScheduledThreadPool executor, Clock clock, long ttlMinutes, boolean refreshStaticData, int interpolateSeconds, Function<String, Properties> loader)
     {
         super(AISMonitor.class);
         this.channel = channel;
@@ -262,7 +263,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
             }
         }
 
-        private void sendStaticData(ByteChannel ch)
+        private void sendStaticData(WritableByteChannel ch)
         {
             try
             {
@@ -294,7 +295,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
             }
         }
 
-        private void sendPositionEstimate(ByteChannel channel)
+        private void sendPositionEstimate(WritableByteChannel channel)
         {
             try
             {

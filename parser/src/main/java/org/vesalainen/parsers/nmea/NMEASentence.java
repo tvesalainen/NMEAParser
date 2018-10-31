@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Locale;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
@@ -255,7 +256,7 @@ public class NMEASentence
     {
         out.append(seq);
     }
-    public void writeTo(ByteChannel channel) throws IOException
+    public void writeTo(WritableByteChannel channel) throws IOException
     {
         channel.write(buffer);
         buffer.flip();
