@@ -2388,7 +2388,7 @@ is the message header format:
 [frame="topbot",options="header"]
 |==============================================================================
 |Field   |Len |Description          |Member     |T|Units
-|0-5     |  6 |Message Type         |type       |u|Constant: 6
+|0-5     |  6 |Message Type         |type       |u|Constant: 8
 |6-7     |  2 |Repeat Indicator     |repeat     |u|As in Common Navigation Block
 |8-37    | 30 |Source MMSI          |mmsi       |u|9 decimal digits
 |38-39   |  2 |Spare                |seqno      |u|Not used
