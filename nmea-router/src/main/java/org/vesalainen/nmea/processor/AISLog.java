@@ -107,6 +107,12 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void set(String property, Object arg)
     {
+        Enum en = null;
+        if (arg instanceof Enum)
+        {
+            en = (Enum) arg;
+            arg = en.name();
+        }
         allProperties.setProperty(property, arg.toString());
         switch (property)
         {
@@ -134,13 +140,13 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                 AISMonitor.setInstance(monitor);
                 break;
             case "messageType":
-                type = (MessageTypes) arg;
+                type = (MessageTypes) en;
                 break;
-            case "status":
-                status = (NavigationStatus) arg;
+            case "navigationStatus":
+                status = (NavigationStatus) en;
                 break;
             case "maneuver":
-                maneuver = (ManeuverIndicator) arg;
+                maneuver = (ManeuverIndicator) en;
                 break;
             default:
                 super.set(property, arg);
@@ -332,8 +338,8 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                                     speed,
                                     heading,
                                     turn,
-                                    status,
-                                    maneuver,
+                                    status.name(),
+                                    maneuver.name(),
                                     channel
                                     );
                             break;
@@ -427,6 +433,11 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     protected void setProperty(String property, Object arg)
     {
+        if (arg instanceof Enum)
+        {
+            Enum e = (Enum) arg;
+            arg = e.name();
+        }
         properties.setProperty(property, arg.toString());
     }
 

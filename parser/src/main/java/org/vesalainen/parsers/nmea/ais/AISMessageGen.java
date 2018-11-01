@@ -16,12 +16,15 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.ais.AISMonitor.CacheEntry;
 import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
+import org.vesalainen.util.navi.Location;
 
 /**
  *
@@ -84,6 +87,59 @@ public class AISMessageGen
                 .bool("dte", true)
                 .spare(1)
                 .build();
+    }
+    /**
+     * As of now of no use!!!
+     * @param mmsi
+     * @param linkage
+     * @param notice
+     * @param date
+     * @param duration
+     * @param location
+     * @param radius
+     * @return 
+     */
+    public static NMEASentence[] msg8AreaNoticeCircle(
+            int mmsi,
+            int linkage,
+            AreaNoticeDescription notice,
+            ZonedDateTime date,
+            Duration duration,
+            Location location,
+            int radius
+    )
+    {
+        return msg8AreaNoticeHeader(mmsi, linkage, notice, date, duration)
+                .integer(3, 0)
+                .integer(2, 1)
+                .integer(25, (int)(60000*location.getLongitude()))
+                .integer(24, (int)(60000*location.getLatitude()))
+                .integer(3, 4)
+                .integer(12, radius)
+                .spare(18)
+                .build();
+                
+    }
+    private static Bldr msg8AreaNoticeHeader(
+            int mmsi,
+            int linkage,
+            AreaNoticeDescription notice,
+            ZonedDateTime date,
+            Duration duration
+    )
+    {
+        return new Bldr(BinaryBroadcastMessage, mmsi)
+                .spare(2)
+                .integer(10, 1) // DAC
+                .integer(6, 22) // FID
+                .integer(10, linkage)
+                .integer(7, notice.ordinal())
+                .integer(4, date.getMonthValue())
+                .integer(5, date.getDayOfMonth())
+                .integer(5, date.getHour())
+                .integer(6, date.getMinute())
+                .integer(18, duration != null ? (int)duration.toMinutes() : 262143)
+                ;
     }
     public static NMEASentence[] msg18(CacheEntry entry)
     {
@@ -175,6 +231,11 @@ public class AISMessageGen
             int mmsi = getMMSI(properties);
             this.builder = new AISBuilder(type, mmsi);
             this.properties = properties;
+        }
+
+        private Bldr(MessageTypes type, int mmsi)
+        {
+            this.builder = new AISBuilder(type, mmsi);
         }
 
         public NMEASentence build1()

@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
@@ -572,6 +573,27 @@ public class MessageTest
         catch (Exception ex)
         {
             fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void type8DAC1FID22() throws IOException
+    {
+        String[] nmeas = new String[] {
+            "!AIVDM,1,1,,A,80000000EP1DF4LH008L7q67hw4<0:000,0*26\r\n"
+        };
+        for (String nmea : nmeas)
+        {
+            System.err.println(nmea);
+            AISContentHelper ach = new AISContentHelper(nmea);
+            TC tc = new TC();
+            parser.parse(nmea, null, tc);
+            assertNull(tc.rollbackReason);
+            assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
+            assertEquals(ach.getUInt(8, 38), tc.mmsi);
+            assertEquals(ach.getUInt(40, 50), tc.dac);
+            assertEquals(ach.getUInt(50, 56), tc.fid);
+            assertEquals(1, tc.dac);
+            assertEquals(22, tc.fid);
         }
     }
     @Test
