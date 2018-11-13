@@ -54,6 +54,7 @@
                     <xsd:element name="sntp-multicaster" type="sntp-multicasterType"/>
                     <xsd:element name="sntp-server" type="sntp-serverType"/>
                     <xsd:element name="time-setter" type="timeSetterType"/>
+                    <xsd:element name="compass-corrector" type="compassCorrectorType"/>
                 </xsd:choice>
             </xsd:extension>
         </xsd:complexContent>
@@ -183,6 +184,9 @@
         <xsd:attribute name="pollInterval" type="pollIntervalType"/>
     </xsd:complexType>
     <xsd:complexType name="sntp-serverType">
+    </xsd:complexType>
+    <xsd:complexType name="compassCorrectorType">
+        <xsd:attribute name="directory" type="xsd:string" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="variation-sourceType">
         <xsd:attribute name="period" type="millisType"/>

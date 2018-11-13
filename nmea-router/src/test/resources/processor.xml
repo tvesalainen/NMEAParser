@@ -8,6 +8,7 @@
         <ais-log directory="c:\\temp" maxLogSize="4096" >
             <ais-monitor refreshStaticData="true" interpolateSeconds="2" />
         </ais-log>
+        <compass-corrector directory="c:\\temp" />
         <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>
     </processor>
@@ -22,11 +23,12 @@
         <route prefix="$GPZDA" target=""/>
         <route prefix="$GPVTG" target=""/>
         <route prefix="$GPDTM" target=""/>
-        <route prefix="$HC" target=""/>
+        <route prefix="$HC" target="Proc"/>
         <route prefix="$TIROT" target=""/>
         <route prefix="$AG" target=""/>
         <route prefix="$VH" target=""/>
         <route prefix="$YC" target=""/>
         <route prefix="$VW" target=""/>
+        <route prefix="$DB" target=""/>
     </multicast-nmea-0183>
 </nmea>

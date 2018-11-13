@@ -18,13 +18,13 @@ package org.vesalainen.nmea.processor;
 
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
+import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
@@ -62,6 +62,16 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
         {
             for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
             {
+                if (ob instanceof CompassCorrectorType)
+                {
+                    info("add AIS Log");
+                    CompassCorrectorType type = (CompassCorrectorType) ob;
+                    CompassCorrector compassCorrector = new CompassCorrector(type, out);
+                    processes.add(compassCorrector);
+                    addNMEAObserver(compassCorrector);
+                    
+                    continue;
+                }
                 if (ob instanceof AisLogType)
                 {
                     info("add AIS Log");
