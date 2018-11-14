@@ -33,6 +33,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.vesalainen.navi.Navis;
 import static org.vesalainen.navi.Navis.bearing;
+import org.vesalainen.util.DoubleMap;
+import org.vesalainen.util.DoubleReference;
 import org.vesalainen.util.FloatMap;
 import org.vesalainen.util.FloatReference;
 import org.vesalainen.util.Recycler;
@@ -133,11 +135,11 @@ public class NMEAFilters
     }
     private static class AccumulatorMap implements UnaryOperator<NMEASample>
     {
-        private FloatMap<String> map = new FloatMap<>();
+        private DoubleMap<String> map = new DoubleMap<>();
         @Override
         public NMEASample apply(NMEASample t)
         {
-            map.entrySet().stream().filter((e) -> (!t.hasProperty(e.getKey()))).forEach((Entry<String, FloatReference> e) ->
+            map.entrySet().stream().filter((e) -> (!t.hasProperty(e.getKey()))).forEach((Entry<String, DoubleReference> e) ->
             {
                 t.setProperty(e.getKey(), e.getValue().getValue());
             });
@@ -491,7 +493,7 @@ public class NMEAFilters
         {
             if (t.hasProperty(property))
             {
-                float value = t.getProperty(property);
+                double value = t.getProperty(property);
                 if (value >= min && value <= max)
                 {
                     return true;

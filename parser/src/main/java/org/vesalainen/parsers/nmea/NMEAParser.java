@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import org.vesalainen.lang.Primitives;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
 import static org.vesalainen.parser.ParserFeature.*;
@@ -43,6 +44,7 @@ import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
 import org.vesalainen.parsers.nmea.time.GPSClock;
+import org.vesalainen.util.CharSequences;
 
 /**
  * @author Timo Vesalainen
@@ -1387,9 +1389,9 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
 
     @Rule("coordinate c ns c coordinate c ew")
     protected void location(
-            float latitude,
+            double latitude,
             int ns,
-            float longitude,
+            double longitude,
             int ew,
             @ParserContext("data") NMEAObserver data)
     {
@@ -1399,9 +1401,9 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
 
     @Rule("coordinate c ns c coordinate c ew")
     protected void destinationWaypointLocation(
-            float latitude,
+            double latitude,
             int ns,
-            float longitude,
+            double longitude,
             int ew,
             @ParserContext("data") NMEAObserver data)
     {
@@ -1455,12 +1457,17 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
     }
 
     @Terminal(expression = "[0-9]+\\.[0-9]+")
-    protected float coordinate(double lat)
+    protected double coordinate(CharSequence seq)
     {
-        double degrees = Math.floor(lat / 100);
-        double minutes = lat - 100.0 * degrees;
+        int ipnt = CharSequences.indexOf(seq, '.');
+        if (ipnt == -1)
+        {
+            throw new IllegalArgumentException(seq+" illegal coordinate");
+        }
+        double degrees = Primitives.parseDouble(seq, 0, ipnt-2);
+        double minutes = Primitives.parseDouble(seq, ipnt-2, seq.length());
         double latitude = degrees + minutes / 60.0;
-        return (float) latitude;
+        return latitude;
     }
 
     @Terminal(expression = "[NS]")

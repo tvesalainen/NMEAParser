@@ -23,7 +23,7 @@ package org.vesalainen.nmea.util;
 public class TrackPoint
 {
     public long time;
-    public float latitude;
-    public float longitude;
+    public double latitude;
+    public double longitude;
     
 }

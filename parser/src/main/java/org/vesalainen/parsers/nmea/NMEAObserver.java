@@ -60,21 +60,20 @@ public interface NMEAObserver extends Transactional
      * @param talkerId 
      */
     public void setTalkerId(TalkerId talkerId);
-
     /**
      * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
      */
     @NMEACat(Coordinate)
     @Unit(value=DegMin, min=-90, max=90)
-    void setLatitude(float latitude);
+    void setLatitude(double latitude);
     /**
      * Longitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param longitude Longitude West is negative.
      */
     @NMEACat(Coordinate)
     @Unit(value=DegMin, min=-180, max=180)
-    void setLongitude(float longitude);
+    void setLongitude(double longitude);
     /**
      * RMA, RMC
      * @param knots 
@@ -122,14 +121,14 @@ public interface NMEAObserver extends Transactional
      */
     @NMEACat(Waypoint)
     @Unit(value=DegMin, min=-90, max=90)
-    void setDestinationWaypointLatitude(float latitude);
+    void setDestinationWaypointLatitude(double latitude);
     /**
      * RMB, WPL
      * @param longitude 
      */
     @NMEACat(Waypoint)
     @Unit(value=DegMin, min=-180, max=180)
-    void setDestinationWaypointLongitude(float longitude);
+    void setDestinationWaypointLongitude(double longitude);
     /**
      * RMB
      * @param nm 

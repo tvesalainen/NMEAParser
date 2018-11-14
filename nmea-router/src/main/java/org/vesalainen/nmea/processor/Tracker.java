@@ -141,9 +141,9 @@ public class Tracker extends AbstractSampleConsumer implements AutoCloseable
     @Override
     protected void process(NMEASample sample)
     {
-        output(sample.getTime(), sample.getProperty("latitude"), sample.getProperty("longitude"));
+        output(sample.getTime(), sample.getLatitude(), sample.getLongitude());
     }
-    public void output(long time, float latitude, float longitude)
+    public void output(long time, double latitude, double longitude)
     {
         active = true;
         count++;

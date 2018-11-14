@@ -72,7 +72,16 @@ public class SimpleStorage implements InvocationHandler
         Float f = (Float) ob;
         return f.floatValue();
     }
-
+    public double getDouble(String property)
+    {
+        Object ob = map.get(property);
+        if (ob == null)
+        {
+            return Double.NaN;
+        }
+        Double d = (Double) ob;
+        return d.doubleValue();
+    }
     public String getCommitReason()
     {
         return commitReason;

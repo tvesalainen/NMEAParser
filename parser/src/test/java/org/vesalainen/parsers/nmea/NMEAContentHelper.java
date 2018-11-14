@@ -116,12 +116,12 @@ public class NMEAContentHelper
         return Float.parseFloat(f);
     }
     
-    public float getDegree(int index)
+    public double getDegree(int index)
     {
         String f = fields[index];
         if (f.isEmpty())
         {
-            return Float.NaN;
+            return Double.NaN;
         }
         String s = fields[index+1];
         int sign;
@@ -139,8 +139,8 @@ public class NMEAContentHelper
                 throw new IllegalArgumentException("got '"+s+"' expected N/S/E/W");
         }
         int idx = f.indexOf('.')-2;
-        float deg = Float.parseFloat(f.substring(0, idx));
-        float min = Float.parseFloat(f.substring(idx));
+        double deg = Double.parseDouble(f.substring(0, idx));
+        double min = Double.parseDouble(f.substring(idx));
         return sign*(deg+min/60F);
     }
 

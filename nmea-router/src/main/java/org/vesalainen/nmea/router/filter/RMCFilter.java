@@ -24,8 +24,8 @@ import org.vesalainen.lang.Primitives;
  */
 public class RMCFilter extends AbstractNMEAFilter
 {
-    private float latitude = Float.NaN;
-    private float longitude = Float.NaN;
+    private double latitude = Double.NaN;
+    private double longitude = Double.NaN;
     private float value;
     private int count;
     private int prevTime;
@@ -33,8 +33,8 @@ public class RMCFilter extends AbstractNMEAFilter
     
     private void reset()
     {
-        latitude = Float.NaN;
-        longitude = Float.NaN;
+        latitude = Double.NaN;
+        longitude = Double.NaN;
         value = 0;
         count = 0;
     }
@@ -74,7 +74,7 @@ public class RMCFilter extends AbstractNMEAFilter
                         log.warning("rejected got %c expected N/S", cs.charAt(begin));
                         return Cond.Reject;
                 }
-                if (!Float.isNaN(latitude))
+                if (!Double.isNaN(latitude))
                 {
                     if (Math.abs(latitude-value) > 0.1)
                     {
@@ -101,7 +101,7 @@ public class RMCFilter extends AbstractNMEAFilter
                         log.warning("rejected got %c expected E/W", cs.charAt(begin));
                         return Cond.Reject;
                 }
-                if (!Float.isNaN(longitude))
+                if (!Double.isNaN(longitude))
                 {
                     if (Math.abs(longitude-value) > 0.1)
                     {

@@ -182,6 +182,15 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
     }
 
     @Override
+    public void set(String property, double arg)
+    {
+        if (sample != null)
+        {
+            sample.setProperty(property, arg);
+        }
+    }
+
+    @Override
     public final String[] getPrefixes()
     {
         return properties.toArray(new String[properties.size()]);

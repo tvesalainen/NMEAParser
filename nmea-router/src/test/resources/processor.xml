@@ -24,11 +24,11 @@
         <route prefix="$GPVTG" target=""/>
         <route prefix="$GPDTM" target=""/>
         <route prefix="$HC" target="Proc"/>
-        <route prefix="$TIROT" target=""/>
+        <route prefix="$TIROT" target="Proc"/>
         <route prefix="$AG" target=""/>
         <route prefix="$VH" target=""/>
         <route prefix="$YC" target=""/>
         <route prefix="$VW" target=""/>
-        <route prefix="$DB" target=""/>
+        <route prefix="$SD" target=""/>
     </multicast-nmea-0183>
 </nmea>

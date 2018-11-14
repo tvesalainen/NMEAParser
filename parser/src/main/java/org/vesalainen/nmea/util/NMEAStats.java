@@ -137,10 +137,10 @@ public class NMEAStats
     }
     public static class PropertyStats
     {
-        private float min = Float.POSITIVE_INFINITY;
-        private float max = Float.NEGATIVE_INFINITY;
+        private double min = Double.POSITIVE_INFINITY;
+        private double max = Double.NEGATIVE_INFINITY;
 
-        public void update(float value)
+        public void update(double value)
         {
             min = Math.min(min, value);
             max = Math.max(max, value);

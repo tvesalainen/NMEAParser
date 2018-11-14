@@ -296,19 +296,23 @@ public class AISMonitor extends JavaLogging implements Stoppable
         {
             try
             {
-                ZonedDateTime zdt = ZonedDateTime.now(clock);
-                int second = zdt.getSecond();
-                long millis = clock.millis();
-                Location estimatedLocation = vessel.estimatedLocation(millis);
-                if (deviceClass == 'B')
+                if (vessel != null)
                 {
-                    NMEASentence[] msg18 = AISMessageGen.msg18(this, second, estimatedLocation.getLatitude(), estimatedLocation.getLongitude());
-                    msg18[0].writeTo(channel);
-                }
-                else
-                {
-                    NMEASentence[] msg1 = AISMessageGen.msg1(this, second, estimatedLocation.getLatitude(), estimatedLocation.getLongitude());
-                    msg1[0].writeTo(channel);
+                    ZonedDateTime zdt = ZonedDateTime.now(clock);
+                    int second = zdt.getSecond();
+                    long millis = clock.millis();
+                    Location estimatedLocation = vessel.estimatedLocation(millis);
+                    if (deviceClass == 'B')
+                    {
+                        info("%s", properties);
+                        NMEASentence[] msg18 = AISMessageGen.msg18(this, second, estimatedLocation.getLatitude(), estimatedLocation.getLongitude());
+                        msg18[0].writeTo(channel);
+                    }
+                    else
+                    {
+                        NMEASentence[] msg1 = AISMessageGen.msg1(this, second, estimatedLocation.getLatitude(), estimatedLocation.getLongitude());
+                        msg1[0].writeTo(channel);
+                    }
                 }
             }
             catch (IOException ex)
@@ -329,7 +333,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
                 for (String mmsi : map.keySet())
                 {
                     CacheEntry entry = map.get(mmsi);
-                    //if (!entry.isOwn())
+                    if (!entry.isOwn())
                     {
                         entry.sendPositionEstimate(channel);
                     }
@@ -359,7 +363,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
                 for (String mmsi : map.keySet())
                 {
                     CacheEntry entry = map.get(mmsi);
-                    //if (!entry.isOwn())
+                    if (!entry.isOwn())
                     {
                         entry.fastBoot(channel);
                     }

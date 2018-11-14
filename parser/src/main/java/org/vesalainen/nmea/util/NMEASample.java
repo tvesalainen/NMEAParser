@@ -25,6 +25,8 @@ import org.vesalainen.lang.Primitives;
 import org.vesalainen.navi.WayPoint;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.TalkerId;
+import org.vesalainen.util.DoubleMap;
+import org.vesalainen.util.DoubleReference;
 import org.vesalainen.util.FloatMap;
 import org.vesalainen.util.FloatReference;
 
@@ -37,7 +39,7 @@ public class NMEASample implements Comparable<NMEASample>, WayPoint
     private long time;
     private TalkerId talkerId;
     private MessageType messageType;
-    private FloatMap<String> map = new FloatMap<>();
+    private DoubleMap<String> map = new DoubleMap<>();
     private Object origin;
 
     public Set<String> getProperties()
@@ -45,12 +47,12 @@ public class NMEASample implements Comparable<NMEASample>, WayPoint
         return map.keySet();
     }
 
-    public FloatMap<String> getMap()
+    public DoubleMap<String> getMap()
     {
         return map;
     }
     
-    public NMEASample setProperty(String property, float value)
+    public NMEASample setProperty(String property, double value)
     {
         map.put(property, value);
         return this;
@@ -65,9 +67,9 @@ public class NMEASample implements Comparable<NMEASample>, WayPoint
         return map.containsKey(property);
     }
     
-    public float getProperty(String property)
+    public double getProperty(String property)
     {
-        return map.getFloat(property);
+        return map.getDouble(property);
     }
     @Override
     public long getTime()
@@ -126,7 +128,7 @@ public class NMEASample implements Comparable<NMEASample>, WayPoint
         sb.append("[time=");
         ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneOffset.UTC);
         sb.append(zdt);
-        for (Entry<String,FloatReference> e : map.entrySet())
+        for (Entry<String,DoubleReference> e : map.entrySet())
         {
             sb.append(", ");
             sb.append(e.getKey());
@@ -152,13 +154,13 @@ public class NMEASample implements Comparable<NMEASample>, WayPoint
     @Override
     public double getLatitude()
     {
-        return map.getFloat("latitude");
+        return map.getDouble("latitude");
     }
 
     @Override
     public double getLongitude()
     {
-        return map.getFloat("longitude");
+        return map.getDouble("longitude");
     }
     
 }

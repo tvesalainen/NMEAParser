@@ -41,17 +41,18 @@ import org.vesalainen.util.logging.AttachedLogger;
  */
 public class CompassCorrector extends AbstractPropertySetter implements AttachedLogger, Stoppable
 {
-    private String[] prefixes = new String[]{"clock", "messageType", "latitude", "longitude", "trueHeading", "speedOverGround", "trackMadeGood", "magneticVariation"};
+    private String[] prefixes = new String[]{"clock", "messageType", "latitude", "longitude", "trueHeading", "speedOverGround", "trackMadeGood", "rateOfTurn", "magneticVariation"};
     private Clock clock = Clock.systemUTC();
     private Path store;
     private boolean furuno;
     private Vessel furunoGPS;
     private Vessel aisGPS;
-    private float latitude;
-    private float longitude;
+    private double latitude;
+    private double longitude;
     private float trueHeading;
     private float speedOverGround;
     private float trackMadeGood;
+    private float rateOfTurn;
     private MessageType messageType;
     private Angle[] corTab;
     private int count;
@@ -59,13 +60,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     public CompassCorrector(CompassCorrectorType type, WritableByteChannel out)
     {
         Path dir = Paths.get(type.getDirectory());
-        this.store = dir.resolve("compass-corrector.dat");
-    }
-
-    @Override
-    public void start(String reason)
-    {
-        super.start(reason);
+        this.store = dir.resolve("compass-corrector.csv");
         corTab = new Angle[360];
         if (Files.exists(store))
         {
@@ -105,7 +100,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
                         {
                             furunoGPS = new Vessel();
                         }
-                        furunoGPS.update(clock.millis(), latitude, longitude, speedOverGround, trackMadeGood, 0);
+                        furunoGPS.update(clock.millis(), latitude, longitude, speedOverGround, trackMadeGood, rateOfTurn);
                     }
                     else
                     {
@@ -113,7 +108,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
                         {
                             aisGPS = new Vessel();
                         }
-                        aisGPS.update(clock.millis(), latitude, longitude, speedOverGround, trackMadeGood, 0);
+                        aisGPS.update(clock.millis(), latitude, longitude, speedOverGround, trackMadeGood, rateOfTurn);
                     }
                     break;
                 case HDT:
@@ -141,7 +136,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     {
         try
         {
-            try (BufferedWriter bw = Files.newBufferedWriter(store, CREATE, WRITE))
+            try (BufferedWriter bw = Files.newBufferedWriter(store, CREATE, WRITE, TRUNCATE_EXISTING))
             {
                 for (Angle a : corTab)
                 {
@@ -163,7 +158,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     }
 
     @Override
-    public void set(String property, float arg)
+    public void set(String property, double arg)
     {
         switch (property)
         {
@@ -173,6 +168,14 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
             case "longitude":
                 longitude = arg;
                 break;
+        }
+    }
+
+    @Override
+    public void set(String property, float arg)
+    {
+        switch (property)
+        {
             case "trueHeading":
                 trueHeading = arg;
                 break;
@@ -181,6 +184,9 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
                 break;
             case "trackMadeGood":
                 trackMadeGood = arg;
+                break;
+            case "rateOfTurn":
+                rateOfTurn = arg;
                 break;
             case "magneticVariation":
                 furuno = true;
@@ -228,7 +234,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         public Angle(String line)
         {
             String[] split = line.split(",");
-            if (split.length != 4)
+            if (split.length < 4)
             {
                 throw new IllegalArgumentException(line);
             }
@@ -241,7 +247,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         public void add(double lat1, double lon1, double lat2, double lon2)
         {
             double radians = Navis.radBearing(lat1, lon1, lat2, lon2);
-            sin += Math.sin(radians);
+                sin += Math.sin(radians);
             cos += Math.cos(radians);
             cnt++;
         }
@@ -304,7 +310,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         @Override
         public String toString()
         {
-            return String.format(Locale.US, "%d,%.20g,%.20g,%d", angle, sin, cos, cnt);
+            return String.format(Locale.US, "%d,%.20g,%.20g,%d,%.1f", angle, sin, cos, cnt, angle());
         }
         
     }

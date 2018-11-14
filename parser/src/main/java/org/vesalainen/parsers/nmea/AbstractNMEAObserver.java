@@ -93,18 +93,6 @@ public class AbstractNMEAObserver implements NMEAObserver
 
 
     @Override
-    public void setLatitude(float latitude)
-    {
-        
-    }
-
-    @Override
-    public void setLongitude(float longitude)
-    {
-        
-    }
-
-    @Override
     public void setSpeedOverGround(float speedOverGround)
     {
         
@@ -124,18 +112,6 @@ public class AbstractNMEAObserver implements NMEAObserver
 
     @Override
     public void setCrossTrackError(float crossTrackError)
-    {
-        
-    }
-
-    @Override
-    public void setDestinationWaypointLatitude(float latitude)
-    {
-        
-    }
-
-    @Override
-    public void setDestinationWaypointLongitude(float longitude)
     {
         
     }
@@ -806,6 +782,26 @@ public class AbstractNMEAObserver implements NMEAObserver
 
     @Override
     public void setOrigin(Object origin)
+    {
+    }
+
+    @Override
+    public void setLatitude(double latitude)
+    {
+    }
+
+    @Override
+    public void setLongitude(double longitude)
+    {
+    }
+
+    @Override
+    public void setDestinationWaypointLatitude(double latitude)
+    {
+    }
+
+    @Override
+    public void setDestinationWaypointLongitude(double longitude)
     {
     }
 

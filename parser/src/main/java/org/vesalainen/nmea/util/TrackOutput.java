@@ -63,7 +63,7 @@ public class TrackOutput extends JavaLogging implements AutoCloseable
         this.format = format;
     }
 
-    public void output(long time, float latitude, float longitude) throws IOException
+    public void output(long time, double latitude, double longitude) throws IOException
     {
         if (!open)
         {

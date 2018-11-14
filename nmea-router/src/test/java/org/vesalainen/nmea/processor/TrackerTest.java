@@ -82,7 +82,7 @@ public class TrackerTest
                 Stream<NMEASample> stream = NMEAStream.parse(is, offerTimeout, takeTimeout, TimeUnit.SECONDS, ()->{return "/sample.nmea";}, tracker.getProperties());
                 tracker.init(stream);
                 tracker.run();
-                assertEquals(132, tracker.getCount());
+                assertEquals(131, tracker.getCount());
             }
             catch (IOException ex)
             {
@@ -103,7 +103,7 @@ public class TrackerTest
                 {
                     count++;
                 }
-                assertEquals(132, count);
+                assertEquals(131, count);
                 //assertEquals("20100515120656", sdf.format(new Date(trackInput.getTime())));   TODO
                 //assertEquals(toFloat(6009.2038), trackInput.getLatitude(), Epsilon);
                 //assertEquals(toFloat(2453.6586), trackInput.getLongitude(), Epsilon);

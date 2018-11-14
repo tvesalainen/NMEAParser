@@ -76,8 +76,8 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private int repeat;
     private int second;
     private int radio;
-    private float lat;
-    private float lon;
+    private double lat;
+    private double lon;
     private float turn;
     private float speed;
     private float course;
@@ -155,9 +155,9 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     }
 
     @Override
-    public void set(String property, float arg)
+    public void set(String property, double arg)
     {
-        allProperties.setProperty(property, Float.toString(arg));
+        allProperties.setProperty(property, Double.toString(arg));
         switch (property)
         {
             case "latitude":
@@ -166,6 +166,18 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
             case "longitude":
                 lon = arg;
                 break;
+            default:
+                super.set(property, arg);
+                break;
+        }
+    }
+
+    @Override
+    public void set(String property, float arg)
+    {
+        allProperties.setProperty(property, Float.toString(arg));
+        switch (property)
+        {
             case "rateOfTurn":
                 turn = arg;
                 break;

@@ -53,14 +53,14 @@ public class NMEAStream
     {
         private Stream.Builder<NMEASample> builder = Stream.builder();
         
-        public void addWaypoint(long time, float latitude, float longitude)
+        public void addWaypoint(long time, double latitude, double longitude)
         {
             NMEASample sample = new NMEASample();
             sample.setMessageType(MessageType.RMC);
             sample.setTalkerId(TalkerId.GP);
             sample.setTime(time);
-            sample.setProperty("latitude", latitude);
-            sample.setProperty("longitude", longitude);
+            sample.setProperty("latitude", (float) latitude);
+            sample.setProperty("longitude", (float) longitude);
             builder.add(sample);
         }
         public NMEASample addSample()

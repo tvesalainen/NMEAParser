@@ -77,7 +77,7 @@ public abstract class TrackFilter
         return this;
     }
 
-    public void input(long time, float latitude, float longitude) throws IOException
+    public void input(long time, double latitude, double longitude) throws IOException
     {
         WP wp = create(time, latitude, longitude);
         switch (buffer.size())
@@ -186,7 +186,7 @@ public abstract class TrackFilter
         }
     }
 
-    private WP create(long time, float latitude, float longitude)
+    private WP create(long time, double latitude, double longitude)
     {
         WP wp;
         if (pool.isEmpty())
@@ -227,15 +227,15 @@ public abstract class TrackFilter
     {
         open = false;
     }
-    protected abstract void output(long time, float latitude, float longitude) throws IOException;
+    protected abstract void output(long time, double latitude, double longitude) throws IOException;
 
     private class WP implements WayPoint
     {
         private long time;
-        private float latitude;
-        private float longitude;
+        private double latitude;
+        private double longitude;
 
-        public WP(long time, float latitude, float longitude)
+        public WP(long time, double latitude, double longitude)
         {
             this.time = time;
             this.latitude = latitude;

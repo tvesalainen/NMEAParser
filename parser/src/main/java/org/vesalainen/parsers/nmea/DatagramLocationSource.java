@@ -62,8 +62,8 @@ public class DatagramLocationSource extends LocationSource
     
     private class Observer extends AbstractPropertySetter implements Transactional, AutoCloseable
     {
-        private float latitude;
-        private float longitude;
+        private double latitude;
+        private double longitude;
         private float horizontalDilutionOfPrecision = Float.NaN;
         private boolean positionUpdated;
         private Clock clock;
@@ -89,19 +89,27 @@ public class DatagramLocationSource extends LocationSource
         }
         
         @Override
-        public void set(String property, float arg)
+        public void set(String property, double arg)
         {
             switch (property)
             {
-                case "horizontalDilutionOfPrecision":
-                    horizontalDilutionOfPrecision = arg;
-                    break;
                 case "latitude":
                     latitude = arg;
                     positionUpdated = true;
                     break;
                 case "longitude":
                     longitude = arg;
+                    break;
+            }
+        }
+
+        @Override
+        public void set(String property, float arg)
+        {
+            switch (property)
+            {
+                case "horizontalDilutionOfPrecision":
+                    horizontalDilutionOfPrecision = arg;
                     break;
             }
         }

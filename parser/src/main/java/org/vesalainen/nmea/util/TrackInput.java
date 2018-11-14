@@ -81,11 +81,11 @@ public class TrackInput implements AutoCloseable
     {
         return trackPoint.time;
     }
-    public float getLatitude()
+    public double getLatitude()
     {
         return trackPoint.latitude;
     }
-    public float getLongitude()
+    public double getLongitude()
     {
         return trackPoint.longitude;
     }

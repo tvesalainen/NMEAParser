@@ -47,6 +47,7 @@ public class NMEAParserTest
 {
     private final NMEAParser parser;
     private final double Epsilon = 0.00001;
+    private final double CoordEpsilon = 0.00001/60.0;
     
     public NMEAParserTest()
     {
@@ -220,8 +221,8 @@ public class NMEAParserTest
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
                 assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
-                assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getDegree(2), ss.getDouble("latitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getDouble("longitude"), Epsilon);
                 assertEquals(nch.getFloat(6), ss.getFloat(nch.getPrefix(7)+"Bearing"), Epsilon);
                 assertEquals(nch.getFloat(8), ss.getFloat(nch.getPrefix(9)+"Bearing"), Epsilon);
                 assertEquals(nch.getFloat(10), ss.getFloat("distanceToWaypoint"), Epsilon);
@@ -294,8 +295,8 @@ public class NMEAParserTest
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
                 assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
-                assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getDegree(2), ss.getDouble("latitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getDouble("longitude"), Epsilon);
                 assertEquals(nch.getFloat(6), ss.getFloat(nch.getPrefix(7)+"Bearing"), Epsilon);
                 assertEquals(nch.getFloat(8), ss.getFloat(nch.getPrefix(9)+"Bearing"), Epsilon);
                 assertEquals(nch.getFloat(10), ss.getFloat("distanceToWaypoint"), Epsilon);
@@ -337,8 +338,8 @@ public class NMEAParserTest
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
                 assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
-                assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getDegree(2), ss.getDouble("latitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getDouble("longitude"), Epsilon);
                 assertEquals(nch.getFloat(6), ss.getFloat(nch.getPrefix(7)+"Bearing"), Epsilon);
                 assertEquals(nch.getFloat(8), ss.getFloat(nch.getPrefix(9)+"Bearing"), Epsilon);
                 assertEquals(nch.getFloat(10), ss.getFloat("distanceToWaypoint"), Epsilon);
@@ -533,8 +534,8 @@ public class NMEAParserTest
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
                 assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), clock.getSecond());
-                assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getDegree(2), ss.getDouble("latitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getDouble("longitude"), Epsilon);
                 assertEquals(GPSQualityIndicator.values()[nch.getInt(6)], ss.getProperty("gpsQualityIndicator"));
                 assertEquals(nch.getInt(7), ss.getProperty("numberOfSatellitesInView"));
                 assertEquals(nch.getFloat(8), ss.getFloat("horizontalDilutionOfPrecision"), 0.1);
@@ -571,8 +572,8 @@ public class NMEAParserTest
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.GLL, ss.getProperty("messageType"));
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
-                assertEquals(nch.getDegree(1), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(3), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getDegree(1), ss.getDouble("latitude"), Epsilon);
+                assertEquals(nch.getDegree(3), ss.getDouble("longitude"), Epsilon);
                 NMEAClock clock = (NMEAClock) ss.getProperty("clock");
                 String hhmmss = nch.getString(5);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
@@ -909,8 +910,8 @@ public class NMEAParserTest
                 assertEquals(MessageType.RMA, ss.getProperty("messageType"));
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 assertEquals(nch.getChar(1), ss.getProperty("status"));
-                assertEquals(nch.getDegree(2), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(4), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getDegree(2), ss.getDouble("latitude"), Epsilon);
+                assertEquals(nch.getDegree(4), ss.getDouble("longitude"), Epsilon);
                 assertEquals(nch.getFloat(6), ss.getFloat("timeDifferenceA"), Epsilon);
                 assertEquals(nch.getFloat(7), ss.getFloat("timeDifferenceB"), Epsilon);
                 assertEquals(nch.getFloat(8), ss.getFloat("speedOverGround"), Epsilon);
@@ -949,8 +950,8 @@ public class NMEAParserTest
                 assertEquals(nch.getSign(3)*nch.getFloat(2), ss.getFloat("crossTrackError"), Epsilon);
                 assertEquals(nch.getString(4), ss.getProperty("toWaypoint"));
                 assertEquals(nch.getString(5), ss.getProperty("fromWaypoint"));
-                assertEquals(nch.getDegree(6), ss.getFloat("destinationWaypointLatitude"), Epsilon);
-                assertEquals(nch.getDegree(8), ss.getFloat("destinationWaypointLongitude"), Epsilon);
+                assertEquals(nch.getDegree(6), ss.getDouble("destinationWaypointLatitude"), Epsilon);
+                assertEquals(nch.getDegree(8), ss.getDouble("destinationWaypointLongitude"), Epsilon);
                 assertEquals(nch.getFloat(10), ss.getFloat("rangeToDestination"), Epsilon);
                 assertEquals(nch.getFloat(11), ss.getFloat("bearingToDestination"), Epsilon);
                 assertEquals(nch.getFloat(12), ss.getFloat("destinationClosingVelocity"), Epsilon);
@@ -981,7 +982,8 @@ public class NMEAParserTest
                 "$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62\r\n",
                 "$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68\r\n",
                 "$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70\r\n",
-                "$GPRMC,010003,A,1248.7047,S,03827.5797,W,0.0,94.9,290505,23.0,W,A*03\r\n"
+                "$GPRMC,010003,A,1248.7047,S,03827.5797,W,0.0,94.9,290505,23.0,W,A*03\r\n",
+                "$GPRMC,211313.00,A,0856.69926,S,14009.82481,W,0.307,,131118,,,D*74\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -1001,8 +1003,8 @@ public class NMEAParserTest
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), cal.get(Calendar.MINUTE));
                 assertEquals(Integer.parseInt(hhmmss.substring(4, 6)), cal.get(Calendar.SECOND));
                 assertEquals(nch.getChar(2), ss.getProperty("status"));
-                assertEquals(nch.getDegree(3), ss.getFloat("latitude"), Epsilon);
-                assertEquals(nch.getDegree(5), ss.getFloat("longitude"), Epsilon);
+                assertEquals(nch.getDegree(3), ss.getDouble("latitude"), 0.00001/60.0);
+                assertEquals(nch.getDegree(5), ss.getDouble("longitude"), 0.00001/60.0);
                 assertEquals(nch.getFloat(7), ss.getFloat("speedOverGround"), Epsilon);
                 assertEquals(nch.getFloat(8), ss.getFloat("trackMadeGood"), Epsilon);
                 String ddmmyy = nch.getString(9);
@@ -1277,8 +1279,8 @@ public class NMEAParserTest
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 assertEquals(nch.getInt(1), ss.getProperty("targetNumber"));
-                assertEquals(nch.getDegree(2), ss.getFloat("destinationWaypointLatitude"), Epsilon);
-                assertEquals(nch.getDegree(4), ss.getFloat("destinationWaypointLongitude"), Epsilon);
+                assertEquals(nch.getDegree(2), ss.getDouble("destinationWaypointLatitude"), CoordEpsilon);
+                assertEquals(nch.getDegree(4), ss.getDouble("destinationWaypointLongitude"), CoordEpsilon);
                 assertEquals(nch.getString(6), ss.getProperty("targetName"));
                 String hhmmss = nch.getString(7);
                 assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), ss.getInt("targetHour"));
@@ -1376,8 +1378,8 @@ public class NMEAParserTest
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.WPL, ss.getProperty("messageType"));
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
-                assertEquals(nch.getDegree(1), ss.getFloat("destinationWaypointLatitude"), Epsilon);
-                assertEquals(nch.getDegree(3), ss.getFloat("destinationWaypointLongitude"), Epsilon);
+                assertEquals(nch.getDegree(1), ss.getDouble("destinationWaypointLatitude"), Epsilon);
+                assertEquals(nch.getDegree(3), ss.getDouble("destinationWaypointLongitude"), Epsilon);
                 assertEquals(nch.getString(5), ss.getProperty("waypoint"));
             }
         }
