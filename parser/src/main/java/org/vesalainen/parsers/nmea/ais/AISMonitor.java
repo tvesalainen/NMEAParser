@@ -46,7 +46,6 @@ import org.vesalainen.util.navi.Location;
 public class AISMonitor extends JavaLogging implements Stoppable
 {
     private static AISMonitor MONITOR;
-    private MMSIParser mmsiParser = MMSIParser.getInstance();
 
     private CachedScheduledThreadPool executor;
     private Clock clock;
@@ -161,8 +160,8 @@ public class AISMonitor extends JavaLogging implements Stoppable
     {
         private char deviceClass;
         private Properties properties = new Properties();
-        private MMSIEntry mmsiEntry;
         private Vessel vessel;
+        private MMSIType mmsiType;
 
         public CacheEntry()
         {
@@ -230,12 +229,12 @@ public class AISMonitor extends JavaLogging implements Stoppable
         }
         public MMSIType getMMSIType()
         {
-            if (mmsiEntry == null)
+            if (mmsiType == null)
             {
                 String mmsi = properties.getProperty("mmsi");
-                mmsiEntry = mmsiParser.parse(mmsi);
+                mmsiType = MMSIType.getType(Integer.parseInt(mmsi));
             }
-            return mmsiEntry.getType();
+            return mmsiType;
         }
 
         public Properties getProperties()
@@ -296,7 +295,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
         {
             try
             {
-                if (vessel != null)
+                if (vessel != null && vessel.isValid())
                 {
                     ZonedDateTime zdt = ZonedDateTime.now(clock);
                     int second = zdt.getSecond();

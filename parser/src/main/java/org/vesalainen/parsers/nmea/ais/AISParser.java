@@ -984,7 +984,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     {
         if (arg != 181000)
         {
-            float lon = arg;
+            double lon = arg;
             lon = lon / 60000;
             if (lon <= 180 && lon >= -180)
             {
@@ -1008,11 +1008,11 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     {
         if (lon != 65536)
         {
-            float f = lon;
-            f = (f / 100) - 180;
+            double d = lon;
+            d = (d / 100) - 180;
             if (lon <= 180 && lon >= -180)
             {
-                aisData.setLongitude(f);
+                aisData.setLongitude(d);
             }
             else
             {
@@ -1027,8 +1027,8 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         {
             if (lon <= 180 * 60 * 10 && lon >= -180 * 60 * 10)
             {
-                float f = lon;
-                aisData.setLongitude(f / 600F);
+                double d = lon;
+                aisData.setLongitude(d / 600.0);
             }
             else
             {
@@ -1043,8 +1043,8 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         {
             if (lon <= 108000000 && lon >= -108000000)
             {
-                float f = lon;
-                aisData.setLongitude(f / 600000F);
+                double d = lon;
+                aisData.setLongitude(d / 600000.0);
             }
             else
             {
@@ -1057,7 +1057,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     {
         if (arg != 91000)
         {
-            float lat = arg;
+            double lat = arg;
             lat = lat / 60000;
             if (lat <= 90 && lat >= -90)
             {
@@ -1081,11 +1081,11 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     {
         if (lat != 32767)
         {
-            float f = lat;
-            f = f / 100 - 90;
-            if (f <= 90 && lat >= -90)
+            double d = lat;
+            d = d / 100 - 90;
+            if (d <= 90 && lat >= -90)
             {
-                aisData.setLatitude(f);
+                aisData.setLatitude(d);
             }
             else
             {
@@ -1100,8 +1100,8 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         {
             if (lat <= 90 * 60 * 10 && lat >= -90 * 60 * 10)
             {
-                float f = lat;
-                aisData.setLatitude(f / 600F);
+                double d = lat;
+                aisData.setLatitude(d / 600.0);
             }
             else
             {
@@ -1116,8 +1116,8 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         {
             if (lat <= 90 * 60 * 10000 && lat >= -90 * 60 * 10000)
             {
-                float f = lat;
-                aisData.setLatitude(f / 600000F);
+                double d = lat;
+                aisData.setLatitude(d / 600000.0);
             }
             else
             {

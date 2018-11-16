@@ -30,8 +30,8 @@ public class TC extends AbstractAISObserver
     int second = -1;
     int heading = -1;
     float course = Float.NaN;
-    float latitude = Float.NaN;
-    float longitude = Float.NaN;
+    double latitude = Double.NaN;
+    double longitude = Double.NaN;
     float speed = Float.NaN;
     float rateOfTurn = Float.NaN;
     NavigationStatus navigationStatus;
@@ -852,13 +852,13 @@ public class TC extends AbstractAISObserver
     }
 
     @Override
-    public void setLatitude(float degrees)
+    public void setLatitude(double degrees)
     {
         this.latitude = degrees;
     }
 
     @Override
-    public void setLongitude(float degrees)
+    public void setLongitude(double degrees)
     {
         this.longitude = degrees;
     }

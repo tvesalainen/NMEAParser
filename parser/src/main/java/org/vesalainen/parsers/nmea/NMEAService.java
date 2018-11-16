@@ -97,7 +97,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         this.in = in;
         this.out = out;
         this.executor = executor;
-        dispatcher = new SimplePropertySetterDispatcher(new WeakMapSet<>());
+        dispatcher = new SimplePropertySetterDispatcher(/*new WeakMapSet<>()*/);
         nmeaDispatcher = NMEADispatcher.getInstance(NMEADispatcher.class, dispatcher);
     }
     
