@@ -28,15 +28,18 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.vesalainen.code.AbstractPropertySetter;
+import static org.vesalainen.math.UnitType.Meter;
+import static org.vesalainen.math.UnitType.NM;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.cpa.Vessel;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.util.logging.AttachedLogger;
+import org.vesalainen.util.navi.SimpleStats;
 
 /**
- *
+ * @deprecated Experimental
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class CompassCorrector extends AbstractPropertySetter implements AttachedLogger, Stoppable
@@ -225,6 +228,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         private double sin;
         private double cos;
         private int cnt;
+        private SimpleStats distance = new SimpleStats();
 
         public Angle(int angle)
         {
@@ -247,9 +251,11 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         public void add(double lat1, double lon1, double lat2, double lon2)
         {
             double radians = Navis.radBearing(lat1, lon1, lat2, lon2);
-                sin += Math.sin(radians);
+            sin += Math.sin(radians);
             cos += Math.cos(radians);
             cnt++;
+            double dist = Navis.distance(lat1, lon1, lat2, lon2);
+            distance.add(NM.convertTo(dist, Meter));
         }
         public double angle()
         {
@@ -310,7 +316,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         @Override
         public String toString()
         {
-            return String.format(Locale.US, "%d,%.20g,%.20g,%d,%.1f", angle, sin, cos, cnt, angle());
+            return String.format(Locale.US, "%d,%.20g,%.20g,%d,%.1f,%.1f", angle, sin, cos, cnt, angle(), distance.getAverage());
         }
         
     }

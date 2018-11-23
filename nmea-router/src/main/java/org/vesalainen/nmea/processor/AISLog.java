@@ -86,6 +86,8 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     private boolean assignedMode;
     private char channel;
     private final WritableByteChannel out;
+    private Long refreshInitialDelayMillis;
+    private Long refreshDelayMillis;
     
     AISLog(AisLogType type, WritableByteChannel channel, CachedScheduledThreadPool executor)
     {
@@ -126,6 +128,8 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                 {
                     ttlMinutes = aisMonitorType.getTtlMinutes();
                     refreshStaticData = aisMonitorType.isRefreshStaticData();
+                    refreshInitialDelayMillis = aisMonitorType.getRefreshInitialDelayMillis();
+                    refreshDelayMillis = aisMonitorType.getRefreshDelayMillis();
                     interpolateSeconds = aisMonitorType.getInterpolateSeconds();
                 }
                 monitor = new AISMonitor(
@@ -134,6 +138,8 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                         clock, 
                         ttlMinutes != null ? ttlMinutes.intValue() : 10, 
                         refreshStaticData != null ? refreshStaticData : false, 
+                        refreshInitialDelayMillis != null ? refreshInitialDelayMillis.intValue() : 5000,
+                        refreshDelayMillis != null ? refreshDelayMillis.intValue() : 500,
                         interpolateSeconds != null ? interpolateSeconds.intValue() : -1, 
                         this::propertiesFor
                 );

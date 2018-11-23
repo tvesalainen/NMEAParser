@@ -170,6 +170,8 @@
     <xsd:complexType name="aisMonitorType">
         <xsd:attribute name="ttlMinutes" type="xsd:unsignedInt"/>
         <xsd:attribute name="refreshStaticData" type="xsd:boolean"/>
+        <xsd:attribute name="refreshInitialDelayMillis" type="xsd:unsignedInt"/>
+        <xsd:attribute name="refreshDelayMillis" type="xsd:unsignedInt"/>
         <xsd:attribute name="interpolateSeconds" type="xsd:unsignedInt"/>
     </xsd:complexType>
     <xsd:complexType name="timeSetterType">

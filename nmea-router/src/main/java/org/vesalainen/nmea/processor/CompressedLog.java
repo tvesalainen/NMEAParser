@@ -66,7 +66,16 @@ public class CompressedLog extends AbstractPropertySetter implements AttachedLog
         compressor.addLong("time", false);
         for (String prop : props)
         {
-            compressor.addFloat(prop);
+            switch (prop)
+            {
+                case "latitude":
+                case "longitude":
+                    compressor.addDouble(prop);
+                    break;
+                default:
+                    compressor.addFloat(prop);
+                    break;
+            }
         }
         compressor.ready();
         Set<String> pset = new HashSet<>(props);
@@ -127,6 +136,12 @@ public class CompressedLog extends AbstractPropertySetter implements AttachedLog
     public void set(String property, float arg)
     {
         compressor.setFloat(property, arg);
+    }
+
+    @Override
+    public void set(String property, double arg)
+    {
+        compressor.setDouble(property, arg);
     }
 
     @Override
