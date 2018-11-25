@@ -139,7 +139,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                         ttlMinutes != null ? ttlMinutes.intValue() : 10, 
                         refreshStaticData != null ? refreshStaticData : false, 
                         refreshInitialDelayMillis != null ? refreshInitialDelayMillis.intValue() : 5000,
-                        refreshDelayMillis != null ? refreshDelayMillis.intValue() : 500,
+                        refreshDelayMillis != null ? refreshDelayMillis.intValue() : 1000,
                         interpolateSeconds != null ? interpolateSeconds.intValue() : -1, 
                         this::propertiesFor
                 );
@@ -437,8 +437,8 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
         repeat = -1;
         second = -1;
         radio = 0;
-        lat = 0;
-        lon = 0;
+        lat = Double.NaN;
+        lon = Double.NaN;
         turn = 0;
         speed = -1;
         course = -1;

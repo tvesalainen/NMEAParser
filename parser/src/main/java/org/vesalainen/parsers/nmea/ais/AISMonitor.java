@@ -21,14 +21,16 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.time.ZonedDateTime;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import static java.util.logging.Level.SEVERE;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 import org.vesalainen.navi.cpa.Vessel;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.mmsi.MMSIType;
@@ -46,7 +48,6 @@ public class AISMonitor extends JavaLogging implements Stoppable
 {
     private static AISMonitor MONITOR;
 
-    private enum BootState {POS, MSG5, MSG24A, MSG24B};
     private CachedScheduledThreadPool executor;
     private Clock clock;
     private boolean refreshStaticData;
@@ -169,12 +170,13 @@ public class AISMonitor extends JavaLogging implements Stoppable
     {
         interpolatorFuture.cancel(false);
     }
-    public class CacheEntry
+    public class CacheEntry implements Comparable<CacheEntry>
     {
         private char deviceClass;
         private Properties properties = new Properties();
         private Vessel vessel;
         private MMSIType mmsiType;
+        private double distance = Double.POSITIVE_INFINITY;
 
         public CacheEntry()
         {
@@ -224,16 +226,17 @@ public class AISMonitor extends JavaLogging implements Stoppable
                 {
                     vessel = new Vessel();
                 }
-                else
-                {
-                    warning("delta %s", new Location(
-                            latitude-vessel.estimatedLatitude(millis),
-                            longitude-vessel.estimatedLongitude(millis)
-                                    )
-                            );
-                }
                 vessel.update(millis, latitude, longitude, speed, bearing, rateOfTurn);
+                if (ownVessel != null)
+                {
+                    distance = Vessel.estimatedDistance(ownVessel, vessel, millis);
+                }
             }
+        }
+
+        public double getDistance()
+        {
+            return distance;
         }
 
         public boolean isOwn()
@@ -274,62 +277,91 @@ public class AISMonitor extends JavaLogging implements Stoppable
 
         private void sendStaticData(WritableByteChannel ch)
         {
+            if (properties.containsKey("vesselName"))   // has static data
+            {
+                if (properties.containsKey("imoNumber"))    // is class A
+                {
+                    sendMsg5(ch);
+                }
+                else
+                {
+                    sendMsg24A(ch);
+                    sendMsg24B(ch);
+                }
+            }
+        }
+        private boolean hasImoNumber()
+        {
+            return properties.containsKey("imoNumber");
+        }
+        private boolean hasVesselName()
+        {
+            return properties.containsKey("vesselName");
+        }
+        private boolean hasCallSign()
+        {
+            return properties.containsKey("callSign");
+        }
+        private boolean sendMsg5(WritableByteChannel ch)
+        {
+            info("Msg5 %s", properties.getProperty("mmsi"));
+            try
+            {
+                if (properties.containsKey("imoNumber"))    // is class A
+                {
+                    NMEASentence[] msg5 = AISMessageGen.msg5(this);
+                    for (NMEASentence ns : msg5)
+                    {
+                        ns.writeTo(ch);
+                    }
+                    return true;
+                }
+                return false;
+            }
+            catch (IOException ex)
+            {
+                throw new IllegalArgumentException(ex);
+            }
+        }
+        private boolean sendMsg24A(WritableByteChannel ch)
+        {
+            info("Msg24A %s", properties.getProperty("mmsi"));
             try
             {
                 if (properties.containsKey("vesselName"))   // has static data
                 {
-                    if (properties.containsKey("imoNumber"))    // is class A
-                    {
-                        sendMsg5(ch);
-                    }
-                    else
-                    {
-                        sendMsg24A(ch);
-                        sendMsg24B(ch);
-                    }
+                    NMEASentence[] msg24A = AISMessageGen.msg24A(this);
+                    msg24A[0].writeTo(channel);
+                    return true;
                 }
+                return false;
             }
             catch (IOException ex)
             {
-                log(SEVERE, ex, "");
+                throw new IllegalArgumentException(ex);
             }
         }
-
-        private boolean sendMsg5(WritableByteChannel ch) throws IOException
+        private boolean sendMsg24B(WritableByteChannel ch)
         {
-            if (properties.containsKey("imoNumber"))    // is class A
+            info("Msg24B %s", properties.getProperty("mmsi"));
+            try
             {
-                NMEASentence[] msg5 = AISMessageGen.msg5(this);
-                for (NMEASentence ns : msg5)
+                if (properties.containsKey("callSign"))
                 {
-                    ns.writeTo(ch);
+                    NMEASentence[] msg24B = AISMessageGen.msg24B(this);
+                    msg24B[0].writeTo(channel);
+                    return true;
                 }
-                return true;
+                return false;
             }
-            return false;
-        }
-        private boolean sendMsg24A(WritableByteChannel ch) throws IOException
-        {
-            if (properties.containsKey("vesselName"))   // has static data
+            catch (IOException ex)
             {
-                NMEASentence[] msg24A = AISMessageGen.msg24A(this);
-                msg24A[0].writeTo(channel);
-                return true;
+                throw new IllegalArgumentException(ex);
             }
-            return false;
-        }
-        private boolean sendMsg24B(WritableByteChannel ch) throws IOException
-        {
-            if (properties.containsKey("callSign"))
-            {
-                NMEASentence[] msg24B = AISMessageGen.msg24B(this);
-                msg24B[0].writeTo(channel);
-                return true;
-            }
-            return false;
         }
         private boolean sendPositionEstimate(WritableByteChannel channel)
         {
+            info("POS %s", properties.getProperty("mmsi"));
             try
             {
                 if (vessel != null && vessel.isValid())
@@ -340,7 +372,6 @@ public class AISMonitor extends JavaLogging implements Stoppable
                     Location estimatedLocation = vessel.estimatedLocation(millis);
                     if (deviceClass == 'B')
                     {
-                        info("%s", properties);
                         NMEASentence[] msg18 = AISMessageGen.msg18(this, second, estimatedLocation.getLatitude(), estimatedLocation.getLongitude());
                         msg18[0].writeTo(channel);
                     }
@@ -357,6 +388,12 @@ public class AISMonitor extends JavaLogging implements Stoppable
                 log(SEVERE, ex, "");
             }
             return false;
+        }
+
+        @Override
+        public int compareTo(CacheEntry o)
+        {
+            return (int) Math.signum(distance - o.distance);
         }
         
     }
@@ -387,10 +424,6 @@ public class AISMonitor extends JavaLogging implements Stoppable
     private class FastBooter implements Runnable
     {
         private ByteChannel channel;
-        private Iterator<CacheEntry> entries;
-        private BootState state = BootState.POS;
-        private ScheduledFuture<?> future;
-        private CacheEntry entry;
 
         public FastBooter(ByteChannel channel)
         {
@@ -400,49 +433,48 @@ public class AISMonitor extends JavaLogging implements Stoppable
         @Override
         public void run()
         {
-            entries = map.keySet().stream().map((m)->map.get(m)).filter((e)->!e.isOwn()).iterator();
-            future = executor.scheduleWithFixedDelay(this::boot, refreshInitialDelayMillis, refreshDelayMillis, TimeUnit.MILLISECONDS);
-        }
-        private void boot()
-        {
-            try
+            int limit = 30000/refreshDelayMillis;   // 30 sec
+            List<CacheEntry> entries = map.values().stream().filter((e)->!e.isOwn()).sorted().limit(limit).collect(Collectors.toList());
+            List<Runnable> commands = new ArrayList<>();
+            int num = 0;
+            for (CacheEntry entry : entries)
             {
-                switch (state)
+                commands.add(num++, new Cmd(entry, (e)->e.sendPositionEstimate(channel)));
+                if (entry.hasImoNumber())
                 {
-                    case POS:
-                        if (entries.hasNext())
-                        {
-                            entry = entries.next();
-                            entry.sendPositionEstimate(channel);
-                            state = BootState.MSG5;
-                        }
-                        else
-                        {
-                            future.cancel(false);
-                        }
-                        break;
-                    case MSG5:
-                        if (entry.sendMsg5(channel))
-                        {
-                            state = BootState.POS;
-                            return;
-                        }
-                    case MSG24A:
-                        entry.sendMsg24A(channel);
-                        {
-                            state = BootState.MSG24B;
-                            return;
-                        }
-                    case MSG24B:
-                        entry.sendMsg24B(channel);
-                        state = BootState.POS;
-                        break;
+                    commands.add(new Cmd(entry, (e)->e.sendMsg5(channel)));
+                }
+                else
+                {
+                    if (entry.hasVesselName())
+                    {
+                        commands.add(new Cmd(entry, (e)->e.sendMsg24A(channel)));
+                    }
+                    if (entry.hasCallSign())
+                    {
+                        commands.add(new Cmd(entry, (e)->e.sendMsg24B(channel)));
+                    }
                 }
             }
-            catch (Exception ex)
-            {
-                log(SEVERE, ex, "AIS fast boot failed");
-            }
+            executor.iterateAtFixedDelay(refreshInitialDelayMillis, refreshDelayMillis, TimeUnit.MILLISECONDS, commands);
         }
+    }
+    private class Cmd implements Runnable
+    {
+        private CacheEntry entry;
+        private Consumer<CacheEntry> func;
+
+        public Cmd(CacheEntry entry, Consumer<CacheEntry> func)
+        {
+            this.entry = entry;
+            this.func = func;
+        }
+        
+        @Override
+        public void run()
+        {
+            func.accept(entry);
+        }
+        
     }
 }
