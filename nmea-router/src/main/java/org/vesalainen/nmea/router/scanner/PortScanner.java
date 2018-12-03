@@ -199,8 +199,8 @@ public class PortScanner extends JavaLogging
     }
     private void startScannerAfter(String port, Scanner after) throws IOException
     {
-        config("starting scanner for %s after %s", port, after);
-        config("scanning port types %s", portTypes);
+        fine("starting scanner for %s after %s", port, after);
+        fine("scanning port types %s", portTypes);
         Iterator<PortType> it = channelIterators.get(port);
         if (it.hasNext())
         {
@@ -239,7 +239,7 @@ public class PortScanner extends JavaLogging
                         try
                         {
                             initialStartScanner(port);
-                            config("started scanner for new port %s", port);
+                            fine("started scanner for new port %s", port);
                         }
                         catch (IOException ex)
                         {
@@ -250,7 +250,7 @@ public class PortScanner extends JavaLogging
             }
             for (Scanner scanner : futures.keySet())
             {
-                config("%s", scanner);
+                fine("%s", scanner);
                 String port = scanner.port;
                 Future<?> future = futures.get(scanner);
                 if (scanner.getElapsedTime() >= monitorPeriod && scanner.getFingerPrint().isEmpty())
@@ -307,7 +307,7 @@ public class PortScanner extends JavaLogging
         {
             try (ScatteringByteChannel channel = portType.getChannelFactory().apply(port))
             {
-                config("started scanner for %s %s", port, channel);
+                fine("started scanner for %s %s", port, channel);
                 NMEAReader reader = new NMEAReader(port, matcher, channel, 128, this::onOk, this::onError);
                 reader.read();
             }
