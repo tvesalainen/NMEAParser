@@ -285,12 +285,19 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     @Override
     public void commit(String reason)
     {
+        ZonedDateTime timestamp = ZonedDateTime.now(clock);
+        info("%s", timestamp);
+        if (second != -1)
+        {
+            timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
+        }
+        info("%s %d", timestamp, second);
         if (
                 "true".equals(allProperties.getProperty("ownMessage", "false")) &&
                 type.isPositionReport()
                 )
         {
-            monitor.updateOwn(lat, lon, speed, course, turn);
+            monitor.updateOwn(timestamp, lat, lon, speed, course, turn);
         }
         if (channel == 0)
         {
@@ -301,12 +308,6 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
             String mmsi = properties.getProperty("mmsi");
             if (mmsi != null)
             {
-                ZonedDateTime timestamp = ZonedDateTime.now(clock);
-                info("%s %d", timestamp, second);
-                if (second != -1)
-                {
-                    //timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
-                }
                 Path dat = dir.resolve(mmsi+".dat");
                 Path log = dir.resolve(mmsi+".log");
                 if (Files.exists(log) && Files.size(log) >= maxLogSize)
