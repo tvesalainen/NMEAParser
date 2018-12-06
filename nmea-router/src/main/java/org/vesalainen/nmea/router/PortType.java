@@ -69,23 +69,23 @@ public enum PortType
         return channelFactory;
     }
     
-    public static PortType getPortType(SerialType serialType)
+    public static PortType[] getPortType(SerialType serialType)
     {
         if (serialType instanceof SeatalkType)
         {
-            return PortType.SEA_TALK;
+            return new PortType[] {PortType.SEA_TALK};
         }
         else
         {
             if (serialType instanceof Nmea0183Type)
             {
-                return PortType.NMEA;
+                return new PortType[] {PortType.NMEA};
             }
             else
             {
                 if (serialType instanceof Nmea0183HsType)
                 {
-                    return PortType.NMEA_HS;
+                    return new PortType[] {PortType.NMEA_HS};
                 }
             }
         }

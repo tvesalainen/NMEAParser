@@ -161,20 +161,22 @@ public class Router extends JavaLogging implements RouterEngine
     {
         for (SerialType serialType : serialSet)
         {
-            PortType portType = PortType.getPortType(serialType);
-            SymmetricDifferenceMatcher<String, SerialType> sdm = portMatcher.get(portType);
-            if (sdm == null)
+            for (PortType portType : PortType.getPortType(serialType))
             {
-                sdm = new SymmetricDifferenceMatcher<>();
-                portMatcher.put(portType, sdm);
+                SymmetricDifferenceMatcher<String, SerialType> sdm = portMatcher.get(portType);
+                if (sdm == null)
+                {
+                    sdm = new SymmetricDifferenceMatcher<>();
+                    portMatcher.put(portType, sdm);
+                }
+                for (RouteType route : serialType.getRoute())
+                {
+                    String prefix = route.getPrefix();
+                    sdm.map(prefix, serialType);
+                    config("add finger print %s -> %s", portType, prefix);
+                }
+                lastPortType.put(serialType.getDevice(), portType);
             }
-            for (RouteType route : serialType.getRoute())
-            {
-                String prefix = route.getPrefix();
-                sdm.map(prefix, serialType);
-                config("add finger print %s -> %s", portType, prefix);
-            }
-            lastPortType.put(serialType.getDevice(), portType);
         }
     }
 
@@ -245,10 +247,12 @@ public class Router extends JavaLogging implements RouterEngine
             if (endpointType instanceof SerialType)
             {
                 SerialType serialType = (SerialType) endpointType;
-                PortType portType = PortType.getPortType(serialType);
-                SymmetricDifferenceMatcher<String, SerialType> sdm = portMatcher.get(portType);
-                sdm.unmap(serialType);
-                config("removed %s from portMatcher", target);
+                for (PortType portType : PortType.getPortType(serialType))
+                {
+                    SymmetricDifferenceMatcher<String, SerialType> sdm = portMatcher.get(portType);
+                    sdm.unmap(serialType);
+                    config("removed %s from portMatcher", target);
+                }
                 checkScannerState();
             }
         }
