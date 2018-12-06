@@ -346,6 +346,7 @@ public class PortScanner extends JavaLogging
                     serialType = sdm.match(fingerPrint);
                     if (serialType != null)
                     {
+                        portMatcher.values().forEach((m)->m.unmap(serialType));     // unmap speedless serials (USB) from other port-types
                         throw new PortFoundException();
                     }
                 }
