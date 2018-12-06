@@ -286,12 +286,10 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     public void commit(String reason)
     {
         ZonedDateTime timestamp = ZonedDateTime.now(clock);
-        info("%s", timestamp);
         if (second != -1)
         {
             timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
         }
-        info("%s %d", timestamp, second);
         if (
                 "true".equals(allProperties.getProperty("ownMessage", "false")) &&
                 type.isPositionReport()

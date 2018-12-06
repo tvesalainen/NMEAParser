@@ -65,5 +65,21 @@ public class NMEAMatcherTest
         assertEquals(1, nm.getMatches());
         assertEquals(200F, nm.getErrorPrecent(), 1e-8);
     }
+    @Test
+    public void test3()
+    {
+        String sentence = "!AIVDO,1,1,,A,B3KMVtP01MObdgvfGMBKwwq5oP06,0*2D\r\n";
+        NMEAMatcher nm = new NMEAMatcher();
+        Route route = new Route();
+        nm.addExpression("!AIVDO,1,1,,A", route);
+        nm.addExpression("!AIVDO,1,1,,B", route);
+        nm.compile();
+        for (int ii=0;ii<sentence.length();ii++)
+        {
+            nm.match(sentence.charAt(ii));
+        }
+        assertEquals(0, nm.getErrors());
+        assertEquals(1, nm.getMatches());
+    }
     
 }
