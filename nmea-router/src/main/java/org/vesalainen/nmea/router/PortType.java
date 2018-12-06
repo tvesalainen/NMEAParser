@@ -19,6 +19,7 @@ package org.vesalainen.nmea.router;
 import java.nio.channels.ScatteringByteChannel;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.nio.channels.FilterChannel;
+import org.vesalainen.nmea.jaxb.router.Nmea0183AnyType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.SeatalkType;
@@ -86,6 +87,13 @@ public enum PortType
                 if (serialType instanceof Nmea0183HsType)
                 {
                     return new PortType[] {PortType.NMEA_HS};
+                }
+                else
+                {
+                    if (serialType instanceof Nmea0183AnyType)
+                    {
+                        return new PortType[] {PortType.NMEA, PortType.NMEA_HS};
+                    }
                 }
             }
         }

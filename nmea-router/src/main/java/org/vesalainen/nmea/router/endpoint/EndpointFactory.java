@@ -23,6 +23,7 @@ import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.LogEndpointType;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
 import org.vesalainen.nmea.jaxb.router.MulticastType;
+import org.vesalainen.nmea.jaxb.router.Nmea0183AnyType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
@@ -70,6 +71,10 @@ public final class EndpointFactory
         if (endpointType instanceof DatagramType)
         {
             return new DatagramEndpoint((DatagramType) endpointType, router);
+        }
+        if (endpointType instanceof Nmea0183AnyType)
+        {
+            return new NmeaAnyEndpoint((Nmea0183AnyType) endpointType, router);
         }
         if (endpointType instanceof Nmea0183HsType)
         {

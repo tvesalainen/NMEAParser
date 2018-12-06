@@ -20,14 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Checksum;
 import org.vesalainen.parsers.nmea.NMEAChecksum;
+import org.vesalainen.regex.LiteralMatcher;
 import org.vesalainen.regex.Regex;
-import org.vesalainen.regex.WildcardMatcher;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class NMEAMatcher<T> extends WildcardMatcher<T>
+public class NMEAMatcher<T> extends LiteralMatcher<T>
 {
     enum State {Prefix, Data, Checksum1, Checksum2, Cr, Lf};
     private State state = State.Prefix;

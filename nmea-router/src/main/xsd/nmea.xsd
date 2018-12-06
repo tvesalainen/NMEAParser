@@ -13,6 +13,7 @@
             <xsd:element name="broadcast-nmea-0183" type="broadcastNMEAType"/>
             <xsd:element name="datagram" type="datagramType"/>
             <xsd:element name="seatalk" type="seatalkType"/>
+            <xsd:element name="nmea-0183-any" type="nmea-0183-anyType"/>
             <xsd:element name="nmea-0183-hs" type="nmea-0183-hsType"/>
             <xsd:element name="nmea-0183" type="nmea-0183Type"/>
             <xsd:element name="serial" type="serialType"/>
@@ -95,6 +96,11 @@
         </xsd:complexContent>
     </xsd:complexType>
     <xsd:complexType name="seatalkType">
+        <xsd:complexContent>
+            <xsd:extension base="serialType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="nmea-0183-anyType">
         <xsd:complexContent>
             <xsd:extension base="serialType"/>
         </xsd:complexContent>
