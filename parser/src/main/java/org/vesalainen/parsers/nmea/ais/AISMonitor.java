@@ -47,6 +47,7 @@ import org.vesalainen.util.navi.Location;
 public class AISMonitor extends JavaLogging implements Stoppable
 {
     private static AISMonitor MONITOR;
+    private static final long TIME_DELTA = 500;
 
     private CachedScheduledThreadPool executor;
     private Clock clock;
@@ -88,6 +89,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
     }
     
     public void updateOwn(
+            ZonedDateTime timestamp,
             double latitude, 
             double longitude, 
             double speed, 
@@ -95,11 +97,13 @@ public class AISMonitor extends JavaLogging implements Stoppable
             double rateOfTurn
     )
     {
+        fine("own update %s", timestamp);
         if (ownVessel == null)
         {
-            ownVessel = new Vessel();
+            ownVessel = new Vessel(TIME_DELTA);
         }
-        ownVessel.update(clock.millis(), latitude, longitude, speed, bearing, rateOfTurn);
+        long millis = timestamp.toInstant().toEpochMilli(); // this is synced with second
+        ownVessel.update(millis, latitude, longitude, speed, bearing, rateOfTurn);
     }
     public void update(
                 MessageTypes type, 
@@ -219,17 +223,19 @@ public class AISMonitor extends JavaLogging implements Stoppable
         )
         {
             detectClass(type);
+            fine("update %s", timestamp);
             if (type.isPositionReport())
             {
                 long millis = timestamp.toInstant().toEpochMilli(); // this is synced with second
                 if (vessel == null)
                 {
-                    vessel = new Vessel();
+                    vessel = new Vessel(TIME_DELTA);
                 }
                 vessel.update(millis, latitude, longitude, speed, bearing, rateOfTurn);
                 if (ownVessel != null)
                 {
-                    distance = Vessel.estimatedDistance(ownVessel, vessel, millis);
+                    fine("clock %s", clock.instant());
+                    distance = Vessel.estimatedDistance(ownVessel, vessel, clock.millis());
                 }
             }
         }
@@ -304,7 +310,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
         }
         private boolean sendMsg5(WritableByteChannel ch)
         {
-            info("Msg5 %s", properties.getProperty("mmsi"));
+            fine("Msg5 %s", properties.getProperty("mmsi"));
             try
             {
                 if (properties.containsKey("imoNumber"))    // is class A
@@ -325,7 +331,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
         }
         private boolean sendMsg24A(WritableByteChannel ch)
         {
-            info("Msg24A %s", properties.getProperty("mmsi"));
+            fine("Msg24A %s", properties.getProperty("mmsi"));
             try
             {
                 if (properties.containsKey("vesselName"))   // has static data
@@ -343,7 +349,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
         }
         private boolean sendMsg24B(WritableByteChannel ch)
         {
-            info("Msg24B %s", properties.getProperty("mmsi"));
+            fine("Msg24B %s", properties.getProperty("mmsi"));
             try
             {
                 if (properties.containsKey("callSign"))
@@ -361,7 +367,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
         }
         private boolean sendPositionEstimate(WritableByteChannel channel)
         {
-            info("POS %s", properties.getProperty("mmsi"));
+            fine("POS %s", properties.getProperty("mmsi"));
             try
             {
                 if (vessel != null && vessel.isValid())

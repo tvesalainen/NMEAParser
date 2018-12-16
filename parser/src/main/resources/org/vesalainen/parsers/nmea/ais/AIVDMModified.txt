@@ -4093,7 +4093,7 @@ is thanks to Kurt Schwehr.
 |66-69   |  4 | Unit Model Code       | model          |u|(Part B) 7 six-bit chars
 |70-89   | 20 | Serial Number         | serial         |u|(Part B) 7 six-bit chars
 |90-131  | 42 | Call Sign             | callsign       |t|(Part B) As in Message Type 5
-|132-161 | 1-36 | Mothership or Dim   | mothership_dim |d|(Part B) See below
+|132-161 | 30 | Mothership or Dim   | mothership_dim |d|(Part B) See below
 |===============================================================================
 
 132-140 |  9 | Dimension to Bow      | to_bow         |u|(Part B) Meters
