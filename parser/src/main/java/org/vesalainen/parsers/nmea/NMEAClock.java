@@ -24,41 +24,25 @@ import org.vesalainen.util.Transactional;
  *
  * @author Timo Vesalainen
  */
-public interface NMEAClock extends MutableDateTime, Transactional
+public interface NMEAClock extends Transactional
 {
-    /**
-     * Local zone description, 00 to +- 13 hours
-     * @param localZoneHours 
-     */
-    void setZoneHours(int localZoneHours);
-    /**
-     * Local zone minutes description, apply same sign as local hours
-     * @param localZoneMinutes 
-     */
-    void setZoneMinutes(int localZoneMinutes);
+    void setDay(int day);
+    void setMonth(int month);
+    void setYear(int year);
+    void setDate(int year, int month, int day);
+    void setTime(int hour, int minute, int second, int milliSecond);
+    public int getHour();
+
+    public int getMinute();
+    public int getSecond();
+    public int getMilliSecond();
+    public int getDay();
+    public int getMonth();
+    public int getYear();
     /**
      * returns true if committed ever
      * @return 
      */
     boolean isCommitted();
-    /**
-     * Returns milliseconds from epoch.
-     * @return 
-     */
-    long millis();
-    /**
-     * Set time in milliseconds from epoch.
-     * @param millis 
-     */
-    void setMillis(long millis);
-    /**
-     * Returns ZonedDateTime created from latest fix from GPS.
-     * @return 
-     */
-    ZonedDateTime getZonedDateTime();
-    /**
-     * Returns offset from system clock.
-     * @return 
-     */
-    long offset();
+
 }

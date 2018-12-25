@@ -214,7 +214,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
                 UnconnectedDatagramChannel udc = (UnconnectedDatagramChannel) in;
                 origin = ()->{return udc.getFromAddress();};
             }
-            clock = new GPSClock(liveClock);
+            clock = GPSClock.getInstance(liveClock);
             setClockSupplier(()->clock);
             parser.parse(in, clock, origin, nmeaDispatcher, aisDispatcher);
         }

@@ -18,22 +18,17 @@ package org.vesalainen.parsers.nmea.time;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
+import static java.time.ZoneOffset.UTC;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
-import static java.time.temporal.ChronoField.DAY_OF_MONTH;
-import static java.time.temporal.ChronoField.HOUR_OF_DAY;
-import static java.time.temporal.ChronoField.MILLI_OF_SECOND;
-import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
-import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
-import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
-import static java.time.temporal.ChronoField.YEAR;
-import java.time.temporal.TemporalField;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.function.LongSupplier;
 import org.vesalainen.parsers.nmea.NMEAClock;
-import org.vesalainen.time.MutableClock;
+import static org.vesalainen.time.MutableDateTime.HOUR_IN_MILLIS;
+import static org.vesalainen.time.MutableDateTime.MINUTE_IN_MILLIS;
+import static org.vesalainen.time.MutableDateTime.SECOND_IN_MILLIS;
 import org.vesalainen.time.SimpleMutableDateTime;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * Transactional MutableClock.
@@ -45,70 +40,188 @@ import org.vesalainen.time.SimpleMutableDateTime;
  * like track file. Time is not updated between time-setting NMEA sentences.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public final class GPSClock extends MutableClock implements NMEAClock
+public abstract class GPSClock extends Clock implements NMEAClock
 {
-    static final Set<ChronoField> SUPPORTED_FIELDS = EnumSet.of(
-        YEAR,
-        MONTH_OF_YEAR, 
-        DAY_OF_MONTH, 
-        HOUR_OF_DAY, 
-        MINUTE_OF_HOUR, 
-        SECOND_OF_MINUTE,
-        MILLI_OF_SECOND
-        );
+    private static final long DRIFT_LIMIT = 500;
+    private static final long MAX_DRIFT = 1;
+    private static final int YEA = 1;
+    private static final int MON = 2;
+    private static final int DAY = 4;
+    private static final int HOU = 8;
+    private static final int MIN = 16;
+    private static final int SEC = 32;
+    private static final int MIL = 64;
+    private static final int TIM = HOU|MIN|SEC|MIL;
+    private static final int ALL = 127;
     private SimpleMutableDateTime uncommitted = new SimpleMutableDateTime();
-    private int localZoneMinutes;
-    private long startTime;
-    private long updTime;
-    /**
-     * Creates a GPSClock in live mode using systemUTC base clock.
-     */
-    public GPSClock()
-    {
-        this(Clock.systemUTC());
-    }
-    /**
-     * Creates a GPSClock in live or fixed mode depending on argument.
-     * @param live 
-     */
-    public GPSClock(boolean live)
-    {
-        this(live ? Clock.systemUTC() : Clock.fixed(Instant.now(), ZoneOffset.UTC));
-    }
-    
-    /**
-     * Creates a GPSClock. If clock is fixed mode is fixed.
-     * <p>It only matter if the clock is fixed or live. This clock always returns
-     * time according to GPS data. Live or recorded.
-     * @param clock 
-     * @see java.time.Clock#fixed(java.time.Instant, java.time.ZoneId) 
-     */
-    public GPSClock(Clock clock)
-    {
-        super(clock);
-    }
-    
-    @Override
-    public void start(String reason)
-    {
-        startTime = clock.millis();
-        this.localZoneMinutes = 0;
-    }
+    protected boolean committed;
+    private boolean needCalc = true;
+    private long dateMillis;
+    protected int upd;
+    private long millis;
+    protected LongSupplier currentTimeMillis = System::currentTimeMillis;
 
     @Override
     public void commit(String reason)
     {
-        updTime = startTime;
-        uncommitted.getFields().entrySet().stream().forEach((e) ->
+        if (upd == ALL)
         {
-            super.set(e.getKey(), e.getValue().getValue());
-        });
-        if (localZoneMinutes != 0)
-        {
-            ZonedDateTime zonedDateTime = getZonedDateTime();
-            zonedDateTime = zonedDateTime.plusMinutes(-localZoneMinutes);
-            setZonedDateTime(zonedDateTime);
+            if (needCalc)
+            {
+                ZonedDateTime zonedDate = ZonedDateTime.of(
+                        uncommitted.get(ChronoField.YEAR),
+                        uncommitted.get(ChronoField.MONTH_OF_YEAR),
+                        uncommitted.get(ChronoField.DAY_OF_MONTH),
+                        0,
+                        0,
+                        0,
+                        0,
+                        UTC);
+                dateMillis = zonedDate.toInstant().toEpochMilli();
+                needCalc = false;
+            }
+            long mls = dateMillis;
+            mls += uncommitted.get(ChronoField.HOUR_OF_DAY)*HOUR_IN_MILLIS;
+            mls += uncommitted.get(ChronoField.MINUTE_OF_HOUR)*MINUTE_IN_MILLIS;
+            mls += uncommitted.get(ChronoField.SECOND_OF_MINUTE)*SECOND_IN_MILLIS;
+            mls += uncommitted.get(ChronoField.NANO_OF_SECOND)/1000000;
+            millis = mls;
+            committed = true;
         }
+    }
+
+    @Override
+    public long millis()
+    {
+        return millis;
+    }
+    
+    @Override
+    public ZoneId getZone()
+    {
+        return UTC;
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Instant instant()
+    {
+        return Instant.ofEpochMilli(millis());
+    }
+
+    void setCurrentTimeMillis(LongSupplier currentTimeMillis)
+    {
+        this.currentTimeMillis = currentTimeMillis;
+    }
+
+    @Override
+    public void setDay(int day)
+    {
+        upd |= DAY;
+        if (uncommitted.getDay() != day)
+        {
+            uncommitted.setDay(day);
+            needCalc = true;
+        }
+    }
+
+    @Override
+    public void setMonth(int month)
+    {
+        upd |= MON;
+        if (uncommitted.getMonth()!= month)
+        {
+            uncommitted.setMonth(month);
+            needCalc = true;
+        }
+    }
+
+    @Override
+    public void setYear(int year)
+    {
+        upd |= YEA;
+        if (uncommitted.getYear()!= year)
+        {
+            uncommitted.setYear(year);
+            needCalc = true;
+        }
+    }
+
+    @Override
+    public void setDate(int year, int month, int day)
+    {
+        setDay(day);
+        setMonth(month);
+        setYear(year);
+    }
+
+    @Override
+    public void setTime(int hour, int minute, int second, int milliSecond)
+    {
+        upd |= TIM;
+        uncommitted.setHour(hour);
+        uncommitted.setMinute(minute);
+        uncommitted.setSecond(second);
+        uncommitted.setMilliSecond(milliSecond);
+    }
+
+    @Override
+    public int getHour()
+    {
+        return uncommitted.getHour();
+    }
+
+    @Override
+    public int getMinute()
+    {
+        return uncommitted.getMinute();
+    }
+
+    @Override
+    public int getSecond()
+    {
+        return uncommitted.getSecond();
+    }
+
+    @Override
+    public int getMilliSecond()
+    {
+        return uncommitted.getMilliSecond();
+    }
+
+    @Override
+    public int getDay()
+    {
+        return uncommitted.getDay();
+    }
+
+    @Override
+    public int getMonth()
+    {
+        return uncommitted.getMonth();
+    }
+
+    @Override
+    public int getYear()
+    {
+        return uncommitted.getYear();
+    }
+
+    @Override
+    public boolean isCommitted()
+    {
+        return committed;
+    }
+
+    @Override
+    public void start(String reason)
+    {
+        upd = 0;
     }
 
     @Override
@@ -116,61 +229,53 @@ public final class GPSClock extends MutableClock implements NMEAClock
     {
     }
 
-    @Override
-    protected long getUpdated()
+    public static final GPSClock getInstance(boolean live)
     {
-        return updTime;
+        return live ? new LiveGPSClock() : new FixedGPSClock();
     }
-
-    @Override
-    public void set(TemporalField field, long amount)
+    public static final class LiveGPSClock extends GPSClock
     {
-        uncommitted.set(field, amount);
-    }
-
-    @Override
-    public void setZonedDateTime(ZonedDateTime zonedDateTime)
-    {
-        for (ChronoField cf : SUPPORTED_FIELDS)
+        private JavaLogging logger = JavaLogging.getLogger(LiveGPSClock.class);
+        private long offset;
+        
+        @Override
+        public void commit(String reason)
         {
-            super.set(cf, zonedDateTime.get(cf));
+            if (upd == ALL)
+            {
+                super.commit(reason);
+                long off = super.millis() - currentTimeMillis.getAsLong();
+                long delta = off-offset;
+                long sig = delta >=0 ? 1 : -1;
+                long adelta = Math.abs(delta);
+                if (adelta > DRIFT_LIMIT)
+                {
+                    logger.info("setting time %d = %d", off, offset);
+                    offset = off;
+                }
+                else
+                {
+                    long adj = sig*Math.min(adelta, MAX_DRIFT);
+                    if (adj != 0)
+                    {
+                        offset += adj;
+                        logger.finest("adjusting time %d = %d", adj, offset);
+                    }
+                }
+                committed = true;
+            }
         }
+
+        @Override
+        public long millis()
+        {
+            return currentTimeMillis.getAsLong() + offset;
+        }
+
+    }
+    public static final class FixedGPSClock extends GPSClock
+    {
+        
     }
     
-    /**
-     * Sets Zone hour offset. This method exist to support ZDA sentence which is
-     * most probable deprecated.
-     * @param localZoneHours 
-     */
-    @Override
-    public void setZoneHours(int localZoneHours)
-    {
-        this.localZoneMinutes += 60*localZoneHours;
-    }
-    /**
-     * Sets Zone minute offset. This method exist to support ZDA sentence which is
-     * most probable deprecated.
-     * @param localZoneMinutes 
-     */
-    @Override
-    public void setZoneMinutes(int localZoneMinutes)
-    {
-        this.localZoneMinutes += 60*localZoneMinutes;
-    }
-
-    @Override
-    public boolean isCommitted()
-    {
-        return !fields.isEmpty();
-    }
-    /**
-     * Returns the offset in milliseconds between systemUTC time and this clock.
-     * @return 
-     */
-    @Override
-    public long offset()
-    {
-        return Clock.systemUTC().millis() - millis();
-    }
-
 }

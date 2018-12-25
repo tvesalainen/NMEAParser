@@ -1448,7 +1448,7 @@ public class NMEAParserTest
                 int md = nch.getInt(6);
                 NMEAClock clock = (NMEAClock) ss.getProperty("clock");
                 String hhmmss = nch.getString(1);
-                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour()+hd);
+                assertEquals(Integer.parseInt(hhmmss.substring(0, 2)), clock.getHour());
                 assertEquals(Integer.parseInt(hhmmss.substring(2, 4)), clock.getMinute());
                 // note that clock is running!
                 assertEquals(Float.parseFloat(hhmmss.substring(4)), (double)clock.getSecond()+(double)clock.getMilliSecond()/1000.0, 0.1);  

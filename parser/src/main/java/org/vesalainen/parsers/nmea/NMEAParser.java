@@ -574,7 +574,6 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
             int localZoneHours,
             @ParserContext("clock") NMEAClock clock)
     {
-        clock.setZoneHours(localZoneHours);
     }
 
     @Rule("integer")
@@ -582,7 +581,6 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
             int localZoneMinutes,
             @ParserContext("clock") NMEAClock clock)
     {
-        clock.setZoneMinutes(localZoneMinutes);
     }
 
     @Rule("decimal c letter")
@@ -1583,7 +1581,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
     }
     public <I> void parse(I input, boolean liveClock, Supplier origin, NMEAObserver data, AISObserver aisData) throws IOException
     {
-        parse(input, new GPSClock(liveClock), origin, data, aisData);
+        parse(input, GPSClock.getInstance(liveClock), origin, data, aisData);
     }
     public <I> void parse(I input, GPSClock gpsClock, Supplier origin, NMEAObserver data, AISObserver aisData) throws IOException
     {

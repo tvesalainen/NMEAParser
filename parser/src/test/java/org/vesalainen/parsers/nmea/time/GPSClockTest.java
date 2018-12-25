@@ -44,19 +44,56 @@ public class GPSClockTest
     }
 
     @Test
-    public void test1()
+    public void testFixed()
     {
-        GPSClock clock = new GPSClock(Clock.fixed(Instant.EPOCH, ZoneId.of("Z")));
+        GPSClock clock = GPSClock.getInstance(false);
         clock.start(null);
         clock.setYear(1970);
         clock.setMonth(1);
         clock.setDay(1);
-        clock.setHour(0);
-        clock.setMinute(0);
-        clock.setSecond(0);
-        clock.setMilliSecond(500);
+        clock.setTime(0, 0, 0, 500);
         clock.commit(null);
         assertEquals(500, clock.millis());
+    }
+    @Test
+    public void testLive()
+    {
+        GPSClock clock = GPSClock.getInstance(true);
+        clock.setCurrentTimeMillis(()->0L);
+        clock.start(null);
+        clock.setYear(1970);
+        clock.setMonth(1);
+        clock.setDay(1);
+        clock.setTime(0, 0, 0, 0);
+        clock.commit(null);
+        assertEquals(0, clock.millis());
+
+        clock.start(null);
+        clock.setYear(1970);
+        clock.setMonth(1);
+        clock.setDay(1);
+        clock.setTime(0, 0, 1, 0);
+        clock.setCurrentTimeMillis(()->1002L);
+        clock.commit(null);
+        assertEquals(1001, clock.millis());
+
+        clock.start(null);
+        clock.setYear(1970);
+        clock.setMonth(1);
+        clock.setDay(1);
+        clock.setTime(0, 0, 2, 0);
+        clock.setCurrentTimeMillis(()->2002L);
+        clock.commit(null);
+        assertEquals(2000, clock.millis());
+
+        clock.start(null);
+        clock.setYear(1970);
+        clock.setMonth(1);
+        clock.setDay(1);
+        clock.setTime(0, 0, 3, 0);
+        clock.setCurrentTimeMillis(()->3001L);
+        clock.commit(null);
+        assertEquals(3000, clock.millis());
     }
     
 }
