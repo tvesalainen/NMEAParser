@@ -23,6 +23,8 @@ import static java.time.ZoneOffset.UTC;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.util.function.LongSupplier;
+import org.vesalainen.math.sliding.SlidingAverage;
+import org.vesalainen.math.sliding.SlidingMin;
 import org.vesalainen.parsers.nmea.NMEAClock;
 import static org.vesalainen.time.MutableDateTime.HOUR_IN_MILLIS;
 import static org.vesalainen.time.MutableDateTime.MINUTE_IN_MILLIS;
@@ -60,6 +62,7 @@ public abstract class GPSClock extends Clock implements NMEAClock
     protected int upd;
     private long millis;
     protected LongSupplier currentTimeMillis = System::currentTimeMillis;
+    
 
     @Override
     public void commit(String reason)
@@ -229,6 +232,12 @@ public abstract class GPSClock extends Clock implements NMEAClock
     {
     }
 
+    @Override
+    public long offset()
+    {
+        return 0L;
+    }
+
     public static final GPSClock getInstance(boolean live)
     {
         return live ? new LiveGPSClock() : new FixedGPSClock();
@@ -237,6 +246,8 @@ public abstract class GPSClock extends Clock implements NMEAClock
     {
         private JavaLogging logger = JavaLogging.getLogger(LiveGPSClock.class);
         private long offset;
+        private SlidingMin min = new SlidingMin(4);
+        private SlidingAverage average = new SlidingAverage(256);
         
         @Override
         public void commit(String reason)
@@ -245,7 +256,10 @@ public abstract class GPSClock extends Clock implements NMEAClock
             {
                 super.commit(reason);
                 long off = super.millis() - currentTimeMillis.getAsLong();
-                long delta = off-offset;
+                min.accept(off);
+                average.accept(min.getMin());
+                logger.info("off = %d %s", off, average);
+                long delta = (long) (average.fast()-offset);
                 long sig = delta >=0 ? 1 : -1;
                 long adelta = Math.abs(delta);
                 if (adelta > DRIFT_LIMIT)
@@ -259,7 +273,7 @@ public abstract class GPSClock extends Clock implements NMEAClock
                     if (adj != 0)
                     {
                         offset += adj;
-                        logger.finest("adjusting time %d = %d", adj, offset);
+                        logger.info("adjusting time %d = %d", adj, offset);
                     }
                 }
                 committed = true;
@@ -270,6 +284,12 @@ public abstract class GPSClock extends Clock implements NMEAClock
         public long millis()
         {
             return currentTimeMillis.getAsLong() + offset;
+        }
+
+        @Override
+        public long offset()
+        {
+            return offset;
         }
 
     }
