@@ -142,7 +142,7 @@ public final class NMEA
         {
             return false;
         }
-        NMEAChecksum checkSum = new NMEAChecksum();
+        NMEAChecksum checkSum = new NMEAChecksum(); // TODO should accept without CRLF???
         checkSum.update(seq);
         String suffix = checkSum.getSuffix();
         return CharSequences.endsWith(seq, suffix);
