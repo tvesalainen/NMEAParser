@@ -20,6 +20,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.Clock;
 import java.util.logging.Level;
 import static org.apache.commons.net.ntp.NtpV3Packet.*;
 import org.apache.commons.net.ntp.TimeStamp;
@@ -41,7 +42,7 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
         "clock"
             };
     private final JavaLogging log = new JavaLogging();
-    private NMEAClock clock;
+    private Clock clock;
     private DatagramSocket socket;
     private NtpV4Impl ntpMessage;
     private Thread thread;
@@ -71,7 +72,7 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
     @Override
     public void commit(String reason)
     {
-        if (thread == null && clock != null && clock.isCommitted())
+        if (thread == null && clock != null && ((NMEAClock)clock).isCommitted())
         {
             log.config("SNTPServer started");
             thread = new Thread(this);
@@ -100,7 +101,7 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
                 ntpMessage.setRootDelay(0);
                 ntpMessage.setRootDispersion(0);
                 ntpMessage.setReferenceId(ReferenceIdentifier.GPS);
-                ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.getZonedDateTime().toEpochSecond()));
+                ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.millis()));
                 ntpMessage.setOriginateTimeStamp(transmitTimeStamp);
                 long time = clock.millis();
                 TimeStamp timeStamp = TimeStamp.getNtpTime(time);
@@ -193,7 +194,7 @@ public class SNTPServer implements PropertySetter, Transactional, Runnable
         switch (property)
         {
             case "clock":
-                clock = (NMEAClock) arg;
+                clock = (Clock) arg;
                 break;
         }
     }

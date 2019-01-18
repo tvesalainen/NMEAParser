@@ -22,7 +22,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.GregorianCalendar;
+import java.time.Clock;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -48,7 +48,7 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
     private long period = 4000;
     private Timer timer;
     private JavaLogging log = new JavaLogging();
-    private NMEAClock clock;
+    private Clock clock;
     private final MulticastSocket socket;
     private InetAddress group;
     private final NtpV4Impl ntpMessage;
@@ -109,7 +109,7 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
         try
         {
             
-            ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.getZonedDateTime().toEpochSecond()));
+            ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.millis()));
             ntpMessage.setTransmitTime(TimeStamp.getNtpTime(clock.millis()));
             DatagramPacket datagramPacket = ntpMessage.getDatagramPacket();
             datagramPacket.setAddress(group);
@@ -198,7 +198,7 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
         switch (property)
         {
             case "clock":
-                clock = (NMEAClock) arg;
+                clock = (Clock) arg;
                 break;
         }
     }

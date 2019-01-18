@@ -106,7 +106,7 @@ public class TimeSetter extends TimerTask implements PropertySetter, Transaction
     {
         try
         {
-            long delta = Math.abs(clock.offset());
+            long delta = Math.abs(((NMEAClock)clock).offset());
             if (delta > maxDelta)
             {
                 Date time = calendar.getTime();

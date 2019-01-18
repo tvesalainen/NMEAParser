@@ -21,7 +21,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.GregorianCalendar;
+import java.time.Clock;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -47,7 +47,7 @@ public class SNTPBroadcaster extends TimerTask implements PropertySetter, Transa
     private long period = 64000;
     private Timer timer;
     private JavaLogging log = new JavaLogging();
-    private NMEAClock clock;
+    private Clock clock;
     private final DatagramSocket socket;
     private final NtpV4Impl ntpMessage;
 
@@ -106,7 +106,7 @@ public class SNTPBroadcaster extends TimerTask implements PropertySetter, Transa
         try
         {
             
-            ntpMessage.setReferenceTime(new TimeStamp(clock.getZonedDateTime().toEpochSecond()));
+            ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.millis()));
             ntpMessage.setTransmitTime(new TimeStamp(clock.millis()));
             DatagramPacket datagramPacket = ntpMessage.getDatagramPacket();
             datagramPacket.setAddress(InetAddress.getByName("255.255.255.255"));
@@ -195,7 +195,7 @@ public class SNTPBroadcaster extends TimerTask implements PropertySetter, Transa
         switch (property)
         {
             case "clock":
-                clock = (NMEAClock) arg;
+                clock = (Clock) arg;
                 break;
         }
     }
