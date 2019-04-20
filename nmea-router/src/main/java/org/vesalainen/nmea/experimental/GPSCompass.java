@@ -16,17 +16,17 @@
  */
 package org.vesalainen.nmea.experimental;
 
+import java.awt.Color;
+import static java.awt.Color.*;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.channels.GatheringByteChannel;
-import java.nio.channels.SocketChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
@@ -34,6 +34,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.vesalainen.math.AngleAverage;
 import org.vesalainen.math.AngleAverageSeeker;
 import org.vesalainen.math.AverageSeeker;
 import org.vesalainen.navi.Navis;
@@ -41,6 +42,8 @@ import org.vesalainen.navi.SimpleWayPoint;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.parsers.nmea.time.GPSClock;
+import org.vesalainen.ui.Plotter;
 import org.vesalainen.util.Merger;
 
 /**
@@ -51,51 +54,43 @@ public class GPSCompass
 {
     private static final NMEAParser parser = NMEAParser.newInstance();
     private static final int WINDOW = 256;
-    private AverageSeeker distanceSeeker;
-    private AngleAverageSeeker diffSeeker;
-    private AngleAverageSeeker[] angleSeeker;
+    private static final double DIFF = 70.63;
+    private AngleAverage[] angle;
     private int[] angleCount;
     private final ThreadPoolExecutor executor;
+    private float variation;
 
     public GPSCompass()
     {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
         executor = new ThreadPoolExecutor(2, 2+availableProcessors, 1, TimeUnit.MINUTES, new SynchronousQueue(), new ThreadPoolExecutor.CallerRunsPolicy());
-        this.distanceSeeker = new AverageSeeker(WINDOW);
-        this.diffSeeker = new AngleAverageSeeker(WINDOW);
-        this.angleSeeker = new AngleAverageSeeker[360];
-        this.angleCount = new int[360];
-        for (int ii=0;ii<360;ii++)
+        this.angle = new AngleAverage[36];
+        this.angleCount = new int[36];
+        for (int ii=0;ii<36;ii++)
         {
-            angleSeeker[ii] = new AngleAverageSeeker(WINDOW);
+            angle[ii] = new AngleAverage();
         }
     }
     
     public void start() throws IOException, InterruptedException, ExecutionException
     {
-        BlockingQueue queueGPS = new ArrayBlockingQueue(64);
-        BlockingQueue queueAIS = new ArrayBlockingQueue(64);
+        BlockingQueue queueGPS = new ArrayBlockingQueue(10);
+        BlockingQueue queueAIS = new ArrayBlockingQueue(10);
         Path dir = Paths.get("C:\\Users\\tkv\\share");
         //GPS gps = new GPS("pi2", 10111, queueGPS);
         //GPS ais = new GPS("pi2", 10112, queueAIS);
-        GPS gps = new GPS(dir.resolve("gps.nmea"), queueGPS);
-        GPS ais = new GPS(dir.resolve("ais.nmea"), queueAIS);
+        GPS gps = new GPS(dir.resolve("gps.nmea"), queueGPS, true);
+        GPS ais = new GPS(dir.resolve("ais.nmea"), queueAIS, false);
         Future<?> aisFuture = executor.submit(ais);
         Future<?> gpsFuture = executor.submit(gps);
-        Iterator<WP> aisIt = Merger.iterator(queueAIS);
-        Iterator<WP> gpsIt = Merger.iterator(queueGPS);
+        Iterator<WP> aisIt = Merger.iterator(queueAIS, 100, TimeUnit.MINUTES);
+        Iterator<WP> gpsIt = Merger.iterator(queueGPS, 100, TimeUnit.MINUTES);
         Iterator<WP> merge = Merger.merge(aisIt, gpsIt);
         
         Pairer pairer = new Pairer(Merger.iterable(merge));
         executor.execute(pairer);
-        aisFuture.get();
         gpsFuture.get();
-        System.err.printf("distance %s\n", distanceSeeker);
-        System.err.printf("fiff %s\n", diffSeeker);
-        for (int ii=0;ii<360;ii++)
-        {
-            System.err.printf("%3d: %5d %s\n", ii, angleCount[ii], angleSeeker[ii]);
-        }
+        aisFuture.get();
     }
     public static void main(String... args)
     {
@@ -122,11 +117,17 @@ public class GPSCompass
         public void run()
         {
             WP prev = null;
+            long p = 0;
             for (WP current : it)
             {
                 if (prev != null && current.getTime() == prev.getTime())
                 {
+                    if (p!=0&&current.getTime()>p+1000)
+                    {
+                        System.err.printf("%s >> %s\n", prev, Instant.ofEpochMilli(p));
+                    }
                     executor.execute(new Calculator(prev, current));
+                    p = current.getTime();
                 }
                 prev = current;
             }
@@ -135,51 +136,61 @@ public class GPSCompass
     }
     private class Calculator implements Runnable
     {
-        private WP wp1;
-        private WP wp2;
+        private WP gps;
+        private WP ais;
 
         public Calculator(WP wp1, WP wp2)
         {
-            this.wp1 = wp1;
-            this.wp2 = wp2;
+            if (wp1.gps)
+            {
+                this.gps = wp1;
+                this.ais = wp2;
+            }
+            else
+            {
+                this.gps = wp2;
+                this.ais = wp1;
+            }
         }
         
         @Override
         public void run()
         {
-            double heading = wp1.heading == -1 ? wp2.heading : wp1.heading;
-            double bearing = Navis.bearing(wp1, wp2);
-            double distance = Navis.distance(wp1, wp2)*1852;
-            double weight = 1.0/(wp1.hdopSq() * wp2.hdopSq());
-            double angleDiff = Navis.angleDiff(heading, bearing);
-            distanceSeeker.add(distance, weight);
-            diffSeeker.add(angleDiff, weight);
-            angleSeeker[(int)heading].add(bearing, weight);
-            angleCount[(int)heading]++;
+            double heading = gps.heading == -1 ? ais.heading : gps.heading;
+            double bearing = Navis.bearing(gps, ais);
+            bearing = Navis.normalizeAngle(bearing-DIFF);
+            double distance = Navis.distance(gps, ais)*1852;
+            double weight = 1.0/(1+Math.pow(1.55-distance, 2));
+            int deg = index((float) heading);
+            angle[deg].add(bearing, weight);
+            angleCount[deg]++;
             //System.err.printf("run %.1f %.1f %.1f %.2f\n", heading, bearing, distance, weight);
+        }
+        private int index(float heading)
+        {
+            return Math.round(heading/10) % 36;
         }
         
     }
-    private class GPS extends AbstractNMEAObserver implements Runnable
+    private class GPS<T> extends AbstractNMEAObserver implements Runnable
     {
-        private GatheringByteChannel channel;
+        private T input;
         private BlockingQueue<WP> queue;
+        private boolean gps;
         private MessageType messageType;
-        private double longitude;
-        private double latitude;
+        private double lon;
+        private double lat;
         private float hdop = Float.MAX_VALUE;
         private float heading = -1;
+        private double longitude;
+        private double latitude;
+        private long time;
 
-        public GPS(Path path, BlockingQueue<WP> queue) throws IOException
+        public GPS(T input, BlockingQueue<WP> queue, boolean gps) throws IOException
         {
-            this.channel = (GatheringByteChannel) Files.newByteChannel(path);
+            this.input = (T) input;
             this.queue = queue;
-        }
-        public GPS(String hostname, int port, BlockingQueue<WP> queue) throws IOException
-        {
-            InetSocketAddress address = new InetSocketAddress(hostname, port);
-            this.channel = SocketChannel.open(address);
-            this.queue = queue;
+            this.gps = gps;
         }
         
         @Override
@@ -187,20 +198,24 @@ public class GPSCompass
         {
             try
             {
-                parser.parse(channel, false, channel::toString, this, null);
+                parser.parse(input, false, input::toString, this, null);
             }
-            catch (IOException ex)
+            catch (Exception ex)
             {
                 ex.printStackTrace();
+            }
+            finally
+            {
+                System.err.println();
             }
         }
 
         @Override
         public void commit(String reason)
         {
-            if (Objects.equals(messageType, MessageType.RMC))
+            if (time != 0 && clock.millis() > time)
             {
-                WP wp = new WP(longitude, latitude, hdop, clock.millis(), heading);
+                WP wp = new WP(longitude, latitude, hdop, time, heading, gps);
                 try
                 {
                     queue.put(wp);
@@ -210,6 +225,16 @@ public class GPSCompass
                     Logger.getLogger(GPSCompass.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+            latitude = lat;
+            longitude = lon;
+            time = clock.millis();
+        }
+
+        @Override
+        public void setClock(Clock clock)
+        {
+            super.setClock(clock);
+            ((GPSClock)clock).setPartialUpdate(true);
         }
 
         @Override
@@ -219,15 +244,15 @@ public class GPSCompass
         }
 
         @Override
-        public void setLongitude(double longitude)
+        public void setLongitude(double lon)
         {
-            this.longitude = longitude;
+            this.lon = lon;
         }
 
         @Override
-        public void setLatitude(double latitude)
+        public void setLatitude(double lat)
         {
-            this.latitude = latitude;
+            this.lat = lat;
         }
 
         @Override
@@ -239,7 +264,18 @@ public class GPSCompass
         @Override
         public void setTrueHeading(float degrees)
         {
-            this.heading = degrees;
+            this.heading = (float) Navis.normalizeAngle(degrees - variation);
+        }
+
+        @Override
+        public void setMagneticVariation(float magneticVariation)
+        {
+            variation = magneticVariation;
+        }
+
+        public boolean isGps()
+        {
+            return gps;
         }
 
     }
@@ -247,12 +283,14 @@ public class GPSCompass
     {
         private float hdop;
         private final float heading;
+        private final boolean gps;
 
-        public WP(double longitude, double latitude, float hdop, long time, float heading)
+        public WP(double longitude, double latitude, float hdop, long time, float heading, boolean gps)
         {
             super(time, latitude, longitude);
             this.hdop = hdop;
             this.heading = heading;
+            this.gps = gps;
         }
 
         public double hdopSq()
