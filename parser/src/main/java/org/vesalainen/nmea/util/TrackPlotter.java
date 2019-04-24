@@ -24,8 +24,8 @@ import java.io.InputStream;
 import java.util.function.UnaryOperator;
 import org.vesalainen.math.AbstractPoint;
 import org.vesalainen.math.Point;
+import org.vesalainen.ui.AbstractPlotter.Polyline;
 import org.vesalainen.ui.Plotter;
-import org.vesalainen.ui.Plotter.Polyline;
 
 /**
  *
@@ -64,7 +64,7 @@ public class TrackPlotter
         Polyline polyline = plotter.polyline(color);
         polyline.lineTo(input.stream().map((t)->{return new AbstractPoint(t.longitude, t.latitude);}).map(new DepCorr()));
         plotter.drawPolyline(polyline);
-        plotter.plot(file, ext);
+        plotter.plot(file.toString(), ext);
     }
     
     private static class DepCorr implements UnaryOperator<AbstractPoint>

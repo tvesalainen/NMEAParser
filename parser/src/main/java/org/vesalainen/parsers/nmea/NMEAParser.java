@@ -18,14 +18,12 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.channels.ScatteringByteChannel;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import java.util.zip.Checksum;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
@@ -39,6 +37,7 @@ import org.vesalainen.parser.annotation.RecoverMethod;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
+import org.vesalainen.parser.util.ChecksumProvider;
 import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.ais.AISContext;
@@ -47,9 +46,7 @@ import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.util.CharSequences;
 
 /**
- * @author Timo Vesalainen
- * @param 
- * @see <a href="http://catb.org/gpsd/NMEA.html">NMEA Revealed</a>
+ * @author Timo Vesalainen@see <a href="http://catb.org/gpsd/NMEA.html">NMEA Revealed</a>
  * @see <a href="http://catb.org/gpsd/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
  * @see <a href="http://www.eye4software.com/hydromagic/documentation/nmea0183/">Professional hydrographic survey software</a>
  * @see <a href="doc-files/NMEAParser-statements.html#BNF">BNF Syntax for NMEA</a>
@@ -194,10 +191,8 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "speed", value = "c skip?"),
     @Rule(left = "windAngle")
 })
-public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, ChecksumProvider
+public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, ChecksumProvider
 {
-    private static final LocalNMEAChecksum localChecksum = new LocalNMEAChecksum();
-
     public NMEAParser()
     {
         setLogger(this.getClass());
@@ -745,7 +740,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
                 data.setMagneticHeading(heading);
                 break;
             default:
-                throw new IllegalArgumentException(unit+ "expected T/M");
+                throw new IllegalArgumentException(unit+ " expected T/M");
         }
     }
 
@@ -1419,8 +1414,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
             @ParserContext("aisContext") AISContext aisContext
             )
     {
-        NMEAChecksum checksum = getChecksum();
-        checksum.updateInput(input);
+        Checksum checksum = input.getChecksum();
         if (sum != checksum.getValue())
         {
             clock.rollback("checksum");
@@ -1585,8 +1579,6 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
     }
     public <I> void parse(I input, GPSClock gpsClock, Supplier origin, NMEAObserver data, AISObserver aisData) throws IOException
     {
-        NMEAChecksum checksum = getChecksum();
-        checksum.reset();
         if (data == null)
         {
             data = new AbstractNMEAObserver();
@@ -1605,39 +1597,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
         }
         try
         {
-            if (input instanceof ScatteringByteChannel)
-            {
-                ScatteringByteChannel sbc = (ScatteringByteChannel) input;
-                parse(sbc, gpsClock, origin, data, aisContext);
-            }
-            else
-            {
-                if (input instanceof URL)
-                {
-                    URL url = (URL) input;
-                    parse(url, gpsClock, origin, data, aisContext);
-                }
-                else
-                {
-                    if (input instanceof String)
-                    {
-                        String str = (String) input;
-                        parse(str, gpsClock, origin, data, aisContext);
-                    }
-                    else
-                    {
-                        if (input instanceof InputStream)
-                        {
-                            InputStream is = (InputStream) input;
-                            parse(is, gpsClock, origin, data, aisContext);
-                        }
-                        else
-                        {
-                            throw new UnsupportedOperationException(input+" not supported as input");
-                        }
-                    }
-                }
-            }
+            parse(input, gpsClock, origin, data, aisContext);
         }
         finally
         {
@@ -1648,43 +1608,10 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
         }
     }
     @ParseMethod(start = "statements", size = 1024, charSet = "US-ASCII",
-            features={WideIndex, /*UseChecksum,*/ UseDirectBuffer}
+            features={WideIndex, UseChecksum, UseDirectBuffer}
     )
-    protected abstract void parse(
-            URL url,
-            @ParserContext("clock") NMEAClock clock,
-            @ParserContext("origin") Supplier origin,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext("aisContext") AISContext aisContext
-            ) throws IOException;
-
-    @ParseMethod(start = "statements", size = 1024, charSet = "US-ASCII",
-            features={WideIndex, /*UseChecksum,*/ UseDirectBuffer}
-    )
-    protected abstract void parse(
-            ScatteringByteChannel channel,
-            @ParserContext("clock") NMEAClock clock,
-            @ParserContext("origin") Supplier origin,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext("aisContext") AISContext aisContext
-            ) throws IOException;
-
-    @ParseMethod(start = "statements", size = 1024, 
-            features={WideIndex, /*UseChecksum*/}
-    )
-    protected abstract void parse(
-            String text,
-            @ParserContext("clock") NMEAClock clock,
-            @ParserContext("origin") Supplier origin,
-            @ParserContext("data") NMEAObserver data,
-            @ParserContext("aisContext") AISContext aisContext
-            ) throws IOException;
-
-    @ParseMethod(start = "statements", size = 8192, charSet = "US-ASCII",
-            features={WideIndex, /*UseChecksum*/}
-    )
-    protected abstract void parse(
-            InputStream is,
+    protected abstract <I> void parse(
+            I input,
             @ParserContext("clock") NMEAClock clock,
             @ParserContext("origin") Supplier origin,
             @ParserContext("data") NMEAObserver data,
@@ -1696,9 +1623,16 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo//, 
         return (NMEAParser) GenClassFactory.loadGenInstance(NMEAParser.class);
     }
 
-    public NMEAChecksum getChecksum()
+    @Override
+    public int lookaheadLength()
     {
-        return localChecksum.get();
+        return 16;
+    }
+
+    @Override
+    public Checksum createChecksum()
+    {
+        return new NMEAChecksum();
     }
 
 }

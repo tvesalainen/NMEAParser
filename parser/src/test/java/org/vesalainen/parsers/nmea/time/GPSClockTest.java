@@ -84,7 +84,7 @@ public class GPSClockTest
         clock.setTime(0, 0, 2, 0);
         clock.setCurrentTimeMillis(()->2002L);
         clock.commit(null);
-        assertEquals(2000, clock.millis());
+        assertEquals(2001, clock.millis());
 
         clock.start(null);
         clock.setYear(1970);

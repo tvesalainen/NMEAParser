@@ -194,7 +194,7 @@
     <xsd:complexType name="sntp-serverType">
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
-        <xsd:attribute name="directory" type="xsd:string" use="required"/>
+        <xsd:attribute name="configFile" type="xsd:string" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="variation-sourceType">
         <xsd:attribute name="period" type="millisType"/>

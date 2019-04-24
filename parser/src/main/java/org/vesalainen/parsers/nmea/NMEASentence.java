@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Locale;
 import org.vesalainen.math.UnitType;
@@ -71,7 +70,7 @@ public class NMEASentence
      * @return
      * @throws IOException 
      */
-    public static NMEASentence rmc(double declination) throws IOException
+    public static NMEASentence rmc(double declination)
     {
         String variation = String.format(Locale.US, "%.1f", Math.abs(declination));
         char ew = declination > 0 ? 'E' : 'W';
@@ -96,7 +95,7 @@ public class NMEASentence
      * @return
      * @throws IOException 
      */
-    public static NMEASentence dbt(float depth, UnitType unit) throws IOException
+    public static NMEASentence dbt(float depth, UnitType unit)
     {
         return builder(SD, DBT)
                 .add(unit.convertTo(depth, Foot))
@@ -113,7 +112,7 @@ public class NMEASentence
      * @return
      * @throws IOException 
      */
-    public static NMEASentence vhw(double speed, UnitType unit) throws IOException
+    public static NMEASentence vhw(double speed, UnitType unit)
     {
         return builder(VW, VHW)
                 .add().add().add().add()
@@ -130,7 +129,7 @@ public class NMEASentence
      * @return
      * @throws IOException 
      */
-    public static NMEASentence mwv(int windAngle, double windSpeed, UnitType unit, boolean trueWind) throws IOException
+    public static NMEASentence mwv(int windAngle, double windSpeed, UnitType unit, boolean trueWind)
     {
         return builder(UP, MWV)
                 .add(windAngle)
@@ -147,7 +146,7 @@ public class NMEASentence
      * @return
      * @throws IOException 
      */
-    public static NMEASentence mtw(float temperature, UnitType unit) throws IOException
+    public static NMEASentence mtw(float temperature, UnitType unit)
     {
         return builder(YC, MTW)
                 .add(unit.convertTo(temperature, Celsius))
@@ -160,7 +159,7 @@ public class NMEASentence
      * @return
      * @throws IOException 
      */
-    public static NMEASentence txt(String msg) throws IOException
+    public static NMEASentence txt(String msg)
     {
         if (msg.indexOf(',') != -1 || msg.indexOf('*') != -1)
         {
@@ -171,6 +170,20 @@ public class NMEASentence
                 .add(1)
                 .add()
                 .add(msg)
+                .build();
+    }
+    public static NMEASentence hdm(double magneticHeading)
+    {
+        return builder(HC, HDM)
+                .add(magneticHeading)
+                .add('M')
+                .build();
+    }
+    public static NMEASentence hdt(double trueHeading)
+    {
+        return builder(HC, HDT)
+                .add(trueHeading)
+                .add('T')
                 .build();
     }
     /**
@@ -360,7 +373,8 @@ public class NMEASentence
         public Builder add(double fld)
         {
             add();
-            return write(String.format(Locale.US, "%.1f", fld));
+            String str = String.format(Locale.US, "%.1f", fld);
+            return write(str.endsWith(".0") ? str.substring(0, str.length()-2) : str);
         }
         /**
          * Add int field

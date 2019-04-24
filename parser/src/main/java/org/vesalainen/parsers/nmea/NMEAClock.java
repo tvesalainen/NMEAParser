@@ -16,8 +16,6 @@
  */
 package org.vesalainen.parsers.nmea;
 
-import java.time.ZonedDateTime;
-import org.vesalainen.time.MutableDateTime;
 import org.vesalainen.util.Transactional;
 
 /**
@@ -26,23 +24,84 @@ import org.vesalainen.util.Transactional;
  */
 public interface NMEAClock extends Transactional
 {
+    /**
+     * Set day of month. (1 - 31)
+     * @param day 
+     */
     void setDay(int day);
+    /**
+     * Set month (1 - 12)
+     * @param month 
+     */
     void setMonth(int month);
+    /**
+     * Set year. If year &lt; 70 add 2000. If 
+     * year &lt; 100 add 1900. 
+     * @param year 
+     */
     void setYear(int year);
+    /**
+     * Set year, month and day
+     * @param year
+     * @param month
+     * @param day 
+     * @see org.vesalainen.parsers.nmea.NMEAClock#setYear(int) 
+     * @see org.vesalainen.parsers.nmea.NMEAClock#setMonth(int)
+     * @see org.vesalainen.parsers.nmea.NMEAClock#setDay(int) 
+     */
     void setDate(int year, int month, int day);
+    /**
+     * Set hour (0-23), minute (0-59), second (0-59) and milli second (0-999).
+     * @param hour
+     * @param minute
+     * @param second
+     * @param milliSecond 
+     */
     void setTime(int hour, int minute, int second, int milliSecond);
-    public int getHour();
-
-    public int getMinute();
-    public int getSecond();
-    public int getMilliSecond();
-    public int getDay();
-    public int getMonth();
-    public int getYear();
+    /**
+     * Returns hour of day (0-23)
+     * @return 
+     */
+    int getHour();
+    /**
+     * Returns minute of hour (0-59)
+     * @return 
+     */
+    int getMinute();
+    /**
+     * Returns second of minute (0-59)
+     * @return 
+     */
+    int getSecond();
+    /**
+     * Returnr millisecond of second (0-999)
+     * @return 
+     */
+    int getMilliSecond();
+    /**
+     * Returns day of month (1-31)
+     * @return 
+     */
+    int getDay();
+    /**
+     * Returns month of year (1-12)
+     * @return 
+     */
+    int getMonth();
+    /**
+     * Returns 4-digit year
+     * @return 
+     */
+    int getYear();
     /**
      * returns true if committed ever
      * @return 
      */
     boolean isCommitted();
+    /**
+     * Returns difference between NMEA time and real time in milli seconds.
+     * @return 
+     */
+    long offset();
 
 }

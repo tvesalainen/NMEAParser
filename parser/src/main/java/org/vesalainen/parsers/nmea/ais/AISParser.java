@@ -3135,7 +3135,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     {
         int arg = input.parseIntRadix2();
         boolean addressed = arg != 0;
-        int offset = input.getStart()-70;
+        long offset = input.getStart()-70;
         if (addressed)
         {
             aisData.setMmsi1(input.parseInt(offset, 30, 2));
@@ -3224,7 +3224,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
 
     protected void mothershipDim(InputReader arg, @ParserContext("aisData") AISObserver aisData)
     {
-        int off = arg.getStart();
+        long off = arg.getStart();
         if (MMSIType.getType(mmsiStore.get()) == CraftAssociatedWithParentShip)
         {
             aisData.setMothershipMMSI(arg.parseInt(off, 30, 2));

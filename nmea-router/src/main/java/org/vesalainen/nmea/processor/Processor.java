@@ -66,7 +66,7 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 {
                     info("add Compass Corrector");
                     CompassCorrectorType type = (CompassCorrectorType) ob;
-                    CompassCorrector compassCorrector = new CompassCorrector(type, out);
+                    CompassCorrector compassCorrector = new CompassCorrector(out, type, out);
                     processes.add(compassCorrector);
                     addNMEAObserver(compassCorrector);
                     

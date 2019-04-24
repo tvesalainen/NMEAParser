@@ -62,12 +62,13 @@ public abstract class GPSClock extends Clock implements NMEAClock
     protected int upd;
     private long millis;
     protected LongSupplier currentTimeMillis = System::currentTimeMillis;
+    protected boolean partialUpdate;    // update with only time GGA, GLL,...
     
 
     @Override
     public void commit(String reason)
     {
-        if (upd == ALL)
+        if (upd == ALL || (partialUpdate && uncommitted.get(ChronoField.YEAR) > 0))
         {
             if (needCalc)
             {
@@ -238,6 +239,17 @@ public abstract class GPSClock extends Clock implements NMEAClock
         return 0L;
     }
 
+    public void setPartialUpdate(boolean partialUpdate)
+    {
+        this.partialUpdate = partialUpdate;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "GPSClock{" + instant().toString() + '}';
+    }
+
     public static final GPSClock getInstance(boolean live)
     {
         return live ? new LiveGPSClock() : new FixedGPSClock();
@@ -252,7 +264,7 @@ public abstract class GPSClock extends Clock implements NMEAClock
         @Override
         public void commit(String reason)
         {
-            if (upd == ALL)
+            if (upd == ALL || partialUpdate)
             {
                 super.commit(reason);
                 long off = super.millis() - currentTimeMillis.getAsLong();

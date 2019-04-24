@@ -8,7 +8,7 @@
         <ais-log directory="c:\\temp" maxLogSize="4096" >
             <ais-monitor refreshStaticData="true" interpolateSeconds="-1" />
         </ais-log>
-        <compass-corrector directory="c:\\temp" />
+        <compass-corrector configFile="c:\\temp\\deviation.txt" />
         <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>
     </processor>

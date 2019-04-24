@@ -47,7 +47,6 @@ import org.vesalainen.util.navi.Location;
 public class AISMonitor extends JavaLogging implements Stoppable
 {
     private static AISMonitor MONITOR;
-    private static final long TIME_DELTA = 500;
 
     private CachedScheduledThreadPool executor;
     private Clock clock;
@@ -100,7 +99,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
         fine("own update %s", timestamp);
         if (ownVessel == null)
         {
-            ownVessel = new Vessel(TIME_DELTA);
+            ownVessel = new Vessel();
         }
         long millis = timestamp.toInstant().toEpochMilli(); // this is synced with second
         ownVessel.update(millis, latitude, longitude, speed, bearing, rateOfTurn);
@@ -229,7 +228,7 @@ public class AISMonitor extends JavaLogging implements Stoppable
                 long millis = timestamp.toInstant().toEpochMilli(); // this is synced with second
                 if (vessel == null)
                 {
-                    vessel = new Vessel(TIME_DELTA);
+                    vessel = new Vessel();
                 }
                 vessel.update(millis, latitude, longitude, speed, bearing, rateOfTurn);
                 if (ownVessel != null)

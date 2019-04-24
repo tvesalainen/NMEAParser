@@ -18,7 +18,6 @@ package org.vesalainen.nmea.processor;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.vesalainen.nmea.processor.CompassCorrector.Angle;
 
 /**
  *
@@ -34,12 +33,5 @@ public class CompassCorrectorTest
     @Test
     public void test1()
     {
-        Angle a = new Angle(1);
-        a.add(60, 25, 60, 26);
-        Angle b = new Angle(a.toString());
-        assertEquals(a, b);
-        assertEquals(90 , a.angle(), 1e-6);
-        a.add(60, 25, 61, 25);
-        assertEquals(45 , a.angle(), 1e-6);
     }
 }

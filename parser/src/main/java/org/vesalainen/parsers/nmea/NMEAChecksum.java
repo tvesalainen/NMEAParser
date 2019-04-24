@@ -23,11 +23,13 @@ import org.vesalainen.parser.util.InputReader;
 /**
  * @author Timo Vesalainen
  */
-public class NMEAChecksum implements Checksum
+public class NMEAChecksum implements Checksum, CharSequence
 {
     private boolean on;
     private int value;
     private int lastInputEnd;
+    private char[] trace = new char[80];
+    private int traceIndex;
     @Override
     public void update(int b)
     {
@@ -35,6 +37,7 @@ public class NMEAChecksum implements Checksum
     }
     private void doUpdate(int b)
     {
+        trace[traceIndex++%80] = (char) b;
         switch (b)
         {
             case '*':
@@ -62,6 +65,7 @@ public class NMEAChecksum implements Checksum
             doUpdate(seq.charAt(ii));
         }
     }
+    /*
     public void updateInput(InputReader input)
     {
         int end = input.getEnd();
@@ -72,6 +76,7 @@ public class NMEAChecksum implements Checksum
         }
         lastInputEnd = end;
     }
+    */
     @Override
     public void update(byte[] b, int off, int len)
     {
@@ -134,4 +139,30 @@ public class NMEAChecksum implements Checksum
             return (byte) ('A'+v-10);
         }
     }
+
+    @Override
+    public int length()
+    {
+        return traceIndex >= 80 ? 80 : traceIndex;
+    }
+
+    @Override
+    public char charAt(int index)
+    {
+        int length = length();
+        return trace[(traceIndex-length+index) % 80];
+    }
+
+    @Override
+    public CharSequence subSequence(int start, int end)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public String toString()
+    {
+        return "NMEAChecksum{" + new StringBuilder(this) + '}';
+    }
+    
 }
