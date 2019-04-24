@@ -78,7 +78,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "nmeaSentence", value = "gll c location c utc c status faaModeIndicator"),
     @Rule(left = "nmeaSentence", value = "gsa c selectionMode c mode c sat1? c sat2? c sat3? c sat4? c sat5? c sat6? c sat7? c sat8? c sat9? c sat10? c sat11? c sat12? c pdop c hdop c vdop"),
     @Rule(left = "nmeaSentence", value = "gsv c totalNumberOfMessages c messageNumber c totalNumberOfSatellitesInView (c prn c elevation c azimuth c snr)+"),
-    @Rule(left = "nmeaSentence", value = "hdg c magneticSensorHeading c magneticDeviation c magneticVariation"),
+    @Rule(left = "nmeaSentence", value = "hdg c magneticHeading c magneticDeviation c magneticVariation"),
     @Rule(left = "nmeaSentence", value = "hdm c heading"),
     @Rule(left = "nmeaSentence", value = "hdt c heading"),
     @Rule(left = "nmeaSentence", value = "mtw c waterTemperature"),
@@ -120,7 +120,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "rateOfTurn"),
     @Rule(left = "waterTemperature"),
     @Rule(left = "heading"),
-    @Rule(left = "magneticSensorHeading"),
+    @Rule(left = "magneticHeading"),
     @Rule(left = "magneticDeviation", value="c skip?"),
     @Rule(left = "faaModeIndicator"),
     @Rule(left = "messageMode"),
@@ -753,11 +753,11 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     }
 
     @Rule("decimal")
-    protected void magneticSensorHeading(
-            float magneticSensorHeading,
+    protected void magneticHeading(
+            float magneticHeading,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setMagneticSensorHeading(magneticSensorHeading);
+        data.setMagneticHeading(magneticHeading);
     }
 
     @Rule("decimal c ew")

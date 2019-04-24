@@ -689,7 +689,7 @@ public class NMEAParserTest
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.HDG, ss.getProperty("messageType"));
                 assertEquals(TalkerId.II, ss.getProperty("talkerId"));
-                assertEquals(nch.getFloat(1), ss.getFloat("magneticSensorHeading"), Epsilon);
+                assertEquals(nch.getFloat(1), ss.getFloat("magneticHeading"), Epsilon);
                 assertEquals(nch.getFloat(2), ss.getFloat("magneticDeviation"), Epsilon);
                 assertEquals(nch.getSign(5)*nch.getFloat(4), ss.getFloat("magneticVariation"), Epsilon);
             }

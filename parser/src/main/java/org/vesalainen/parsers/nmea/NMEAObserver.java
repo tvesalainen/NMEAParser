@@ -451,21 +451,14 @@ public interface NMEAObserver extends Transactional
     @Unit(value=Degree, min=-30, max=30)
     void setMagneticDeviation(float magneticDeviation);
     /**
-     * HDG
-     * @param magneticSensorHeading 
-     */
-    @NMEACat(Bearing)
-    @Unit(value=Degree, min=0, max=360)
-    void setMagneticSensorHeading(float magneticSensorHeading);
-    /**
-     * HDM, HDT
+     * HDT
      * @param degrees
      */
     @NMEACat(Bearing)
     @Unit(value=Degree, min=0, max=360)
     void setTrueHeading(float degrees);
     /**
-     * HDM, HDT
+     * HDM, HDG
      * @param degrees
      */
     @NMEACat(Bearing)

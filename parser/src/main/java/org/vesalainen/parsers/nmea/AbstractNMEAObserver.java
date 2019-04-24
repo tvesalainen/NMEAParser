@@ -363,12 +363,6 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setMagneticSensorHeading(float magneticSensorHeading)
-    {
-        
-    }
-
-    @Override
     public void setWaterTemperature(float waterTemperature)
     {
         
