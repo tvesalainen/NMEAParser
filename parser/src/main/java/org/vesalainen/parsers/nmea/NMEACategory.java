@@ -26,6 +26,7 @@ public enum NMEACategory
     Bearing,
     Depth,
     Speed,
+    Distance,
     Coordinate,
     Waypoint,
     GPS,

@@ -799,4 +799,49 @@ public class AbstractNMEAObserver implements NMEAObserver
     {
     }
 
+    @Override
+    public void setTargetDistance(float distance)
+    {
+    }
+
+    @Override
+    public void setBearingFromOwnShip(float bearing)
+    {
+    }
+
+    @Override
+    public void setBearingUnit(char units)
+    {
+    }
+
+    @Override
+    public void setTargetSpeed(float speed)
+    {
+    }
+
+    @Override
+    public void setTargetCourse(float course)
+    {
+    }
+
+    @Override
+    public void setCourseUnit(char units)
+    {
+    }
+
+    @Override
+    public void setDistanceOfCPA(float distance)
+    {
+    }
+
+    @Override
+    public void setTimeToCPA(float time)
+    {
+    }
+
+    @Override
+    public void setDistanceUnit(char units)
+    {
+    }
+
 }

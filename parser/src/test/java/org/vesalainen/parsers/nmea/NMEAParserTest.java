@@ -1298,6 +1298,44 @@ public class NMEAParserTest
     }
 
     @Test
+    public void ttm()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$RATTM,30,0.087733,9.667969,,0.00,0.0,T, , ,N,ARPA30,T, *2E\r\n"
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, tc, null);
+                assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.TTM, ss.getProperty("messageType"));
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertEquals(TalkerId.RA, ss.getProperty("talkerId"));
+                assertEquals(nch.getInt(1), ss.getProperty("targetNumber"));
+                assertEquals(nch.getFloat(2), ss.getFloat("targetDistance"), Epsilon);
+                assertEquals(nch.getFloat(3), ss.getFloat("bearingFromOwnShip"), Epsilon);
+                assertEquals(nch.getChar(4), ss.getProperty("bearingUnit"));
+                assertEquals(nch.getFloat(5), ss.getFloat("targetSpeed"), Epsilon);
+                assertEquals(nch.getFloat(6), ss.getFloat("targetCourse"), Epsilon);
+                assertEquals(nch.getChar(7), ss.getProperty("courseUnit"));
+                assertEquals(nch.getChar(10), ss.getProperty("distanceUnit"));
+                assertEquals(nch.getString(11), ss.getProperty("targetName"));
+                assertEquals(nch.getChar(12), ss.getProperty("targetStatus"));
+                assertEquals(nch.getString(13), ss.getProperty("referenceTarget"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void txt()
     {
         try

@@ -770,4 +770,27 @@ public interface NMEAObserver extends Transactional
 
     @NMEACat(Acceleration)
     public void setYRtr(float value);
+
+    @NMEACat(Distance)
+    public void setTargetDistance(float distance);
+
+    @NMEACat(Bearing)
+    public void setBearingFromOwnShip(float bearing);
+
+    public void setBearingUnit(char units);
+
+    @NMEACat(Speed)
+    public void setTargetSpeed(float speed);
+
+    @NMEACat(Bearing)
+    public void setTargetCourse(float course);
+
+    public void setCourseUnit(char units);
+
+    @NMEACat(Distance)
+    public void setDistanceOfCPA(float distance);
+
+    public void setTimeToCPA(float time);
+
+    public void setDistanceUnit(char units);
 }

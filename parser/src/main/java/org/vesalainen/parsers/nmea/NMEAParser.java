@@ -93,6 +93,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "nmeaSentence", value = "rte c totalNumberOfMessages c messageNumber c messageMode c route c waypoints"),
     @Rule(left = "nmeaSentence", value = "ths c trueHeading c status"),
     @Rule(left = "nmeaSentence", value = "tll c targetNumber c destinationWaypointLocation c targetName c targetTime c targetStatus c referenceTarget"),
+    @Rule(left = "nmeaSentence", value = "ttm c targetNumber c targetDistance c bearingFromOwnShip c bearingUnit c targetSpeed c targetCourse c courseUnit c distanceOfCPA c timeToCPA c distanceUnit c targetName c targetStatus c referenceTarget"),
     @Rule(left = "nmeaSentence", value = "txt c totalNumberOfMessages c messageNumber c targetName c message"),
     @Rule(left = "nmeaSentence", value = "vhw c waterHeading c waterHeading c waterSpeed c waterSpeed"),
     @Rule(left = "nmeaSentence", value = "vtg c track c track c speed c speed faaModeIndicator"),
@@ -189,6 +190,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "waterSpeed", value = "c skip?"),
     @Rule(left = "track", value = "c skip?"),
     @Rule(left = "speed", value = "c skip?"),
+    @Rule(left = "bearingUnit"),
     @Rule(left = "windAngle")
 })
 public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, ChecksumProvider
@@ -821,10 +823,10 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("decimal c letter")
     protected void distanceToWaypoint(
             float distanceToWaypoint,
-            char units,
+            char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDistanceToWaypoint(toKnots(distanceToWaypoint, units));
+        data.setDistanceToWaypoint(toKnots(distanceToWaypoint, unit));
     }
 
     @Rule("decimal c letter")
@@ -977,10 +979,10 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("decimal c letter")
     protected void arrivalCircleRadius(
             float arrivalCircleRadius,
-            char units,
+            char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setArrivalCircleRadius(toNauticalMiles(arrivalCircleRadius, units));
+        data.setArrivalCircleRadius(toNauticalMiles(arrivalCircleRadius, unit));
     }
 
     @Rule("decimal c decimal")
@@ -1017,12 +1019,94 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         data.setTargetNumber(target);
     }
 
+    @Rule("decimal")
+    protected void targetDistance(
+            float distance,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTargetDistance(distance);
+    }
+
+    @Rule("decimal")
+    protected void bearingFromOwnShip(
+            float bearing,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setBearingFromOwnShip(bearing);
+    }
+
+    @Rule("letter")
+    protected void bearingUnit(
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setBearingUnit(unit);
+    }
+
+    @Rule("decimal")
+    protected void targetSpeed(
+            float speed,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTargetSpeed(speed);
+    }
+
     @Rule("letter")
     protected void targetStatus(
             char status,
             @ParserContext("data") NMEAObserver data)
     {
         data.setTargetStatus(status);
+    }
+    
+    @Rule("decimal")
+    protected void targetCourse(
+            float course,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTargetCourse(course);
+    }
+
+    @Rule("letter")
+    protected void courseUnit(
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setCourseUnit(unit);
+    }
+    
+    @Rule("decimal")
+    protected void distanceOfCPA(
+            float distance,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setDistanceOfCPA(distance);
+    }
+
+    @Rule("decimal")
+    protected void timeToCPA(
+            float time,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setTimeToCPA(time);
+    }
+
+    @Rule("wsp")
+    protected void distanceOfCPA()
+    {   // OpenCPN send ' '
+    }
+
+    @Rule("wsp")
+    protected void timeToCPA()
+    {   // OpenCPN send ' '
+    }
+
+    @Rule("letter")
+    protected void distanceUnit(
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setDistanceUnit(unit);
     }
     
     @Rule("string")
@@ -1530,6 +1614,9 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
 
     @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)]+")
     protected abstract void skip();
+
+    @Terminal(expression = "[ \t]+")
+    protected abstract void wsp();
 
     @RecoverMethod
     public void recover(

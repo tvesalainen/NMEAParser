@@ -186,6 +186,16 @@ public class NMEASentence
                 .add('T')
                 .build();
     }
+    public static NMEASentence hdg(double magneticHeading, double deviation, double variation)
+    {
+        return builder(HC, HDG)
+                .add(magneticHeading)
+                .add(Math.abs(deviation))
+                .add(deviation >= 0 ? 'E' : 'W')
+                .add(Math.abs(variation))
+                .add(variation >= 0 ? 'E' : 'W')
+                .build();
+    }
     /**
      * Returns byte buffer containing the sentence.
      * @return 
@@ -241,6 +251,14 @@ public class NMEASentence
     public CharSequence getPrefix()
     {
         return NMEA.getPrefix(seq);
+    }
+    /**
+     * Returns size of sentence.
+     * @return 
+     */
+    public int size()
+    {
+        return buffer.limit();
     }
     /**
      * Write sentence to bb
