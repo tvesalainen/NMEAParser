@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.processor.deviation;
 
 import java.io.IOException;
 
@@ -22,86 +22,9 @@ import java.io.IOException;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public interface DeviationMXBean
+public interface DeviationReadWriteMXBean extends DeviationReadMXBean
 {
-    String getPath();
-    double getVariation();
     void rotate(double diff);
-    String getDeviation000();
-
-    String getDeviation010();
-
-    String getDeviation100();
-
-    String getDeviation110();
-
-    String getDeviation120();
-
-    String getDeviation130();
-
-    String getDeviation140();
-
-    String getDeviation150();
-
-    String getDeviation160();
-
-    String getDeviation170();
-
-    String getDeviation180();
-
-    String getDeviation190();
-
-    String getDeviation020();
-
-    String getDeviation200();
-
-    String getDeviation210();
-
-    String getDeviation220();
-
-    String getDeviation230();
-
-    String getDeviation240();
-
-    String getDeviation250();
-
-    String getDeviation260();
-
-    String getDeviation270();
-
-    String getDeviation280();
-
-    String getDeviation290();
-
-    String getDeviation030();
-
-    String getDeviation300();
-
-    String getDeviation310();
-
-    String getDeviation320();
-
-    String getDeviation330();
-
-    String getDeviation340();
-
-    String getDeviation350();
-
-    String getDeviation040();
-
-    String getDeviation050();
-
-    String getDeviation060();
-
-    String getDeviation070();
-
-    String getDeviation080();
-
-    String getDeviation090();
-
-    void load() throws IOException;
-
-    void reset();
 
     void setDeviation000(String deviation);
 
@@ -175,6 +98,5 @@ public interface DeviationMXBean
 
     void setDeviation090(String deviation);
 
-    void store() throws IOException;
     
 }

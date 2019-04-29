@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,6 +37,7 @@ import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import static org.vesalainen.nmea.processor.GeoMagManager.Type.DECLINATION;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.MessageType;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.AttachedLogger;
 
 /**
@@ -43,7 +45,7 @@ import org.vesalainen.util.logging.AttachedLogger;
  */
 public class CompassCorrector extends AbstractPropertySetter implements AttachedLogger, Stoppable
 {
-    private GatheringByteChannel channel;
+    private WritableByteChannel out;
     private String[] prefixes = new String[]{"clock", "messageType", "latitude", "longitude", "magneticHeading", };
     private Clock clock = Clock.systemUTC();
     private double latitude;
@@ -53,16 +55,22 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     private final Path path;
     private final GeoMagManager geoMagMgr;
     private DeviationManager deviationMgr;
+    private final CachedScheduledThreadPool executor;
 
-    public CompassCorrector(GatheringByteChannel channel, CompassCorrectorType type, WritableByteChannel out) throws IOException
+    public CompassCorrector(CompassCorrectorType type, WritableByteChannel out, CachedScheduledThreadPool executor) throws IOException
     {
-        this.channel = channel;
+        this.out = out;
+        this.executor = executor;
         this.path = Paths.get(type.getConfigFile());
         this.geoMagMgr = new GeoMagManager();
         geoMagMgr.addObserver(DECLINATION, 0.1, this::updateVariance);
     }
 
     private void updateVariance(double variance)
+    {
+        executor.submit(()->updVar(variance));
+    }
+    private void updVar(double variance)
     {
         if (deviationMgr == null)
         {
@@ -96,7 +104,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
                         try 
                         {
                             ByteBuffer bb = deviationMgr.getHDT(magneticHeading);
-                            channel.write(bb);
+                            out.write(bb);
                             bb.flip();
                         }
                         catch (IOException ex) 
@@ -162,24 +170,6 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     public String[] getPrefixes()
     {
         return prefixes;
-    }
-
-    private double[] readPoints(Path deviation) throws IOException
-    {
-        List<String> lines = Files.readAllLines(deviation);
-        double[] points = new double[lines.size()*2];
-        int idx = 0;
-        for (String line : lines)
-        {
-            String[] split = line.split(" ");
-            if (split.length != 2)
-            {
-                throw new IllegalArgumentException(line);
-            }
-            points[idx++] = Primitives.parseDouble(split[0]);
-            points[idx++] = Primitives.parseDouble(split[1]);
-        }
-        return points;
     }
 
 }

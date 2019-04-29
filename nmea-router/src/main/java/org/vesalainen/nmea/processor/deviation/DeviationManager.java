@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.processor.deviation;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -22,9 +22,7 @@ import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import static java.nio.file.StandardOpenOption.CREATE;
-import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
-import static java.nio.file.StandardOpenOption.WRITE;
+import static java.nio.file.StandardOpenOption.*;
 import java.util.List;
 import java.util.Locale;
 import javax.management.InstanceAlreadyExistsException;
@@ -42,7 +40,7 @@ import org.vesalainen.util.ArrayHelp;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class DeviationManager extends DeviationBean
+public class DeviationManager extends DeviationReadWriteBean
 {
     private Path path;
     private double[] points;
@@ -75,7 +73,7 @@ public class DeviationManager extends DeviationBean
             int len = points.length / 2;
             for (int ii = 0; ii < len; ii++)
             {
-                bw.write(String.format(Locale.US, "%.1f %.1f\n", points[2 * ii], points[2 * ii + 1]));
+                bw.write(String.format(Locale.US, "%.0f %.1f\n", points[2 * ii], points[2 * ii + 1]));
             }
         }
     }
@@ -163,7 +161,7 @@ public class DeviationManager extends DeviationBean
         for (int ii=0;ii<3600;ii++)
         {
             float a = (float)ii/10F;
-            NMEASentence hdt = NMEASentence.hdt(Navis.normalizeAngle(spline.applyAsDouble(a) + a - variation));
+            NMEASentence hdt = NMEASentence.hdt(Navis.normalizeAngle(spline.applyAsDouble(a) + a + variation));
             trueHeading[ii] = hdt.getByteBuffer();
         }
     }
