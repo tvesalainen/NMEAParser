@@ -16,12 +16,12 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.nmea.processor.DeviationManager;
+import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import org.junit.Test;
-import org.vesalainen.nmea.processor.DeviationManager;
+import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import static org.junit.Assert.*;
 import org.vesalainen.util.CharSequences;
 
@@ -40,12 +40,12 @@ public class DeviationManagerTest
     public void test1() throws IOException
     {
         DeviationManager dm = new DeviationManager(Paths.get("c:\\temp\\deviation.txt"), 10);
-        assertEquals("$HCHDT,260,T*33\r\n", get(dm.getHDT(270)));
+        assertEquals("$HCHDT,280,T*3D\r\n", get(dm.getHDT(270)));
         dm.setDeviation090("-10");
         assertEquals("-10.0", dm.getDeviation090());
-        assertEquals("$HCHDT,70,T*00\r\n", get(dm.getHDT(90)));
+        assertEquals("$HCHDT,90,T*0E\r\n", get(dm.getHDT(90)));
         dm.rotate(10);
-        assertEquals("$HCHDT,80,T*0F\r\n", get(dm.getHDT(90)));
+        assertEquals("$HCHDT,100,T*36\r\n", get(dm.getHDT(90)));
     }
     private String get(ByteBuffer bb)
     {
