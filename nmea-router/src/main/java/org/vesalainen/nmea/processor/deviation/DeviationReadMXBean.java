@@ -24,87 +24,189 @@ import java.io.IOException;
  */
 public interface DeviationReadMXBean
 {
-
-    String getDeviation000();
-
-    String getDeviation010();
-
-    String getDeviation020();
-
-    String getDeviation030();
-
-    String getDeviation040();
-
-    String getDeviation050();
-
-    String getDeviation060();
-
-    String getDeviation070();
-
-    String getDeviation080();
-
-    String getDeviation090();
-
-    String getDeviation100();
-
-    String getDeviation110();
-
-    String getDeviation120();
-
-    String getDeviation130();
-
-    String getDeviation140();
-
-    String getDeviation150();
-
-    String getDeviation160();
-
-    String getDeviation170();
-
-    String getDeviation180();
-
-    String getDeviation190();
-
-    String getDeviation200();
-
-    String getDeviation210();
-
-    String getDeviation220();
-
-    String getDeviation230();
-
-    String getDeviation240();
-
-    String getDeviation250();
-
-    String getDeviation260();
-
-    String getDeviation270();
-
-    String getDeviation280();
-
-    String getDeviation290();
-
-    String getDeviation300();
-
-    String getDeviation310();
-
-    String getDeviation320();
-
-    String getDeviation330();
-
-    String getDeviation340();
-
-    String getDeviation350();
-
+    void load() throws IOException;
+    String getDeviation(int deg);
     String getPath();
-
     double getVariation();
 
-    void load() throws IOException;
+    default String getDeviation000()
+    {
+        return getDeviation(00);
+    }
 
-    void reset();
+    default String getDeviation010()
+    {
+        return getDeviation(10);
+    }
 
-    void store() throws IOException;
-    
+    default String getDeviation020()
+    {
+        return getDeviation(20);
+    }
+
+    default String getDeviation030()
+    {
+        return getDeviation(30);
+    }
+
+    default String getDeviation040()
+    {
+        return getDeviation(40);
+    }
+
+    default String getDeviation050()
+    {
+        return getDeviation(50);
+    }
+
+    default String getDeviation060()
+    {
+        return getDeviation(60);
+    }
+
+    default String getDeviation070()
+    {
+        return getDeviation(70);
+    }
+
+    default String getDeviation080()
+    {
+        return getDeviation(80);
+    }
+
+    default String getDeviation090()
+    {
+        return getDeviation(90);
+    }
+
+    default String getDeviation100()
+    {
+        return getDeviation(100);
+    }
+
+    default String getDeviation110()
+    {
+        return getDeviation(110);
+    }
+
+    default String getDeviation120()
+    {
+        return getDeviation(120);
+    }
+
+    default String getDeviation130()
+    {
+        return getDeviation(130);
+    }
+
+    default String getDeviation140()
+    {
+        return getDeviation(140);
+    }
+
+    default String getDeviation150()
+    {
+        return getDeviation(150);
+    }
+
+    default String getDeviation160()
+    {
+        return getDeviation(160);
+    }
+
+    default String getDeviation170()
+    {
+        return getDeviation(170);
+    }
+
+    default String getDeviation180()
+    {
+        return getDeviation(180);
+    }
+
+    default String getDeviation190()
+    {
+        return getDeviation(190);
+    }
+
+    default String getDeviation200()
+    {
+        return getDeviation(200);
+    }
+
+    default String getDeviation210()
+    {
+        return getDeviation(210);
+    }
+
+    default String getDeviation220()
+    {
+        return getDeviation(220);
+    }
+
+    default String getDeviation230()
+    {
+        return getDeviation(230);
+    }
+
+    default String getDeviation240()
+    {
+        return getDeviation(240);
+    }
+
+    default String getDeviation250()
+    {
+        return getDeviation(250);
+    }
+
+    default String getDeviation260()
+    {
+        return getDeviation(260);
+    }
+
+    default String getDeviation270()
+    {
+        return getDeviation(270);
+    }
+
+    default String getDeviation280()
+    {
+        return getDeviation(280);
+    }
+
+    default String getDeviation290()
+    {
+        return getDeviation(290);
+    }
+
+    default String getDeviation300()
+    {
+        return getDeviation(300);
+    }
+
+    default String getDeviation310()
+    {
+        return getDeviation(310);
+    }
+
+    default String getDeviation320()
+    {
+        return getDeviation(320);
+    }
+
+    default String getDeviation330()
+    {
+        return getDeviation(330);
+    }
+
+    default String getDeviation340()
+    {
+        return getDeviation(340);
+    }
+
+    default String getDeviation350()
+    {
+        return getDeviation(350);
+    }
+
 }

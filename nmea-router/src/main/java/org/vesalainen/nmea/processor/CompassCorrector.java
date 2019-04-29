@@ -16,25 +16,17 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.nmea.processor.deviation.DeviationManager;
-import java.io.BufferedWriter;
+import org.vesalainen.nmea.processor.deviation.EditableDeviationManager;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import static java.nio.file.StandardOpenOption.*;
 import java.time.Clock;
-import java.util.List;
-import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.code.AbstractPropertySetter;
-import org.vesalainen.lang.Primitives;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import static org.vesalainen.nmea.processor.GeoMagManager.Type.DECLINATION;
+import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
@@ -76,7 +68,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         {
             try
             {
-                deviationMgr = new DeviationManager(path, variance);
+                deviationMgr = DeviationManager.getInstance(path, variance);
             }
             catch (IOException ex)
             {
