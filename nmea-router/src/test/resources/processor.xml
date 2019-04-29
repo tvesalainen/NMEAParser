@@ -11,6 +11,7 @@
         <compass-corrector configFile="c:\\temp\\deviation.txt" />
         <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>
+        <route prefix="$HCHDT" target="Net TCP"/>
     </processor>
     <multicast-nmea-0183 name="Net" address="224.0.0.3" enable="true">
         <route prefix="$GPRMC" target="Proc TCP"/>
