@@ -270,13 +270,13 @@ public abstract class GPSClock extends Clock implements NMEAClock
                 long off = super.millis() - currentTimeMillis.getAsLong();
                 min.accept(off);
                 average.accept(min.getMin());
-                logger.info("off = %d %s", off, average);
+                logger.fine("off = %d %s", off, average);
                 long delta = (long) (average.fast()-offset);
                 long sig = delta >=0 ? 1 : -1;
                 long adelta = Math.abs(delta);
                 if (adelta > DRIFT_LIMIT)
                 {
-                    logger.info("setting time %d = %d", off, offset);
+                    logger.fine("setting time %d = %d", off, offset);
                     offset = off;
                 }
                 else
@@ -285,7 +285,7 @@ public abstract class GPSClock extends Clock implements NMEAClock
                     if (adj != 0)
                     {
                         offset += adj;
-                        logger.info("adjusting time %d = %d", adj, offset);
+                        logger.fine("adjusting time %d = %d", adj, offset);
                     }
                 }
                 committed = true;

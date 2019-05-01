@@ -23,10 +23,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -38,7 +35,6 @@ import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEASampler;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
 import org.vesalainen.parsers.nmea.time.GPSClock;
-import org.vesalainen.util.WeakMapSet;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -143,6 +139,10 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     public void addNMEAObserver(PropertySetter propertySetter, String... prefixes)
     {
         nmeaDispatcher.addObserver(propertySetter, prefixes);
+        if (clock != null)
+        {
+            propertySetter.set("clock", clock); // supply clock if attached on the fly
+        }
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
@@ -161,6 +161,10 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
             aisDispatcher = AISDispatcher.getInstance(AISDispatcher.class);
         }
         aisDispatcher.addObserver(propertySetter, prefixes);
+        if (clock != null)
+        {
+            propertySetter.set("clock", clock); // supply clock if attached on the fly
+        }
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
