@@ -19,25 +19,25 @@ package org.vesalainen.nmea.experimental;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.WayPoint;
-import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
+import org.vesalainen.nmea.processor.deviation.DeviationBuilder;
 import org.vesalainen.parsers.nmea.MessageType;
+import org.vesalainen.parsers.nmea.NMEADispatcher;
 import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.parsers.nmea.ais.AbstractAISObserver;
+import org.vesalainen.parsers.nmea.NMEAService;
+import org.vesalainen.parsers.nmea.ais.AISDispatcher;
 import org.vesalainen.parsers.nmea.ais.MessageTypes;
-import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.navi.Location;
@@ -49,42 +49,61 @@ import org.vesalainen.util.navi.Location;
 public class CompassCalibrator extends JavaLogging
 {
     private static final double DISTANCE_TOLERANCE = UnitType.convert(10, Meter, NM);
-    private static final double DEGREE_TOLERANCE = 25;
+    private static final double DEGREE_TOLERANCE = 10;
     private static final long TIME_TOLERANCE = 2000;
     private Path path;
     private CachedScheduledThreadPool executor;
     private Map<Integer,AISTarget> aisTargets = new ConcurrentHashMap<>();
     private Map<Integer,ARPATarget> arpaTargets = new ConcurrentHashMap<>();
-    private Corrector corrector = new Corrector();
-    private Clock clock;
+    private DeviationBuilder builder;
+    private final double variation;
+    private NMEAObserverImpl nmeaObserver;
+    private AISObserverImpl aisObserver;
 
-    public CompassCalibrator(Path path)
+    public CompassCalibrator(Path path, double variation)
     {
-        this(path, new CachedScheduledThreadPool());
+        this(new DeviationBuilder(path, variation), path, variation, new CachedScheduledThreadPool());
     }
-    public CompassCalibrator(Path path, CachedScheduledThreadPool executor)
+    public CompassCalibrator(DeviationBuilder builder, Path path, double variation, CachedScheduledThreadPool executor)
     {
         super(CompassCalibrator.class);
         this.path = path;
+        this.variation = variation;
         this.executor = executor;
+        this.builder = builder;
     }
-
+    public void attach(NMEAService svc)
+    {
+        nmeaObserver = new NMEAObserverImpl();
+        aisObserver = new AISObserverImpl();
+        svc.addNMEAObserver(nmeaObserver);
+        svc.addAISObserver(aisObserver);
+    }
+    public void detach(NMEAService svc)
+    {
+        svc.removeNMEAObserver(nmeaObserver);
+        svc.removeAISObserver(aisObserver);
+    }
     public void run() throws IOException, InterruptedException
     {
+        NMEADispatcher nmeaDispatcher = NMEADispatcher.getInstance(NMEADispatcher.class);
+        nmeaObserver = new NMEAObserverImpl();
+        nmeaDispatcher.addObserver(nmeaObserver, nmeaObserver.getPrefixes());
+        AISDispatcher aisDispatcher = AISDispatcher.getInstance(AISDispatcher.class);
+        aisObserver = new AISObserverImpl();
+        aisDispatcher.addObserver(aisObserver, aisObserver.getPrefixes());
         NMEAParser parser = NMEAParser.newInstance();
-        clock = GPSClock.getInstance(false);
-        JavaLogging.setClockSupplier(()->clock);
-        parser.parse(path, (GPSClock)clock, path::toString, new NMEAObserverImpl(), new AISObserverImpl());
+        parser.parse(path, false, path::toString, nmeaDispatcher, aisDispatcher);
         executor.awaitTermination(1, TimeUnit.DAYS);
     }
     private void process(AISTarget ais, AISInstance aisIns)
     {
-        finest("process %s %d", ais, aisIns.time);
+        info("process %s %d", ais, aisIns.time);
         arpaTargets.values().forEach((a)->process(a, ais, aisIns));
     }
     private void process(ARPATarget arpa, AISTarget ais, AISInstance aisIns)
     {
-        finest("process %s %s", ais, arpa);
+        info("process %s %s", ais, arpa);
         ARPAInstance arpaIns = arpa.getClosest(aisIns.time);
         if (arpaIns != null)
         {
@@ -98,56 +117,24 @@ public class CompassCalibrator extends JavaLogging
         double distanceToAis = Navis.distance(arpaIns.ownLat, arpaIns.ownLon, aisLat, aisLon);
         if (diff(distanceToAis, arpaIns.targetDistance) > DISTANCE_TOLERANCE)
         {
-            finest("%s too far %.0fm %.0fm", ais, UnitType.convert(distanceToAis, NM, Meter), UnitType.convert(arpaIns.targetDistance, NM, Meter));
+            info("%s too far %.0fm %.0fm", ais, UnitType.convert(distanceToAis, NM, Meter), UnitType.convert(arpaIns.targetDistance, NM, Meter));
             return;
         }
         double bearingToAis = Navis.bearing(arpaIns.ownLat, arpaIns.ownLon, aisLat, aisLon);
-        corrector.add(arpaIns.trueHeading, arpaIns.bearingFromOwnShip, bearingToAis);
+        double angleDiff = Navis.angleDiff(arpaIns.bearingFromOwnShip, bearingToAis);
+        if (Math.abs(angleDiff) > DEGREE_TOLERANCE)
+        {
+            info("angle too big %f", angleDiff);
+        }
+        else
+        {
+            info("correct %s %f %f %f", ais, arpaIns.trueHeading, arpaIns.bearingFromOwnShip, bearingToAis);
+            builder.correct(arpaIns.trueHeading, arpaIns.bearingFromOwnShip, bearingToAis);
+        }
     }
     private double diff(double x, double y)
     {
         return Math.abs(x-y);
-    }
-    private class Corrector
-    {
-        private List<Double> trueBearings = new ArrayList<>();
-        private List<Double> radarBearings = new ArrayList<>();
-        private List<Double> aisBearings = new ArrayList<>();
-        
-        public boolean add(double trueBearing, double radarBearing, double aisBearing)
-        {
-            double angleDiff = Navis.angleDiff(aisBearing, radarBearing);
-            if (Math.abs(angleDiff) > DEGREE_TOLERANCE)
-            {
-                finest("angle too big %f", angleDiff);
-                return false;
-            }
-            else
-            {
-                info("correct %f %f %f", trueBearing, radarBearing, aisBearing);
-                trueBearings.add(trueBearing);
-                radarBearings.add(radarBearing);
-                aisBearings.add(aisBearing);
-                return true;
-            }
-        }
-        public void start()
-        {
-            trueBearings.clear();
-            radarBearings.clear();
-            aisBearings.clear();
-        }
-        public void commit()
-        {
-            if (!radarBearings.isEmpty())
-            {
-                System.err.println();
-            }
-        }
-        public void rollback()
-        {
-        }
-
     }
     private class ARPATarget
     {
@@ -250,9 +237,9 @@ public class CompassCalibrator extends JavaLogging
         }
         
     }
-    private class NMEAObserverImpl extends AbstractNMEAObserver
+    private class NMEAObserverImpl extends AbstractPropertySetter
     {
-
+        private String[] prefixes = new String[]{"clock", "targetCourse", "targetSpeed", "targetDistance", "targetStatus", "targetNumber", "longitude", "latitude", "trueHeading", "bearingFromOwnShip", "messageType"};
         private float targetCourse;
         private float targetSpeed;
         private float targetDistance;
@@ -263,6 +250,7 @@ public class CompassCalibrator extends JavaLogging
         private float trueHeading;
         private float bearingFromOwnShip;
         private MessageType messageType;
+        private Clock clock;
 
         @Override
         public void commit(String reason)
@@ -292,7 +280,7 @@ public class CompassCalibrator extends JavaLogging
                                     target = new ARPATarget(targetNumber);
                                     arpaTargets.put(targetNumber, target);
                                 }
-                                ARPAInstance instance = new ARPAInstance(CompassCalibrator.this.clock.millis(), targetDistance, bearingFromOwnShip, longitude, latitude, trueHeading);
+                                ARPAInstance instance = new ARPAInstance(clock.millis(), targetDistance, bearingFromOwnShip, longitude, latitude, trueHeading);
                                 target.add(instance);
                                 break;
                             case 'L':
@@ -315,71 +303,84 @@ public class CompassCalibrator extends JavaLogging
         }
 
         @Override
-        public void setMessageType(MessageType messageType)
+        public String[] getPrefixes()
         {
-            this.messageType = messageType;
+            return prefixes;
         }
 
         @Override
-        public void setTargetCourse(float course)
+        public void set(String property, Object arg)
         {
-            this.targetCourse = course;
+            switch (property)
+            {
+                case "messageType":
+                    this.messageType = (MessageType) arg;
+                    break;
+                case "clock":
+                    this.clock = (Clock) arg;
+                    break;
+            }
         }
 
         @Override
-        public void setTargetSpeed(float speed)
+        public void set(String property, double arg)
         {
-            this.targetSpeed = speed;
+            switch (property)
+            {
+                case "longitude":
+                    this.longitude = arg;
+                    break;
+                case "latitude":
+                    this.latitude = arg;
+                    break;
+            }
         }
 
         @Override
-        public void setTargetDistance(float distance)
+        public void set(String property, float arg)
         {
-            this.targetDistance = distance;
+            switch (property)
+            {
+                case "targetCourse":
+                    this.targetCourse = arg;
+                    break;
+                case "targetSpeed":
+                    this.targetSpeed = arg;
+                    break;
+                case "targetDistance":
+                    this.targetDistance = arg;
+                    break;
+                case "bearingFromOwnShip":
+                    this.bearingFromOwnShip = arg;
+                    break;
+                case "trueHeading":
+                    this.trueHeading = arg;
+                    break;
+            }
         }
 
         @Override
-        public void setBearingFromOwnShip(float bearing)
+        public void set(String property, int arg)
         {
-            this.bearingFromOwnShip = bearing;
+            switch (property)
+            {
+                case "targetNumber":
+                    this.targetNumber = arg;
+                    break;
+            }
         }
 
         @Override
-        public void setLongitude(double longitude)
+        public void set(String property, char arg)
         {
-            this.longitude = longitude;
+            switch (property)
+            {
+                case "targetStatus":
+                    this.targetStatus = arg;
+                    break;
+            }
         }
-
-        @Override
-        public void setLatitude(double latitude)
-        {
-            this.latitude = latitude;
-        }
-
-        @Override
-        public void setTargetStatus(char status)
-        {
-            this.targetStatus = status;
-        }
-
-        @Override
-        public void setTargetNumber(int target)
-        {
-            this.targetNumber = target;
-        }
-
-        @Override
-        public void setTrueHeading(float degrees)
-        {
-            this.trueHeading = degrees;
-        }
-
-        @Override
-        public void setClock(Clock clock)
-        {
-            CompassCalibrator.this.clock = clock;
-        }
-
+        
     }
     private class AISTarget
     {
@@ -462,8 +463,9 @@ public class CompassCalibrator extends JavaLogging
         }
         
     }
-    private class AISObserverImpl extends AbstractAISObserver
+    private class AISObserverImpl extends AbstractPropertySetter
     {
+        private String[] prefixes = new String[]{"clock", "ownMessage", "dimensionToStarboard", "dimensionToPort", "dimensionToStern", "dimensionToBow", "vesselName", "latitude", "longitude", "heading", "messageType", "mmsi"};
         private boolean ownMessage;
         private int dimensionToStarboard;
         private int dimensionToPort;
@@ -474,6 +476,9 @@ public class CompassCalibrator extends JavaLogging
         private double longitude;
         private int heading;
         private Future<?> future;
+        private MessageTypes messageType;
+        private int mmsi;
+        private Clock clock;
 
         @Override
         public void commit(String reason)
@@ -495,24 +500,25 @@ public class CompassCalibrator extends JavaLogging
                 {
                     trg.pos = new BoatPosition(dimensionToStarboard, dimensionToPort, dimensionToBow, dimensionToStern);
                 }
-                switch (messageType)
+                if (clock != null)
                 {
-                    case PositionReportClassA:
-                    case PositionReportClassAAssignedSchedule:
-                    case PositionReportClassAResponseToInterrogation:
-                    case StandardClassBCSPositionReport:
-                    case ExtendedClassBEquipmentPositionReport:
-                    case AidToNavigationReport:
-                        finest("AIS %s", new Location(latitude, longitude));
-                        final AISInstance instance = new AISInstance(clock.millis(), latitude, longitude, heading);
-                        process(target, instance);
-                        /**
-                        if (future == null || future.isDone())
-                        {
-                            future = executor.submit(()->process(target, instance));
-                        }
-                        */
-                        break;
+                    switch (messageType)
+                    {
+                        case PositionReportClassA:
+                        case PositionReportClassAAssignedSchedule:
+                        case PositionReportClassAResponseToInterrogation:
+                        case StandardClassBCSPositionReport:
+                        case ExtendedClassBEquipmentPositionReport:
+                        case AidToNavigationReport:
+                            finest("AIS %s", new Location(latitude, longitude));
+                            final AISInstance instance = new AISInstance(clock.millis(), latitude, longitude, heading);
+                            //process(target, instance);
+                            if (future == null || future.isDone())
+                            {
+                                future = executor.submit(()->process(target, instance));
+                            }
+                            break;
+                    }
                 }
             }
         }
@@ -526,6 +532,7 @@ public class CompassCalibrator extends JavaLogging
             dimensionToStern = -1;
             dimensionToBow = -1;
             vesselName = null;
+            ownMessage = false;
         }
 
         @Override
@@ -534,63 +541,77 @@ public class CompassCalibrator extends JavaLogging
         }
 
         @Override
-        public void setOwnMessage(boolean ownMessage)
+        public String[] getPrefixes()
         {
-            this.ownMessage = ownMessage;
+            return prefixes;
         }
 
         @Override
-        public void setMessageType(MessageTypes messageType)
+        public void set(String property, Object arg)
         {
-            this.messageType = messageType;
+            switch (property)
+            {
+                case "clock":
+                    this.clock = (Clock) arg;
+                    break;
+                case "messageType":
+                    this.messageType = (MessageTypes) arg;
+                    break;
+                case "vesselName":
+                    this.vesselName = (String) arg;
+                    break;
+            }
         }
 
         @Override
-        public void setDimensionToStarboard(int dimension)
+        public void set(String property, int arg)
         {
-            this.dimensionToStarboard = dimension;
+            switch (property)
+            {
+                case "mmsi":
+                    this.mmsi = arg;
+                    break;
+                case "heading":
+                    this.heading = arg;
+                    break;
+                case "dimensionToStarboard":
+                    this.dimensionToStarboard = arg;
+                    break;
+                case "dimensionToPort":
+                    this.dimensionToPort = arg;
+                    break;
+                case "dimensionToStern":
+                    this.dimensionToStern = arg;
+                    break;
+                case "dimensionToBow":
+                    this.dimensionToBow = arg;
+                    break;
+            }
         }
 
         @Override
-        public void setDimensionToPort(int dimension)
+        public void set(String property, boolean arg)
         {
-            this.dimensionToPort = dimension;
+            switch (property)
+            {
+                case "ownMessage":
+                    this.ownMessage = arg;
+                    break;
+            }
         }
 
         @Override
-        public void setDimensionToStern(int dimension)
+        public void set(String property, double arg)
         {
-            this.dimensionToStern = dimension;
-        }
-
-        @Override
-        public void setDimensionToBow(int dimension)
-        {
-            this.dimensionToBow = dimension;
-        }
-
-        @Override
-        public void setVesselName(String str)
-        {
-            this.vesselName = str;
-        }
-
-        @Override
-        public void setLatitude(double degrees)
-        {
-            this.latitude = degrees;
-        }
-
-        @Override
-        public void setLongitude(double degrees)
-        {
-            this.longitude = degrees;
-        }
-
-        @Override
-        public void setHeading(int heading)
-        {
-            this.heading = heading;
+            switch (property)
+            {
+                case "latitude":
+                    this.latitude = arg;
+                    break;
+                case "longitude":
+                    this.longitude = arg;
+                    break;
+            }
         }
 
     }

@@ -82,15 +82,6 @@ public class EditableDeviationManager extends DeviationManager implements Deviat
         spline = new PolarCubicSpline(points);
         updateTrueHeading();
     }
-    private void updateTrueHeading()
-    {
-        for (int ii=0;ii<3600;ii++)
-        {
-            float a = (float)ii/10F;
-            NMEASentence hdt = NMEASentence.hdt(Navis.normalizeAngle(spline.applyAsDouble(a) + a + variation));
-            trueHeading[ii] = hdt.getByteBuffer();
-        }
-    }
     @Override
     public String getDeviation(int deg)
     {

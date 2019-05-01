@@ -32,12 +32,15 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.math.PolarCubicSpline;
+import org.vesalainen.navi.Navis;
+import org.vesalainen.parsers.nmea.NMEASentence;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class DeviationManager
+public abstract class DeviationManager extends JavaLogging
 {
     
     protected Path path;
@@ -49,6 +52,7 @@ public abstract class DeviationManager
 
     protected DeviationManager(Path path, double variation)
     {
+        super(DeviationManager.class);
         try
         {
             this.path = path;
@@ -70,7 +74,7 @@ public abstract class DeviationManager
         }
         else
         {
-            return null;
+            return new DeviationBuilder(path, variation);
         }
     }
     public void store() throws IOException
@@ -109,6 +113,26 @@ public abstract class DeviationManager
         for (int ii = 0; ii < len; ii++)
         {
             points[2 * ii] = ii * 10;
+        }
+    }
+    public double getDeviation(double deg)
+    {
+        if (spline != null && spline.isInjection())
+        {
+            return spline.applyAsDouble(deg);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    protected void updateTrueHeading()
+    {
+        for (int ii=0;ii<3600;ii++)
+        {
+            double a = (double)ii/10F;
+            NMEASentence hdt = NMEASentence.hdt(Navis.normalizeAngle(getDeviation(a) + a + variation));
+            trueHeading[ii] = hdt.getByteBuffer();
         }
     }
 

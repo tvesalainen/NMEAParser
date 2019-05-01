@@ -38,7 +38,7 @@ public class CompassCalibratorTest
     @Test
     public void test() throws IOException, InterruptedException
     {
-        CompassCalibrator cc = new CompassCalibrator(Paths.get("c:\\temp\\testinmea2.txt"));
+        CompassCalibrator cc = new CompassCalibrator(Paths.get("c:\\temp\\testinmea2.txt"), 10.6);
         cc.run();
     }
     

@@ -23,12 +23,17 @@ import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.code.AbstractPropertySetter;
+import org.vesalainen.nmea.experimental.CompassCalibrator;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import static org.vesalainen.nmea.processor.GeoMagManager.Type.DECLINATION;
+import org.vesalainen.nmea.processor.deviation.DeviationBuilder;
 import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.MessageType;
+import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.AttachedLogger;
 
@@ -38,7 +43,7 @@ import org.vesalainen.util.logging.AttachedLogger;
 public class CompassCorrector extends AbstractPropertySetter implements AttachedLogger, Stoppable
 {
     private WritableByteChannel out;
-    private String[] prefixes = new String[]{"clock", "messageType", "latitude", "longitude", "magneticHeading", };
+    private String[] prefixes = new String[]{"clock", "messageType", "latitude", "longitude", "magneticHeading" };
     private Clock clock = Clock.systemUTC();
     private double latitude;
     private double longitude;
@@ -48,11 +53,15 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     private final GeoMagManager geoMagMgr;
     private DeviationManager deviationMgr;
     private final CachedScheduledThreadPool executor;
+    private final NMEAService service;
+    private DeviationBuilder builder;
+    private CompassCalibrator calibrator;
 
-    public CompassCorrector(CompassCorrectorType type, WritableByteChannel out, CachedScheduledThreadPool executor) throws IOException
+    public CompassCorrector(CompassCorrectorType type, WritableByteChannel out, CachedScheduledThreadPool executor, NMEAService service) throws IOException
     {
         this.out = out;
         this.executor = executor;
+        this.service = service;
         this.path = Paths.get(type.getConfigFile());
         this.geoMagMgr = new GeoMagManager();
         geoMagMgr.addObserver(DECLINATION, 0.1, this::updateVariance);
@@ -69,6 +78,12 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
             try
             {
                 deviationMgr = DeviationManager.getInstance(path, variance);
+                if (deviationMgr instanceof DeviationBuilder)
+                {
+                    builder = (DeviationBuilder) deviationMgr;
+                    calibrator = new CompassCalibrator(builder, path, variance, executor);
+                    calibrator.attach(service);
+                }
             }
             catch (IOException ex)
             {
@@ -115,6 +130,26 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     }
 
     @Override
+    public void stop()
+    {
+        if (builder != null)
+        {
+            try
+            {
+                builder.store();
+            }
+            catch (IOException ex)
+            {
+                throw new IllegalArgumentException(ex);
+            }
+        }
+        if (calibrator != null)
+        {
+            calibrator.detach(service);
+        }
+    }
+
+    @Override
     public void set(String property, double arg)
     {
         switch (property)
@@ -153,11 +188,6 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         }
     }
     
-    @Override
-    public void stop()
-    {
-    }
-
     @Override
     public String[] getPrefixes()
     {
