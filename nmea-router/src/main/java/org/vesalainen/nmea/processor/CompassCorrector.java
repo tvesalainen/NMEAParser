@@ -16,20 +16,16 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.nmea.processor.deviation.EditableDeviationManager;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nmea.experimental.CompassCalibrator;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import static org.vesalainen.nmea.processor.GeoMagManager.Type.DECLINATION;
-import org.vesalainen.nmea.processor.deviation.DeviationBuilder;
 import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.MessageType;
@@ -54,8 +50,8 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     private DeviationManager deviationMgr;
     private final CachedScheduledThreadPool executor;
     private final NMEAService service;
-    private DeviationBuilder builder;
     private CompassCalibrator calibrator;
+    private final Path buildPath;
 
     public CompassCorrector(CompassCorrectorType type, WritableByteChannel out, CachedScheduledThreadPool executor, NMEAService service) throws IOException
     {
@@ -63,6 +59,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         this.executor = executor;
         this.service = service;
         this.path = Paths.get(type.getConfigFile());
+        this.buildPath = Paths.get(type.getBuildFile());
         this.geoMagMgr = new GeoMagManager();
         geoMagMgr.addObserver(DECLINATION, 0.1, this::updateVariance);
     }
@@ -77,13 +74,9 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         {
             try
             {
-                deviationMgr = DeviationManager.getInstance(path, variance);
-                if (deviationMgr instanceof DeviationBuilder)
-                {
-                    builder = (DeviationBuilder) deviationMgr;
-                    calibrator = new CompassCalibrator(builder, path, variance, executor);
-                    calibrator.attach(service);
-                }
+                deviationMgr = new DeviationManager(path, variance);
+                calibrator = new CompassCalibrator(deviationMgr, path, variance, executor);
+                calibrator.attach(service);
             }
             catch (IOException ex)
             {
@@ -118,6 +111,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
                         {
                             throw new IllegalArgumentException(ex);
                         }
+                        deviationMgr.updateMagneticHeading(magneticHeading);
                     }
                     break;
             }
@@ -132,17 +126,6 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     @Override
     public void stop()
     {
-        if (builder != null)
-        {
-            try
-            {
-                builder.store();
-            }
-            catch (IOException ex)
-            {
-                throw new IllegalArgumentException(ex);
-            }
-        }
         if (calibrator != null)
         {
             calibrator.detach(service);

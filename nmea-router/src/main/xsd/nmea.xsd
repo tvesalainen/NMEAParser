@@ -195,6 +195,7 @@
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
         <xsd:attribute name="configFile" type="xsd:string" use="required"/>
+        <xsd:attribute name="buildFile" type="xsd:string"/>
     </xsd:complexType>
     <xsd:complexType name="variation-sourceType">
         <xsd:attribute name="period" type="millisType"/>

@@ -22,12 +22,35 @@ import java.io.IOException;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public interface DeviationReadMXBean
+public interface DeviationMXBean
 {
+    void plot(String path) throws IOException;
     void load() throws IOException;
     String getDeviation(int deg);
     String getPath();
     double getVariation();
+
+    void store() throws IOException;
+    public void reset();
+    
+    void setDeviation(double deviation);
+    
+    default void setPlus1()
+    {
+        setDeviation(1);
+    }
+    default void setPlus5()
+    {
+        setDeviation(5);
+    }
+    default void setMinus1()
+    {
+        setDeviation(-1);
+    }
+    default void setMinus5()
+    {
+        setDeviation(-5);
+    }
 
     default String getDeviation000()
     {

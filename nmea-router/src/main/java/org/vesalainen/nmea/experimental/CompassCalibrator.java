@@ -19,25 +19,30 @@ package org.vesalainen.nmea.experimental;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import static java.util.logging.Level.*;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.WayPoint;
-import org.vesalainen.nmea.processor.deviation.DeviationBuilder;
+import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEADispatcher;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
 import org.vesalainen.parsers.nmea.ais.MessageTypes;
+import org.vesalainen.parsers.nmea.ais.TimestampSupport;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.navi.Location;
@@ -55,22 +60,23 @@ public class CompassCalibrator extends JavaLogging
     private CachedScheduledThreadPool executor;
     private Map<Integer,AISTarget> aisTargets = new ConcurrentHashMap<>();
     private Map<Integer,ARPATarget> arpaTargets = new ConcurrentHashMap<>();
-    private DeviationBuilder builder;
+    private DeviationManager devMgr;
     private final double variation;
     private NMEAObserverImpl nmeaObserver;
     private AISObserverImpl aisObserver;
+    private List<Correction> corrections = new ArrayList<>();
 
-    public CompassCalibrator(Path path, double variation)
+    public CompassCalibrator(Path path, double variation) throws IOException
     {
-        this(new DeviationBuilder(path, variation), path, variation, new CachedScheduledThreadPool());
+        this(new DeviationManager(path, variation), path, variation, new CachedScheduledThreadPool());
     }
-    public CompassCalibrator(DeviationBuilder builder, Path path, double variation, CachedScheduledThreadPool executor)
+    public CompassCalibrator(DeviationManager devMgr, Path path, double variation, CachedScheduledThreadPool executor)
     {
         super(CompassCalibrator.class);
         this.path = path;
         this.variation = variation;
         this.executor = executor;
-        this.builder = builder;
+        this.devMgr = devMgr;
     }
     public void attach(NMEAService svc)
     {
@@ -98,43 +104,108 @@ public class CompassCalibrator extends JavaLogging
     }
     private void process(AISTarget ais, AISInstance aisIns)
     {
-        info("process %s %d", ais, aisIns.time);
-        arpaTargets.values().forEach((a)->process(a, ais, aisIns));
+        try
+        {
+            finest("process %s %d", ais, aisIns.time);
+            arpaTargets.values().forEach((a)->process(a, ais, aisIns));
+            commit(ais);
+        }
+        catch (Exception ex)
+        {
+            log(SEVERE, ex, "%s", ex.getMessage());
+        }
     }
     private void process(ARPATarget arpa, AISTarget ais, AISInstance aisIns)
     {
-        info("process %s %s", ais, arpa);
+        finest("process %s %s", ais, arpa);
         ARPAInstance arpaIns = arpa.getClosest(aisIns.time);
         if (arpaIns != null)
         {
-            process(ais, arpaIns, aisIns);
+            process(arpa, ais, arpaIns, aisIns);
         }
     }
-    private void process(AISTarget ais, ARPAInstance arpaIns, AISInstance aisIns)
+    private void process(ARPATarget arpa, AISTarget ais, ARPAInstance arpaIns, AISInstance aisIns)
     {
         double aisLat = ais.getLatitude(aisIns);
         double aisLon = ais.getLongitude(aisIns);
+        double maxLength = ais.getMaxLength(aisIns);
         double distanceToAis = Navis.distance(arpaIns.ownLat, arpaIns.ownLon, aisLat, aisLon);
+        double distanceToAisMeters = UnitType.convert(distanceToAis, NM, Meter);
+        double maxAngle = 2*Math.toDegrees(Math.atan2(maxLength/2, distanceToAisMeters));
+        if (maxAngle > DEGREE_TOLERANCE)
+        {
+            fine("too close too big");
+            return;
+        }
         if (diff(distanceToAis, arpaIns.targetDistance) > DISTANCE_TOLERANCE)
         {
-            info("%s too far %.0fm %.0fm", ais, UnitType.convert(distanceToAis, NM, Meter), UnitType.convert(arpaIns.targetDistance, NM, Meter));
+            fine("%s too far %.0fm %.0fm", ais, UnitType.convert(distanceToAis, NM, Meter), UnitType.convert(arpaIns.targetDistance, NM, Meter));
             return;
         }
         double bearingToAis = Navis.bearing(arpaIns.ownLat, arpaIns.ownLon, aisLat, aisLon);
         double angleDiff = Navis.angleDiff(arpaIns.bearingFromOwnShip, bearingToAis);
         if (Math.abs(angleDiff) > DEGREE_TOLERANCE)
         {
-            info("angle too big %f", angleDiff);
+            fine("%s angle too big %f", ais, angleDiff);
         }
         else
         {
-            info("correct %s %f %f %f", ais, arpaIns.trueHeading, arpaIns.bearingFromOwnShip, bearingToAis);
-            builder.correct(arpaIns.trueHeading, arpaIns.bearingFromOwnShip, bearingToAis);
+            Correction correction = new Correction(arpa, ais, arpaIns.trueHeading, arpaIns.bearingFromOwnShip, bearingToAis);
+            corrections.add(correction);
+            info("queue correction %s", correction);
+        }
+    }
+    private void commit(AISTarget ais)
+    {
+        try
+        {
+            if (corrections.size() == 1)
+            {
+                Correction c = corrections.get(0);
+                info("correct %s", c);
+                devMgr.correct(c.trueBearing, c.radarBearing, c.aisBearing);
+            }
+            else
+            {
+                for (Correction c : corrections)
+                {
+                    info("undo %s", c);
+                }
+            }
+        }
+        finally
+        {
+            corrections.clear();
         }
     }
     private double diff(double x, double y)
     {
         return Math.abs(x-y);
+    }
+    private class Correction
+    {
+        private ARPATarget arpa;
+        private AISTarget ais;
+        private double trueBearing;
+        private double radarBearing;
+        private double aisBearing;
+
+        public Correction(ARPATarget arpa, AISTarget ais, double trueBearing, double radarBearing, double aisBearing)
+        {
+            this.arpa = arpa;
+            this.ais = ais;
+            this.trueBearing = trueBearing;
+            this.radarBearing = radarBearing;
+            this.aisBearing = aisBearing;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "Correction{" + arpa + ", " + ais + ", " + trueBearing + ", " + radarBearing + ", " + aisBearing + '}';
+        }
+
+        
     }
     private class ARPATarget
     {
@@ -392,7 +463,17 @@ public class CompassCalibrator extends JavaLogging
         {
             this.mmsi = mmsi;
         }
-        
+        public double getMaxLength(AISInstance aisIns)
+        {
+            if (pos != null)
+            {
+                if (pos.length() > 4)
+                {
+                    return pos.length();
+                }
+            }   
+            return 500;
+        }
         public double getLatitude(AISInstance aisIns)
         {
             if (pos != null && aisIns.heading != -1)
@@ -465,7 +546,7 @@ public class CompassCalibrator extends JavaLogging
     }
     private class AISObserverImpl extends AbstractPropertySetter
     {
-        private String[] prefixes = new String[]{"clock", "ownMessage", "dimensionToStarboard", "dimensionToPort", "dimensionToStern", "dimensionToBow", "vesselName", "latitude", "longitude", "heading", "messageType", "mmsi"};
+        private String[] prefixes = new String[]{"clock", "second", "ownMessage", "dimensionToStarboard", "dimensionToPort", "dimensionToStern", "dimensionToBow", "vesselName", "latitude", "longitude", "heading", "messageType", "mmsi"};
         private boolean ownMessage;
         private int dimensionToStarboard;
         private int dimensionToPort;
@@ -479,6 +560,8 @@ public class CompassCalibrator extends JavaLogging
         private MessageTypes messageType;
         private int mmsi;
         private Clock clock;
+        private int second;
+        private long lastMillis;
 
         @Override
         public void commit(String reason)
@@ -511,12 +594,18 @@ public class CompassCalibrator extends JavaLogging
                         case ExtendedClassBEquipmentPositionReport:
                         case AidToNavigationReport:
                             finest("AIS %s", new Location(latitude, longitude));
-                            final AISInstance instance = new AISInstance(clock.millis(), latitude, longitude, heading);
-                            //process(target, instance);
-                            if (future == null || future.isDone())
+                            ZonedDateTime timestamp = ZonedDateTime.now(clock);
+                            if (second != -1)
+                            {
+                                timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
+                            }
+                            long millis = timestamp.toInstant().toEpochMilli(); // this is synced with second
+                            final AISInstance instance = new AISInstance(millis, latitude, longitude, heading);
+                            if ((future == null || future.isDone()) && millis > lastMillis)
                             {
                                 future = executor.submit(()->process(target, instance));
                             }
+                            lastMillis = millis + TIME_TOLERANCE;   // so that next ais measure has corrected deviation in effect
                             break;
                     }
                 }
@@ -526,6 +615,7 @@ public class CompassCalibrator extends JavaLogging
         @Override
         public void start(String reason)
         {
+            second = -1;
             heading = -1;
             dimensionToStarboard = -1;
             dimensionToPort = -1;
@@ -570,6 +660,9 @@ public class CompassCalibrator extends JavaLogging
             {
                 case "mmsi":
                     this.mmsi = arg;
+                    break;
+                case "second":
+                    this.second = arg;
                     break;
                 case "heading":
                     this.heading = arg;

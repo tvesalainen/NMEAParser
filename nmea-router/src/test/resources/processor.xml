@@ -10,7 +10,10 @@
         <ais-log directory="c:\\temp" maxLogSize="4096" >
             <ais-monitor refreshStaticData="true" interpolateSeconds="-1" />
         </ais-log>
-        <compass-corrector configFile="c:\\temp\\deviation.txt" />
+        <compass-corrector 
+            configFile="c:\\temp\\deviation.txt" 
+            buildFile="c:\\temp\\deviation_build.ser" 
+        />
         <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>
         <route prefix="$HCHDT" target="Net TCP"/>

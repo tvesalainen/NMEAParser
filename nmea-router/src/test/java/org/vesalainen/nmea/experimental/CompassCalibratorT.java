@@ -27,10 +27,10 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CompassCalibratorTest
+public class CompassCalibratorT
 {
     
-    public CompassCalibratorTest()
+    public CompassCalibratorT()
     {
         JavaLogging.setConsoleHandler("org.vesalainen", Level.INFO);
     }

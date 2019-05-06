@@ -16,6 +16,8 @@
  */
 package org.vesalainen.nmea.processor.deviation;
 
+import java.awt.Color;
+import java.awt.geom.Point2D;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -31,26 +33,32 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import org.vesalainen.lang.Primitives;
+import org.vesalainen.math.PointList;
 import org.vesalainen.math.PolarCubicSpline;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.parsers.nmea.NMEASentence;
+import static org.vesalainen.ui.Direction.LEFT;
+import static org.vesalainen.ui.Direction.TOP;
+import org.vesalainen.ui.PolarPlotter;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class DeviationManager extends JavaLogging
+public class DeviationManager extends JavaLogging implements DeviationMXBean
 {
     
     protected Path path;
-    protected double[] points;
+    protected final PointList points = new PointList();
     protected ByteBuffer[] trueHeading = new ByteBuffer[3600];
     protected final ObjectName objectName;
     protected PolarCubicSpline spline;
     protected double variation;
+    protected double magneticHeading;
+    protected long headingTimestamp;
 
-    protected DeviationManager(Path path, double variation)
+    public DeviationManager(Path path, double variation) throws IOException
     {
         super(DeviationManager.class);
         try
@@ -59,6 +67,7 @@ public abstract class DeviationManager extends JavaLogging
             this.variation = variation;
             this.objectName = new ObjectName("org.vesalainen.navi.deviation:type=manager");
             ManagementFactory.getPlatformMBeanServer().registerMBean(this, objectName);
+            load();
         }
         catch (MalformedObjectNameException | InstanceAlreadyExistsException | MBeanRegistrationException | NotCompliantMBeanException ex)
         {
@@ -66,60 +75,110 @@ public abstract class DeviationManager extends JavaLogging
         }
     }
 
-    public static DeviationManager getInstance(Path path, double variation) throws IOException
+    @Override
+    public String getDeviation(int deg)
     {
-        if (Files.exists(path))
+        return String.format(Locale.US, "%.1f", getDeviation((double)deg));
+    }
+
+    public void correct(double trueHeading, double radarHeading, double aisHeading)
+    {
+        double magneticHeading = Navis.normalizeAngle(trueHeading - variation);
+        double deviation = Navis.angleDiff(radarHeading, aisHeading);
+        setDeviation(magneticHeading, deviation);
+    }
+
+    public void setDeviation(double magneticHeading, double deviation)
+    {
+        double cumulatedDeviation = getDeviation(magneticHeading) + deviation;
+        int idx = points.indexOf(0, magneticHeading, Double.NaN, 1, 0);
+        if (idx != -1)
         {
-            return new EditableDeviationManager(path, variation);
+            points.set(idx, magneticHeading, cumulatedDeviation);
         }
         else
         {
-            return new DeviationBuilder(path, variation);
+            points.add(magneticHeading, cumulatedDeviation);
+        }
+        info("add correction magneticBearing %f deviation %f", magneticHeading, deviation);
+        points.sort();
+        spline = new PolarCubicSpline(points.array());
+        if (!spline.isInjection())
+        {
+            spline.forceInjection();
+        }
+        info("created new deviation table");
+        updateTrueHeading();
+    }
+    @Override
+    public void setDeviation(double deviation)
+    {
+        if (System.currentTimeMillis() - headingTimestamp < 1800)
+        {
+            setDeviation(magneticHeading, deviation);
+        }
+        else
+        {
+            info("outdated magneticHeading");
         }
     }
+
+    @Override
+    public void plot(String path) throws IOException
+    {
+        PolarPlotter plotter = new PolarPlotter(1000, 1000, Color.WHITE);
+        plotter.setColor(Color.GREEN);
+        plotter.draw(spline);
+        plotter.setColor(Color.LIGHT_GRAY);
+        plotter.drawCoordinates(LEFT, TOP);
+        plotter.plot(path);
+    }
+
+    @Override
     public void store() throws IOException
     {
         try (final BufferedWriter bw = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))
         {
-            int len = points.length / 2;
+            int len = points.size();
             for (int ii = 0; ii < len; ii++)
             {
-                bw.write(String.format(Locale.US, "%.0f %.1f\n", points[2 * ii], points[2 * ii + 1]));
+                Point2D p = points.get(ii);
+                bw.write(String.format(Locale.US, "%.0f %.1f\n", p.getX(), p.getY()));
             }
         }
     }
 
-    public void load() throws IOException
+    @Override
+    public final void load() throws IOException
     {
-        List<String> lines = Files.readAllLines(path);
-        points = new double[lines.size() * 2];
-        int idx = 0;
-        for (String line : lines)
+        points.clear();
+        if (Files.exists(path))
         {
-            String[] split = line.split(" ");
-            if (split.length != 2)
+            List<String> lines = Files.readAllLines(path);
+            for (String line : lines)
             {
-                throw new IllegalArgumentException(line);
+                String[] split = line.split(" ");
+                if (split.length != 2)
+                {
+                    throw new IllegalArgumentException(line);
+                }
+                points.add(Primitives.parseDouble(split[0]), Primitives.parseDouble(split[1]));
             }
-            points[idx++] = Primitives.parseDouble(split[0]);
-            points[idx++] = Primitives.parseDouble(split[1]);
         }
-    }
+        update();
+}
 
+    @Override
     public void reset()
     {
-        points = new double[2 * 36];
-        int len = 36;
-        for (int ii = 0; ii < len; ii++)
-        {
-            points[2 * ii] = ii * 10;
-        }
+        points.clear();
+        spline = null;
     }
     public double getDeviation(double deg)
     {
         if (spline != null && spline.isInjection())
         {
-            return spline.applyAsDouble(deg);
+            return spline.eval(deg, 0.0001);
         }
         else
         {
@@ -130,8 +189,8 @@ public abstract class DeviationManager extends JavaLogging
     {
         for (int ii=0;ii<3600;ii++)
         {
-            double a = (double)ii/10F;
-            NMEASentence hdt = NMEASentence.hdt(Navis.normalizeAngle(getDeviation(a) + a + variation));
+            double magneticHeading = (double)ii/10F;
+            NMEASentence hdt = NMEASentence.hdt(getTrueHeading(magneticHeading));
             trueHeading[ii] = hdt.getByteBuffer();
         }
     }
@@ -140,20 +199,45 @@ public abstract class DeviationManager extends JavaLogging
     {
         return trueHeading[(int) (deg * 10F)];
     }
+    public double getTrueHeading(double magneticHeading)
+    {
+        return Navis.normalizeAngle(magneticHeading + getDeviation(magneticHeading) + variation);
+    }
+    public void updateMagneticHeading(double magneticHeading)
+    {
+        this.magneticHeading = magneticHeading;
+        this.headingTimestamp = System.currentTimeMillis();
+    }
 
     public void updateVariation(double variation)
     {
         this.variation = variation;
+        updateTrueHeading();
     }
 
+    private void update()
+    {
+        if (!points.isEmpty())
+        {
+            spline = new PolarCubicSpline(points.array());
+        }
+        updateTrueHeading();
+    }
+    @Override
     public String getPath()
     {
         return path.toString();
     }
 
+    @Override
     public double getVariation()
     {
         return variation;
+    }
+
+    public PolarCubicSpline getSpline()
+    {
+        return spline;
     }
     
 }
