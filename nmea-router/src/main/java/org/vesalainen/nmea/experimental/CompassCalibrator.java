@@ -150,9 +150,9 @@ public class CompassCalibrator extends JavaLogging
         }
         else
         {
-            Correction correction = new Correction(arpa, ais, arpaIns.trueHeading, arpaIns.bearingFromOwnShip, bearingToAis);
+            Correction correction = new Correction(arpa, ais, arpaIns.magneticHeading, arpaIns.bearingFromOwnShip, bearingToAis, 1/maxAngle);
             corrections.add(correction);
-            info("queue correction %s", correction);
+            info("queue correction %s %.1f", correction, maxAngle);
         }
     }
     private void commit(AISTarget ais)
@@ -163,7 +163,7 @@ public class CompassCalibrator extends JavaLogging
             {
                 Correction c = corrections.get(0);
                 info("correct %s", c);
-                devMgr.correct(c.trueBearing, c.radarBearing, c.aisBearing);
+                devMgr.correct(c.magneticHeading, c.radarHeading, c.aisHeading, c.weight);
             }
             else
             {
@@ -186,23 +186,25 @@ public class CompassCalibrator extends JavaLogging
     {
         private ARPATarget arpa;
         private AISTarget ais;
-        private double trueBearing;
-        private double radarBearing;
-        private double aisBearing;
+        private double magneticHeading;
+        private double radarHeading;
+        private double aisHeading;
+        private double weight;
 
-        public Correction(ARPATarget arpa, AISTarget ais, double trueBearing, double radarBearing, double aisBearing)
+        public Correction(ARPATarget arpa, AISTarget ais, double magneticHeading, double radarHeading, double aisHeading, double weight)
         {
             this.arpa = arpa;
             this.ais = ais;
-            this.trueBearing = trueBearing;
-            this.radarBearing = radarBearing;
-            this.aisBearing = aisBearing;
+            this.magneticHeading = magneticHeading;
+            this.radarHeading = radarHeading;
+            this.aisHeading = aisHeading;
+            this.weight = weight;
         }
 
         @Override
         public String toString()
         {
-            return "Correction{" + arpa + ", " + ais + ", " + trueBearing + ", " + radarBearing + ", " + aisBearing + '}';
+            return "Correction{" + arpa + ", " + ais + ", " + magneticHeading + ", " + radarHeading + ", " + aisHeading + '}';
         }
 
         
@@ -281,16 +283,16 @@ public class CompassCalibrator extends JavaLogging
         private float bearingFromOwnShip;
         private double ownLon;
         private double ownLat;
-        private float trueHeading;
+        private float magneticHeading;
 
-        public ARPAInstance(long time, float targetDistance, float bearingFromOwnShip, double longitude, double latitude, float trueHeading)
+        public ARPAInstance(long time, float targetDistance, float bearingFromOwnShip, double longitude, double latitude, float magneticHeading)
         {
             this.time = time;
             this.targetDistance = targetDistance;
             this.bearingFromOwnShip = bearingFromOwnShip;
             this.ownLon = longitude;
             this.ownLat = latitude;
-            this.trueHeading = trueHeading;
+            this.magneticHeading = magneticHeading;
         }
         public double getTargetLatitude()
         {
@@ -304,13 +306,13 @@ public class CompassCalibrator extends JavaLogging
         @Override
         public String toString()
         {
-            return "ARPAInstance{" + targetDistance + ", " + bearingFromOwnShip + ", " + trueHeading + '}';
+            return "ARPAInstance{" + targetDistance + ", " + bearingFromOwnShip + ", " + magneticHeading + '}';
         }
         
     }
     private class NMEAObserverImpl extends AbstractPropertySetter
     {
-        private String[] prefixes = new String[]{"clock", "targetCourse", "targetSpeed", "targetDistance", "targetStatus", "targetNumber", "longitude", "latitude", "trueHeading", "bearingFromOwnShip", "messageType"};
+        private String[] prefixes = new String[]{"clock", "targetCourse", "targetSpeed", "targetDistance", "targetStatus", "targetNumber", "longitude", "latitude", "magneticHeading", "bearingFromOwnShip", "messageType"};
         private float targetCourse;
         private float targetSpeed;
         private float targetDistance;
@@ -318,10 +320,11 @@ public class CompassCalibrator extends JavaLogging
         private int targetNumber;
         private double longitude;
         private double latitude;
-        private float trueHeading;
+        private float magneticHeading;
         private float bearingFromOwnShip;
         private MessageType messageType;
         private Clock clock;
+        private int lastMagHea;
 
         @Override
         public void commit(String reason)
@@ -351,7 +354,7 @@ public class CompassCalibrator extends JavaLogging
                                     target = new ARPATarget(targetNumber);
                                     arpaTargets.put(targetNumber, target);
                                 }
-                                ARPAInstance instance = new ARPAInstance(clock.millis(), targetDistance, bearingFromOwnShip, longitude, latitude, trueHeading);
+                                ARPAInstance instance = new ARPAInstance(clock.millis(), targetDistance, bearingFromOwnShip, longitude, latitude, magneticHeading);
                                 target.add(instance);
                                 break;
                             case 'L':
@@ -424,8 +427,8 @@ public class CompassCalibrator extends JavaLogging
                 case "bearingFromOwnShip":
                     this.bearingFromOwnShip = arg;
                     break;
-                case "trueHeading":
-                    this.trueHeading = arg;
+                case "magneticHeading":
+                    this.magneticHeading = arg;
                     break;
             }
         }
@@ -456,7 +459,7 @@ public class CompassCalibrator extends JavaLogging
     private class AISTarget
     {
         private int mmsi;
-        private String vesselName = "???";
+        private String vesselName = "";
         private BoatPosition pos;
 
         public AISTarget(int mmsi)
@@ -594,12 +597,17 @@ public class CompassCalibrator extends JavaLogging
                         case ExtendedClassBEquipmentPositionReport:
                         case AidToNavigationReport:
                             finest("AIS %s", new Location(latitude, longitude));
+                            /* second is always in future
                             ZonedDateTime timestamp = ZonedDateTime.now(clock);
                             if (second != -1)
                             {
                                 timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
                             }
                             long millis = timestamp.toInstant().toEpochMilli(); // this is synced with second
+                            info("%s %s", target, timestamp);
+                            */
+                            fine("%s %s", target, clock);
+                            long millis = clock.millis();
                             final AISInstance instance = new AISInstance(millis, latitude, longitude, heading);
                             if ((future == null || future.isDone()) && millis > lastMillis)
                             {

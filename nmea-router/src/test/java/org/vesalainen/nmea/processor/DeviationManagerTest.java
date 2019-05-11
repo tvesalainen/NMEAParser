@@ -22,15 +22,19 @@ import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.Random;
+import java.util.logging.Level;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.math.PolarCubicSpline;
+import org.vesalainen.navi.Navis;
 import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import static org.vesalainen.ui.Direction.LEFT;
 import static org.vesalainen.ui.Direction.TOP;
 import org.vesalainen.ui.PolarPlotter;
 import org.vesalainen.util.CharSequences;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -41,9 +45,10 @@ public class DeviationManagerTest
     
     public DeviationManagerTest()
     {
+        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINE);
     }
 
-    @Test
+    //@Test
     public void testCorrection() throws IOException
     {
         double variation = 10;
@@ -64,32 +69,27 @@ public class DeviationManagerTest
         }
         DeviationManager dm = new DeviationManager(Paths.get("foo"), 10);
         Random random = new Random(12345678L);
-        for (int ii=0;ii<39;ii++)
+        for (int ii=0;ii<300;ii++)
         {
             double magneticHeading = 360*random.nextDouble();
-            double aisHeading = magneticHeading + realDeviation.applyAsDouble(magneticHeading) + variation;
+            double realDev = realDeviation.applyAsDouble(magneticHeading);
+            double aisHeading = Navis.normalizeAngle(magneticHeading + realDev + variation);
             double radarHeading = dm.getTrueHeading(magneticHeading);
-            try
-            {
-                if (ii == 39)
-                {
-                    System.err.println();
-                }
-                dm.correct(aisHeading, radarHeading, aisHeading);
-            }
-            catch (Exception ex)
-            {
-                System.err.println();
-            }
+            JavaLogging.getLogger("org.vesalainen").fine("mh %.1f: rd %.1f  radar %.1f  ais %.1f", magneticHeading, realDev, radarHeading, aisHeading);
+            dm.correct(magneticHeading, radarHeading, aisHeading, 1);
+            double exp = dm.getTrueHeading(magneticHeading);
+            assertEquals(exp, aisHeading, 1);
         }
+        PolarCubicSpline spline = dm.getSpline();
         PolarPlotter plotter = new PolarPlotter(1000, 1000, Color.WHITE);
         plotter.setColor(Color.BLUE);
         plotter.setFont("Arial", BOLD, 20);
         plotter.draw(realDeviation);
         plotter.setColor(Color.RED);
-        plotter.draw(dm.getSpline());
+        spline.setDrawWithControlPoints(true);
+        plotter.draw(spline);
         plotter.setColor(Color.LIGHT_GRAY);
-        plotter.drawCoordinates(LEFT, TOP);
+        plotter.drawCoordinates();
         plotter.plot("dev3.png");
     }
     //@Test

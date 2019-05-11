@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
@@ -50,6 +52,7 @@ public class DeviationManager extends JavaLogging implements DeviationMXBean
 {
     
     protected Path path;
+    protected final Accumulator[] accumulators = new Accumulator[36];
     protected final PointList points = new PointList();
     protected ByteBuffer[] trueHeading = new ByteBuffer[3600];
     protected final ObjectName objectName;
@@ -81,41 +84,48 @@ public class DeviationManager extends JavaLogging implements DeviationMXBean
         return String.format(Locale.US, "%.1f", getDeviation((double)deg));
     }
 
-    public void correct(double trueHeading, double radarHeading, double aisHeading)
+    public void correct(double magneticHeading, double radarHeading, double aisHeading, double weight)
     {
-        double magneticHeading = Navis.normalizeAngle(trueHeading - variation);
+        fine("mh %.1f: radar %.1f  ais %.1f", magneticHeading, radarHeading, aisHeading);
         double deviation = Navis.angleDiff(radarHeading, aisHeading);
-        setDeviation(magneticHeading, deviation);
+        setDeviation(magneticHeading, deviation, weight);
     }
 
-    public void setDeviation(double magneticHeading, double deviation)
+    public void setDeviation(double magneticHeading, double deviation, double weight)
     {
         double cumulatedDeviation = getDeviation(magneticHeading) + deviation;
-        int idx = points.indexOf(0, magneticHeading, Double.NaN, 1, 0);
-        if (idx != -1)
+        fine("mh %.1f: %.1f + %.1f = %.1f", magneticHeading, getDeviation(magneticHeading), deviation, cumulatedDeviation);
+        info("add correction magneticBearing %.1f deviation %.1f", magneticHeading, cumulatedDeviation);
+        int index = (int) (magneticHeading/10);
+        Accumulator acc = accumulators[index];
+        if (acc == null)
         {
-            points.set(idx, magneticHeading, cumulatedDeviation);
+            acc = new Accumulator();
+            accumulators[index] = acc;
         }
-        else
+        acc.add(magneticHeading, cumulatedDeviation, weight);
+        update();
+        try
         {
-            points.add(magneticHeading, cumulatedDeviation);
+            store();
         }
-        info("add correction magneticBearing %f deviation %f", magneticHeading, deviation);
-        points.sort();
-        spline = new PolarCubicSpline(points.array());
-        if (!spline.isInjection())
+        catch (IOException ex)
         {
-            spline.forceInjection();
+            throw new IllegalArgumentException(ex);
         }
-        info("created new deviation table");
-        updateTrueHeading();
     }
     @Override
     public void setDeviation(double deviation)
     {
         if (System.currentTimeMillis() - headingTimestamp < 1800)
         {
-            setDeviation(magneticHeading, deviation);
+            double cumulatedDeviation = getDeviation(magneticHeading) + deviation;
+            int index = (int) (magneticHeading/10);
+            Accumulator acc = new Accumulator();
+            acc.add(magneticHeading, cumulatedDeviation);
+            accumulators[index] = acc;
+            info("force correction magneticBearing %.1f deviation %.1f", magneticHeading, cumulatedDeviation);
+            update();
         }
         else
         {
@@ -130,7 +140,7 @@ public class DeviationManager extends JavaLogging implements DeviationMXBean
         plotter.setColor(Color.GREEN);
         plotter.draw(spline);
         plotter.setColor(Color.LIGHT_GRAY);
-        plotter.drawCoordinates(LEFT, TOP);
+        plotter.drawCoordinates();
         plotter.plot(path);
     }
 
@@ -139,11 +149,12 @@ public class DeviationManager extends JavaLogging implements DeviationMXBean
     {
         try (final BufferedWriter bw = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))
         {
-            int len = points.size();
-            for (int ii = 0; ii < len; ii++)
+            for (Accumulator acc :  accumulators)
             {
-                Point2D p = points.get(ii);
-                bw.write(String.format(Locale.US, "%.0f %.1f\n", p.getX(), p.getY()));
+                if (acc != null)
+                {
+                    bw.write(String.format("%s\n", acc));
+                }
             }
         }
     }
@@ -151,18 +162,13 @@ public class DeviationManager extends JavaLogging implements DeviationMXBean
     @Override
     public final void load() throws IOException
     {
-        points.clear();
         if (Files.exists(path))
         {
-            List<String> lines = Files.readAllLines(path);
-            for (String line : lines)
+            for (String line : Files.readAllLines(path))
             {
-                String[] split = line.split(" ");
-                if (split.length != 2)
-                {
-                    throw new IllegalArgumentException(line);
-                }
-                points.add(Primitives.parseDouble(split[0]), Primitives.parseDouble(split[1]));
+                Accumulator acc = new Accumulator(line);
+                int index = (int) (acc.getX()/10);
+                accumulators[index] = acc;
             }
         }
         update();
@@ -217,9 +223,22 @@ public class DeviationManager extends JavaLogging implements DeviationMXBean
 
     private void update()
     {
+        points.clear();
+        for (Accumulator a :  accumulators)
+        {
+            if (a != null)
+            {
+                points.add(a.getX(), a.getY());
+            }
+        }
         if (!points.isEmpty())
         {
             spline = new PolarCubicSpline(points.array());
+            if (!spline.isInjection())
+            {
+                spline.forceInjection();
+            }
+            info("created new deviation table");
         }
         updateTrueHeading();
     }

@@ -22,6 +22,7 @@ import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.util.logging.Level;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nmea.experimental.CompassCalibrator;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
@@ -51,7 +52,6 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
     private final CachedScheduledThreadPool executor;
     private final NMEAService service;
     private CompassCalibrator calibrator;
-    private final Path buildPath;
 
     public CompassCorrector(CompassCorrectorType type, WritableByteChannel out, CachedScheduledThreadPool executor, NMEAService service) throws IOException
     {
@@ -59,7 +59,6 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         this.executor = executor;
         this.service = service;
         this.path = Paths.get(type.getConfigFile());
-        this.buildPath = Paths.get(type.getBuildFile());
         this.geoMagMgr = new GeoMagManager();
         geoMagMgr.addObserver(DECLINATION, 0.1, this::updateVariance);
     }
@@ -78,9 +77,9 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
                 calibrator = new CompassCalibrator(deviationMgr, path, variance, executor);
                 calibrator.attach(service);
             }
-            catch (IOException ex)
+            catch (Exception ex)
             {
-                throw new IllegalArgumentException(ex);
+                log(Level.SEVERE, ex, "%s", ex.getMessage());
             }
         }
         else
@@ -104,8 +103,11 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
                         try 
                         {
                             ByteBuffer bb = deviationMgr.getHDT(magneticHeading);
-                            out.write(bb);
-                            bb.flip();
+                            if (bb != null)
+                            {
+                                out.write(bb);
+                                bb.flip();
+                            }
                         }
                         catch (IOException ex) 
                         {
