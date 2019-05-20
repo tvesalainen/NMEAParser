@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
@@ -286,10 +285,12 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
     public void commit(String reason)
     {
         ZonedDateTime timestamp = ZonedDateTime.now(clock);
+        /*
         if (second != -1)
         {
             timestamp = (ZonedDateTime) TimestampSupport.adjustIntoSecond(timestamp, second);
         }
+        */
         if (
                 "true".equals(allProperties.getProperty("ownMessage", "false")) &&
                 type.isPositionReport()
@@ -483,7 +484,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                 changed = true;
                 if (db != null)
                 {
-                    warning("AIS: %s replaced %s -> %s", property, db, fresh);
+                    fine("AIS: %s replaced %s -> %s", property, db, fresh);
                 }
             }
         }

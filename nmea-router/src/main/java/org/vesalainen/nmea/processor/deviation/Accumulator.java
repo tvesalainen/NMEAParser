@@ -24,13 +24,15 @@ import org.vesalainen.lang.Primitives;
  */
 public final class Accumulator
 {
-    private double weight;
     private double sumX;
     private double sumY;
+    private double weight;
+    private int count;
+    private String annotation;
 
     public Accumulator(String line)
     {
-        String[] split = line.split(" ");
+        String[] split = line.split(" ", 5);
         switch (split.length)
         {
             case 2:
@@ -43,6 +45,19 @@ public final class Accumulator
                 this.sumY = Primitives.parseDouble(split[1]);
                 this.weight = Primitives.parseDouble(split[2]);
                 break;
+            case 4:
+                this.sumX = Primitives.parseDouble(split[0]);
+                this.sumY = Primitives.parseDouble(split[1]);
+                this.weight = Primitives.parseDouble(split[2]);
+                this.count = Primitives.parseInt(split[3]);
+                break;
+            case 5:
+                this.sumX = Primitives.parseDouble(split[0]);
+                this.sumY = Primitives.parseDouble(split[1]);
+                this.weight = Primitives.parseDouble(split[2]);
+                this.count = Primitives.parseInt(split[3]);
+                this.annotation = split[4];
+                break;
             default:
                 throw new IllegalArgumentException(line);
         }
@@ -52,11 +67,13 @@ public final class Accumulator
     {
     }
 
-    public Accumulator(double sumX, double sumY, double weight)
+    public Accumulator(double sumX, double sumY, double weight, int count, String annotation)
     {
-        this.weight = weight;
         this.sumX = sumX;
         this.sumY = sumY;
+        this.weight = weight;
+        this.count = count;
+        this.annotation = annotation;
     }
 
     public void add(double x, double y)
@@ -72,6 +89,12 @@ public final class Accumulator
         this.sumX += x*weight;
         this.sumY += y*weight;
         this.weight += weight;
+        this.count++;
+    }
+
+    public void setAnnotation(String annotation)
+    {
+        this.annotation = annotation;
     }
     
     public double getX()
@@ -82,6 +105,11 @@ public final class Accumulator
     public double getY()
     {
         return sumY / weight;
+    }
+
+    public int getCount()
+    {
+        return count;
     }
 
     @Override
@@ -128,7 +156,14 @@ public final class Accumulator
     @Override
     public String toString()
     {
-        return sumX + " " + sumY + " " + weight;
+        if (annotation == null)
+        {
+            return sumX + " " + sumY + " " + weight + " " + count;
+        }
+        else
+        {
+            return sumX + " " + sumY + " " + weight + " " + count + " " + annotation;
+        }
     }
     
 }

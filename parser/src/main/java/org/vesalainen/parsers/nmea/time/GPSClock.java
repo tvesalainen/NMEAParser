@@ -254,7 +254,38 @@ public abstract class GPSClock extends Clock implements NMEAClock
     {
         return live ? new LiveGPSClock() : new FixedGPSClock();
     }
+    public static final GPSClock getSyncInstance()
+    {
+        return new SyncLiveGPSClock();
+    }
     public static final class LiveGPSClock extends GPSClock
+    {
+        private long offset;
+        
+        @Override
+        public void commit(String reason)
+        {
+            if (upd == ALL || partialUpdate)
+            {
+                super.commit(reason);
+                offset = super.millis() - currentTimeMillis.getAsLong();
+            }
+        }
+
+        @Override
+        public long millis()
+        {
+            return currentTimeMillis.getAsLong() + offset;
+        }
+
+        @Override
+        public long offset()
+        {
+            return offset;
+        }
+
+    }
+    public static final class SyncLiveGPSClock extends GPSClock
     {
         private JavaLogging logger = JavaLogging.getLogger(LiveGPSClock.class);
         private long offset;

@@ -14,17 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.experimental;
+package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Clock;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +39,8 @@ import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
 import org.vesalainen.parsers.nmea.ais.MessageTypes;
-import org.vesalainen.parsers.nmea.ais.TimestampSupport;
+import org.vesalainen.util.LongRingBufferMap;
+import org.vesalainen.util.TimeToLiveMap;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 import org.vesalainen.util.navi.Location;
@@ -54,12 +52,12 @@ import org.vesalainen.util.navi.Location;
 public class CompassCalibrator extends JavaLogging
 {
     private static final double DISTANCE_TOLERANCE = UnitType.convert(10, Meter, NM);
-    private static final double DEGREE_TOLERANCE = 10;
+    private static final double DEGREE_TOLERANCE = 6;
     private static final long TIME_TOLERANCE = 2000;
     private Path path;
     private CachedScheduledThreadPool executor;
     private Map<Integer,AISTarget> aisTargets = new ConcurrentHashMap<>();
-    private Map<Integer,ARPATarget> arpaTargets = new ConcurrentHashMap<>();
+    private Map<Integer,ARPATarget> arpaTargets = new TimeToLiveMap<>(10, TimeUnit.MINUTES);
     private DeviationManager devMgr;
     private final double variation;
     private NMEAObserverImpl nmeaObserver;
@@ -152,7 +150,7 @@ public class CompassCalibrator extends JavaLogging
         {
             Correction correction = new Correction(arpa, ais, arpaIns.magneticHeading, arpaIns.bearingFromOwnShip, bearingToAis, 1/maxAngle);
             corrections.add(correction);
-            info("queue correction %s %.1f", correction, maxAngle);
+            fine("queue correction %s %.1f", correction, maxAngle);
         }
     }
     private void commit(AISTarget ais)
@@ -162,7 +160,7 @@ public class CompassCalibrator extends JavaLogging
             if (corrections.size() == 1)
             {
                 Correction c = corrections.get(0);
-                info("correct %s", c);
+                fine("correct %s", c);
                 devMgr.correct(c.magneticHeading, c.radarHeading, c.aisHeading, c.weight);
             }
             else
@@ -212,7 +210,7 @@ public class CompassCalibrator extends JavaLogging
     private class ARPATarget
     {
         private int targetNumber;
-        private NavigableMap<Long,ARPAInstance> instances = new TreeMap<>();
+        private LongRingBufferMap<ARPAInstance> instances = new LongRingBufferMap<>(20);
 
         public ARPATarget(int targetNumber)
         {
@@ -223,53 +221,10 @@ public class CompassCalibrator extends JavaLogging
         {
             instances.put(instant.time, instant);
         }
-        ARPAInstance getClosest(Long time)
+        ARPAInstance getClosest(long time)
         {
-            if (!instances.isEmpty())
-            {
-                Map.Entry<Long, ARPAInstance> entry = getClosestEntry(time);
-                if (entry != null && Math.abs(time - entry.getKey()) <= TIME_TOLERANCE)
-                {
-                    return entry.getValue();
-                }
-            }
-            return null;
+            return instances.getClosest(time, TIME_TOLERANCE);
         }
-        Map.Entry<Long, ARPAInstance> getClosestEntry(Long time)
-        {
-            Map.Entry<Long, ARPAInstance> floor = instances.floorEntry(time);
-            Map.Entry<Long, ARPAInstance> ceiling = instances.ceilingEntry(time);
-            if (floor != null && ceiling != null)
-            {
-                if (time - floor.getKey() < ceiling.getKey() - time)
-                {
-                    return floor;
-                }
-                else
-                {
-                    return ceiling;
-                }
-            }
-            else
-            {
-                if (floor != null)
-                {
-                    return floor;
-                }
-                else
-                {
-                    if (ceiling != null)
-                    {
-                        return ceiling;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-        }
-
         @Override
         public String toString()
         {

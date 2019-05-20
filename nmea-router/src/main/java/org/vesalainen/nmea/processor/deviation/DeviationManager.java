@@ -17,7 +17,6 @@
 package org.vesalainen.nmea.processor.deviation;
 
 import java.awt.Color;
-import java.awt.geom.Point2D;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -25,22 +24,16 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
-import org.vesalainen.lang.Primitives;
 import org.vesalainen.math.PointList;
 import org.vesalainen.math.PolarCubicSpline;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import static org.vesalainen.ui.Direction.LEFT;
-import static org.vesalainen.ui.Direction.TOP;
 import org.vesalainen.ui.PolarPlotter;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -101,6 +94,9 @@ public class DeviationManager extends JavaLogging implements DeviationMXBean
         if (acc == null)
         {
             acc = new Accumulator();
+            int from = index*10;
+            int to = from+10;
+            acc.setAnnotation("# ["+from+" - "+to+")");
             accumulators[index] = acc;
         }
         acc.add(magneticHeading, cumulatedDeviation, weight);
@@ -122,6 +118,9 @@ public class DeviationManager extends JavaLogging implements DeviationMXBean
             double cumulatedDeviation = getDeviation(magneticHeading) + deviation;
             int index = (int) (magneticHeading/10);
             Accumulator acc = new Accumulator();
+            int from = index*10;
+            int to = from+10;
+            acc.setAnnotation("# ["+from+" - "+to+")");
             acc.add(magneticHeading, cumulatedDeviation);
             accumulators[index] = acc;
             info("force correction magneticBearing %.1f deviation %.1f", magneticHeading, cumulatedDeviation);

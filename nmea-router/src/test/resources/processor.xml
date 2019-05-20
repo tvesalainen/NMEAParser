@@ -12,7 +12,6 @@
         </ais-log>
         <compass-corrector 
             configFile="c:\\temp\\deviation.txt" 
-            buildFile="c:\\temp\\deviation_build.ser" 
         />
         <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>

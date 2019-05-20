@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.experimental;
 
+import org.vesalainen.nmea.processor.CompassCalibrator;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.logging.Level;

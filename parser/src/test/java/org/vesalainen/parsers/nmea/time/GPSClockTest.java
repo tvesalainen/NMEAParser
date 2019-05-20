@@ -56,9 +56,9 @@ public class GPSClockTest
         assertEquals(500, clock.millis());
     }
     @Test
-    public void testLive()
+    public void testSyncLive()
     {
-        GPSClock clock = GPSClock.getInstance(true);
+        GPSClock clock = GPSClock.getSyncInstance();
         clock.setCurrentTimeMillis(()->0L);
         clock.start(null);
         clock.setYear(1970);

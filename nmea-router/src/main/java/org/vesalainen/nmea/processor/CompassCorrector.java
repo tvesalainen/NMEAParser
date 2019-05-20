@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.logging.Level;
 import org.vesalainen.code.AbstractPropertySetter;
-import org.vesalainen.nmea.experimental.CompassCalibrator;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import static org.vesalainen.nmea.processor.GeoMagManager.Type.DECLINATION;
 import org.vesalainen.nmea.processor.deviation.DeviationManager;
