@@ -68,7 +68,7 @@ public class TC extends AbstractAISObserver
     float temperature = Float.NaN;
     int humidity = -1;
     float dewpoint = Float.NaN;
-    int pressure = -1;
+    float pressure = Float.NaN;
     Tendency pressuretend;
     float visibility = Float.NaN;
     Tendency leveltrend;
@@ -648,7 +648,7 @@ public class TC extends AbstractAISObserver
     }
 
     @Override
-    public void setAirPressure(int pressure)
+    public void setAirPressure(float pressure)
     {
         this.pressure = pressure;
     }

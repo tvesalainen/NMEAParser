@@ -75,30 +75,12 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
     }
     protected void init()
     {
-        addProperties(getPrefixes());
+        dispatcher.addObserver(this);
         if (initializer != null)
         {
             initializer.accept(this);
             initializer = null;
         }
-    }
-    /**
-     * Add offer properties to running set.
-     * @param properties 
-     */
-    public void addProperties(String... properties)
-    {
-        this.properties.addAll(CollectionHelp.create(properties));
-        dispatcher.addObserver(this, properties);
-    }
-    /**
-     * Removes observers from running set.
-     * @param properties 
-     */
-    public void removeProperties(String... properties)
-    {
-        dispatcher.removeObserver(this, properties);
-        this.properties.removeAll(CollectionHelp.create(properties));
     }
     /**
      * Creates a stream from observer. Behavior of two or more running streams
@@ -199,7 +181,7 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
     @Override
     public void run()
     {
-        dispatcher.removeObserver(this, getPrefixes());
+        dispatcher.removeObserver(this);
     }
 
 }

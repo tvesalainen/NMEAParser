@@ -671,11 +671,6 @@ public interface AISObserver extends Transactional
      */
     void setDewPoint(float degrees);
     /**
-     * 800-1200hPa: units 1hPa
-     * @param pressure 
-     */
-    void setAirPressure(int pressure);
-    /**
      * Pressure Tendency
      * @param tendency 0 = steady, 1 = decreasing, 2 = increasing, 3 - N/A (default).
      */

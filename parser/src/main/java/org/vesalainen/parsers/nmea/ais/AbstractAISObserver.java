@@ -770,12 +770,6 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setAirPressure(int pressure)
-    {
-        
-    }
-
-    @Override
     public void setAirPressureTendency(Tendency tendency)
     {
         

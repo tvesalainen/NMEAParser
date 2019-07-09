@@ -90,12 +90,12 @@ public class CompassCalibrator extends JavaLogging
     }
     public void run() throws IOException, InterruptedException
     {
-        NMEADispatcher nmeaDispatcher = NMEADispatcher.getInstance(NMEADispatcher.class);
+        NMEADispatcher nmeaDispatcher = NMEADispatcher.newInstance();
         nmeaObserver = new NMEAObserverImpl();
-        nmeaDispatcher.addObserver(nmeaObserver, nmeaObserver.getPrefixes());
-        AISDispatcher aisDispatcher = AISDispatcher.getInstance(AISDispatcher.class);
+        nmeaDispatcher.addObserver(nmeaObserver);
+        AISDispatcher aisDispatcher = AISDispatcher.newInstance();
         aisObserver = new AISObserverImpl();
-        aisDispatcher.addObserver(aisObserver, aisObserver.getPrefixes());
+        aisDispatcher.addObserver(aisObserver);
         NMEAParser parser = NMEAParser.newInstance();
         parser.parse(path, false, path::toString, nmeaDispatcher, aisDispatcher);
         executor.awaitTermination(1, TimeUnit.DAYS);

@@ -51,7 +51,6 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     private AISDispatcher aisDispatcher;
     private final List<AutoCloseable> autoCloseables = new ArrayList<>();
     private Thread thread;
-    private PropertySetterDispatcher dispatcher;
     private boolean liveClock = true;
     private Future<?> future;
     private GPSClock clock;
@@ -93,8 +92,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         this.in = in;
         this.out = out;
         this.executor = executor;
-        dispatcher = new SimplePropertySetterDispatcher(/*new WeakMapSet<>()*/);
-        nmeaDispatcher = NMEADispatcher.getInstance(NMEADispatcher.class, dispatcher);
+        nmeaDispatcher = NMEADispatcher.newInstance();
     }
     
     public void start()
@@ -127,18 +125,9 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         this.liveClock = liveClock;
     }
     
-    public PropertySetterDispatcher getDispatcher()
-    {
-        return dispatcher;
-    }
-
     public void addNMEAObserver(PropertySetter propertySetter)
     {
-        addNMEAObserver(propertySetter, propertySetter.getPrefixes());
-    }
-    public void addNMEAObserver(PropertySetter propertySetter, String... prefixes)
-    {
-        nmeaDispatcher.addObserver(propertySetter, prefixes);
+        nmeaDispatcher.addObserver(propertySetter);
         if (clock != null)
         {
             propertySetter.set("clock", clock); // supply clock if attached on the fly
@@ -152,15 +141,11 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void addAISObserver(PropertySetter propertySetter)
     {
-        addAISObserver(propertySetter, propertySetter.getPrefixes());
-    }
-    public void addAISObserver(PropertySetter propertySetter, String... prefixes)
-    {
         if (aisDispatcher == null)
         {
-            aisDispatcher = AISDispatcher.getInstance(AISDispatcher.class);
+            aisDispatcher = AISDispatcher.newInstance();
         }
-        aisDispatcher.addObserver(propertySetter, prefixes);
+        aisDispatcher.addObserver(propertySetter);
         if (clock != null)
         {
             propertySetter.set("clock", clock); // supply clock if attached on the fly
@@ -174,11 +159,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void removeNMEAObserver(PropertySetter propertySetter)
     {
-        removeNMEAObserver(propertySetter, propertySetter.getPrefixes());
-    }
-    public void removeNMEAObserver(PropertySetter propertySetter, String... prefixes)
-    {
-        nmeaDispatcher.removeObserver(propertySetter, prefixes);
+        nmeaDispatcher.removeObserver(propertySetter);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
@@ -188,11 +169,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void removeAISObserver(PropertySetter propertySetter)
     {
-        removeAISObserver(propertySetter, propertySetter.getPrefixes());
-    }
-    public void removeAISObserver(PropertySetter propertySetter, String... prefixes)
-    {
-        aisDispatcher.removeObserver(propertySetter, prefixes);
+        aisDispatcher.removeObserver(propertySetter);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;

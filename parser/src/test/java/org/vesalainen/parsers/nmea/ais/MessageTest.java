@@ -362,17 +362,17 @@ public class MessageTest
                     assertTrue(tc.dewpoint >= -20 && tc.dewpoint <= 50);
                 }
                 assertEquals(dewpoint, tc.dewpoint, Epsilon);
-                int pressure = ach.getUInt(181, 190);
+                float pressure = ach.getUInt(181, 190);
                 if (pressure >= 403)
                 {
-                    pressure=-1;
+                    pressure=Float.NaN;
                 }
                 else
                 {
                     pressure+=800;
                     assertTrue(tc.pressure >= 800 && tc.pressure <= 1200);
                 }
-                assertEquals(pressure, tc.pressure);
+                assertEquals(pressure, tc.pressure, 1e-10);
                 assertEquals(Tendency.values()[ach.getUInt(190, 192)], tc.pressuretend);
                 float visibility = ach.getUInt(192, 200);
                 if (visibility >= 250)
@@ -1233,9 +1233,9 @@ public class MessageTest
             list.remove(4);
             list.remove(2);
             list.remove(1);
-            MapListPropertySetter ls = new MapListPropertySetter();
-            AISObserverImpl tc = AISObserverImpl.getInstance(AISObserverImpl.class);
-            tc.addObserver(ls, "mmsi");
+            MapListPropertySetter ls = new MapListPropertySetter("mmsi");
+            AISDispatcher tc = AISDispatcher.newInstance();
+            tc.addObserver(ls);
             parser.parse(nmea, null, tc);
             assertEquals(list, ls.getProperty("mmsi"));
         }

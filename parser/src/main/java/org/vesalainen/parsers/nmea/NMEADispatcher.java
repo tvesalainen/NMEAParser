@@ -16,26 +16,18 @@
  */
 package org.vesalainen.parsers.nmea;
 
-import org.vesalainen.code.PropertyDispatcher;
-import org.vesalainen.code.PropertyDispatcherClass;
-import org.vesalainen.code.PropertySetterDispatcher;
+import org.vesalainen.code.InterfaceDispatcher;
+import org.vesalainen.code.InterfaceDispatcherAnnotation;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-@PropertyDispatcherClass("org.vesalainen.parsers.nmea.NMEADispatcherImpl")
-public abstract class NMEADispatcher extends PropertyDispatcher implements NMEAObserver
+@InterfaceDispatcherAnnotation
+public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEAObserver
 {
-
-    public NMEADispatcher(int[] sizes)
+    public static NMEADispatcher newInstance()
     {
-        super(sizes);
+        return newInstance(NMEADispatcher.class);
     }
-
-    public NMEADispatcher(int[] sizes, PropertySetterDispatcher observers)
-    {
-        super(sizes, observers);
-    }
-    
 }

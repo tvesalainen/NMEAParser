@@ -38,8 +38,7 @@ public class NMEAStream
     }
     public static final <I> Stream<NMEASample> parse(I input, long offerTimeout, long takeTimeout, TimeUnit timeUnit, Supplier origin, String... properties)
     {
-        SimplePropertySetterDispatcher dispatcher = new SimplePropertySetterDispatcher();
-        NMEADispatcher nmeaDispatcher = NMEADispatcher.getInstance(NMEADispatcher.class, dispatcher);
+        NMEADispatcher nmeaDispatcher = NMEADispatcher.newInstance();
         NMEASampler sampler = new NMEASampler(nmeaDispatcher, offerTimeout, takeTimeout, timeUnit, (s)->init(input, nmeaDispatcher, origin), properties);
         return sampler.stream();
     }

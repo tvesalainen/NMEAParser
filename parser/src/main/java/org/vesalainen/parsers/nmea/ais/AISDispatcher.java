@@ -16,26 +16,19 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import org.vesalainen.code.PropertyDispatcher;
-import org.vesalainen.code.PropertyDispatcherClass;
-import org.vesalainen.code.PropertySetterDispatcher;
+import org.vesalainen.code.InterfaceDispatcher;
+import static org.vesalainen.code.InterfaceDispatcher.newInstance;
+import org.vesalainen.code.InterfaceDispatcherAnnotation;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-@PropertyDispatcherClass("org.vesalainen.parsers.nmea.ais.AISDispatcherImpl")
-public abstract class AISDispatcher extends PropertyDispatcher implements AISObserver
+@InterfaceDispatcherAnnotation
+public abstract class AISDispatcher extends InterfaceDispatcher implements AISObserver
 {
-
-    public AISDispatcher(int[] sizes)
+    public static AISDispatcher newInstance()
     {
-        super(sizes);
+        return newInstance(AISDispatcher.class);
     }
-
-    public AISDispatcher(int[] sizes, PropertySetterDispatcher observers)
-    {
-        super(sizes, observers);
-    }
-    
 }
