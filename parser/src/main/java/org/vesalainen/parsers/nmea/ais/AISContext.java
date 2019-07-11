@@ -153,23 +153,22 @@ public class AISContext extends SimpleWorkflow<Integer,ThreadMessage,Void>
         @Override
         public void run()
         {
-            TransactionalAISObserver tao = TransactionalAISObserver.getInstance(aisData);
             switch (message)
             {
                 case 0:
-                    aisParser.parse(channel, tao, context);
+                    //aisParser.parse(channel, aisData, context);
                     break;
                 case 1:
                 case 2:
                 case 3:
-                    aisParser.parse123Messages(channel, tao, context);
+                    //aisParser.parse123Messages(channel, aisData, context);
                     break;
                 default:
                     String methodName = "parse"+message+"Messages";
                     try
                     {
                         Method parser = aisParser.getClass().getMethod(methodName, AISChannel.class, AISObserver.class, AISContext.class);
-                        parser.invoke(aisParser, channel, tao, context);
+                        parser.invoke(aisParser, channel, aisData, context);
                     }
                     catch (NoSuchMethodException  ex)
                     {

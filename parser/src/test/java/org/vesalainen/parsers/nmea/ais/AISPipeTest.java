@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Timo Vesalainen <timo.vesalainen@iki.fi>
+ * Copyright (C) 2019 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,25 +16,33 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import org.vesalainen.code.TransactionalSetter;
-import org.vesalainen.code.TransactionalSetterClass;
-import org.vesalainen.parsers.nmea.ais.AISObserver;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.vesalainen.util.HexDump;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-@TransactionalSetterClass("org.vesalainen.parsers.nmea.ais.TransactionalAISObserverImpl")
-public abstract class TransactionalAISObserver extends TransactionalSetter implements AISObserver
+public class AISPipeTest
 {
-
-    public TransactionalAISObserver(int[] sizes)
+    
+    public AISPipeTest()
     {
-        super(sizes);
     }
 
-    public static TransactionalAISObserver getInstance(AISObserver observer)
+    @Test
+    public void test1() throws IOException
     {
-        return TransactionalAISObserver.getInstance(TransactionalAISObserver.class, observer);
+        AISPipe ap = new AISPipe();
+        ap.add("55P5TL01VIaAL@7WKO@mBplU@<PDhh000000001S;AJ::4A80?4i@E53", 0);
+        ap.add("1@0000000000000", 2);
+        ByteBuffer bb = ByteBuffer.allocate(512);
+        ap.read(bb);
+        bb.flip();
+        String remainingToHex = HexDump.remainingToHex(bb);
     }
+    
 }

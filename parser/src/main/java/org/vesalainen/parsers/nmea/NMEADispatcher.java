@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parsers.nmea;
 
+import java.lang.invoke.MethodHandles;
 import org.vesalainen.code.InterfaceDispatcher;
 import org.vesalainen.code.InterfaceDispatcherAnnotation;
 
@@ -30,4 +31,10 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
     {
         return newInstance(NMEADispatcher.class);
     }
+
+    public NMEADispatcher(MethodHandles.Lookup lookup)
+    {
+        super(lookup);
+    }
+    
 }

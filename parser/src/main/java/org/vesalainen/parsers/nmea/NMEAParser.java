@@ -18,6 +18,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.ChecksumProvider;
 import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.Converter.*;
+import org.vesalainen.parsers.nmea.ais.AISBridge;
 import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
 import org.vesalainen.parsers.nmea.time.GPSClock;
@@ -59,8 +61,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "statement", value = "nmeaStatement"),
     @Rule(left = "nmeaStatement", value = "'\\$' talkerId nmeaSentence '[\\,]*\\*' checksum '\r\n'"),
     @Rule(left = "nmeaStatement", value = "'\\$P' proprietaryType c proprietaryData '[\\,]*\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "aivdm aisPrefix ('[0-W`-w]+' c ('[0-5]')?)? '\\*' checksum '\r\n'"),
-    @Rule(left = "nmeaStatement", value = "aivdo aisPrefix ('[0-W`-w]+' c ('[0-5]')?)? '\\*' checksum '\r\n'"),
+    @Rule(left = "nmeaStatement", value = "aisMessage"),
     @Rule(left = "nmeaSentence", value = "aam c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
     @Rule(left = "nmeaSentence", value = "alm c totalNumberOfMessages c messageNumber c satellitePRNNumber c gpsWeekNumber c svHealth c eccentricity c almanacReferenceTime c inclinationAngle c rateOfRightAscension c rootOfSemiMajorAxis c argumentOfPerigee c longitudeOfAscensionNode c meanAnomaly c f0ClockParameter c f1ClockParameter"),
     @Rule(left = "nmeaSentence", value = "apa c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),
@@ -310,22 +311,20 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     {
         data.setYRtr(value);
     }
+    @Rule("aivdm")
+    @Rule("aivdo")
+    protected abstract boolean aisOwnMessage(boolean ownMessage);
+
     @Rule("'!AIVDM'")
-    protected void aivdm(@ParserContext("aisContext") AISContext aisContext)
+    protected boolean aivdm()
     {
-        if (aisContext != null)
-        {
-            aisContext.setOwnMessage(false);
-        }
+        return false;
     }
 
     @Rule("'!AIVDO'")
-    protected void aivdo(@ParserContext("aisContext") AISContext aisContext)
+    protected boolean aivdo()
     {
-        if (aisContext != null)
-        {
-            aisContext.setOwnMessage(true);
-        }
+        return false;
     }
 
     @Rule("letter")
@@ -520,24 +519,38 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         return cc;
     }
 
-    @Rule("c integer c integer c sequentialMessageID c channel c")
-    protected void aisPrefix(
+    @Terminal(expression="[0-W`-w]+")
+    protected CharSequence aisPayload(CharSequence data)
+    {
+        return new StringBuilder(data);
+    }
+
+    @Rule("aisOwnMessage c integer c integer c sequentialMessageID c channel c aisPayload c integer '\\*' hex '\r\n'")
+    protected void aisMessage(
+            boolean ownMessage,
             int numberOfSentences,
             int sentenceNumber,
             int sequentialMessageID,
             char channel,
+            CharSequence payload,
+            int padding,
+            int checksum,
             @ParserContext(ParserConstants.InputReader) InputReader input,
-            @ParserContext("aisContext") AISContext aisContext
+            @ParserContext("aisBridge") AISBridge aisBridge
             ) throws IOException
     {
-        if (aisContext != null)
+        if (aisBridge != null)
         {
-            aisContext.startOfSentence(
-                    input, 
+            aisBridge.newSentence(
+                    ownMessage, 
                     numberOfSentences, 
                     sentenceNumber,
                     sequentialMessageID,
-                    channel
+                    channel,
+                    payload,
+                    padding,
+                    checksum,
+                    input.getChecksum().getValue()
             );
         }
     }
@@ -1495,7 +1508,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             @ParserContext("clock") NMEAClock clock,
             @ParserContext("origin") Supplier origin,
             @ParserContext("data") NMEAObserver data,
-            @ParserContext("aisContext") AISContext aisContext
+            @ParserContext("aisBridge") AISBridge aisBridge
             )
     {
         Checksum checksum = input.getChecksum();
@@ -1506,10 +1519,6 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             String reason = org+" "+input.getLineNumber()+": checksum " + Integer.toHexString(sum) + " != " + Integer.toHexString((int) checksum.getValue());
             data.rollback(reason);
             warning(reason);
-            if (aisContext != null && aisContext.isAisMessage())
-            {
-                aisContext.afterChecksum(false, reason);
-            }
         }
         else
         {
@@ -1521,14 +1530,6 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
                 data.setOrigin(origin.get());
             }
             data.commit("ok");
-            if (aisContext != null && aisContext.isAisMessage())
-            {
-                aisContext.afterChecksum(true, "ok");
-            }
-        }
-        if (aisContext != null)
-        {
-            aisContext.setAisMessage(false);
         }
     }
 
@@ -1621,7 +1622,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @RecoverMethod
     public void recover(
             @ParserContext("data") NMEAObserver data,
-            @ParserContext("aisContext") AISContext aisContext,
+            @ParserContext("aisBridge") AISBridge aisBridge,
             @ParserContext(ParserConstants.ExpectedDescription) String expected,
             @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
             @ParserContext(ParserConstants.THROWABLE) Throwable thr
@@ -1643,10 +1644,6 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         String reason = "skipping " + sb+"\nexpected:"+expected;
         data.rollback(reason);
         reader.clear();
-        if (aisContext != null && aisContext.isAisMessage())
-        {
-            aisContext.afterChecksum(false, reason);
-        }
     }
     /**
      * Parse NMEA
@@ -1674,23 +1671,23 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         data.setClock(gpsClock);
         gpsClock.start(null);
         data.commit("Set clock");
-        AISContext aisContext = null;
+        AISBridge aisBridge = null;
         if (aisData != null)
         {
             aisData.start(null);
             aisData.setClock(gpsClock);
             aisData.commit("Set clock");
-            aisContext = new AISContext(aisData);
+            aisBridge = new AISBridge(aisData);
         }
         try
         {
-            parse(input, gpsClock, origin, data, aisContext);
+            parse(input, gpsClock, origin, data, aisBridge);
         }
         finally
         {
-            if (aisContext != null)
+            if (aisBridge != null)
             {
-                aisContext.waitAndStopThreads();
+                aisBridge.waitAndStopThreads();
             }
         }
     }
@@ -1702,7 +1699,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             @ParserContext("clock") NMEAClock clock,
             @ParserContext("origin") Supplier origin,
             @ParserContext("data") NMEAObserver data,
-            @ParserContext("aisContext") AISContext aisContext
+            @ParserContext("aisBridge") AISBridge aisBridge
             ) throws IOException;
 
     public static NMEAParser newInstance()
@@ -1713,7 +1710,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Override
     public int lookaheadLength()
     {
-        return 16;
+        return 100;
     }
 
     @Override

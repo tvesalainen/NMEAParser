@@ -17,6 +17,7 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
+import java.nio.channels.ReadableByteChannel;
 import java.util.logging.Level;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
@@ -35,7 +36,6 @@ import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import static org.vesalainen.parsers.mmsi.MMSIType.*;
 import org.vesalainen.regex.SyntaxErrorException;
-import org.vesalainen.util.concurrent.SimpleWorkflow.ContextAccess;
 import org.vesalainen.util.concurrent.ThreadStoppedException;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -78,16 +78,10 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Terminal(left="persons", expression="[01]{13}", doc="# persons on board", reducer="org.vesalainen.parsers.nmea.ais.AISParser persons(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="fid20", expression="010100", doc="FID", reducer="org.vesalainen.parsers.nmea.ais.AISParser fid(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="text_84", expression="[01]{84}", doc="Text", reducer="org.vesalainen.parsers.nmea.ais.AISParser text_84(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="4", expression="000100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="5", expression="000101", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="left", expression="[01]{9}", doc="Left boundary", reducer="org.vesalainen.parsers.nmea.ais.AISParser left(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="sender", expression="[01]{3}", doc="Sender Class", reducer="org.vesalainen.parsers.nmea.ais.AISParser sender(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="reserved", expression="[01]{8}", doc="Regional Reserved", reducer="org.vesalainen.parsers.nmea.ais.AISParser reserved(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="6", expression="000110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="7", expression="000111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="8", expression="001000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="sounder_state", expression="[01]{2}", doc="Echo sounder", reducer="org.vesalainen.parsers.nmea.ais.AISParser sounderState(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="9", expression="001001", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="assigned", expression="[01]{1}", doc="Assigned", reducer="org.vesalainen.parsers.nmea.ais.AISParser assigned(boolean,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="txrx_4", expression="[01]{4}", doc="Tx/Rx mode", reducer="org.vesalainen.parsers.nmea.ais.AISParser txrx_4(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="txrx_2", expression="[01]{2}", doc="Tx/Rx Mode", reducer="org.vesalainen.parsers.nmea.ais.AISParser txrx_2(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -201,7 +195,6 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Terminal(left="from_hour", expression="[01]{5}", doc="From UTC Hour", reducer="org.vesalainen.parsers.nmea.ais.AISParser fromHour(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="preciptype_3", expression="[01]{3}", doc="Precipitation", reducer="org.vesalainen.parsers.nmea.ais.AISParser preciptype_3(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="preciptype_2", expression="[01]{2}", doc="Precipitation Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser preciptype_2(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="1-3", expression="000001|000010|000011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="fmonth", expression="[01]{4}", doc="From month (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser fmonth(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="off_position", expression="[01]{1}", doc="Off-Position Indicator", reducer="org.vesalainen.parsers.nmea.ais.AISParser offPosition(boolean,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="cup2", expression="[01]{8}", doc="Current Vector component Up (z) #2", reducer="org.vesalainen.parsers.nmea.ais.AISParser cup2_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -261,19 +254,10 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Terminal(left="precipitation", expression="[01]{3}", doc="Precipitation", reducer="org.vesalainen.parsers.nmea.ais.AISParser precipitation(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="band", expression="[01]{1}", doc="Band flag", reducer="org.vesalainen.parsers.nmea.ais.AISParser band(boolean,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="to_stern", expression="[01]{9}", doc="Dimension to Stern", reducer="org.vesalainen.parsers.nmea.ais.AISParser toStern(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="10", expression="001010", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="11", expression="001011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="watertemp", expression="[01]{10}", doc="Water Temperature", reducer="org.vesalainen.parsers.nmea.ais.AISParser watertemp_U1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="12", expression="001100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="lading", expression="[01]{2}", doc="Laden or Ballast", reducer="org.vesalainen.parsers.nmea.ais.AISParser lading(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="distance1", expression="[01]{7}", doc="Current Distance #1", reducer="org.vesalainen.parsers.nmea.ais.AISParser distance1(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="14", expression="001110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="15", expression="001111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="16", expression="010000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="seaice", expression="[01]{5}", doc="Sea Ice Concentration", reducer="org.vesalainen.parsers.nmea.ais.AISParser seaice(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="17", expression="010001", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="18", expression="010010", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="19", expression="010011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="waterlevel_U2_12", expression="[01]{12}", doc="Water Level", reducer="org.vesalainen.parsers.nmea.ais.AISParser waterlevel_U2_12(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="surveyor", expression="[01]{2}", doc="Surveyor", reducer="org.vesalainen.parsers.nmea.ais.AISParser surveyor(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="dest_mmsi", expression="[01]{30}", doc="Destination MMSI", reducer="org.vesalainen.parsers.nmea.ais.AISParser destMmsi(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -281,13 +265,7 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Terminal(left="ptend", expression="[01]{4}", doc="Pressure Tendency", reducer="org.vesalainen.parsers.nmea.ais.AISParser ptend(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="solidwaste", expression="[01]{2}", doc="Waste disposal (solid)", reducer="org.vesalainen.parsers.nmea.ais.AISParser solidwaste(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="to_bow", expression="[01]{9}", doc="Dimension to Bow", reducer="org.vesalainen.parsers.nmea.ais.AISParser toBow(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="20", expression="010100", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="21", expression="010101", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="22", expression="010110", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="23", expression="010111", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
-,@Terminal(left="24", expression="011000", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="destination_30", expression="[01]{30}", doc="Destination", reducer="org.vesalainen.parsers.nmea.ais.AISParser destination_30(org.vesalainen.parser.util.InputReader,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
-,@Terminal(left="27", expression="011011", doc="Message Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser type(int,org.vesalainen.parsers.nmea.ais.AISObserver,org.vesalainen.parsers.nmea.ais.AISContext)", radix=2)
 ,@Terminal(left="shiptype", expression="[01]{8}", doc="Ship Type", reducer="org.vesalainen.parsers.nmea.ais.AISParser shiptype(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="offset2", expression="[01]{12}", doc="Offset B", reducer="org.vesalainen.parsers.nmea.ais.AISParser offset2(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 ,@Terminal(left="availability", expression="[01]{1}", doc="Services Availability", reducer="org.vesalainen.parsers.nmea.ais.AISParser availability(boolean,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
@@ -480,23 +458,23 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Terminal(left="eta_minute", expression="[01]{6}", doc="ETA Minute (UTC)", reducer="org.vesalainen.parsers.nmea.ais.AISParser eta_minute(int,org.vesalainen.parsers.nmea.ais.AISObserver)", radix=2)
 })
 @Rules({
-@Rule(left="23Messages", value={"(23Content end)+"})
+@Rule(left="23Messages", value={"(start 23Content end)+"})
 ,@Rule(left="shape", value={"Sector"})
 ,@Rule(left="6Content", value={"IMO289BerthingDataAddressed"})
 ,@Rule(left="Sector", value={"shape2", "scale", "lon_I3_25", "lat_I3_24", "precision", "radius_12", "left", "right"})
 ,@Rule(left="8Content", value={"IMO289RouteInformationBroadcast"})
 ,@Rule(left="Type16AssignmentModeCommandB", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "offset1", "increment1_10", "mmsi2", "offset2", "increment2_10"})
-,@Rule(left="22Messages", value={"(22Content end)+"})
+,@Rule(left="22Messages", value={"(start 22Content end)+"})
 ,@Rule(left="17Content", value={"Type17DGNSSBroadcastBinaryMessage"})
 ,@Rule(left="8Content", value={"WeatherObservationReportFromShipNonWMOVariant"})
 ,@Rule(left="Type20DataLinkManagementMessage2", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11"})
 ,@Rule(left="11Content", value={"Type11UTCDateResponse"})
 ,@Rule(left="12Content", value={"Type12AddressedSafetyRelatedMessage"})
 ,@Rule(left="Type23GroupAssignmentCommand", value={"repeat", "mmsi", "'[01]{2}'", "ne_lon", "ne_lat", "sw_lon", "sw_lat", "station_type", "ship_type", "'[01]{22}'", "txrx_2", "interval", "quiet", "('[01]{6}')?"})
-,@Rule(left="20Messages", value={"(20Content end)+"})
+,@Rule(left="20Messages", value={"(start 20Content end)+"})
 ,@Rule(left="8Content", value={"MeteorologicalAndHydrologicalDataIMO236"})
 ,@Rule(left="AreaNoticeAddressedMessageHeader", value={"repeat", "mmsi", "seqno", "dac001", "fid22", "linkage", "notice", "month", "day_5", "hour", "minute_6", "duration_18", "(shape)+"})
-,@Rule(left="24Messages", value={"(24Content end)+"})
+,@Rule(left="24Messages", value={"(start 24Content end)+"})
 ,@Rule(left="21Content", value={"Type21AidToNavigationReport1"})
 ,@Rule(left="Type15Interrogation3", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1", "'[01]{2}'", "type1_2", "offset1_2", "'[01]{2}'", "mmsi2", "type2_1", "offset2_1", "('[01]{2}')?"})
 ,@Rule(left="6Content", value={"TidalWindowIMO289"})
@@ -505,44 +483,22 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Rule(left="21Content", value={"Type21AidToNavigationReport2"})
 ,@Rule(left="Type5StaticAndVoyageRelatedData", value={"repeat", "mmsi", "ais_version", "imo", "callsign", "shipname", "shiptype", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "eta_month", "eta_day", "eta_hour", "eta_minute", "draught", "destination_120", "dte", "('[01]{1}')?"})
 ,@Rule(left="Type15Interrogation2", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1", "'[01]{2}'", "type1_2", "offset1_2", "('[01]{2}')?"})
-,@Rule(left="message", value={"27"})
 ,@Rule(left="Type20DataLinkManagementMessage4", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11", "offset3", "number3", "timeout3", "increment3", "offset4", "number4", "timeout4", "increment4"})
-,@Rule(left="message", value={"24"})
-,@Rule(left="message", value={"23"})
-,@Rule(left="message", value={"20"})
-,@Rule(left="message", value={"22"})
 ,@Rule(left="AreaNoticeAddressedMessageHeader", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid23", "linkage", "notice", "month", "day_5", "hour", "minute_6", "duration_18", "(shape)+"})
 ,@Rule(left="AreaNoticeBroadcastMessageHeader", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid22", "linkage", "notice", "month", "day_5", "hour", "minute_6", "duration_18", "(shape)+"})
-,@Rule(left="message", value={"21"})
 ,@Rule(left="WindReportPayload", value={"wspeed", "wgust", "wdir", "wgustdir", "sensortype", "fwspeed", "fwgust", "fwdir", "day_5", "hour", "minute_6", "duration_8", "('[01]{3}')?"})
 ,@Rule(left="Type20DataLinkManagementMessage3", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11", "offset3", "number3", "timeout3", "increment3"})
 ,@Rule(left="23Content", value={"Type23GroupAssignmentCommand"})
-,@Rule(left="messages", value={"message+"})
 ,@Rule(left="Type4BaseStationReport", value={"repeat", "mmsi", "year", "month", "day_5", "hour", "minute_6", "second", "accuracy", "lon_I4_28", "lat_I4_27", "epfd", "'[01]{10}'", "raim", "radio_19"})
-,@Rule(left="message", value={"17"})
-,@Rule(left="message", value={"16"})
-,@Rule(left="message", value={"19"})
-,@Rule(left="message", value={"18"})
 ,@Rule(left="Type27LongRangeAISBroadcastMessage", value={"repeat", "mmsi", "accuracy", "raim", "status_4", "lon_I4_18", "lat_I4_17", "speed_6", "course_9", "gnss", "('[01]{1}')?"})
 ,@Rule(left="IMO236DangerousCargoIndication", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid12", "lastport", "lmonth", "lday", "lhour", "lminute", "nextport", "nmonth", "nday", "nhour", "nminute", "dangerous", "imdcat", "unid", "amount", "unit", "('[01]{3}')?"})
-,@Rule(left="message", value={"12"})
-,@Rule(left="message", value={"15"})
-,@Rule(left="message", value={"14"})
 ,@Rule(left="SeaStateReportPayload", value={"swheight", "swperiod", "swelldir", "seastate", "swelltype", "watertemp", "distance1", "depthtype", "waveheight", "waveperiod", "wavedir", "wavetype", "salinity"})
-,@Rule(left="message", value={"11"})
-,@Rule(left="message", value={"10"})
-,@Rule(left="1-3Messages", value={"(1-3Content end)+"})
-,@Rule(left="message", value={"9"})
+,@Rule(left="1-3Messages", value={"(start 1-3Content end)+"})
 ,@Rule(left="IMO236ExtendedShipStaticAndVoyageRelatedData", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid15", "airdraught_11", "('[01]{5}')?"})
 ,@Rule(left="18Content", value={"Type18StandardClassBCSPositionReport"})
-,@Rule(left="message", value={"6"})
 ,@Rule(left="HorizontalCurrentReportPayload", value={"bearing1", "distance1", "speed1", "direction1", "depth1", "bearing1", "distance1", "speed1", "direction1", "depth1", "('[01]{1}')?"})
-,@Rule(left="message", value={"5"})
-,@Rule(left="message", value={"8"})
 ,@Rule(left="shape", value={"AssociatedText"})
-,@Rule(left="message", value={"7"})
-,@Rule(left="message", value={"4"})
-,@Rule(left="27Messages", value={"(27Content end)+"})
+,@Rule(left="27Messages", value={"(start 27Content end)+"})
 ,@Rule(left="8Content", value={"VTSGeneratedSyntheticTargets"})
 ,@Rule(left="8Content", value={"AreaNoticeBroadcastMessageHeader"})
 ,@Rule(left="6Content", value={"AreaNoticeAddressedMessageHeader"})
@@ -551,28 +507,28 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Rule(left="6Content", value={"IMO289RouteInformationAddressed"})
 ,@Rule(left="SiteLocationPayload", value={"lon_I4_28", "lat_I4_27", "alt_11", "owner", "timeout", "('[01]{12}')?"})
 ,@Rule(left="IMO289RouteInformationBroadcast", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid27", "linkage", "sender", "rtype", "month", "day_5", "hour", "minute_6", "duration_18", "waycount", "(lon_I4_28 lat_I4_27)+"})
-,@Rule(left="18Messages", value={"(18Content end)+"})
-,@Rule(left="7Messages", value={"(7Content end)+"})
+,@Rule(left="18Messages", value={"(start 18Content end)+"})
+,@Rule(left="7Messages", value={"(start 7Content end)+"})
 ,@Rule(left="IMO289BerthingDataAddressed", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid20", "linkage", "berth_length", "berth_depth", "position", "month", "day_5", "hour", "minute_6", "availability", "agent", "fuel", "chandler", "stevedore", "electrical", "water", "customs", "cartage", "crane", "lift", "medical", "navrepair", "provisions", "shiprepair", "surveyor", "steam", "tugs", "solidwaste", "liquidwaste", "hazardouswaste", "ballast", "additional", "regional1", "regional2", "future1", "future2", "berth_name", "berth_lon", "berth_lat"})
 ,@Rule(left="8Content", value={"IMO236ExtendedShipStaticAndVoyageRelatedData"})
-,@Rule(left="12Messages", value={"(12Content end)+"})
+,@Rule(left="12Messages", value={"(start 12Content end)+"})
 ,@Rule(left="15Content", value={"Type15Interrogation1"})
 ,@Rule(left="15Content", value={"Type15Interrogation2"})
 ,@Rule(left="15Content", value={"Type15Interrogation3"})
-,@Rule(left="10Messages", value={"(10Content end)+"})
+,@Rule(left="10Messages", value={"(start 10Content end)+"})
 ,@Rule(left="CommonNavigationBlock", value={"repeat", "mmsi", "status_4", "turn", "speed_U1_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "heading_9", "second", "maneuver", "'[01]{3}'", "raim", "radio_19"})
 ,@Rule(left="6Content", value={"IMO236TidalWindow"})
-,@Rule(left="19Messages", value={"(19Content end)+"})
-,@Rule(left="6Messages", value={"(6Content end)+"})
+,@Rule(left="19Messages", value={"(start 19Content end)+"})
+,@Rule(left="6Messages", value={"(start 6Content end)+"})
 ,@Rule(left="MeteorologicalAndHydrologicalDataIMO289", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid31", "lon_I3_25", "lat_I3_24", "accuracy", "day_5", "hour", "minute_6", "wspeed", "wgust", "wdir", "wgustdir", "airtemp_U1_11", "humidity", "dewpoint", "pressure_9", "pressuretend_2", "visgreater", "visibility_U1_8", "waterlevel_U2_12", "leveltrend", "cspeed_U1_8", "cdir", "cspeed2", "cdir2", "cdepth2_5", "cspeed3", "cdir3", "cdepth3_5", "waveheight", "waveperiod", "wavedir", "swellheight", "swellperiod", "swelldir", "seastate", "watertemp", "precipitation", "salinity", "ice", "('[01]{10}')?"})
 ,@Rule(left="Type24StaticDataReportB", value={"repeat", "mmsi", "partno1", "shiptype", "vendorid", "model", "serial", "callsign", "mothership_dim"})
 ,@Rule(left="Type24StaticDataReportA", value={"repeat", "mmsi", "partno0", "shipname", "('[01]{1,8}')?"})
 ,@Rule(left="shape", value={"Polyline"})
-,@Rule(left="21Messages", value={"(21Content end)+"})
+,@Rule(left="21Messages", value={"(start 21Content end)+"})
 ,@Rule(left="IMO289TextDescriptionAddressed", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid30", "linkage", "description_6_930"})
 ,@Rule(left="IMO289MarineTrafficSignal", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid19", "linkage", "station", "lon_I3_25", "lat_I3_24", "status_2", "signal", "hour", "minute_6", "nextsignal", "('[01]{102}')?"})
 ,@Rule(left="CircleOrPoint", value={"shape0", "scale", "lon_I3_25", "lat_I3_24", "precision", "radius_12", "('[01]{18}')?"})
-,@Rule(left="11Messages", value={"(11Content end)+"})
+,@Rule(left="11Messages", value={"(start 11Content end)+"})
 ,@Rule(left="6Content", value={"IMO236NumberOfPersonsOnBoard"})
 ,@Rule(left="24Content", value={"Type24StaticDataReportB"})
 ,@Rule(left="Type14SafetyRelatedBroadcastMessage", value={"repeat", "mmsi", "'[01]{2}'", "text_968"})
@@ -595,20 +551,20 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Rule(left="EnvironmentalMessageHeader", value={"repeat", "mmsi", "seqno", "dac001", "fid26", "(sensor day_5 hour minute_6 site payload)+"})
 ,@Rule(left="VTSGeneratedSyntheticTargets", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid17", "(idtype id '[01]{4}' lat_I3_24 lon_I3_25 course_9 second speed_10)+"})
 ,@Rule(left="Polygon", value={"shape4", "scale", "(bearing distance)+"})
-,@Rule(left="5Messages", value={"(5Content end)+"})
+,@Rule(left="5Messages", value={"(start 5Content end)+"})
 ,@Rule(left="Type21AidToNavigationReport1", value={"repeat", "mmsi", "aid_type", "name_120", "accuracy", "lon_I4_28", "lat_I4_27", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "second", "off_position", "regional_8", "raim", "virtual_aid", "assigned", "('[01]{1}')?"})
 ,@Rule(left="Type9StandardSARAircraftPositionReport", value={"repeat", "mmsi", "alt_12", "speed_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "second", "regional_8", "dte", "'[01]{3}'", "assigned", "raim", "radio_20"})
 ,@Rule(left="9Content", value={"Type9StandardSARAircraftPositionReport"})
 ,@Rule(left="8Content", value={"WeatherObservationReportFromShipWMOVariant"})
 ,@Rule(left="7Content", value={"Type7BinaryAcknowledge"})
 ,@Rule(left="22Content", value={"Type22ChannelManagement"})
-,@Rule(left="4Messages", value={"(4Content end)+"})
+,@Rule(left="4Messages", value={"(start 4Content end)+"})
 ,@Rule(left="Polyline", value={"shape3", "scale", "(bearing distance)+"})
 ,@Rule(left="Type21AidToNavigationReport2", value={"repeat", "mmsi", "aid_type", "name_120", "accuracy", "lon_I4_28", "lat_I4_27", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "second", "off_position", "regional_8", "raim", "virtual_aid", "assigned", "'[01]{1}'", "name_ext"})
 ,@Rule(left="shape", value={"Rectangle"})
 ,@Rule(left="Type11UTCDateResponse", value={"repeat", "mmsi", "year", "month", "day_5", "hour", "minute_6", "second", "accuracy", "lon_I4_28", "lat_I4_27", "epfd", "'[01]{10}'", "raim", "radio_19"})
-,@Rule(left="8Messages", value={"(8Content end)+"})
-,@Rule(left="17Messages", value={"(17Content end)+"})
+,@Rule(left="8Messages", value={"(start 8Content end)+"})
+,@Rule(left="17Messages", value={"(start 17Content end)+"})
 ,@Rule(left="shape", value={"CircleOrPoint"})
 ,@Rule(left="shape", value={"Polygon"})
 ,@Rule(left="5Content", value={"Type5StaticAndVoyageRelatedData"})
@@ -621,20 +577,19 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Rule(left="10Content", value={"Type10UTCDateInquiry"})
 ,@Rule(left="20Content", value={"Type20DataLinkManagementMessage1"})
 ,@Rule(left="StationIDPayload", value={"name_84", "('[01]{1}')?"})
-,@Rule(left="15Messages", value={"(15Content end)+"})
-,@Rule(left="9Messages", value={"(9Content end)+"})
+,@Rule(left="15Messages", value={"(start 15Content end)+"})
+,@Rule(left="9Messages", value={"(start 9Content end)+"})
 ,@Rule(left="AssociatedText", value={"shape5", "text_84"})
-,@Rule(left="16Messages", value={"(16Content end)+"})
+,@Rule(left="16Messages", value={"(start 16Content end)+"})
 ,@Rule(left="Type15Interrogation1", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1"})
 ,@Rule(left="8Content", value={"IMO289MarineTrafficSignal"})
 ,@Rule(left="Type17DGNSSBroadcastBinaryMessage", value={"repeat", "mmsi", "'[01]{2}'", "lon_I1_18", "lat_I1_17", "'[01]{5}'", "data"})
 ,@Rule(left="8Content", value={"MeteorologicalAndHydrologicalDataIMO289"})
 ,@Rule(left="14Content", value={"Type14SafetyRelatedBroadcastMessage"})
-,@Rule(left="message", value={"1-3"})
 ,@Rule(left="8Content", value={"IMO289TextDescriptionBroadcast"})
 ,@Rule(left="Type20DataLinkManagementMessage1", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11"})
 ,@Rule(left="IMO289ExtendedShipStaticAndVoyageRelatedData", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid24", "linkage", "airdraught_13", "lastport", "nextport", "secondport", "ais_state", "ata_state", "bnwas_state", "ecdisb_state", "chart_state", "sounder_state", "epaid_state", "steer_state", "gnss_state", "gyro_state", "lrit_state", "magcomp_state", "navtex_state", "arpa_state", "sband_state", "xband_state", "hfradio_state", "inmarsat_state", "mfradio_state", "vhfradio_state", "grndlog_state", "waterlog_state", "thd_state", "tcs_state", "vdr_state", "'[01]{2}'", "iceclass", "horsepower", "vhfchan", "lshiptype", "tonnage", "lading", "heavyoil", "lightoil", "dieseloil", "totaloil", "persons", "('[01]{10}')?"})
-,@Rule(left="14Messages", value={"(14Content end)+"})
+,@Rule(left="14Messages", value={"(start 14Content end)+"})
 ,@Rule(left="1-3Content", value={"CommonNavigationBlock"})
 ,@Rule(left="MeteorologicalAndHydrologicalDataIMO236", value={"repeat", "mmsi", "'[01]{2}'", "dac001", "fid11", "lat_I3_24", "lon_I3_25", "day_5", "hour", "minute_6", "wspeed", "wgust", "wdir", "wgustdir", "temperature", "humidity", "dewpoint", "pressure_9", "pressuretend_2", "visibility_U1_8", "waterlevel_U1_9", "leveltrend", "cspeed_U1_8", "cdir", "cspeed2", "cdir2", "cdepth2_5", "cspeed3", "cdir3", "cdepth3_5", "waveheight", "waveperiod", "wavedir", "swellheight", "swellperiod", "swelldir", "seastate", "watertemp", "preciptype_3", "salinity", "ice", "('[01]{6}')?"})
 ,@Rule(left="Rectangle", value={"shape1", "scale", "lon_I3_25", "lat_I3_24", "precision", "east", "north", "orientation", "('[01]{5}')?"})
@@ -681,143 +636,153 @@ protected void text_936(InputReader arg, @ParserContext("aisData") AISObserver a
 protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData){}
 
+    @Terminal(expression="[OM]", doc="Own Message")
+    protected abstract char ownMessage(char om);
+    @Terminal(expression="[AB]", doc="AIS Radio channel")        
+    protected abstract char aisChannel(char c);
+    @Terminal(expression="[01]{6}", radix=2) 
+    protected abstract int messageType(int type);
+    
+    @Rule("ownMessage aisChannel messageType")
+    protected void start(char ownMessage, char aisChannel, int messageType, @ParserContext("aisData") AISObserver aisData, @ParserContext("aisBridge") AISBridge aisBridge)
+    {
+        aisBridge.start("start of "+messageType+" message");
+        aisData.setOwnMessage(ownMessage=='O');
+        aisData.setChannel(aisChannel);
+        aisData.setMessageType(MessageTypes.values()[messageType]);
+    }
     @Terminal(expression="[CR]")
-    protected void end(char end, @ParserContext("aisData") AISObserver aisData, @ParserContext("aisContext") AISContext aisContext)
+    protected void end(char end, @ParserContext("aisData") AISObserver aisData, @ParserContext("aisBridge") AISBridge aisBridge)
     {
         if (end == 'C')
         {
-            commit(aisContext, aisData, "Commit");
+            aisBridge.commit("Commit");
         }
         else
         {
-            rollback(aisContext, aisData, "Rollback");
+            aisBridge.rollback("Rollback");
         }
     }
     public static AISParser newInstance() throws IOException
     {
         return (AISParser) GenClassFactory.getGenInstance(AISParser.class);
     }
-    @ParseMethod(start = "messages", size=6, charSet = "US-ASCII", features={WideIndex})
-    protected abstract void parse(
-            AISChannel channel,
-            @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
 
     @ParseMethod(start = "1-3Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse123Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "4Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse4Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "5Messages", size=422, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse5Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "6Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse6Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "7Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse7Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "8Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse8Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "9Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse9Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "10Messages", size=72, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse10Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "11Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse11Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "12Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse12Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "14Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse14Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "15Messages", size=160, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse15Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "16Messages", size=144, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse16Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "17Messages", size=816, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse17Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "18Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse18Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "19Messages", size=312, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse19Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "20Messages", size=160, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse20Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "21Messages", size=360, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse21Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "22Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse22Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "23Messages", size=160, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse23Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "24Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse24Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
     @ParseMethod(start = "27Messages", size=168, charSet = "US-ASCII", features={WideIndex})
     protected abstract void parse27Messages(
-            AISChannel channel,
+            ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext) throws ThreadStoppedException;
+            @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
 
     @RecoverMethod
     public void recover(
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext,
+            @ParserContext("aisBridge") AISBridge aisBridge,
             @ParserContext(ParserConstants.InputReader) InputReader reader,
             @ParserContext(ParserConstants.ExpectedDescription) String expected,
             @ParserContext(ParserConstants.LastToken) String got,
@@ -834,30 +799,18 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         String input = reader.getInput();
         sb.append(input);
         sb.append('^');
-        int myKey = aisContext.getCurrentKey();
-        if (myKey == 0)
+        if (skip(input))
         {
-            for (int ii=input.length();ii<6;ii++)
+            int cc = reader.read();
+            while (cc == '0' || cc == '1')
             {
-                int cc = reader.read();
                 sb.append((char) cc);
+                cc = reader.read();
+                reader.clear();
             }
         }
-        else
-        {
-            if (skip(input))
-            {
-                int cc = reader.read();
-                while (cc == '0' || cc == '1')
-                {
-                    sb.append((char) cc);
-                    cc = reader.read();
-                    reader.clear();
-                }
-            }
-        }
-        rollback(aisContext, aisData, "skipping: "+sb+"\nexpected:"+expected);
         reader.clear();
+        aisBridge.rollback("skipping: "+sb+"\nexpected:"+expected);
     }
     private boolean skip(String input)
     {
@@ -867,43 +820,6 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         }
         char cc = input.charAt(input.length()-1);
         return cc == '0' || cc == '1';
-    }
-
-    private void commit(final AISContext aisContext, final AISObserver aisData, final String comment)
-    {
-        ContextAccess<Void,Void> ca = new ContextAccess<Void,Void>() 
-        {
-            @Override
-            public Void access(Void context)
-            {
-                Integer currentKey = aisContext.getCurrentKey();
-                aisData.setMessageType(MessageTypes.values()[currentKey]);
-                aisData.commit(comment);
-                return null;
-            }
-        };
-        aisContext.accessContext(ca);
-    }
-    private void rollback(AISContext aisContext, final AISObserver aisData, final String comment)
-    {
-        ContextAccess<Void,Void> ca = new ContextAccess<Void,Void>() 
-        {
-            @Override
-            public Void access(Void context)
-            {
-                aisData.rollback(comment);
-                return null;
-            }
-        };
-        aisContext.accessContext(ca);
-    }
-    protected void type(
-            int messageType, 
-            @ParserContext("aisData") AISObserver aisData,
-            @ParserContext("aisContext") AISContext aisContext
-    )
-    {
-        aisContext.setMessageType(messageType);
     }
 
     protected void repeat(int repeatIndicator, @ParserContext("aisData") AISObserver aisData)

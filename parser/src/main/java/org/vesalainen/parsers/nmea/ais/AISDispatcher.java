@@ -16,6 +16,8 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
+import java.lang.invoke.MethodHandles;
+import java.util.concurrent.locks.ReentrantLock;
 import org.vesalainen.code.InterfaceDispatcher;
 import static org.vesalainen.code.InterfaceDispatcher.newInstance;
 import org.vesalainen.code.InterfaceDispatcherAnnotation;
@@ -27,8 +29,58 @@ import org.vesalainen.code.InterfaceDispatcherAnnotation;
 @InterfaceDispatcherAnnotation
 public abstract class AISDispatcher extends InterfaceDispatcher implements AISObserver
 {
+    private ReentrantLock lock = new ReentrantLock();
     public static AISDispatcher newInstance()
     {
         return newInstance(AISDispatcher.class);
     }
+
+    public AISDispatcher(MethodHandles.Lookup lookup)
+    {
+        super(lookup);
+    }
+
+    @Override
+    public void commit(String reason)
+    {
+        try
+        {
+            super.commit(reason);
+        }
+        finally
+        {
+            System.err.println("commit "+lock+" "+Thread.currentThread());
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void rollback(String reason)
+    {
+        try
+        {
+            super.rollback(reason);
+        }
+        finally
+        {
+            System.err.println("rollback "+lock+" "+Thread.currentThread());
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void start(String reason)
+    {
+        if (!lock.isHeldByCurrentThread())
+        {
+            System.err.println("start "+lock+" "+Thread.currentThread());
+            lock.lock();
+        }
+        else
+        {
+            warning("thread was held by current thread!!!");
+        }
+        super.start(reason);
+    }
+    
 }
