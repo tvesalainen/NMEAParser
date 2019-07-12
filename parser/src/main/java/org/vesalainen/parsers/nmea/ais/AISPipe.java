@@ -31,6 +31,7 @@ public class AISPipe implements ScatteringByteChannel
 {
     private static final byte COMMIT_MARK = (byte)'C';
     private static final byte ROLLBACK_MARK = (byte)'R';
+    private static final byte EXIT_MARK = (byte)'E';
     private ByteBuffer bb;
     private SinkChannel sink;
     private SourceChannel source;
@@ -61,6 +62,13 @@ public class AISPipe implements ScatteringByteChannel
     {
         bb.clear();
         bb.put(ROLLBACK_MARK);
+        bb.flip();
+        sink.write(bb);
+    }
+    public void exit() throws IOException
+    {
+        bb.clear();
+        bb.put(EXIT_MARK);
         bb.flip();
         sink.write(bb);
     }

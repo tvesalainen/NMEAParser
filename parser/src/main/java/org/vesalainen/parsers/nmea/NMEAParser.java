@@ -1710,7 +1710,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Override
     public int lookaheadLength()
     {
-        return 100;
+        return 16;
     }
 
     @Override

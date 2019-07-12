@@ -636,6 +636,11 @@ protected void text_936(InputReader arg, @ParserContext("aisData") AISObserver a
 protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData){}
 
+    @Terminal(expression="[E]", doc="Exit parsing")
+    protected void exit(char exit)
+    {
+        System.err.println("exit");
+    }
     @Terminal(expression="[OM]", doc="Own Message")
     protected abstract char ownMessage(char om);
     @Terminal(expression="[AB]", doc="AIS Radio channel")        
@@ -668,112 +673,112 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         return (AISParser) GenClassFactory.getGenInstance(AISParser.class);
     }
 
-    @ParseMethod(start = "1-3Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "1-3Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse123Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "4Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "4Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse4Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "5Messages", size=422, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "5Messages", size=422, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse5Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "6Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "6Messages", size=1008, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse6Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "7Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "7Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse7Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "8Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "8Messages", size=1008, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse8Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "9Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "9Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse9Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "10Messages", size=72, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "10Messages", size=72, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse10Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "11Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "11Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse11Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "12Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "12Messages", size=1008, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse12Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "14Messages", size=1008, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "14Messages", size=1008, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse14Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "15Messages", size=160, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "15Messages", size=160, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse15Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "16Messages", size=144, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "16Messages", size=144, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse16Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "17Messages", size=816, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "17Messages", size=816, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse17Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "18Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "18Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse18Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "19Messages", size=312, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "19Messages", size=312, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse19Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "20Messages", size=160, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "20Messages", size=160, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse20Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "21Messages", size=360, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "21Messages", size=360, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse21Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "22Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "22Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse22Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "23Messages", size=160, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "23Messages", size=160, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse23Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "24Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "24Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse24Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
             @ParserContext("aisBridge") AISBridge aisBridge) throws ThreadStoppedException;
-    @ParseMethod(start = "27Messages", size=168, charSet = "US-ASCII", features={WideIndex})
+    @ParseMethod(start = "27Messages", size=168, charSet = "US-ASCII", features={WideIndex}, eof="exit")
     protected abstract void parse27Messages(
             ReadableByteChannel channel,
             @ParserContext("aisData") AISObserver aisData,
