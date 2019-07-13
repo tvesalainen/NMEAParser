@@ -65,12 +65,14 @@ public class AISBridge extends JavaLogging implements Transactional
             long value
     ) throws IOException
     {
+        fine("AIS(%d, %d, %s)", numberOfSentences, sentenceNumber, payload);
         if (checksum != value)
         {
             warning("Message parsing was terminated because of checksum fail");
             if (current != null)
             {
                 current.pipe.rollback();
+                fine("AIS rollback checksum failed");
             }
             current = null;
             return;
@@ -80,17 +82,22 @@ public class AISBridge extends JavaLogging implements Transactional
             if (current != null)
             {
                 current.pipe.rollback();
+                fine("AIS rollback old");
             }
             int messageNumber = payload.charAt(0)-'0';
             current = getMessageHandler(messageNumber);
             current.pipe.start(ownMessage, (byte) channel);
+            fine("AIS sent start");
         }
         if (current != null)
         {
             current.pipe.add(payload, padding);
+            fine("AIS sent payload");
             if (sentenceNumber == numberOfSentences)    // last
             {
                 current.pipe.commit();
+                current = null;
+                fine("AIS commit");
             }
         }
     }
@@ -105,6 +112,7 @@ public class AISBridge extends JavaLogging implements Transactional
             }
             handler = new MessageHandler(messageNumber);
             handlers[messageNumber-1] = handler;
+            fine("AIS created new message handler %d", messageNumber);
         }
         return handler;
     }
@@ -115,12 +123,13 @@ public class AISBridge extends JavaLogging implements Transactional
             if (handler != null && !handler.future.isDone())
             {
                 handler.pipe.exit();
+                fine("AIS terminated %d", handler.message);
             }
         }
         executor.shutdown();
         try
         {
-            executor.awaitTermination(1, TimeUnit.MINUTES);
+            executor.awaitTermination(10, TimeUnit.MINUTES);
             executor.shutdownNow();
         }
         catch (InterruptedException ex)
@@ -134,7 +143,9 @@ public class AISBridge extends JavaLogging implements Transactional
     {
         try
         {
+            finest("AIS waiting for permit");
             semaphore.acquire();
+            finest("AIS got permit");
         }
         catch (InterruptedException ex)
         {
@@ -146,12 +157,14 @@ public class AISBridge extends JavaLogging implements Transactional
     public void rollback(String reason)
     {
         semaphore.release();
+        finest("AIS released permit (rollback)");
     }
 
     @Override
     public void commit(String reason)
     {
         semaphore.release();
+        finest("AIS released permit (commit)");
     }
     private class MessageHandler implements Runnable
     {
@@ -189,7 +202,7 @@ public class AISBridge extends JavaLogging implements Transactional
                     }
                     break;
             }
-            System.err.println();
+            fine("AIS exit %d", message);
         }
 
     }

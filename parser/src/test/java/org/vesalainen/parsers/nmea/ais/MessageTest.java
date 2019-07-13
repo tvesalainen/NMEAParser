@@ -18,7 +18,10 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -32,6 +35,7 @@ import org.vesalainen.parsers.mmsi.MMSIType;
 import static org.vesalainen.parsers.mmsi.MMSIType.CraftAssociatedWithParentShip;
 import org.vesalainen.parsers.nmea.ListStorage;
 import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * TODO Test for 
@@ -58,6 +62,7 @@ public class MessageTest
     @BeforeClass
     public static void setUpClass()
     {
+        JavaLogging.setConsoleHandler("org.vesalainen", Level.FINEST);
     }
 
     @AfterClass
@@ -1110,6 +1115,7 @@ public class MessageTest
     @Test
     public void err0()
     {
+        System.err.println("err0");
         try
         {
             List<Object> list = getExpected();
@@ -1131,7 +1137,7 @@ public class MessageTest
             ListStorage ls = new ListStorage();
             AISObserver tc = ls.getStorage(AISObserver.class);
             parser.parse(nmea, null, tc);
-            assertEquals(list, ls.getProperty("mmsi"));
+            assertEquals(new HashSet<>(list), new HashSet<>(ls.getProperty("mmsi")));
         }
         catch (Exception ex)
         {
@@ -1141,6 +1147,7 @@ public class MessageTest
     @Test
     public void err1()
     {
+        System.err.println("err1");
         try
         {
             List<Object> list = getExpected();
@@ -1164,7 +1171,7 @@ public class MessageTest
             ListStorage ls = new ListStorage();
             AISObserver tc = ls.getStorage(AISObserver.class);
             parser.parse(nmea, null, tc);
-            assertEquals(list, ls.getProperty("mmsi"));
+            assertEquals(new HashSet<>(list), new HashSet<>(ls.getProperty("mmsi")));
         }
         catch (Exception ex)
         {
@@ -1175,6 +1182,7 @@ public class MessageTest
     @Test
     public void err2()
     {
+        System.err.println("err2");
         try
         {
             List<Object> list = getExpected();
@@ -1198,7 +1206,7 @@ public class MessageTest
             ListStorage ls = new ListStorage();
             AISObserver tc = ls.getStorage(AISObserver.class);
             parser.parse(nmea, null, tc);
-            assertEquals(list, ls.getProperty("mmsi"));
+            assertEquals(new HashSet<>(list), new HashSet<>(ls.getProperty("mmsi")));
         }
         catch (Exception ex)
         {
@@ -1209,6 +1217,7 @@ public class MessageTest
     @Test
     public void err3()
     {
+        System.err.println("err3");
         try
         {
             List<Object> list = getExpected();
@@ -1237,7 +1246,7 @@ public class MessageTest
             AISDispatcher tc = AISDispatcher.newInstance();
             tc.addObserver(ls);
             parser.parse(nmea, null, tc);
-            assertEquals(list, ls.getProperty("mmsi"));
+            assertEquals(new HashSet<>(list), new HashSet<>(ls.getProperty("mmsi")));
         }
         catch (Exception ex)
         {
