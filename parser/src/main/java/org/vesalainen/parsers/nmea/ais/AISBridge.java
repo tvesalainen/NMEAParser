@@ -43,6 +43,11 @@ public class AISBridge extends JavaLogging implements Transactional
     private final MessageHandler[] handlers = new MessageHandler[27];
     private MessageHandler current;
     private Semaphore semaphore = new Semaphore(1);
+    private boolean ownMessage;
+    private int numberOfSentences;
+    private int nextSentenceNumber;
+    private int sequentialMessageID;
+    private char channel;
 
     public AISBridge(AISObserver aisData) throws IOException
     {
@@ -82,12 +87,26 @@ public class AISBridge extends JavaLogging implements Transactional
             if (current != null)
             {
                 current.pipe.rollback();
-                fine("AIS rollback old");
+                fine("AIS rollback rest of message missing");
             }
             int messageNumber = payload.charAt(0)-'0';
             current = getMessageHandler(messageNumber);
             current.pipe.start(ownMessage, (byte) channel);
             fine("AIS sent start");
+            setExpected(ownMessage, numberOfSentences, sequentialMessageID, channel);
+        }
+        else
+        {
+            if (current != null)
+            {
+                if (!expected(ownMessage, numberOfSentences, sentenceNumber, sequentialMessageID, channel))
+                {
+                    current.pipe.rollback();
+                    fine("AIS rollback sequence error");
+                    current = null;
+                    return;
+                }
+            }
         }
         if (current != null)
         {
@@ -165,6 +184,40 @@ public class AISBridge extends JavaLogging implements Transactional
     {
         semaphore.release();
         finest("AIS released permit (commit)");
+    }
+
+    private boolean expected(
+            boolean ownMessage, 
+            int numberOfSentences, 
+            int sentenceNumber, 
+            int sequentialMessageID, 
+            char channel
+    )
+    {
+        if (
+            sentenceNumber != nextSentenceNumber ||
+            ownMessage != this.ownMessage ||
+            numberOfSentences != this.numberOfSentences ||
+            sequentialMessageID != this.sequentialMessageID ||
+            channel != this.channel
+                )
+        {
+            return false;
+        }
+        else
+        {
+            nextSentenceNumber++;
+            return true;
+        }
+    }
+
+    private void setExpected(boolean ownMessage, int numberOfSentences, int sequentialMessageID, char channel)
+    {
+        this.nextSentenceNumber = 2;
+        this.ownMessage = ownMessage;
+        this.numberOfSentences = numberOfSentences;
+        this.sequentialMessageID = sequentialMessageID;
+        this.channel = channel;
     }
     private class MessageHandler implements Runnable
     {
