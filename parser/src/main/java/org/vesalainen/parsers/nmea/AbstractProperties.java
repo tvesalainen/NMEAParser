@@ -43,16 +43,19 @@ public abstract class AbstractProperties
         Map<String,Prop> map = new HashMap<>();
         for (Method method : cls.getMethods())
         {
-            NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
-            if (nmeaCat == null)
+            if (BeanHelper.isSetter(method))
             {
-                continue;
+                NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
+                if (nmeaCat == null)
+                {
+                    continue;
+                }
+                NMEACategory nmeaCategory = nmeaCat.value();
+                String property = BeanHelper.getProperty(method);
+                Unit unit = method.getAnnotation(Unit.class);
+                Class<?> type = method.getParameterTypes()[0];
+                map.put(property, new Prop(property, unit, nmeaCategory, type));
             }
-            NMEACategory nmeaCategory = nmeaCat.value();
-            String property = BeanHelper.getProperty(method);
-            Unit unit = method.getAnnotation(Unit.class);
-            Class<?> type = method.getParameterTypes()[0];
-            map.put(property, new Prop(property, unit, nmeaCategory, type));
         }
         return map;
     }
@@ -61,16 +64,19 @@ public abstract class AbstractProperties
         Map<String,Prop> map = new HashMap<>();
         for (Method method : cls.getMethods())
         {
-            NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
-            NMEACategory nmeaCategory = null;
-            if (nmeaCat != null)
+            if (BeanHelper.isSetter(method))
             {
-                nmeaCategory = nmeaCat.value();
+                NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
+                NMEACategory nmeaCategory = null;
+                if (nmeaCat != null)
+                {
+                    nmeaCategory = nmeaCat.value();
+                }
+                String property = BeanHelper.getProperty(method);
+                Unit unit = method.getAnnotation(Unit.class);
+                Class<?> type = method.getParameterTypes()[0];
+                map.put(property, new Prop(property, unit, nmeaCategory, type));
             }
-            String property = BeanHelper.getProperty(method);
-            Unit unit = method.getAnnotation(Unit.class);
-            Class<?> type = method.getParameterTypes()[0];
-            map.put(property, new Prop(property, unit, nmeaCategory, type));
         }
         return map;
     }

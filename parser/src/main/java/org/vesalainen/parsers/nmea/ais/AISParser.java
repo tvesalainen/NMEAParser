@@ -643,7 +643,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     }
     @Terminal(expression="[OM]", doc="Own Message")
     protected abstract char ownMessage(char om);
-    @Terminal(expression="[AB]", doc="AIS Radio channel")        
+    @Terminal(expression="[AB\\-]", doc="AIS Radio channel")        
     protected abstract char aisChannel(char c);
     @Terminal(expression="[01]{6}", radix=2) 
     protected abstract int messageType(int type);

@@ -25,9 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -90,6 +88,7 @@ public class AISBridge extends JavaLogging implements Transactional
                 fine("AIS rollback rest of message missing");
             }
             int messageNumber = payload.charAt(0)-'0';
+            messageNumber = messageNumber < 4 ? 1 : messageNumber;
             current = getMessageHandler(messageNumber);
             current.pipe.start(ownMessage, (byte) channel);
             fine("AIS sent start");
@@ -131,7 +130,7 @@ public class AISBridge extends JavaLogging implements Transactional
             }
             handler = new MessageHandler(messageNumber);
             handlers[messageNumber-1] = handler;
-            fine("AIS created new message handler %d", messageNumber);
+            config("AIS created new message handler %d", messageNumber);
         }
         return handler;
     }

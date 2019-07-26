@@ -510,7 +510,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule
     protected char channel()
     {
-        return 0;
+        return '-';
     }
 
     @Rule("letter")

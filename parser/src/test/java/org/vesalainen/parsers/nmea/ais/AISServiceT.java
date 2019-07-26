@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Timo Vesalainen <timo.vesalainen@iki.fi>
+ * Copyright (C) 2019 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,26 +16,34 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import java.lang.invoke.MethodHandles;
-import org.vesalainen.code.InterfaceDispatcher;
-import static org.vesalainen.code.InterfaceDispatcher.newInstance;
-import org.vesalainen.code.InterfaceDispatcherAnnotation;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.vesalainen.parsers.nmea.NMEAService;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-@InterfaceDispatcherAnnotation
-public abstract class AISDispatcher extends InterfaceDispatcher implements AISObserver
+public class AISServiceT
 {
-    public static AISDispatcher newInstance()
+    
+    public AISServiceT()
     {
-        return newInstance(AISDispatcher.class);
+        JavaLogging.setConsoleHandler("org.vesalainen", Level.CONFIG);
     }
 
-    public AISDispatcher(MethodHandles.Lookup lookup)
+    @Test
+    public void test1() throws IOException, InterruptedException
     {
-        super(lookup);
+        NMEAService nmeaService = new NMEAService("224.0.0.3", 10110);
+        AISService aisService = new AISService(Paths.get("c:\\temp"), 10);
+        aisService.attach(nmeaService);
+        nmeaService.start();
+        Thread.sleep(100000000);
     }
-
+    
 }

@@ -21,7 +21,7 @@ import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.util.Transactional;
 
 /**
- *
+ * @deprecated 
  * @author Timo Vesalainen
  */
 public class BoatMonitor extends AbstractPropertySetter implements Transactional

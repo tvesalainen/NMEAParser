@@ -27,6 +27,7 @@ import java.util.concurrent.Future;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
+import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.PropertySetter;
 import org.vesalainen.code.PropertySetterDispatcher;
 import org.vesalainen.code.SimplePropertySetterDispatcher;
@@ -35,6 +36,7 @@ import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEASampler;
 import org.vesalainen.parsers.nmea.ais.AISDispatcher;
 import org.vesalainen.parsers.nmea.time.GPSClock;
+import org.vesalainen.util.Transactional;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -127,11 +129,12 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void addNMEAObserver(PropertySetter propertySetter)
     {
-        nmeaDispatcher.addObserver(propertySetter);
-        if (clock != null)
-        {
-            propertySetter.set("clock", clock); // supply clock if attached on the fly
-        }
+        addNMEAObserver(propertySetter, true);
+    }
+    public void addNMEAObserver(PropertySetter propertySetter, boolean reportMissingProperties)
+    {
+        addClock(propertySetter);
+        nmeaDispatcher.addObserver(propertySetter, reportMissingProperties);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
@@ -141,18 +144,53 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     
     public void addAISObserver(PropertySetter propertySetter)
     {
+        addAISObserver(propertySetter, true);
+    }
+    public void addAISObserver(PropertySetter propertySetter, boolean reportMissingProperties)
+    {
         if (aisDispatcher == null)
         {
             aisDispatcher = AISDispatcher.newInstance();
         }
-        aisDispatcher.addObserver(propertySetter);
-        if (clock != null)
-        {
-            propertySetter.set("clock", clock); // supply clock if attached on the fly
-        }
+        addClock(propertySetter);
+        aisDispatcher.addObserver(propertySetter, reportMissingProperties);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
+            autoCloseables.add(ac);
+        }
+    }
+    
+    public void addNMEAObserver(AnnotatedPropertyStore propertyStore)
+    {
+        addNMEAObserver(propertyStore, true);
+    }
+    public void addNMEAObserver(AnnotatedPropertyStore propertyStore, boolean reportMissingProperties)
+    {
+        addClock(propertyStore);
+        nmeaDispatcher.addObserver(propertyStore, reportMissingProperties);
+        if (propertyStore instanceof AutoCloseable)
+        {
+            AutoCloseable ac = (AutoCloseable) propertyStore;
+            autoCloseables.add(ac);
+        }
+    }
+    
+    public void addAISObserver(AnnotatedPropertyStore propertyStore)
+    {
+        addAISObserver(propertyStore, true);
+    }
+    public void addAISObserver(AnnotatedPropertyStore propertyStore, boolean reportMissingProperties)
+    {
+        if (aisDispatcher == null)
+        {
+            aisDispatcher = AISDispatcher.newInstance();
+        }
+        addClock(propertyStore);
+        aisDispatcher.addObserver(propertyStore, reportMissingProperties);
+        if (propertyStore instanceof AutoCloseable)
+        {
+            AutoCloseable ac = (AutoCloseable) propertyStore;
             autoCloseables.add(ac);
         }
     }
@@ -176,7 +214,23 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
             autoCloseables.remove(ac);
         }
     }
-    
+    private void addClock(PropertySetter propertySetter)
+    {
+        if (clock != null && propertySetter.wantsProperty("clock"))
+        {
+            Transactional transactional = null;
+            if (propertySetter instanceof Transactional)
+            {
+                transactional = (Transactional) propertySetter;
+                transactional.start("add clock");
+            }
+            propertySetter.set("clock", clock); // supply clock is attached on the fly
+            if (transactional != null)
+            {
+                transactional.commit("add clock");
+            }
+        }
+    }
     public boolean hasObservers()
     {
         return nmeaDispatcher.hasObservers() ||
