@@ -481,7 +481,7 @@ import org.vesalainen.util.logging.JavaLogging;
 ,@Rule(left="Type18StandardClassBCSPositionReport", value={"repeat", "mmsi", "reserved", "speed_U1_10", "accuracy", "lon_I4_28", "lat_I4_27", "course_U1_12", "heading_9", "second", "regional_2", "cs", "display", "dsc", "band", "msg22", "assigned", "raim", "radio_20"})
 ,@Rule(left="IMO289ClearanceTimeToEnterPort", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid18", "linkage", "month", "day_5", "hour", "minute_6", "portname", "destination_30", "lon_I3_25", "lat_I3_24", "('[01]{43}')?"})
 ,@Rule(left="21Content", value={"Type21AidToNavigationReport2"})
-,@Rule(left="Type5StaticAndVoyageRelatedData", value={"repeat", "mmsi", "ais_version", "imo", "callsign", "shipname", "shiptype", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "eta_month", "eta_day", "eta_hour", "eta_minute", "draught", "destination_120", "dte", "('[01]{1}')?"})
+,@Rule(left="Type5StaticAndVoyageRelatedData", value={"repeat", "mmsi", "ais_version", "imo", "callsign", "shipname", "shiptype", "to_bow", "to_stern", "to_port", "to_starboard", "epfd", "eta_month", "eta_day", "eta_hour", "eta_minute", "draught", "destination_120", "dte", "extra?"})
 ,@Rule(left="Type15Interrogation2", value={"repeat", "mmsi", "'[01]{2}'", "mmsi1", "type1_1", "offset1_1", "'[01]{2}'", "type1_2", "offset1_2", "('[01]{2}')?"})
 ,@Rule(left="Type20DataLinkManagementMessage4", value={"repeat", "mmsi", "'[01]{2}'", "offset1", "number1", "timeout1", "increment1_11", "offset2", "number2", "timeout2", "increment2_11", "offset3", "number3", "timeout3", "increment3", "offset4", "number4", "timeout4", "increment4"})
 ,@Rule(left="AreaNoticeAddressedMessageHeader", value={"repeat", "mmsi", "seqno", "dest_mmsi", "retransmit", "'[01]{1}'", "dac001", "fid23", "linkage", "notice", "month", "day_5", "hour", "minute_6", "duration_18", "(shape)+"})
@@ -636,11 +636,10 @@ protected void text_936(InputReader arg, @ParserContext("aisData") AISObserver a
 protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData){}
 
+    @Terminal(expression="[01]+", doc="Extra trailer")
+    protected abstract void extra();
     @Terminal(expression="[E]", doc="Exit parsing")
-    protected void exit(char exit)
-    {
-        System.err.println("exit");
-    }
+    protected abstract void exit();
     @Terminal(expression="[OM]", doc="Own Message")
     protected abstract char ownMessage(char om);
     @Terminal(expression="[AB\\-]", doc="AIS Radio channel")        
@@ -651,7 +650,8 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     @Rule("ownMessage aisChannel messageType")
     protected void start(char ownMessage, char aisChannel, int messageType, @ParserContext("aisData") AISObserver aisData, @ParserContext("aisBridge") AISBridge aisBridge)
     {
-        aisBridge.start("start of "+messageType+" message");
+        aisBridge.start("Start from NMEAParser");
+        aisData.start("Start from NMEAParser");
         aisData.setOwnMessage(ownMessage=='O');
         aisData.setChannel(aisChannel);
         aisData.setMessageType(MessageTypes.values()[messageType]);
@@ -817,7 +817,9 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             }
         }
         reader.clear();
-        aisBridge.rollback("skipping: "+sb+"\nexpected:"+expected);
+        String msg = "skipping: "+sb+"\nexpected:"+expected;
+        aisData.rollback(msg);
+        aisBridge.rollback(msg);
     }
     private boolean skip(String input)
     {
