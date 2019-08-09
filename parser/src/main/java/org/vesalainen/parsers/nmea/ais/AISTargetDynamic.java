@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Formatter;
 import java.util.Locale;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
@@ -49,7 +50,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
     @Property private boolean assignedMode;
     @Property private boolean raim;
     @Property private int radioStatus;
-    @Property private EPFDFixTypes epfdFixTypes;
+    @Property private EPFDFixTypes epfd;
     @Property private int etaMonth;
     @Property private int etaDay;
     @Property private int etaHour;
@@ -61,7 +62,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         super(MethodHandles.lookup());
     }
 
-    public AISTargetDynamic(AnnotatedPropertyStore aps)
+    public AISTargetDynamic(AISTargetDynamic aps)
     {
         super(aps);
     }
@@ -71,7 +72,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         super(MethodHandles.lookup(), path);
     }
     
-    public void print(PrintWriter pw, boolean logExists)
+    public void print(AISLogFile pw, boolean logExists) throws IOException
     {
         switch (messageType)
         {
@@ -80,9 +81,9 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
             case PositionReportClassAResponseToInterrogation:   // 3
                 if (!logExists)
                 {
-                    pw.print("#Msg  Timestamp Location Course Speed Heading ROT Status Maneuver Channel\r\n");
+                    pw.format("#Msg  Timestamp Location Course Speed Heading ROT Status Maneuver Channel\r\n");
                 }
-                pw.format(Locale.US, "Msg%d %s %s %.1f %.1f %d %.1f %s %s %c\r\n",
+                pw.format("Msg%d %s %s %.1f %.1f %d %.1f %s %s %c\r\n",
                         messageType.ordinal(),
                         instant,
                         new Location(latitude, longitude),
@@ -90,13 +91,13 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
                         speed,
                         heading,
                         rateOfTurn,
-                        navigationStatus.name(),
-                        maneuver.name(),
+                        navigationStatus,
+                        maneuver,
                         channel
                         );
                 break;
             case StaticAndVoyageRelatedData:    // 5
-                pw.format(Locale.US, "Msg%d %s \"%s\" %d %d %d %d %s\r\n",
+                pw.format("Msg%d %s \"%s\" %d %d %d %d %s\r\n",
                         messageType.ordinal(),
                         instant,
                         destination,
@@ -104,15 +105,15 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
                         etaDay,
                         etaHour,
                         etaMinute,
-                        epfdFixTypes
+                        epfd
                         );
                 break;
             case StandardSARAircraftPositionReport:
                 if (!logExists)
                 {
-                    pw.print("#Msg  Timestamp Location Course Speed Altitude Channel Assigned\r\n");
+                    pw.format("#Msg  Timestamp Location Course Speed Altitude Channel Assigned\r\n");
                 }
-                pw.format(Locale.US, "Msg%d %s %s %.1f %.1f %d %c %b\r\n",
+                pw.format("Msg%d %s %s %.1f %.1f %d %c %b\r\n",
                         messageType.ordinal(),
                         instant,
                         new Location(latitude, longitude),
@@ -127,9 +128,9 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
             case ExtendedClassBEquipmentPositionReport:
                 if (!logExists)
                 {
-                    pw.print("#Msg  Timestamp Location Course Speed Heading Channel Assigned\r\n");
+                    pw.format("#Msg  Timestamp Location Course Speed Heading Channel Assigned\r\n");
                 }
-                pw.format(Locale.US, "Msg%d %s %s %.1f %.1f %d %c %b\r\n",
+                pw.format("Msg%d %s %s %.1f %.1f %d %c %b\r\n",
                         messageType.ordinal(),
                         instant,
                         new Location(latitude, longitude),
@@ -259,7 +260,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
 
     public AISTargetDynamic setEpfdFixTypes(EPFDFixTypes epfdFixTypes)
     {
-        this.epfdFixTypes = epfdFixTypes;
+        this.epfd = epfdFixTypes;
         return this;
     }
 
@@ -379,7 +380,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
 
     public EPFDFixTypes getEpfdFixTypes()
     {
-        return epfdFixTypes;
+        return epfd;
     }
 
     public int getEtaMonth()

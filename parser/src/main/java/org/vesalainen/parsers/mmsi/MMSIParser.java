@@ -35,6 +35,7 @@ import org.vesalainen.parser.annotation.Terminal;
 @GrammarDef()
 public abstract class MMSIParser
 {
+    public static final MMSIParser PARSER = getInstance();
     /**
      * Returns MMSIParser instance
      * @return 

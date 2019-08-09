@@ -68,7 +68,7 @@ public enum MMSIType
      */
     Unknown;
     /**
-     * Returns MMSI type. This fast method not fully parsing MMSI.
+     * Returns MMSI type. This is fast method not fully parsing MMSI.
      * @param mmsi
      * @return 
      */

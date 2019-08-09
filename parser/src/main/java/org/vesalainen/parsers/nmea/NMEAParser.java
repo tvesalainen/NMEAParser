@@ -324,7 +324,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("'!AIVDO'")
     protected boolean aivdo()
     {
-        return false;
+        return true;
     }
 
     @Rule("letter")

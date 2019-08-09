@@ -94,8 +94,7 @@ public enum NavigationStatus
         this.description = description;
     }
 
-    @Override
-    public String toString()
+    public String getDescription()
     {
         return description;
     }

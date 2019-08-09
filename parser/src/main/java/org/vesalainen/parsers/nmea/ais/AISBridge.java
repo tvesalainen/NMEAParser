@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.channels.ReadableByteChannel;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -68,7 +71,16 @@ public class AISBridge extends JavaLogging implements Transactional
             long value
     ) throws IOException
     {
-        fine("AIS(%d, %d, %s)", numberOfSentences, sentenceNumber, payload);
+        fine("!AIVD%c,%d,%d,%s,%s,%s,%d*%02X", 
+                ownMessage ? 'O' : 'M',
+                numberOfSentences,
+                sentenceNumber,
+                sequentialMessageID == 0 ? "" : String.valueOf(sequentialMessageID),
+                channel != '-' ? String.valueOf(channel) : "",
+                payload,
+                padding,
+                checksum
+        );
         if (checksum != value)
         {
             warning("Message parsing was terminated because of checksum fail");
@@ -130,7 +142,6 @@ public class AISBridge extends JavaLogging implements Transactional
             }
             handler = new MessageHandler(messageNumber);
             handlers[messageNumber-1] = handler;
-            config("AIS created new message handler %d", messageNumber);
         }
         return handler;
     }
@@ -234,6 +245,7 @@ public class AISBridge extends JavaLogging implements Transactional
         @Override
         public void run()
         {
+            config("AIS created new message handler %d", message);
             switch (message)
             {
                 case 1:

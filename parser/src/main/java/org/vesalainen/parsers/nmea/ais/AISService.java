@@ -18,21 +18,31 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import static java.nio.file.StandardOpenOption.READ;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.function.Consumer;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import org.vesalainen.nio.channels.GZIPChannel;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAClock;
 import org.vesalainen.parsers.nmea.NMEAService;
+import org.vesalainen.util.LifeCycle;
+import static org.vesalainen.util.LifeCycle.*;
 import org.vesalainen.util.TimeToLiveMap;
 import org.vesalainen.util.Transactional;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
@@ -40,23 +50,82 @@ import org.vesalainen.util.Transactional;
  */
 public class AISService extends AnnotatedPropertyStore implements Transactional, Stoppable
 {
+    @FunctionalInterface
+    public interface AISTargetObserver
+    {
+        void observe(LifeCycle status, int mmsi, AISTarget target);
+    }
     private final Path dir;
     private final AISTargetData data = new AISTargetData();
     private final AISTargetDynamic dynamic = new AISTargetDynamic();
     private TimeToLiveMap<Integer,AISTarget> map;
+    private CachedScheduledThreadPool executor;
+    private long maxLogSize;
+    private AISTarget ownTarget;
+    private Set<AISTargetObserver> observers = new HashSet<>();
     
     @Property private NMEAClock clock;
     @Property private MessageTypes messageType;
     @Property private int mmsi;
     @Property private boolean ownMessage;
 
-    public AISService(Path dir, long ttlMinutes)
+    public AISService(Path dir, long ttlMinutes, long maxLogSize, CachedScheduledThreadPool executor)
     {
         super(MethodHandles.lookup());
         this.dir = dir;
+        this.maxLogSize = maxLogSize;
+        this.executor = executor;
         this.map = new TimeToLiveMap<>(ttlMinutes, TimeUnit.MINUTES, this::targetRemoved);
     }
 
+    public void addObserver(AISTargetObserver observer)
+    {
+        observers.add(observer);
+    }
+    public void removeObserver(AISTargetObserver observer)
+    {
+        observers.remove(observer);
+    }
+    public List<AISTargetDynamic> search(int mmsi, Instant from, Instant to)
+    {
+        List<AISTargetDynamic> list = new ArrayList<>();
+        search(mmsi, from, to, list::add);
+        return list;
+    }
+    public void search(int mmsi, Instant from, Instant to, Consumer<AISTargetDynamic> consumer)
+    {
+        Path path = getDynamicPath(dir, mmsi);
+        AISLogFile log = new AISLogFile(path, maxLogSize, executor);
+        List<Path> paths = log.getPaths();
+        paths.forEach((p)->
+        {
+            try
+            {
+                Instant lastModifiedTime = Files.getLastModifiedTime(p).toInstant();
+                if (from == null || lastModifiedTime.isAfter(from))
+                {
+                    try (ReadableByteChannel channel = getChannel(p))
+                    {
+                        AISTargetDynamicParser.PARSER.parse(channel, (AISTargetDynamic t)->
+                        {
+                            Instant instant = t.getInstant();
+                            if (
+                                    (from == null || instant.isAfter(from)) &&
+                                    (to == null || instant.isBefore(to))
+                                    )
+                            {
+                                consumer.accept(t);
+                            }
+                        });
+                    }
+                }
+            }
+            catch (IOException ex)
+            {
+                throw new IllegalArgumentException(ex);
+            }
+        });
+    }
     @Override
     public void commit(String reason, Collection<String> updatedProperties)
     {
@@ -64,9 +133,28 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         {
             if (mmsi != 0)
             {
-                AISTarget target = getTarget();
                 dynamic.setInstant(Instant.now((Clock) clock));
-                target.update(data, dynamic, updatedProperties);
+                if (ownMessage)
+                {
+                    if (ownTarget == null)
+                    {
+                        ownTarget = new AISTarget(maxLogSize, executor, mmsi, dir, new AISTargetData(data), new AISTargetDynamic(dynamic));
+                        ownTarget.open();
+                    }
+                    else
+                    {
+                        if (dynamic.getChannel() != '-')
+                        {
+                            ownTarget.update(data, dynamic, updatedProperties);
+                        }
+                    }
+                }
+                else
+                {
+                    AISTarget target = getTarget();
+                    target.update(data, dynamic, updatedProperties);
+                    observers.forEach((o)->o.observe(UPDATE, mmsi, target));
+                }
             }
         }
         catch (IOException ex)
@@ -74,9 +162,17 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
             throw new IllegalArgumentException(ex);
         }
     }
-    public void targetRemoved(Integer mmsi, AISTarget target)
+    private void targetRemoved(Integer mmsi, AISTarget target)
     {
-        target.close();
+        try
+        {
+            observers.forEach((o)->o.observe(CLOSE, mmsi, target));
+            target.close();
+        }
+        catch (IOException ex)
+        {
+            throw new IllegalArgumentException(ex);
+        }
     }
     public void attach(NMEAService svc)
     {
@@ -93,6 +189,18 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
     @Override
     public void stop()
     {
+        if (ownTarget != null)
+        {
+            try
+            {
+                ownTarget.close();
+                ownTarget = null;
+            }
+            catch (IOException ex)
+            {
+                throw new IllegalArgumentException(ex);
+            }
+        }
         map.clear();    // stores data
     }
 
@@ -103,7 +211,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         {
             AISTargetData dat;
             AISTargetDynamic dyn = new AISTargetDynamic();
-            Path dataPath = getDataPath();
+            Path dataPath = getDataPath(dir, mmsi);
             if (Files.exists(dataPath))
             {
                 dat = new AISTargetData(dataPath, false);
@@ -112,15 +220,39 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
             {
                 dat = new AISTargetData();
             }
-            target = new AISTarget(mmsi, dir, dat, dyn);
+            final AISTarget trg = target = new AISTarget(maxLogSize, executor, mmsi, dir, dat, dyn);
             map.put(mmsi, target);
             target.open();
-        }
+            observers.forEach((o)->o.observe(OPEN, mmsi, trg));
+}
         return target;
     }
     
-    private Path getDataPath()
+    private static Path getDataPath(Path dir, int mmsi)
     {
         return dir.resolve(mmsi+".dat");
+    }
+    private static Path getDynamicPath(Path dir, int mmsi)
+    {
+        return dir.resolve(mmsi+".log");
+    }
+    private static ReadableByteChannel getChannel(Path path)
+    {
+        try
+        {
+            if (path.getFileName().toString().endsWith(".gz"))
+            {
+                return new GZIPChannel(path, READ);
+            }
+            else
+            {
+                return FileChannel.open(path, READ);
+            }
+        }
+        catch (IOException ex)
+        {
+            throw new IllegalArgumentException(ex);
+        }
+        
     }
 }

@@ -186,7 +186,9 @@ public class MessageTest
                 "!AIVDM,2,1,6,B,56:fS:D0000000000008v0<QD4r0`T4v3400000t0`D147?ps1P00000,0*3D\r\n"+
                     "!AIVDM,2,2,6,B,000000000000008,2*29\r\n",
                 "!AIVDM,2,1,8,A,53Q6SR02=21U`@H?800l4E9<f1HTLt000000001?BhL<@4q30Glm841E,0*7C\r\n"+
-                    "!AIVDM,2,2,8,A,1DThUDQh0000000,2*4D\r\n"
+                    "!AIVDM,2,2,8,A,1DThUDQh0000000,2*4D\r\n",
+                "!AIVDM,2,1,7,A,569D;:P000030000000P4V1PTpN3K7H00000000N3hA353<eaN4j0CQj0B@0,0*03\r\n"+
+                    "!AIVDM,2,2,7,A,000000000080,0*19\r\n"
             };
             for (String nmea : nmeas)
             {
@@ -194,6 +196,7 @@ public class MessageTest
                 TC tc = new TC();
                 parser.parse(nmea, null, tc);
                 AISContentHelper ach = new AISContentHelper(nmea);
+                int bits = ach.getBits();
                 assertEquals(MessageTypes.StaticAndVoyageRelatedData, tc.messageType);
                 assertEquals(ach.getUInt(8, 38), tc.mmsi);
                 MMSIEntry mmsiEntry = mmsiParser.parse(tc.mmsi);

@@ -16,16 +16,21 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.function.Consumer;
 import org.vesalainen.parser.GenClassFactory;
+import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
+import org.vesalainen.parser.annotation.RecoverMethod;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.AbstractParser;
+import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.regex.SyntaxErrorException;
 
 /**
  *
@@ -35,7 +40,9 @@ import org.vesalainen.parser.util.AbstractParser;
 @GrammarDef()
 public abstract class AISTargetDynamicParser extends AbstractParser
 {
-    public static final AISTargetDynamicParser getInstance()
+    public static final AISTargetDynamicParser PARSER = getInstance();
+    
+    private static AISTargetDynamicParser getInstance()
     {
         return (AISTargetDynamicParser) GenClassFactory.loadGenInstance(AISTargetDynamicParser.class);
     }
@@ -46,6 +53,24 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     @ParseMethod(start = "lines", whiteSpace="whiteSpace")
     public abstract <I> void parse(I input, @ParserContext("consumer") Consumer<AISTargetDynamic> consumer);
     
+    @RecoverMethod
+    public void recover(
+            @ParserContext(ParserConstants.InputReader) InputReader reader,
+            @ParserContext(ParserConstants.Exception) Throwable thr
+            ) throws IOException
+    {
+        if (thr != null && !(thr instanceof SyntaxErrorException))
+        {
+            throw new IOException(thr);
+        }
+        char cc = (char) reader.read();
+        while (cc != -1 && cc != '\n')
+        {
+            cc = (char) reader.read();
+        }
+        //warning("skipped %s", reader);
+        reader.clear();
+    }
     @Rule(left="lines", value="line")
     protected void lines1(AISTargetDynamic line, @ParserContext("consumer") Consumer<AISTargetDynamic> consumer)
     {
@@ -82,6 +107,11 @@ public abstract class AISTargetDynamicParser extends AbstractParser
                 .setNavigationStatus(navigationStatus)
                 .setManeuver(maneuver)
                 .setChannel(channel);
+    }
+    @Rule(left="line", value="message5 instant old")
+    protected AISTargetDynamic line5(MessageTypes type, Instant instant)
+    {
+        return null;
     }
     @Rule(left="line", value="message5 instant quote int int int int epfdFixTypes")
     protected AISTargetDynamic line5(MessageTypes type, Instant instant, String destination, int etaMonth, int etaDay, int etaHour, int etaMinute, EPFDFixTypes epfdFixTypes)
@@ -125,6 +155,11 @@ public abstract class AISTargetDynamicParser extends AbstractParser
                 .setAssignedMode(assignedMode);
     }
     
+    @Rule(left="line", value="message24 instant old")
+    protected AISTargetDynamic line24(MessageTypes type, Instant instant)
+    {
+        return null;
+    }
     @Terminal(expression = "Msg[123]")
     protected MessageTypes message123(String msg)
     {
@@ -136,12 +171,18 @@ public abstract class AISTargetDynamicParser extends AbstractParser
         return MessageTypes.values()[Integer.parseInt(msg.substring(3))];
     }
     @Terminal(expression = "Msg5")
-    protected MessageTypes message5(String msg)
+    protected MessageTypes message5()
     {
         return MessageTypes.StaticAndVoyageRelatedData;
     }
+    @Terminal(expression = "Msg24")
+    protected MessageTypes message24()
+    {
+        return MessageTypes.StaticDataReport;
+    }
+
     @Terminal(expression = "Msg9")
-    protected MessageTypes message9(String msg)
+    protected MessageTypes message9()
     {
         return MessageTypes.StandardSARAircraftPositionReport;
     }
@@ -160,6 +201,9 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     {
         return EPFDFixTypes.valueOf(epfdFixTypes);
     }
+    @Terminal(expression = "\\{[^\\}]+\\}[\n]?")
+    protected abstract void old();
+
 
     
 }

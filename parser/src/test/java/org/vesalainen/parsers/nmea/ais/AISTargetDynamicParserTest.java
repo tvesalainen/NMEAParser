@@ -36,7 +36,7 @@ public class AISTargetDynamicParserTest
     @Test
     public void test1()
     {
-        AISTargetDynamicParser parser = AISTargetDynamicParser.getInstance();
+        AISTargetDynamicParser parser = AISTargetDynamicParser.PARSER;
         AISTargetDynamic atd = parser.parse("#Msg  Timestamp Location Course Speed Heading Channel Assigned");
         assertNull(atd);
         atd = parser.parse("Msg18 2019-07-14T21:10:54.127Z 16°3.49'S 145°37.26'W 42.0 0.2 351 - false");
@@ -54,7 +54,7 @@ public class AISTargetDynamicParserTest
     public void test2()
     {
         Path path = Paths.get("src\\test\\resources\\230123250.log");
-        AISTargetDynamicParser parser = AISTargetDynamicParser.getInstance();
+        AISTargetDynamicParser parser = AISTargetDynamicParser.PARSER;
         parser.parse(path, (t)->System.err.println(t));
     }
 }

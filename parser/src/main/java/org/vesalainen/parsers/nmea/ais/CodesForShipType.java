@@ -430,7 +430,7 @@ public enum CodesForShipType
         this.description = description;
     }
 
-    public String toString()
+    public String getDescription()
     {
         return description;
     }

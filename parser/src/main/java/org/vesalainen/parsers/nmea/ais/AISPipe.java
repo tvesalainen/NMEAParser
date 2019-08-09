@@ -22,6 +22,9 @@ import java.nio.channels.Pipe;
 import java.nio.channels.Pipe.SinkChannel;
 import java.nio.channels.Pipe.SourceChannel;
 import java.nio.channels.ScatteringByteChannel;
+import org.vesalainen.nio.channels.ByteBufferPipe;
+import org.vesalainen.nio.channels.ByteBufferPipe.Sink;
+import org.vesalainen.nio.channels.ByteBufferPipe.Source;
 
 /**
  *
@@ -33,13 +36,13 @@ public class AISPipe implements ScatteringByteChannel
     private static final byte ROLLBACK_MARK = (byte)'R';
     private static final byte EXIT_MARK = (byte)'E';
     private ByteBuffer bb;
-    private SinkChannel sink;
-    private SourceChannel source;
+    private Sink sink;
+    private Source source;
 
     public AISPipe() throws IOException
     {
         bb = ByteBuffer.allocate(1024);
-        Pipe pipe = Pipe.open();
+        ByteBufferPipe pipe = new ByteBufferPipe();
         this.sink = pipe.sink();
         this.source = pipe.source();
     }

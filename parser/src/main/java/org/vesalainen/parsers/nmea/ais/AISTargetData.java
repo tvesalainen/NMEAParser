@@ -19,7 +19,6 @@ package org.vesalainen.parsers.nmea.ais;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
-import java.util.Calendar;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 
@@ -65,6 +64,91 @@ public class AISTargetData extends AnnotatedPropertyStore
     public AISTargetData(Path path, boolean reportMissingProperties) throws IOException
     {
         super(MethodHandles.lookup(), path, reportMissingProperties);
+    }
+
+    public int getMmsi()
+    {
+        return mmsi;
+    }
+
+    public String getVesselName()
+    {
+        return vesselName;
+    }
+
+    public String getCallSign()
+    {
+        return callSign;
+    }
+
+    public int getImoNumber()
+    {
+        return imoNumber;
+    }
+
+    public CodesForShipType getShipType()
+    {
+        return shipType;
+    }
+
+    public int getDimensionToBow()
+    {
+        return dimensionToBow;
+    }
+
+    public int getDimensionToStern()
+    {
+        return dimensionToStern;
+    }
+
+    public int getDimensionToPort()
+    {
+        return dimensionToPort;
+    }
+
+    public int getDimensionToStarboard()
+    {
+        return dimensionToStarboard;
+    }
+
+    public float getDraught()
+    {
+        return draught;
+    }
+
+    public boolean isCsUnit()
+    {
+        return csUnit;
+    }
+
+    public boolean isDisplay()
+    {
+        return display;
+    }
+
+    public boolean isDsc()
+    {
+        return dsc;
+    }
+
+    public int getUnitModelCode()
+    {
+        return unitModelCode;
+    }
+
+    public boolean isPositionAccuracy()
+    {
+        return positionAccuracy;
+    }
+
+    public int getSerialNumber()
+    {
+        return serialNumber;
+    }
+
+    public String getVendorId()
+    {
+        return vendorId;
     }
     
 }
