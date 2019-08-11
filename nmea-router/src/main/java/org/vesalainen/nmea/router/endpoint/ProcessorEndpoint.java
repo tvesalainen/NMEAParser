@@ -17,6 +17,10 @@
 package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
+import org.vesalainen.nio.RingByteBuffer;
+import org.vesalainen.nio.channels.ByteBufferChannel;
 import org.vesalainen.nio.channels.PipeChannel;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.processor.Processor;
@@ -27,7 +31,7 @@ import static org.vesalainen.nmea.router.RouterManager.POOL;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-class ProcessorEndpoint extends Endpoint<ProcessorType,PipeChannel>
+class ProcessorEndpoint extends Endpoint<ProcessorType,ByteBufferChannel>
 {
 
     private Processor processor;
@@ -38,14 +42,37 @@ class ProcessorEndpoint extends Endpoint<ProcessorType,PipeChannel>
     }
 
     @Override
-    public PipeChannel createChannel() throws IOException
+    public ByteBufferChannel createChannel() throws IOException
     {
-        PipeChannel[] peers = PipeChannel.createPeers();
-        PipeChannel pc1 = peers[0];
-        PipeChannel pc2 = peers[1];
+        ByteBufferChannel[] peers = ByteBufferChannel.open(4096, true);
+        ByteBufferChannel pc1 = peers[0];
+        ByteBufferChannel pc2 = peers[1];
         processor = new Processor(endpointType, pc2, pc2, POOL);
         processor.start();
+        pc1.setWriteTimeout(0, TimeUnit.MILLISECONDS);
         return pc1;
+    }
+
+    @Override
+    public int write(ByteBuffer bb) throws IOException
+    {
+        int rc = super.write(bb);
+        if (rc == 0)
+        {
+            warning("processor not reading");
+        }
+        return rc;
+    }
+
+    @Override
+    public int write(Endpoint src, RingByteBuffer ring) throws IOException
+    {
+        int rc = super.write(src, ring);
+        if (rc == 0)
+        {
+            warning("processor not reading");
+        }
+        return rc;
     }
 
     @Override
