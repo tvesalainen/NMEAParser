@@ -21,8 +21,63 @@ package org.vesalainen.parsers.nmea.ais;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class AISUtil
+public final class AISUtil
 {
+    /**
+    /**
+     * <p> Turn rate is encoded as follows: <p> 0 = not turning <p> 1…126 =
+     * turning right at up to 708 degrees per minute or higher <p> 1…-126 =
+     * turning left at up to 708 degrees per minute or higher <p> 127 = turning
+     * right at more than 5deg/30s (No TI available) <p> -127 = turning left at
+     * more than 5deg/30s (No TI available) <p> 128 (80 hex) indicates no turn
+     * information available (default) <p>Values between 0 and 708 degrees/min
+     * coded by ROTAIS=4.733 * SQRT(ROTsensor) degrees/min where ROTsensor is
+     * the Rate of Turn as input by an external Rate of Turn Indicator. ROTAIS
+     * is rounded to the nearest integer value. Thus, to decode the field value,
+     * divide by 4.733 and then square it. Sign of the field value should be
+     * preserved when squaring it, otherwise the left/right indication will be
+     * lost.
+     * @param rot
+     * @return 
+     */
+    public static float rot(int turn)
+    {
+        switch (turn)
+        {
+            case 0:
+                return 0;
+            case 127:
+                return 10;
+            case -127:
+                return -10;
+            case -128:  // 0x80
+                return Float.NaN;
+            default:
+                float f = turn;
+                f = f / 4.733F;
+                return Math.signum(f) * f * f;
+        }
+    }
+    public static int rot(float turn)
+    {
+        if (Float.isNaN(turn))
+        {
+            return -128;
+        }
+        if (turn == 0)
+        {
+            return 0;
+        }
+        if (turn == 10)
+        {
+            return 127;
+        }
+        if (turn == -10)
+        {
+            return -127;
+        }
+        return (int) Math.round(Math.signum(turn)*Math.sqrt(Math.abs(turn))*4.733F);
+    }
     public static String makeString(CharSequence seq)
     {
         StringBuilder sb = new StringBuilder();
