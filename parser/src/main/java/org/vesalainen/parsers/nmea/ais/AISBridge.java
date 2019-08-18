@@ -52,10 +52,14 @@ public class AISBridge extends JavaLogging implements Transactional
 
     public AISBridge(AISObserver aisData) throws IOException
     {
+        this(aisData, Executors.newCachedThreadPool());
+    }
+    public AISBridge(AISObserver aisData, ExecutorService executor) throws IOException
+    {
         super(AISBridge.class);
         this.parser = AISParser.newInstance();
         this.aisData = aisData;
-        executor = Executors.newCachedThreadPool();
+        this.executor = executor;
 
     }
 
@@ -245,29 +249,34 @@ public class AISBridge extends JavaLogging implements Transactional
         @Override
         public void run()
         {
-            config("AIS created new message handler %d", message);
-            switch (message)
+            try
             {
-                case 1:
-                case 2:
-                case 3:
-                    parser.parse123Messages(pipe, aisData, AISBridge.this);
-                    break;
-                default:
-                    String methodName = "parse"+message+"Messages";
-                    try
-                    {
-                        Method parseMethod = parser.getClass().getMethod(methodName, ReadableByteChannel.class, AISObserver.class, AISBridge.class);
-                        parseMethod.invoke(parser, pipe, aisData, AISBridge.this);
-                    }
-                    catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
-                    {
-                        log(SEVERE, ex, "%s", ex.getMessage());
-                    }
-                    break;
+                config("AIS created new message handler %d", message);
+                switch (message)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        parser.parse123Messages(pipe, aisData, AISBridge.this);
+                        break;
+                    default:
+                        String methodName = "parse"+message+"Messages";
+                        try
+                        {
+                            Method parseMethod = parser.getClass().getMethod(methodName, ReadableByteChannel.class, AISObserver.class, AISBridge.class);
+                            parseMethod.invoke(parser, pipe, aisData, AISBridge.this);
+                        }
+                        catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
+                        {
+                            log(SEVERE, ex, "%s", ex.getMessage());
+                        }
+                        break;
+                }
             }
-            fine("AIS exit %d", message);
+            catch (Throwable ex)
+            {
+                log(SEVERE, ex, "AIS exit %d", message);
+            }
         }
-
     }
 }

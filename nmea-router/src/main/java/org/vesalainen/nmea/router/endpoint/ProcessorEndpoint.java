@@ -19,9 +19,9 @@ package org.vesalainen.nmea.router.endpoint;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
+import static java.util.logging.Level.SEVERE;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.ByteBufferChannel;
-import org.vesalainen.nio.channels.PipeChannel;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.processor.Processor;
 import org.vesalainen.nmea.router.Router;
@@ -33,7 +33,6 @@ import static org.vesalainen.nmea.router.RouterManager.POOL;
  */
 class ProcessorEndpoint extends Endpoint<ProcessorType,ByteBufferChannel>
 {
-
     private Processor processor;
 
     public ProcessorEndpoint(ProcessorType processorType, Router router)
@@ -81,6 +80,10 @@ class ProcessorEndpoint extends Endpoint<ProcessorType,ByteBufferChannel>
         try
         {
             super.run();
+        }
+        catch (Throwable thr)
+        {
+            log(SEVERE, thr, "processor stopper %s", thr.getMessage());
         }
         finally
         {

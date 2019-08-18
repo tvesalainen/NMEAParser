@@ -17,14 +17,15 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.util.Formatter;
-import java.util.Locale;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import org.vesalainen.parsers.nmea.NMEASentence;
+import static org.vesalainen.parsers.nmea.ais.ManeuverIndicator.NotAvailableDefault;
+import static org.vesalainen.parsers.nmea.ais.MessageTypes.PositionReportClassA;
+import static org.vesalainen.parsers.nmea.ais.MessageTypes.StandardClassBCSPositionReport;
+import static org.vesalainen.parsers.nmea.ais.NavigationStatus.NotDefinedDefault;
 import org.vesalainen.util.navi.Location;
 
 /**
@@ -34,15 +35,16 @@ import org.vesalainen.util.navi.Location;
 public class AISTargetDynamic extends AnnotatedPropertyStore
 {
     @Property private MessageTypes messageType;
-    @Property private Instant instant;
-    @Property private double latitude;
-    @Property private double longitude;
-    @Property private float course;
-    @Property private float speed;
-    @Property private int heading;
+    @Property private long timestamp;
+    @Property private int mmsi;
+    @Property private double latitude = Double.NaN;
+    @Property private double longitude = Double.NaN;
+    @Property private float course = 360;
+    @Property private float speed = 102.3F;
+    @Property private int heading = 511;
     @Property private float rateOfTurn;
-    @Property private NavigationStatus navigationStatus;
-    @Property private ManeuverIndicator maneuver;
+    @Property private NavigationStatus navigationStatus = NotDefinedDefault; 
+    @Property private ManeuverIndicator maneuver = NotAvailableDefault;
     @Property private char channel;
     @Property private int altitude;
     @Property private boolean band;
@@ -50,12 +52,11 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
     @Property private boolean assignedMode;
     @Property private boolean raim;
     @Property private int radioStatus;
-    @Property private EPFDFixTypes epfd;
-    @Property private int etaMonth;
-    @Property private int etaDay;
-    @Property private int etaHour;
-    @Property private int etaMinute;
-    @Property private String destination;
+    @Property private boolean positionAccuracy;
+    @Property private int second = 60;
+    @Property private boolean csUnit;
+    @Property private boolean display;
+    @Property private boolean dsc;
     
     public AISTargetDynamic()
     {
@@ -72,6 +73,60 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         super(MethodHandles.lookup(), path);
     }
     
+    protected NMEASentence[] getMsg1()
+    {
+        if (!Double.isNaN(latitude))
+        {
+            return new AISBuilder(PositionReportClassA, mmsi)
+                .integer(4, navigationStatus, NavigationStatus.NotDefinedDefault)
+                .rot(rateOfTurn)
+                .decimal(10, speed, 10)
+                .bool(positionAccuracy)
+                .decimal(28, longitude, 600000)
+                .decimal(27, latitude, 600000)
+                .decimal(12, course, 10)
+                .integer(9, heading)
+                .integer(6, second)
+                .integer(2, maneuver, ManeuverIndicator.NotAvailableDefault)
+                .spare(3)
+                .bool(raim)
+                .integer(19, radioStatus)
+                .build();
+        }
+        else
+        {
+            return AISBuilder.EMPTY;
+        }
+    }
+    protected NMEASentence[] getMsg18()
+    {
+        if (!Double.isNaN(latitude))
+        {
+            return new AISBuilder(StandardClassBCSPositionReport, mmsi)
+                .spare(8)
+                .decimal(10, speed, 10)
+                .bool(positionAccuracy)
+                .decimal(28, longitude, 600000)
+                .decimal(27, latitude, 600000)
+                .decimal(12, course, 10)
+                .integer(9, heading)
+                .integer(6, second)
+                .spare(2)
+                .bool(csUnit)
+                .bool(display)
+                .bool(dsc)
+                .bool(band)
+                .bool(msg22)
+                .bool(assignedMode)
+                .bool(raim)
+                .integer(20, radioStatus)
+                .build();
+        }
+        else
+        {
+            return AISBuilder.EMPTY;
+        }
+    }
     public void print(AISLogFile pw, boolean logExists) throws IOException
     {
         switch (messageType)
@@ -85,7 +140,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
                 }
                 pw.format("Msg%d %s %s %.1f %.1f %d %.1f %s %s %c\r\n",
                         messageType.ordinal(),
-                        instant,
+                        timestamp,
                         new Location(latitude, longitude),
                         course,
                         speed,
@@ -96,18 +151,6 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
                         channel
                         );
                 break;
-            case StaticAndVoyageRelatedData:    // 5
-                pw.format("Msg%d %s \"%s\" %d %d %d %d %s\r\n",
-                        messageType.ordinal(),
-                        instant,
-                        destination,
-                        etaMonth,
-                        etaDay,
-                        etaHour,
-                        etaMinute,
-                        epfd
-                        );
-                break;
             case StandardSARAircraftPositionReport:
                 if (!logExists)
                 {
@@ -115,7 +158,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
                 }
                 pw.format("Msg%d %s %s %.1f %.1f %d %c %b\r\n",
                         messageType.ordinal(),
-                        instant,
+                        timestamp,
                         new Location(latitude, longitude),
                         course,
                         speed,
@@ -132,7 +175,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
                 }
                 pw.format("Msg%d %s %s %.1f %.1f %d %c %b\r\n",
                         messageType.ordinal(),
-                        instant,
+                        timestamp,
                         new Location(latitude, longitude),
                         course,
                         speed,
@@ -147,12 +190,12 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
     @Override
     public String toString()
     {
-        return "AISTargetDynamic{" + "messageType=" + messageType + ", instant=" + instant + '}';
+        return "AISTargetDynamic{" + "messageType=" + messageType + ", instant=" + timestamp + '}';
     }
 
-    public AISTargetDynamic setInstant(Instant instant)
+    public AISTargetDynamic setTimestamp(long timestamp)
     {
-        this.instant = instant;
+        this.timestamp = timestamp;
         return this;
     }
 
@@ -222,12 +265,6 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         return this;
     }
 
-    public AISTargetDynamic setDestination(String destination)
-    {
-        this.destination = destination;
-        return this;
-    }
-
     public AISTargetDynamic setBand(boolean band)
     {
         this.band = band;
@@ -258,44 +295,14 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         return this;
     }
 
-    public AISTargetDynamic setEpfdFixTypes(EPFDFixTypes epfdFixTypes)
-    {
-        this.epfd = epfdFixTypes;
-        return this;
-    }
-
-    public AISTargetDynamic setEtaMonth(int etaMonth)
-    {
-        this.etaMonth = etaMonth;
-        return this;
-    }
-
-    public AISTargetDynamic setEtaDay(int etaDay)
-    {
-        this.etaDay = etaDay;
-        return this;
-    }
-
-    public AISTargetDynamic setEtaHour(int etaHour)
-    {
-        this.etaHour = etaHour;
-        return this;
-    }
-
-    public AISTargetDynamic setEtaMinute(int etaMinute)
-    {
-        this.etaMinute = etaMinute;
-        return this;
-    }
-
     public MessageTypes getMessageType()
     {
         return messageType;
     }
 
-    public Instant getInstant()
+    public long getTimestamp()
     {
-        return instant;
+        return timestamp;
     }
 
     public double getLatitude()
@@ -348,11 +355,6 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         return altitude;
     }
 
-    public String getDestination()
-    {
-        return destination;
-    }
-
     public boolean isBand()
     {
         return band;
@@ -378,29 +380,34 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         return radioStatus;
     }
 
-    public EPFDFixTypes getEpfdFixTypes()
+    public int getMmsi()
     {
-        return epfd;
+        return mmsi;
     }
 
-    public int getEtaMonth()
+    public boolean isPositionAccuracy()
     {
-        return etaMonth;
+        return positionAccuracy;
     }
 
-    public int getEtaDay()
+    public int getSecond()
     {
-        return etaDay;
+        return second;
     }
 
-    public int getEtaHour()
+    public boolean isCsUnit()
     {
-        return etaHour;
+        return csUnit;
     }
 
-    public int getEtaMinute()
+    public boolean isDisplay()
     {
-        return etaMinute;
+        return display;
     }
-    
+
+    public boolean isDsc()
+    {
+        return dsc;
+    }
+
 }

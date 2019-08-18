@@ -2,6 +2,7 @@
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
     <tcp-endpoint name="TCP" port="12345" enable="true" aisFastBoot="true">
         <route prefix="$RA" target="Proc"/>
+        <route prefix="$EC" target="Proc"/>
     </tcp-endpoint>
     <processor name="Proc" enable="true">
         <true-wind-source/>
@@ -20,7 +21,7 @@
     <multicast-nmea-0183 name="Net" address="224.0.0.3" enable="true">
         <route prefix="$GPRMC" target="Proc TCP"/>
         <route prefix="$IIMWV" target="Proc"/>
-        <route prefix="!AI" target="Proc"/>
+        <route prefix="!AI" target="Proc TCP"/>
         <route prefix="$YXXDR" target=""/>
         <route prefix="$GPGLL" target=""/>
         <route prefix="$GPRMB" target=""/>

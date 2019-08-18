@@ -20,19 +20,19 @@ package org.vesalainen.parsers.nmea.ais;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import org.vesalainen.navi.BoatPosition;
-import org.vesalainen.parsers.mmsi.MMSIEntry;
-import org.vesalainen.parsers.mmsi.MMSIParser;
+import org.vesalainen.navi.WayPoint;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
+import org.vesalainen.navi.cpa.Course;
+import org.vesalainen.parsers.nmea.NMEASentence;
 
 /**
  * @author Timo Vesalainen
  */
-public class AISTarget implements BoatPosition
+public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AISTarget>
 {
     private CachedScheduledThreadPool executor;
     private long maxLogSize;
@@ -43,17 +43,23 @@ public class AISTarget implements BoatPosition
     private boolean logExists;
     private AISTargetData data;
     private AISTargetDynamic dynamic;
-    private MMSIEntry mmsiEntry;
+    private double distance;    // from own target in NM
+    private double estimatedDistance;    // from own target in NM
+    private double estimatedLatitude;
+    private double estimatedLongitude;
+    private double cpaTime;
+    private double cpaDistance;
+    private AISTarget ownTarget;
+    private boolean updated;
+    private long lastUpdate;
+    private char deviceClass;
 
     public AISTarget(long maxLogSize, CachedScheduledThreadPool executor, int mmsi, Path dir, AISTargetData data, AISTargetDynamic dynamic)
     {
         this.maxLogSize = maxLogSize;
         this.executor = executor;
-        if (dir != null)
-        {
-            this.dataPath = dir.resolve(mmsi+".dat");
-            this.dynamicPath = dir.resolve(mmsi+".log");
-        }
+        this.dataPath = AISService.getDataPath(dir, mmsi);
+        this.dynamicPath = AISService.getDynamicPath(dir, mmsi);
         this.data = data;
         this.dynamic = dynamic;
         this.dataDigest = data.getSha1();
@@ -66,17 +72,81 @@ public class AISTarget implements BoatPosition
             log = new AISLogFile(dynamicPath, maxLogSize, executor);
         }
     }
-    public void update(AISTargetData dat, AISTargetDynamic dyn, Collection<String> updatedProperties) throws IOException
+    public void update(MessageTypes type, AISTargetData dat, AISTargetDynamic dyn, Collection<String> updatedProperties) throws IOException
     {
+        detectClass(type);
         data.copyFrom(dat, updatedProperties, false);
         dynamic.copyFrom(dyn, updatedProperties, false);
-        dynamic.setInstant(dyn.getInstant());
+        dynamic.setTimestamp(dyn.getTimestamp());
         if (dataPath != null && dynamic.getChannel() != '-')    // radio messages has channel A/B
         {
             dynamic.print(log, logExists);
             logExists = true;
         }
+        updated = true;
     }
+    public void setOwnTarget(AISTarget ownTarget)
+    {
+        this.ownTarget = ownTarget;
+    }
+    private void calc()
+    {
+        if (updated && ownTarget != null)
+        {
+            double x0 = getLatitude()-ownTarget.getLatitude();
+            double x1 = deltaLatitude()-ownTarget.deltaLatitude();
+            double x2 = getLongitude()-ownTarget.getLongitude();
+            double x3 = deltaLongitude()-ownTarget.deltaLongitude();
+            double x4 = x0*x0;
+            double x5 = x0*x1;
+            double x6 = x1*x0;
+            double x7 = x5+x6;
+            double x8 = x1*x1;
+            double x9 = x2*x2;
+            double x10 = x2*x3;
+            double x11 = x3*x2;
+            double x12 = x10+x11;
+            double x13 = x3*x3;
+            double x14 = x4+x9;
+            double x15 = x7+x12;
+            double x16 = x8+x13;
+            double x17 = 1*x15;
+            double x18 = 2*x16;
+            // distance is sqrt((x16*t*t+x15*t+x14)
+            // derivative of distance is 2*x16+x15 (= x18*t+x17)
+            // x16 >= 0
+            // x15 < 0 when distance minimum is in future
+            distance = Math.sqrt(x14)*60.0; // t = 0
+            if (x15 < 0)
+            {
+                cpaTime = (-x17/x18)/60000.0;
+                double t = cpaTime;
+                cpaDistance = Math.sqrt((x16*t+x15)*t+x14)*60.0;
+            }
+            else
+            {
+                cpaTime = Double.NaN;
+                cpaDistance = Double.NaN;
+            }
+            updated = false;
+        }
+    }
+
+    public double getCPADistance()
+    {
+        calc();
+        return cpaDistance;
+    }
+    /**
+     * Returns time to collision in minutes
+     * @return 
+     */
+    public double getCPATime()
+    {
+        calc();
+        return cpaTime;
+    }
+    
     public void close() throws IOException
     {
         if (dataPath != null)
@@ -96,14 +166,24 @@ public class AISTarget implements BoatPosition
             }
         }
     }
+
+    public AISTargetData getData()
+    {
+        return data;
+    }
+
+    public AISTargetDynamic getDynamic()
+    {
+        return dynamic;
+    }
+    
     /**
      * Returns MMSI type of target
      * @return 
      */
     public MMSIType getMMSIType()
     {
-        ensureMMSIParsed();
-        return mmsiEntry.getType();
+        return data.getMMSIType();
     }
     /**
      * Returns country of target
@@ -111,9 +191,71 @@ public class AISTarget implements BoatPosition
      */
     public String getCountry()
     {
-        ensureMMSIParsed();
-        return mmsiEntry.getMid().getCountry();
+        return data.getCountry();
     }
+    /**
+     * {@inheritDoc}
+     * @return 
+     */
+    public boolean hasAllData()
+    {
+        return data.hasAllData() && deviceClass != 0;
+    }
+    /**
+     * Returns true is target is class A. This is unreliable before hasAllData()
+     * returns true.
+     * @return 
+     */
+    public boolean isClassA()
+    {
+        return deviceClass == 'A';
+    }
+    public NMEASentence[] getPositionReport()
+    {
+        if (hasAllData())
+        {
+            if (isClassA())
+            {
+                return dynamic.getMsg1();
+            }
+            else
+            {
+                return dynamic.getMsg18();
+            }
+        }
+        else
+        {
+            return AISBuilder.EMPTY;
+        }
+    }
+    public NMEASentence[] getStaticReport()
+    {
+        if (hasAllData())
+        {
+            if (isClassA())
+            {
+                return data.getMsg5();
+            }
+            else
+            {
+                return data.getMsg24();
+            }
+        }
+        else
+        {
+            return AISBuilder.EMPTY;
+        }
+    }    
+    /**
+     * Returns distance to ownTarget in NM
+     * @return 
+     */
+    public double getDistance()
+    {
+        calc();
+        return distance;
+    }
+    
     /**
      * Returns AIS antenna distance to starboard side.
      * @return 
@@ -154,7 +296,8 @@ public class AISTarget implements BoatPosition
      * Returns center latitude corrected with dimensions
      * @return 
      */
-    public double getCenterLatitude()
+    @Override
+    public double getLatitude()
     {
         return centerLatitude(dynamic.getLatitude(), dynamic.getLongitude(), dynamic.getHeading());
     }
@@ -162,16 +305,23 @@ public class AISTarget implements BoatPosition
      * Returns center longitude corrected with dimensions
      * @return 
      */
-    public double getCenterLongitude()
+    @Override
+    public double getLongitude()
     {
         return centerLongitude(dynamic.getLatitude(), dynamic.getLongitude(), dynamic.getHeading());
+    }
+
+    @Override
+    public long getTime()
+    {
+        return dynamic.getTimestamp();
     }
 
     /**
      * Returns latitude reported by target
      * @return 
      */
-    public double getLatitude()
+    public double getAntennaLatitude()
     {
         return dynamic.getLatitude();
     }
@@ -179,7 +329,7 @@ public class AISTarget implements BoatPosition
      * Returns longitude reported by target
      * @return 
      */
-    public double getLongitude()
+    public double getAntennaLongitude()
     {
         return dynamic.getLongitude();
     }
@@ -216,17 +366,17 @@ public class AISTarget implements BoatPosition
 
     public boolean isCsUnit()
     {
-        return data.isCsUnit();
+        return dynamic.isCsUnit();
     }
 
     public boolean isDisplay()
     {
-        return data.isDisplay();
+        return dynamic.isDisplay();
     }
 
     public boolean isDsc()
     {
-        return data.isDsc();
+        return dynamic.isDsc();
     }
 
     public int getUnitModelCode()
@@ -236,7 +386,7 @@ public class AISTarget implements BoatPosition
 
     public boolean isPositionAccuracy()
     {
-        return data.isPositionAccuracy();
+        return dynamic.isPositionAccuracy();
     }
 
     public int getSerialNumber()
@@ -254,17 +404,19 @@ public class AISTarget implements BoatPosition
         return dynamic.getMessageType();
     }
 
-    public Instant getInstant()
+    public long getTimestamp()
     {
-        return dynamic.getInstant();
+        return dynamic.getTimestamp();
     }
 
-    public float getCourse()
+    @Override
+    public double getCourse()
     {
         return dynamic.getCourse();
     }
 
-    public float getSpeed()
+    @Override
+    public double getSpeed()
     {
         return dynamic.getSpeed();
     }
@@ -301,7 +453,7 @@ public class AISTarget implements BoatPosition
 
     public String getDestination()
     {
-        return dynamic.getDestination();
+        return data.getDestination();
     }
 
     public boolean isBand()
@@ -329,37 +481,61 @@ public class AISTarget implements BoatPosition
         return dynamic.getRadioStatus();
     }
 
-    public EPFDFixTypes getEpfdFixTypes()
+    public EPFDFixTypes getEpfd()
     {
-        return dynamic.getEpfdFixTypes();
+        return data.getEpfd();
     }
 
     public int getEtaMonth()
     {
-        return dynamic.getEtaMonth();
+        return data.getEtaMonth();
     }
 
     public int getEtaDay()
     {
-        return dynamic.getEtaDay();
+        return data.getEtaDay();
     }
 
     public int getEtaHour()
     {
-        return dynamic.getEtaHour();
+        return data.getEtaHour();
     }
 
     public int getEtaMinute()
     {
-        return dynamic.getEtaMinute();
+        return data.getEtaMinute();
     }
 
-    private void ensureMMSIParsed()
+    @Override
+    public String toString()
     {
-        if (mmsiEntry == null)
+        return "AISTarget{" + getMmsi() + " "+ getVesselName() + " distance="+ getDistance() + " cpa=" + getCPATime() + '}';
+    }
+
+    @Override
+    public int compareTo(AISTarget o)
+    {
+        return Double.compare(distance, o.distance);
+    }
+
+    private void detectClass(MessageTypes type)
+    {
+        switch (type)
         {
-            mmsiEntry = MMSIParser.PARSER.parse(data.getMmsi());
+            case PositionReportClassA:
+            case PositionReportClassAAssignedSchedule:
+            case PositionReportClassAResponseToInterrogation:
+            case StandardSARAircraftPositionReport:
+            case StaticAndVoyageRelatedData:
+                deviceClass = 'A';
+                break;
+            case StandardClassBCSPositionReport:
+            case ExtendedClassBEquipmentPositionReport:
+            case StaticDataReport:
+                deviceClass = 'B';
+                break;
         }
     }
+
     
 }

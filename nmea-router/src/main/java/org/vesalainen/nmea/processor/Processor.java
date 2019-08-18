@@ -18,8 +18,10 @@ package org.vesalainen.nmea.processor;
 
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,6 +38,7 @@ import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAService;
+import org.vesalainen.parsers.nmea.ais.AISService;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -76,10 +79,16 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 {
                     info("add AIS Log");
                     AisLogType type = (AisLogType) ob;
-                    AISLog aisLog = new AISLog(type, out, executor);
-                    processes.add(aisLog);
-                    addAISObserver(aisLog);
-                    
+                    String directory = type.getDirectory();
+                    Long ttlMinutes = type.getTtlMinutes();
+                    BigInteger maxLogSize = type.getMaxLogSize();
+                    AISService aisService = AISService.getInstance(
+                            this, 
+                            Paths.get(directory), 
+                            ttlMinutes != null ? ttlMinutes : 10, 
+                            maxLogSize != null ? maxLogSize.longValue() : 1024*1024, 
+                            executor);
+                    processes.add(aisService);
                     continue;
                 }
                 if (ob instanceof CompressedLogType)

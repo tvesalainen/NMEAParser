@@ -29,8 +29,6 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.PropertySetter;
-import org.vesalainen.code.PropertySetterDispatcher;
-import org.vesalainen.code.SimplePropertySetterDispatcher;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEASampler;
@@ -251,7 +249,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
             }
             clock = GPSClock.getInstance(liveClock);
             setClockSupplier(()->clock);
-            parser.parse(in, clock, origin, nmeaDispatcher, aisDispatcher);
+            parser.parse(in, clock, origin, nmeaDispatcher, aisDispatcher, executor);
         }
         catch (Exception ex)
         {

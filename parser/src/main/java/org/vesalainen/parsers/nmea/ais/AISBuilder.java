@@ -26,6 +26,8 @@ import org.vesalainen.parsers.nmea.TalkerId;
  */
 public final class AISBuilder
 {
+    public static final NMEASentence[] EMPTY = new NMEASentence[]{};
+    
     private StringBuilder sb = new StringBuilder();
 
     AISBuilder()    // for testing
@@ -105,22 +107,7 @@ public final class AISBuilder
     }
     public AISBuilder rot(float rot)
     {
-        if (!Float.isNaN(rot))
-        {
-            float abs = Math.abs(rot);
-            if (abs <= 708)
-            {
-                integer(8, (int) Math.round(Math.signum(rot)*4.733*Math.sqrt(abs)));
-            }
-            else
-            {
-                integer(8, (int) (Math.signum(rot)*127));
-            }
-        }
-        else
-        {
-            integer(8, 128);
-        }
+        integer(8, AISUtil.rot(rot));
         return this;
     }
     public AISBuilder bool(boolean b)
@@ -132,9 +119,20 @@ public final class AISBuilder
     {
         return integer(bits, 0);
     }
-    public AISBuilder decimal(int bits, float value, float coef)
+    public AISBuilder decimal(int bits, double value, double coef)
     {
         return integer(bits, (int) Math.round(value*coef));
+    }
+    public AISBuilder integer(int bits, Enum value, Enum def)
+    {
+        if (value != null)
+        {
+            return integer(bits, value.ordinal());
+        }
+        else
+        {
+            return integer(bits, def.ordinal());
+        }
     }
     public AISBuilder integer(int bits, int value)
     {

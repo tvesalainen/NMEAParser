@@ -27,7 +27,7 @@ import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
 import org.vesalainen.util.navi.Location;
 
 /**
- *
+ * @deprecated 
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class AISMessageGen

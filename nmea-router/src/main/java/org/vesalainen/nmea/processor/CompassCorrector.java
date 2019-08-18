@@ -17,6 +17,7 @@
 package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
@@ -24,27 +25,29 @@ import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.logging.Level;
 import org.vesalainen.code.AbstractPropertySetter;
+import org.vesalainen.code.AnnotatedPropertyStore;
+import org.vesalainen.code.Property;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import static org.vesalainen.nmea.processor.GeoMagManager.Type.DECLINATION;
 import org.vesalainen.nmea.processor.deviation.DeviationManager;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEAService;
+import org.vesalainen.util.Transactional;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.AttachedLogger;
 
 /**
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CompassCorrector extends AbstractPropertySetter implements AttachedLogger, Stoppable
+public class CompassCorrector extends AnnotatedPropertyStore implements Transactional, Stoppable
 {
     private WritableByteChannel out;
-    private String[] prefixes = new String[]{"clock", "messageType", "latitude", "longitude", "magneticHeading" };
-    private Clock clock = Clock.systemUTC();
-    private double latitude;
-    private double longitude;
-    private float magneticHeading;
-    private MessageType messageType;
+    @Property private Clock clock = Clock.systemUTC();
+    @Property private double latitude;
+    @Property private double longitude;
+    @Property private float magneticHeading;
+    @Property private MessageType messageType;
     private final Path path;
     private final GeoMagManager geoMagMgr;
     private DeviationManager deviationMgr;
@@ -54,6 +57,7 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
 
     public CompassCorrector(CompassCorrectorType type, WritableByteChannel out, CachedScheduledThreadPool executor, NMEAService service) throws IOException
     {
+        super(MethodHandles.lookup());
         this.out = out;
         this.executor = executor;
         this.service = service;
@@ -131,51 +135,6 @@ public class CompassCorrector extends AbstractPropertySetter implements Attached
         {
             calibrator.detach(service);
         }
-    }
-
-    @Override
-    public void set(String property, double arg)
-    {
-        switch (property)
-        {
-            case "latitude":
-                latitude = arg;
-                break;
-            case "longitude":
-                longitude = arg;
-                break;
-        }
-    }
-
-    @Override
-    public void set(String property, float arg)
-    {
-        switch (property)
-        {
-            case "magneticHeading":
-                magneticHeading = arg;
-                break;
-        }
-    }
-
-    @Override
-    public void set(String property, Object arg)
-    {
-        switch (property)
-        {
-            case "clock":
-                clock = (Clock) arg;
-                break;
-            case "messageType":
-                messageType = (MessageType) arg;
-                break;
-        }
-    }
-    
-    @Override
-    public String[] getPrefixes()
-    {
-        return prefixes;
     }
 
 }

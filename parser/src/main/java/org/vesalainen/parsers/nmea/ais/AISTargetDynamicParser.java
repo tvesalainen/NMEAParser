@@ -97,7 +97,7 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     {
         return new AISTargetDynamic()
                 .setMessageType(type)
-                .setInstant(instant)
+                .setTimestamp(instant.toEpochMilli())
                 .setLatitude(latitude)
                 .setLongitude(longitude)
                 .setCourse(course)
@@ -116,22 +116,14 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     @Rule(left="line", value="message5 instant quote int int int int epfdFixTypes")
     protected AISTargetDynamic line5(MessageTypes type, Instant instant, String destination, int etaMonth, int etaDay, int etaHour, int etaMinute, EPFDFixTypes epfdFixTypes)
     {
-        return new AISTargetDynamic()
-                .setMessageType(type)
-                .setInstant(instant)
-                .setEpfdFixTypes(epfdFixTypes)
-                .setEtaMonth(etaMonth)
-                .setEtaDay(etaDay)
-                .setEtaHour(etaHour)
-                .setEtaMinute(etaMinute)
-                .setDestination(destination);
+        return null;
     }
     @Rule(left="line", value="message5 instant coordinate coordinate '\\,'? float float int char boolean")
     protected AISTargetDynamic line9(MessageTypes type, Instant instant, double latitude, double longitude, float course, float speed, int altitude, char channel, boolean assignedMode)
     {
         return new AISTargetDynamic()
                 .setMessageType(type)
-                .setInstant(instant)
+                .setTimestamp(instant.toEpochMilli())
                 .setLatitude(latitude)
                 .setLongitude(longitude)
                 .setCourse(course)
@@ -145,7 +137,7 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     {
         return new AISTargetDynamic()
                 .setMessageType(type)
-                .setInstant(instant)
+                .setTimestamp(instant.toEpochMilli())
                 .setLatitude(latitude)
                 .setLongitude(longitude)
                 .setCourse(course)

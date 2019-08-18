@@ -874,25 +874,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
      */
     protected void turn_I3(int turn, @ParserContext("aisData") AISObserver aisData)
     {
-        switch (turn)
-        {
-            case 0:
-                aisData.setRateOfTurn(0);
-                break;
-            case 127:
-                aisData.setRateOfTurn(10);
-                break;
-            case -127:
-                aisData.setRateOfTurn(-10);
-                break;
-            case -128:  // 0x80
-                break;
-            default:
-                float f = turn;
-                f = f / 4.733F;
-                aisData.setRateOfTurn(Math.signum(f) * f * f);
-                break;
-        }
+        aisData.setRateOfTurn(AISUtil.rot(turn));
     }
 
     protected void accuracy(boolean accuracy, @ParserContext("aisData") AISObserver aisData)

@@ -22,6 +22,8 @@ import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.zip.Checksum;
@@ -1663,6 +1665,10 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     }
     public <I> void parse(I input, GPSClock gpsClock, Supplier origin, NMEAObserver data, AISObserver aisData) throws IOException
     {
+        parse(input, gpsClock, origin, data, aisData, Executors.newCachedThreadPool());
+    }
+    public <I> void parse(I input, GPSClock gpsClock, Supplier origin, NMEAObserver data, AISObserver aisData, ExecutorService executor) throws IOException
+    {
         if (data == null)
         {
             data = new AbstractNMEAObserver();
@@ -1677,7 +1683,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             aisData.start(null);
             aisData.setClock(gpsClock);
             aisData.commit("Set clock");
-            aisBridge = new AISBridge(aisData);
+            aisBridge = new AISBridge(aisData, executor);
         }
         try
         {

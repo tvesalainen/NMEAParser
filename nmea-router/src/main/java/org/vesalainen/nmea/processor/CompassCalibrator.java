@@ -29,7 +29,7 @@ import static java.util.logging.Level.*;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
-import org.vesalainen.navi.BoatPosition;
+import org.vesalainen.navi.SimpleBoatPosition;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.WayPoint;
 import org.vesalainen.nmea.processor.deviation.DeviationManager;
@@ -265,7 +265,7 @@ public class CompassCalibrator extends JavaLogging
         }
         
     }
-    private class NMEAObserverImpl extends AbstractPropertySetter
+    public class NMEAObserverImpl extends AbstractPropertySetter
     {
         private String[] prefixes = new String[]{"clock", "targetCourse", "targetSpeed", "targetDistance", "targetStatus", "targetNumber", "longitude", "latitude", "magneticHeading", "bearingFromOwnShip", "messageType"};
         private float targetCourse;
@@ -415,7 +415,7 @@ public class CompassCalibrator extends JavaLogging
     {
         private int mmsi;
         private String vesselName = "";
-        private BoatPosition pos;
+        private SimpleBoatPosition pos;
 
         public AISTarget(int mmsi)
         {
@@ -425,9 +425,9 @@ public class CompassCalibrator extends JavaLogging
         {
             if (pos != null)
             {
-                if (pos.length() > 4)
+                if (pos.getLength() > 4)
                 {
-                    return pos.length();
+                    return pos.getLength();
                 }
             }   
             return 500;
@@ -502,7 +502,7 @@ public class CompassCalibrator extends JavaLogging
         }
         
     }
-    private class AISObserverImpl extends AbstractPropertySetter
+    public class AISObserverImpl extends AbstractPropertySetter
     {
         private String[] prefixes = new String[]{"clock", "second", "ownMessage", "dimensionToStarboard", "dimensionToPort", "dimensionToStern", "dimensionToBow", "vesselName", "latitude", "longitude", "heading", "messageType", "mmsi"};
         private boolean ownMessage;
@@ -539,7 +539,7 @@ public class CompassCalibrator extends JavaLogging
                 }
                 if (dimensionToStarboard != -1)
                 {
-                    trg.pos = new BoatPosition(dimensionToStarboard, dimensionToPort, dimensionToBow, dimensionToStern);
+                    trg.pos = new SimpleBoatPosition(dimensionToStarboard, dimensionToPort, dimensionToBow, dimensionToStern);
                 }
                 if (clock != null)
                 {

@@ -167,18 +167,9 @@
         <xsd:attribute name="updateSeconds" type="xsd:unsignedInt"/>
     </xsd:complexType>
     <xsd:complexType name="aisLogType">
-        <xsd:sequence>
-            <xsd:element name="ais-monitor" type="aisMonitorType" maxOccurs="1"/>
-        </xsd:sequence>
         <xsd:attribute name="directory" type="xsd:string" use="required"/>
         <xsd:attribute name="maxLogSize" type="xsd:unsignedLong"/>
-    </xsd:complexType>
-    <xsd:complexType name="aisMonitorType">
         <xsd:attribute name="ttlMinutes" type="xsd:unsignedInt"/>
-        <xsd:attribute name="refreshStaticData" type="xsd:boolean"/>
-        <xsd:attribute name="refreshInitialDelayMillis" type="xsd:unsignedInt"/>
-        <xsd:attribute name="refreshDelayMillis" type="xsd:unsignedInt"/>
-        <xsd:attribute name="interpolateSeconds" type="xsd:unsignedInt"/>
     </xsd:complexType>
     <xsd:complexType name="timeSetterType">
         <xsd:attribute name="cmd" type="xsd:string" use="required"/>

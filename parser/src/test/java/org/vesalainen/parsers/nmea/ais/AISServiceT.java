@@ -25,10 +25,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import static java.nio.file.StandardOpenOption.READ;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.nio.channels.GZIPChannel;
+import org.vesalainen.parsers.nmea.NMEADispatcher;
+import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
@@ -65,12 +70,63 @@ public class AISServiceT
     public void test1() throws IOException, InterruptedException
     {
         CachedScheduledThreadPool executor = new CachedScheduledThreadPool();
-        NMEAService nmeaService = new NMEAService("224.0.0.3", 10110);
-        AISService aisService = new AISService(Paths.get("c:\\temp"), 10, 1024*1024, executor);
-        aisService.attach(nmeaService);
+        NMEAService nmeaService = new NMEAService("224.0.0.3", 10110, executor);
+        Path dir = Paths.get("c:\\temp");
+        AISService aisService = AISService.getInstance(nmeaService, dir, 10, 1024*1024, executor);
         nmeaService.start();
+        while (true)
+        {
+            Thread.sleep(10000);
+            System.err.println();
+            Collection<AISTarget> liveList = aisService.getLiveList();
+            liveList.forEach((t) -> testAISTarget(t));
+        }
+
         //aisService.addObserver((s, m, t)->System.err.println(s+" "+m));
-        Thread.sleep(100000000);
+        //Thread.sleep(100000000);
     }
-    
+    private void testAISTarget(AISTarget target)
+    {
+        try
+        {
+            if (target.hasAllData())
+            {
+                NMEAParser parser = NMEAParser.newInstance();
+                NMEADispatcher nmeaDispatcher = NMEADispatcher.newInstance();
+                AISDispatcher aisDispatcher = AISDispatcher.newInstance();
+                NMEASentence[] positionReport = target.getPositionReport();
+                if (positionReport.length > 0)
+                {
+                    String pos = positionReport[0].toString();
+                    AISTargetDynamic dyn = new AISTargetDynamic();
+                    aisDispatcher.addObserver(dyn, false);
+                    parser.parse(pos, nmeaDispatcher, aisDispatcher);
+                    AISTargetDynamic dynamic = target.getDynamic();
+                    dyn.setTimestamp(dynamic.getTimestamp());
+                    dyn.setChannel(dynamic.getChannel());
+                    dyn.setMessageType(dynamic.getMessageType());
+                    assertEquals(dynamic, dyn);
+                }
+                NMEASentence[] staticReport = target.getStaticReport();
+                if (staticReport.length > 0)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    for (NMEASentence ns : staticReport)
+                    {
+                        sb.append(ns.toString());
+                    }
+                    AISTargetData dat = new AISTargetData();
+                    aisDispatcher.addObserver(dat, false);
+                    parser.parse(sb.toString(), nmeaDispatcher, aisDispatcher);
+                    AISTargetData data = target.getData();
+                    assertEquals(data, dat);
+                }
+                System.err.println("tested "+target);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
 }

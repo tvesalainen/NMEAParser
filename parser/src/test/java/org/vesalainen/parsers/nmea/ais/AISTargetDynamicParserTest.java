@@ -41,7 +41,7 @@ public class AISTargetDynamicParserTest
         assertNull(atd);
         atd = parser.parse("Msg18 2019-07-14T21:10:54.127Z 16°3.49'S 145°37.26'W 42.0 0.2 351 - false");
         assertEquals(MessageTypes.StandardClassBCSPositionReport, atd.getMessageType());
-        assertEquals(Instant.parse("2019-07-14T21:10:54.127Z"), atd.getInstant());
+        assertEquals(Instant.parse("2019-07-14T21:10:54.127Z").toEpochMilli(), atd.getTimestamp());
         assertEquals(-16-3.49/60, atd.getLatitude(), 1e-8);
         assertEquals(-145-37.26/60, atd.getLongitude(), 1e-6);
         assertEquals(42F, atd.getCourse(), 1e-10F);

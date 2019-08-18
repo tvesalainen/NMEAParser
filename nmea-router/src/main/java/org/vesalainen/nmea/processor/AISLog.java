@@ -39,14 +39,12 @@ import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nio.channels.ChannelHelper;
 import org.vesalainen.nio.channels.GZIPChannel;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
-import org.vesalainen.nmea.jaxb.router.AisMonitorType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.ais.AISMonitor;
 import org.vesalainen.parsers.nmea.ais.AISProperties;
 import org.vesalainen.parsers.nmea.ais.ManeuverIndicator;
 import org.vesalainen.parsers.nmea.ais.MessageTypes;
 import org.vesalainen.parsers.nmea.ais.NavigationStatus;
-import org.vesalainen.parsers.nmea.ais.TimestampSupport;
 import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.AttachedLogger;
@@ -122,6 +120,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                 Long ttlMinutes = null;
                 Boolean refreshStaticData = null;
                 Long interpolateSeconds = null;
+                /*
                 AisMonitorType aisMonitorType = aisLogType.getAisMonitor();
                 if (aisMonitorType != null)
                 {
@@ -130,7 +129,7 @@ public class AISLog extends AbstractPropertySetter implements AttachedLogger, St
                     refreshInitialDelayMillis = aisMonitorType.getRefreshInitialDelayMillis();
                     refreshDelayMillis = aisMonitorType.getRefreshDelayMillis();
                     interpolateSeconds = aisMonitorType.getInterpolateSeconds();
-                }
+                }*/
                 monitor = new AISMonitor(
                         out, 
                         executor, 
