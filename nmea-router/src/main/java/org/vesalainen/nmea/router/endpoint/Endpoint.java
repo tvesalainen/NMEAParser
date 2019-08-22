@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
 import org.vesalainen.nio.RingByteBuffer;
@@ -64,6 +65,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected List<MessageFilter> filterList;
     protected Set<String> fingerPrint = new HashSet<>();
     private NMEAReader reader;
+    protected CountDownLatch started = new CountDownLatch(1);
 
     public Endpoint(E endpointType, Router router)
     {
@@ -216,6 +218,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
             try (T ch = createChannel())
             {
                 channel = ch;
+                started.countDown();
                 config("started %s", channel);
                 reader = new NMEAReader(name, matcher, channel, bufferSize, this::onOk, this::onError);
                 reader.read();
