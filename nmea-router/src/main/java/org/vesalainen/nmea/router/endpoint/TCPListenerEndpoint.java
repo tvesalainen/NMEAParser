@@ -121,11 +121,12 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         private final Sink sink;
         private final Source source;
         private Future<?> proxyFuture;
+        private final SocketChannel socketChannel;
 
         public TCPEndpoint(SocketChannel socketChannel, TcpEndpointType endpointType, Router router)
         {
             super(endpointType, router, "-"+seq.incrementAndGet());
-            this.channel = socketChannel;
+            this.socketChannel = socketChannel;
             pipe = new ByteBufferPipe(1024, true);
             sink = pipe.sink();
             source = pipe.source();
@@ -135,7 +136,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         @Override
         public SocketChannel createChannel() throws IOException
         {
-            return channel;
+            return socketChannel;
         }
 
         @Override
@@ -167,6 +168,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         {
             try
             {
+                started.await();
                 while (true)
                 {
                     source.writeTo(channel);
@@ -182,9 +184,9 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         {
             try
             {
-                clients.add(this);
-                config("starting socket connection %s", channel);
+                config("starting socket connection %s", socketChannel);
                 proxyFuture = POOL.submit(this::proxy);
+                clients.add(this);
                 super.run();
             }
             catch (Throwable ex)
@@ -193,8 +195,8 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             finally
             {
-                proxyFuture.cancel(true);
                 clients.remove(this);
+                proxyFuture.cancel(true);
             }
         }
         
