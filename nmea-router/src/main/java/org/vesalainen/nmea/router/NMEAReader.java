@@ -80,7 +80,7 @@ public class NMEAReader extends JavaLogging
             }
             if (count == -1)
             {
-                throw new EOFException(name);
+                throw new EOFException(name+" "+channel);
             }
             distribution.increment(count);
             Matcher.Status match;
