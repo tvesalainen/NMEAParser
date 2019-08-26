@@ -53,8 +53,6 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
     public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out, CachedScheduledThreadPool executor) throws IOException
     {
         super(in, out, executor);
-        this.in = in;
-        this.out = out;
         this.processorType = processorType;
     }
 
@@ -82,13 +80,14 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                     String directory = type.getDirectory();
                     Long ttlMinutes = type.getTtlMinutes();
                     BigInteger maxLogSize = type.getMaxLogSize();
-                    AISService aisService = AISService.getInstance(
+                    AISLog aisLog = AISLog.getInstance(
                             this, 
                             Paths.get(directory), 
                             ttlMinutes != null ? ttlMinutes : 10, 
                             maxLogSize != null ? maxLogSize.longValue() : 1024*1024, 
-                            executor);
-                    processes.add(aisService);
+                            executor,
+                            out);
+                    processes.add(aisLog);
                     continue;
                 }
                 if (ob instanceof CompressedLogType)
