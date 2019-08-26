@@ -119,8 +119,8 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
             distance = Math.sqrt(x14)*60.0; // t = 0
             if (x15 < 0)
             {
-                cpaTime = (-x17/x18)/60000.0;
-                double t = cpaTime;
+                double t = (-x17/x18);
+                cpaTime = t/60000.0;
                 cpaDistance = Math.sqrt((x16*t+x15)*t+x14)*60.0;
             }
             else
