@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.function.Consumer;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserConstants;
+import org.vesalainen.parser.ParserInfo;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
@@ -38,7 +39,7 @@ import org.vesalainen.regex.SyntaxErrorException;
  */
 @GenClassname()
 @GrammarDef()
-public abstract class AISTargetDynamicParser extends AbstractParser
+public abstract class AISTargetDynamicParser extends AbstractParser implements ParserInfo
 {
     public static final AISTargetDynamicParser PARSER = getInstance();
     
@@ -56,6 +57,8 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     @RecoverMethod
     public void recover(
             @ParserContext(ParserConstants.InputReader) InputReader reader,
+            @ParserContext(ParserConstants.ExpectedDescription) String expected,
+            @ParserContext(ParserConstants.LastToken) String got,
             @ParserContext(ParserConstants.Exception) Throwable thr
             ) throws IOException
     {
@@ -63,12 +66,16 @@ public abstract class AISTargetDynamicParser extends AbstractParser
         {
             throw new IOException(thr);
         }
-        char cc = (char) reader.read();
+        int cc = reader.read();
         while (cc != -1 && cc != '\n')
         {
-            cc = (char) reader.read();
+            cc = reader.read();
         }
-        //warning("skipped %s", reader);
+        if (cc == -1)
+        {
+            throw new SyntaxErrorException(reader.toString());
+        }
+        warning("skipped %s", reader);
         reader.clear();
     }
     @Rule(left="lines", value="line")
@@ -97,7 +104,7 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     {
         return new AISTargetDynamic()
                 .setMessageType(type)
-                .setTimestamp(instant.toEpochMilli())
+                .setTimestamp(instant)
                 .setLatitude(latitude)
                 .setLongitude(longitude)
                 .setCourse(course)
@@ -123,7 +130,7 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     {
         return new AISTargetDynamic()
                 .setMessageType(type)
-                .setTimestamp(instant.toEpochMilli())
+                .setTimestamp(instant)
                 .setLatitude(latitude)
                 .setLongitude(longitude)
                 .setCourse(course)
@@ -137,7 +144,7 @@ public abstract class AISTargetDynamicParser extends AbstractParser
     {
         return new AISTargetDynamic()
                 .setMessageType(type)
-                .setTimestamp(instant.toEpochMilli())
+                .setTimestamp(instant)
                 .setLatitude(latitude)
                 .setLongitude(longitude)
                 .setCourse(course)

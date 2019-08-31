@@ -20,6 +20,7 @@ package org.vesalainen.parsers.nmea.ais;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import org.vesalainen.navi.BoatPosition;
@@ -314,7 +315,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     @Override
     public long getTime()
     {
-        return dynamic.getTimestamp();
+        return dynamic.getTimestamp().toEpochMilli();
     }
 
     /**
@@ -404,7 +405,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         return dynamic.getMessageType();
     }
 
-    public long getTimestamp()
+    public Instant getTimestamp()
     {
         return dynamic.getTimestamp();
     }

@@ -19,6 +19,7 @@ package org.vesalainen.parsers.nmea.ais;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Locale;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -41,7 +42,7 @@ public class AISTargetDynamicParserTest
         assertNull(atd);
         atd = parser.parse("Msg18 2019-07-14T21:10:54.127Z 16°3.49'S 145°37.26'W 42.0 0.2 351 - false");
         assertEquals(MessageTypes.StandardClassBCSPositionReport, atd.getMessageType());
-        assertEquals(Instant.parse("2019-07-14T21:10:54.127Z").toEpochMilli(), atd.getTimestamp());
+        assertEquals(Instant.parse("2019-07-14T21:10:54.127Z"), atd.getTimestamp());
         assertEquals(-16-3.49/60, atd.getLatitude(), 1e-8);
         assertEquals(-145-37.26/60, atd.getLongitude(), 1e-6);
         assertEquals(42F, atd.getCourse(), 1e-10F);
@@ -56,5 +57,13 @@ public class AISTargetDynamicParserTest
         Path path = Paths.get("src\\test\\resources\\230123250.log");
         AISTargetDynamicParser parser = AISTargetDynamicParser.PARSER;
         parser.parse(path, (t)->System.err.println(t));
+    }
+    @Test
+    public void test3()
+    {
+        AISTargetDynamicParser parser = AISTargetDynamicParser.PARSER;
+        AISTargetDynamic atd = parser.parse("Msg18 1567210381411 17°59.26'S 159°49.59'W 251.3 5.7 511 B false");
+        assertEquals(Instant.ofEpochMilli(1567210381411L), atd.getTimestamp());
+
     }
 }

@@ -226,7 +226,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
                     {
                         AISTargetDynamicParser.PARSER.parse(channel, (AISTargetDynamic t)->
                         {
-                            Instant instant = Instant.ofEpochMilli(t.getTimestamp());
+                            Instant instant = t.getTimestamp();
                             if (
                                     (from == null || instant.isAfter(from)) &&
                                     (to == null || instant.isBefore(to))
@@ -251,7 +251,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         {
             if (mmsi != 0)
             {
-                dynamic.setTimestamp((((Clock)clock).millis()));
+                dynamic.setTimestamp((((Clock)clock).instant()));
                 if (ownMessage)
                 {
                     if (ownTarget == null)
@@ -320,7 +320,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
             target.open();
             target.setOwnTarget(ownTarget);
             observers.forEach((o)->o.observe(OPEN, mmsi, trg));
-}
+        }
         return target;
     }
     

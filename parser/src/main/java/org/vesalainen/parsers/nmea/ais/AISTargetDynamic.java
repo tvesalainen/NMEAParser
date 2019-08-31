@@ -19,13 +19,13 @@ package org.vesalainen.parsers.nmea.ais;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
+import java.time.Instant;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import static org.vesalainen.parsers.nmea.ais.ManeuverIndicator.NotAvailableDefault;
-import static org.vesalainen.parsers.nmea.ais.MessageTypes.PositionReportClassA;
-import static org.vesalainen.parsers.nmea.ais.MessageTypes.StandardClassBCSPositionReport;
-import static org.vesalainen.parsers.nmea.ais.NavigationStatus.NotDefinedDefault;
+import static org.vesalainen.parsers.nmea.ais.ManeuverIndicator.*;
+import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
+import static org.vesalainen.parsers.nmea.ais.NavigationStatus.*;
 import org.vesalainen.util.navi.Location;
 
 /**
@@ -35,7 +35,7 @@ import org.vesalainen.util.navi.Location;
 public class AISTargetDynamic extends AnnotatedPropertyStore
 {
     @Property private MessageTypes messageType;
-    @Property private long timestamp;
+    @Property private Instant timestamp;
     @Property private int mmsi;
     @Property private double latitude = Double.NaN;
     @Property private double longitude = Double.NaN;
@@ -193,7 +193,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         return "AISTargetDynamic{" + "messageType=" + messageType + ", instant=" + timestamp + '}';
     }
 
-    public AISTargetDynamic setTimestamp(long timestamp)
+    public AISTargetDynamic setTimestamp(Instant timestamp)
     {
         this.timestamp = timestamp;
         return this;
@@ -300,7 +300,7 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
         return messageType;
     }
 
-    public long getTimestamp()
+    public Instant getTimestamp()
     {
         return timestamp;
     }
