@@ -67,17 +67,19 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             Endpoint.endpointMap.put(name, this);
             int port = endpointType.getPort();
             InetSocketAddress socketAddress = new InetSocketAddress(port);
-            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-            serverSocketChannel.setOption(SO_REUSEADDR, true);
-            serverSocketChannel.bind(socketAddress);
-            while (true)
+            try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open())
             {
-                SocketChannel socketChannel = serverSocketChannel.accept();
-                TCPEndpoint tcpEndpoint = new TCPEndpoint(socketChannel, endpointType, router);
-                POOL.submit(tcpEndpoint);
-                if (endpointType.isAisFastBoot() != null && endpointType.isAisFastBoot())
+                serverSocketChannel.setOption(SO_REUSEADDR, true);
+                serverSocketChannel.bind(socketAddress);
+                while (true)
                 {
-                    AISService.fastBoot(socketChannel);
+                    SocketChannel socketChannel = serverSocketChannel.accept();
+                    TCPEndpoint tcpEndpoint = new TCPEndpoint(socketChannel, endpointType, router);
+                    POOL.submit(tcpEndpoint);
+                    if (endpointType.isAisFastBoot() != null && endpointType.isAisFastBoot())
+                    {
+                        AISService.fastBoot(socketChannel);
+                    }
                 }
             }
         }
