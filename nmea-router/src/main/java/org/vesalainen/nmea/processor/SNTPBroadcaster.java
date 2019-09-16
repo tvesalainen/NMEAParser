@@ -106,9 +106,12 @@ public class SNTPBroadcaster extends TimerTask implements PropertySetter, Transa
         try
         {
             
-            ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.millis()));
-            ntpMessage.setTransmitTime(new TimeStamp(clock.millis()));
+            long millis = clock.millis();
+            TimeStamp timestamp = TimeStamp.getNtpTime(millis);
+            ntpMessage.setReferenceTime(timestamp);
+            ntpMessage.setTransmitTime(timestamp);
             DatagramPacket datagramPacket = ntpMessage.getDatagramPacket();
+            datagramPacket.setPort(NTP_PORT);
             datagramPacket.setAddress(InetAddress.getByName("255.255.255.255"));
             socket.send(datagramPacket);
         }

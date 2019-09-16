@@ -122,16 +122,16 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 if (ob instanceof SntpBroadcasterType)
                 {
                     SntpBroadcasterType sntpBroadcasterType = (SntpBroadcasterType) ob;
-                    warning("not supported SNTPBroadcaster");
-                    //SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
-                    //addNMEAObserver(broadcaster);
+                    SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
+                    addNMEAObserver(broadcaster);
+                    continue;
                 }
                 if (ob instanceof SntpMulticasterType)
                 {
                     SntpMulticasterType sntpMulticasterType = (SntpMulticasterType) ob;
-                    warning("not supported SNTPMulticaster");
-                    //SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
-                    //addNMEAObserver(multicaster);
+                    SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
+                    addNMEAObserver(multicaster);
+                    continue;
                 }
                 if (ob instanceof TimeSetterType)
                 {
@@ -143,9 +143,9 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 if (ob instanceof SntpServerType)
                 {
                     SntpServerType sntpServerType = (SntpServerType) ob;
-                    warning("not supported SNTPServer");
-                    //SNTPServer server = new SNTPServer(sntpServerType);
-                    //addNMEAObserver(server);
+                    SNTPServer server = new SNTPServer(sntpServerType);
+                    addNMEAObserver(server);
+                    continue;
                 }
                 if (process == null)
                 {

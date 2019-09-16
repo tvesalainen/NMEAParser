@@ -63,8 +63,8 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
             pollInterval = interval;
         }
         period = (long) Math.pow(2, pollInterval)*1000;
-        socket = new MulticastSocket(NTP_PORT);
-        group = InetAddress.getByName("224.0.0.4");
+        socket = new MulticastSocket();
+        group = InetAddress.getByName("224.0.1.1");
         socket.joinGroup(group);
         ntpMessage = new NtpV4Impl();
         ntpMessage.setMode(MODE_BROADCAST);
@@ -97,7 +97,7 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
     {
         if (timer  == null)
         {
-            log.config("SNTPBroadcaster started period=%d", period);
+            log.config("SNTPMulticaster started period=%d", period);
             timer = new Timer();
             timer.scheduleAtFixedRate(this, 0, period);
         }
@@ -108,9 +108,10 @@ public class SNTPMulticaster extends TimerTask implements PropertySetter, Transa
     {
         try
         {
-            
-            ntpMessage.setReferenceTime(TimeStamp.getNtpTime(clock.millis()));
-            ntpMessage.setTransmitTime(TimeStamp.getNtpTime(clock.millis()));
+            long millis = clock.millis();
+            TimeStamp timestamp = TimeStamp.getNtpTime(millis);
+            ntpMessage.setReferenceTime(timestamp);
+            ntpMessage.setTransmitTime(timestamp);
             DatagramPacket datagramPacket = ntpMessage.getDatagramPacket();
             datagramPacket.setAddress(group);
             socket.send(datagramPacket);
