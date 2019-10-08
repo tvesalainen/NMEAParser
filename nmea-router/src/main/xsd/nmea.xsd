@@ -183,6 +183,7 @@
         <xsd:attribute name="pollInterval" type="pollIntervalType"/>
     </xsd:complexType>
     <xsd:complexType name="sntp-serverType">
+        <xsd:attribute name="rootDelay" type="millisType"/>
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
         <xsd:attribute name="configFile" type="xsd:string" use="required"/>

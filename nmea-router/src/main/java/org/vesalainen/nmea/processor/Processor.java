@@ -25,6 +25,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
@@ -61,6 +64,15 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
     {
         try
         {
+            super.start();
+            if (running != null)
+            {
+                running.await();
+            }
+            if (!clock.waitUntilReady(5, TimeUnit.SECONDS))
+            {
+                warning("Clock didn't start in 5 seconds");
+            }
             for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
             {
                 if (ob instanceof CompassCorrectorType)
@@ -119,20 +131,6 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                     info("add Tracker");
                     process = new Tracker(tt, (ScheduledExecutorService) executor);
                 }
-                if (ob instanceof SntpBroadcasterType)
-                {
-                    SntpBroadcasterType sntpBroadcasterType = (SntpBroadcasterType) ob;
-                    SNTPBroadcaster broadcaster = new SNTPBroadcaster(sntpBroadcasterType);
-                    addNMEAObserver(broadcaster);
-                    continue;
-                }
-                if (ob instanceof SntpMulticasterType)
-                {
-                    SntpMulticasterType sntpMulticasterType = (SntpMulticasterType) ob;
-                    SNTPMulticaster multicaster = new SNTPMulticaster(sntpMulticasterType);
-                    addNMEAObserver(multicaster);
-                    continue;
-                }
                 if (ob instanceof TimeSetterType)
                 {
                     TimeSetterType timeSetterType = (TimeSetterType) ob;
@@ -142,9 +140,12 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 }
                 if (ob instanceof SntpServerType)
                 {
+                    info("add SntpServer");
                     SntpServerType sntpServerType = (SntpServerType) ob;
-                    SNTPServer server = new SNTPServer(sntpServerType);
+                    SNTPServerProc server = new SNTPServerProc(sntpServerType, executor);
+                    processes.add(server);
                     addNMEAObserver(server);
+                    server.start("");
                     continue;
                 }
                 if (process == null)
@@ -154,9 +155,8 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 process.start(this);
                 processes.add(process);
             }
-            super.start();
         }
-        catch (IOException ex)
+        catch (IOException | InterruptedException ex)
         {
             throw new IllegalArgumentException(ex);
         }
