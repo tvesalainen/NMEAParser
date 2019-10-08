@@ -68,7 +68,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.AAM, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -99,7 +99,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.ALM, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -141,7 +141,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.APA, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -175,7 +175,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.APB, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -211,7 +211,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.BEC, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -252,7 +252,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.BOD, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -285,7 +285,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.BWC, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -328,7 +328,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.BWR, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -368,7 +368,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.BWW, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -401,7 +401,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.DBK, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -431,7 +431,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.DBS, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -461,7 +461,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.DBT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -492,7 +492,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.DPT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -524,7 +524,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.GGA, ss.getProperty("messageType"));
@@ -567,7 +567,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.GLL, ss.getProperty("messageType"));
@@ -606,7 +606,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.GSA, ss.getProperty("messageType"));
@@ -644,7 +644,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.GSV, ss.getProperty("messageType"));
@@ -684,7 +684,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.HDG, ss.getProperty("messageType"));
@@ -717,7 +717,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.HDM, ss.getProperty("messageType"));
@@ -748,7 +748,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.HDT, ss.getProperty("messageType"));
@@ -776,7 +776,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.MTW, ss.getProperty("messageType"));
@@ -808,7 +808,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.MWV, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -840,7 +840,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.VWR, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -876,7 +876,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.R00, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -904,7 +904,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.RMA, ss.getProperty("messageType"));
@@ -941,7 +941,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.RMB, ss.getProperty("messageType"));
@@ -990,7 +990,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.RMC, ss.getProperty("messageType"));
@@ -1038,7 +1038,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals("GRME", ss.getProperty("proprietaryType"));
@@ -1065,7 +1065,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals("GRMM", ss.getProperty("proprietaryType"));
@@ -1092,7 +1092,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals("GRMZ", ss.getProperty("proprietaryType"));
@@ -1119,7 +1119,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals("ICOA", ss.getProperty("proprietaryType"));
@@ -1146,7 +1146,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.ROT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -1175,7 +1175,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.RPM, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -1207,7 +1207,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.RSA, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -1240,7 +1240,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.RTE, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -1273,7 +1273,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.TLL, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -1310,7 +1310,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.TTM, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -1348,7 +1348,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.TXT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
@@ -1381,7 +1381,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.VTG, ss.getProperty("messageType"));
@@ -1411,7 +1411,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.WPL, ss.getProperty("messageType"));
@@ -1442,7 +1442,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.XTE, ss.getProperty("messageType"));
@@ -1477,7 +1477,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.ZDA, ss.getProperty("messageType"));
@@ -1514,7 +1514,7 @@ public class NMEAParserTest
             System.err.println(nmea);
             SimpleStorage ss = new SimpleStorage();
             NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-            parser.parse(nmea, tc, null);
+            parser.parse(nmea, false, null, tc, null);
             NMEAContentHelper nch = new NMEAContentHelper(nmea);
             assertEquals(ss.getFloat("trueHeading"), nch.getFloat(1), 1e-8);
         }
@@ -1546,7 +1546,7 @@ public class NMEAParserTest
             list.add(94.9F);
             ListStorage ls = new ListStorage();
             NMEAObserver tc = ls.getStorage(NMEAObserver.class);
-            parser.parse(nmea, tc, null);
+            parser.parse(nmea, false, null, tc, null);
             assertEquals(list, ls.getProperty("trackMadeGood"));
         }
         catch (Exception ex)
@@ -1579,7 +1579,7 @@ public class NMEAParserTest
             list.add(231.8F);
             ListStorage ls = new ListStorage();
             NMEAObserver tc = ls.getStorage(NMEAObserver.class);
-            parser.parse(nmea, tc, null);
+            parser.parse(nmea, false, null, tc, null);
             assertEquals(list, ls.getProperty("trackMadeGood"));
         }
         catch (Exception ex)
@@ -1602,7 +1602,7 @@ public class NMEAParserTest
                 System.err.println(nmea);
                 SimpleStorage ss = new SimpleStorage();
                 NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-                parser.parse(nmea, tc, null);
+                parser.parse(nmea, false, null, tc, null);
                 assertNull(ss.getRollbackReason());
                 assertEquals(MessageType.TXT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);

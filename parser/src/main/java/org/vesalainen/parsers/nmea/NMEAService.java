@@ -23,6 +23,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -53,7 +54,8 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     private Thread thread;
     private boolean liveClock = true;
     private Future<?> future;
-    private GPSClock clock;
+    protected GPSClock clock;
+    protected CountDownLatch running = new CountDownLatch(1);
 
     public NMEAService(String address, int port) throws IOException
     {
@@ -249,6 +251,8 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
             }
             clock = GPSClock.getInstance(liveClock);
             setClockSupplier(()->clock);
+            running.countDown();
+            running = null;
             parser.parse(in, clock, origin, nmeaDispatcher, aisDispatcher, executor);
         }
         catch (Exception ex)

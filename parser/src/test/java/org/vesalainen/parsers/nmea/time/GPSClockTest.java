@@ -29,6 +29,8 @@ import java.time.chrono.IsoChronology;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQuery;
+import java.util.Random;
+import java.util.function.LongSupplier;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -56,44 +58,65 @@ public class GPSClockTest
         assertEquals(500, clock.millis());
     }
     @Test
-    public void testSyncLive()
+    public void testLive()
     {
-        GPSClock clock = GPSClock.getSyncInstance();
-        clock.setCurrentTimeMillis(()->0L);
+        NanoTime time = new NanoTime();
+        GPSClock clock = GPSClock.getInstance(time, true);
         clock.start(null);
         clock.setYear(1970);
         clock.setMonth(1);
         clock.setDay(1);
-        clock.setTime(0, 0, 0, 0);
+        clock.setTime(0, 0, 0, 500);
         clock.commit(null);
-        assertEquals(0, clock.millis());
-
-        clock.start(null);
-        clock.setYear(1970);
-        clock.setMonth(1);
-        clock.setDay(1);
-        clock.setTime(0, 0, 1, 0);
-        clock.setCurrentTimeMillis(()->1002L);
-        clock.commit(null);
-        assertEquals(1001, clock.millis());
-
-        clock.start(null);
-        clock.setYear(1970);
-        clock.setMonth(1);
-        clock.setDay(1);
-        clock.setTime(0, 0, 2, 0);
-        clock.setCurrentTimeMillis(()->2002L);
-        clock.commit(null);
-        assertEquals(2001, clock.millis());
-
-        clock.start(null);
-        clock.setYear(1970);
-        clock.setMonth(1);
-        clock.setDay(1);
-        clock.setTime(0, 0, 3, 0);
-        clock.setCurrentTimeMillis(()->3001L);
-        clock.commit(null);
-        assertEquals(3000, clock.millis());
+        assertEquals(500, clock.millis());
+        assertEquals("1970-01-01T00:00:00.500Z", clock.instant().toString());
+        
+        time.time = 123L;
+        assertEquals("1970-01-01T00:00:00.500000123Z", clock.instant().toString());
+        
+        
+        time.time = 1000000123L;
+        assertEquals("1970-01-01T00:00:01.500000123Z", clock.instant().toString());
+        
     }
-    
+    @Test
+    public void testLive2()
+    {
+        Random random = new Random(123456789L);
+        NanoTime time = new NanoTime();
+        GPSClock clock = GPSClock.getInstance(time, true);
+        for (int s=0;s<3;s++)
+        {
+            time.time = 1000000000L*s;
+            clock.start(null);
+            clock.setYear(1970);
+            clock.setMonth(1);
+            clock.setDay(1);
+            clock.setTime(0, 0, s, 0);
+            clock.commit(null);
+        }
+        for (int s=3;s<60;s++)
+        {
+            time.time = 1000000000L*s + random.nextInt(100000000);
+            clock.start(null);
+            clock.setYear(1970);
+            clock.setMonth(1);
+            clock.setDay(1);
+            clock.setTime(0, 0, s, 0);
+            clock.commit(null);
+            time.time = 1000000000L*s + 500000000;
+            assertEquals(s*1000+500, clock.millis());
+        }
+    }
+    private class NanoTime implements LongSupplier
+    {
+        private long time;
+        
+        @Override
+        public long getAsLong()
+        {
+            return time;
+        }
+        
+    }
 }

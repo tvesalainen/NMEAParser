@@ -22,15 +22,16 @@ import java.time.ZoneId;
 import static java.time.ZoneOffset.UTC;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
+import static java.time.temporal.ChronoField.INSTANT_SECONDS;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.LongSupplier;
-import org.vesalainen.math.sliding.SlidingAverage;
-import org.vesalainen.math.sliding.SlidingMin;
+import org.vesalainen.math.sliding.LongTimeoutSlidingMin;
 import org.vesalainen.parsers.nmea.NMEAClock;
-import static org.vesalainen.time.MutableDateTime.HOUR_IN_MILLIS;
-import static org.vesalainen.time.MutableDateTime.MINUTE_IN_MILLIS;
-import static org.vesalainen.time.MutableDateTime.SECOND_IN_MILLIS;
+import org.vesalainen.time.MutableInstant;
 import org.vesalainen.time.SimpleMutableDateTime;
-import org.vesalainen.util.logging.JavaLogging;
+import org.vesalainen.util.logging.AttachedLogger;
 
 /**
  * Transactional MutableClock.
@@ -44,8 +45,8 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public abstract class GPSClock extends Clock implements NMEAClock
 {
-    private static final long DRIFT_LIMIT = 500;
-    private static final long MAX_DRIFT = 1;
+    private static final long MINUTE_IN_SECONDS = 60;
+    private static final long HOUR_IN_SECONDS = 60*MINUTE_IN_SECONDS;
     private static final int YEA = 1;
     private static final int MON = 2;
     private static final int DAY = 4;
@@ -56,15 +57,26 @@ public abstract class GPSClock extends Clock implements NMEAClock
     private static final int TIM = HOU|MIN|SEC|MIL;
     private static final int ALL = 127;
     private SimpleMutableDateTime uncommitted = new SimpleMutableDateTime();
-    protected boolean committed;
     private boolean needCalc = true;
-    private long dateMillis;
+    protected MutableInstant time = new MutableInstant();
+    protected MutableInstant lastTime = new MutableInstant();
+    private boolean lastTimeSet;
+    private long dateSecond;
+    private CountDownLatch ready = new CountDownLatch(1);
     protected int upd;
-    private long millis;
-    protected LongSupplier currentTimeMillis = System::currentTimeMillis;
+    protected final LongSupplier nanoTime;
     protected boolean partialUpdate;    // update with only time GGA, GLL,...
-    
 
+    public GPSClock()
+    {
+        this(System::nanoTime);
+    }
+
+    public GPSClock(LongSupplier nanoTime)
+    {
+        this.nanoTime = nanoTime;
+    }
+    
     @Override
     public void commit(String reason)
     {
@@ -81,25 +93,61 @@ public abstract class GPSClock extends Clock implements NMEAClock
                         0,
                         0,
                         UTC);
-                dateMillis = zonedDate.toInstant().toEpochMilli();
+                dateSecond = zonedDate.getLong(INSTANT_SECONDS);
                 needCalc = false;
             }
-            long mls = dateMillis;
-            mls += uncommitted.get(ChronoField.HOUR_OF_DAY)*HOUR_IN_MILLIS;
-            mls += uncommitted.get(ChronoField.MINUTE_OF_HOUR)*MINUTE_IN_MILLIS;
-            mls += uncommitted.get(ChronoField.SECOND_OF_MINUTE)*SECOND_IN_MILLIS;
-            mls += uncommitted.get(ChronoField.NANO_OF_SECOND)/1000000;
-            millis = mls;
-            committed = true;
+            long sec = dateSecond;
+            sec += uncommitted.get(ChronoField.HOUR_OF_DAY)*HOUR_IN_SECONDS;
+            sec += uncommitted.get(ChronoField.MINUTE_OF_HOUR)*MINUTE_IN_SECONDS;
+            sec += uncommitted.get(ChronoField.SECOND_OF_MINUTE);
+            time.set(sec, uncommitted.get(ChronoField.NANO_OF_SECOND));
+            pulse0();
         }
     }
 
-    @Override
-    public long millis()
+    private void pulse0()
     {
-        return millis;
+        if (time.compareTo(lastTime) > 0)
+        {
+            if (lastTimeSet)
+            {
+                pulse();
+                if (ready != null)
+                {
+                    ready.countDown();
+                    ready = null;
+                }
+            }
+            else
+            {
+                lastTimeSet = true;
+            }
+            lastTime.set(time);
+        }
+    }
+    protected abstract void pulse();
+
+    protected void adjust()
+    {
+    }
+    protected MutableInstant time()
+    {
+        return time;
+    }
+    @Override
+    public final long millis()
+    {
+        adjust();
+        return time().millis();
     }
     
+    @Override
+    public final Instant instant()
+    {
+        adjust();
+        return time().instant();
+    }
+
     @Override
     public ZoneId getZone()
     {
@@ -110,17 +158,6 @@ public abstract class GPSClock extends Clock implements NMEAClock
     public Clock withZone(ZoneId zone)
     {
         throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Instant instant()
-    {
-        return Instant.ofEpochMilli(millis());
-    }
-
-    void setCurrentTimeMillis(LongSupplier currentTimeMillis)
-    {
-        this.currentTimeMillis = currentTimeMillis;
     }
 
     @Override
@@ -217,9 +254,19 @@ public abstract class GPSClock extends Clock implements NMEAClock
     }
 
     @Override
-    public boolean isCommitted()
+    public boolean isReady()
     {
-        return committed;
+        return ready == null;
+    }
+
+    @Override
+    public boolean waitUntilReady(long timeout, TimeUnit unit) throws InterruptedException
+    {
+        if (ready != null)
+        {
+            return ready.await(timeout, unit);
+        }
+        return true;
     }
 
     @Override
@@ -233,12 +280,6 @@ public abstract class GPSClock extends Clock implements NMEAClock
     {
     }
 
-    @Override
-    public long offset()
-    {
-        return 0L;
-    }
-
     public void setPartialUpdate(boolean partialUpdate)
     {
         this.partialUpdate = partialUpdate;
@@ -247,97 +288,88 @@ public abstract class GPSClock extends Clock implements NMEAClock
     @Override
     public String toString()
     {
-        return "GPSClock{" + instant().toString() + '}';
+        return "GPSClock{" + time().instant().toString() + '}';
     }
 
     public static final GPSClock getInstance(boolean live)
     {
-        return live ? new LiveGPSClock() : new FixedGPSClock();
+        return getInstance(System::nanoTime, live);
     }
-    public static final GPSClock getSyncInstance()
+    public static final GPSClock getInstance(LongSupplier clock, boolean live)
     {
-        return new SyncLiveGPSClock();
+        return live ? new LiveGPSClock(clock) : new FixedGPSClock(clock);
     }
     public static final class LiveGPSClock extends GPSClock
     {
-        private long offset;
-        
-        @Override
-        public void commit(String reason)
+        private static final int WINDOW_IN_MINUTES = 10;
+        private static final long WINDOW = TimeUnit.MINUTES.toNanos(WINDOW_IN_MINUTES);
+        private ReentrantLock lock = new ReentrantLock();
+        private MutableInstant pulse = new MutableInstant();
+        private MutableInstant now = new MutableInstant();
+        private MutableInstant corrected = new MutableInstant();
+        private LongTimeoutSlidingMin offset = new LongTimeoutSlidingMin(nanoTime, WINDOW_IN_MINUTES*60, WINDOW);
+
+        public LiveGPSClock(LongSupplier nanoTime)
         {
-            if (upd == ALL || partialUpdate)
+            super(nanoTime);
+        }
+
+        @Override
+        protected void pulse()
+        {
+            lock.lock();
+            try
             {
-                super.commit(reason);
-                offset = super.millis() - currentTimeMillis.getAsLong();
+                long t = nanoTime.getAsLong();
+                pulse.set(t);
+                long behind = time.until(pulse);
+                offset.accept(behind, t);
+                long dif = behind-offset.getMin();
+                pulse.plus(-dif);
+            }
+            finally
+            {
+                lock.unlock();
             }
         }
 
         @Override
-        public long millis()
+        protected void adjust()
         {
-            return currentTimeMillis.getAsLong() + offset;
-        }
-
-        @Override
-        public long offset()
-        {
-            return offset;
-        }
-
-    }
-    public static final class SyncLiveGPSClock extends GPSClock
-    {
-        private JavaLogging logger = JavaLogging.getLogger(LiveGPSClock.class);
-        private long offset;
-        private SlidingMin min = new SlidingMin(4);
-        private SlidingAverage average = new SlidingAverage(256);
-        
-        @Override
-        public void commit(String reason)
-        {
-            if (upd == ALL || partialUpdate)
+            super.adjust();
+            lock.lock();
+            try
             {
-                super.commit(reason);
-                long off = super.millis() - currentTimeMillis.getAsLong();
-                min.accept(off);
-                average.accept(min.getMin());
-                logger.fine("off = %d %s", off, average);
-                long delta = (long) (average.fast()-offset);
-                long sig = delta >=0 ? 1 : -1;
-                long adelta = Math.abs(delta);
-                if (adelta > DRIFT_LIMIT)
-                {
-                    logger.fine("setting time %d = %d", off, offset);
-                    offset = off;
-                }
-                else
-                {
-                    long adj = sig*Math.min(adelta, MAX_DRIFT);
-                    if (adj != 0)
-                    {
-                        offset += adj;
-                        logger.fine("adjusting time %d = %d", adj, offset);
-                    }
-                }
-                committed = true;
+                now.set(nanoTime.getAsLong());
+                long d = pulse.until(now);
+                corrected.set(time);
+                corrected.plus(d);
+            }
+            finally
+            {
+                lock.unlock();
             }
         }
 
         @Override
-        public long millis()
+        protected MutableInstant time()
         {
-            return currentTimeMillis.getAsLong() + offset;
-        }
-
-        @Override
-        public long offset()
-        {
-            return offset;
+            return corrected;
         }
 
     }
     public static final class FixedGPSClock extends GPSClock
     {
+
+        public FixedGPSClock(LongSupplier nanoTime)
+        {
+            super(nanoTime);
+        }
+
+        @Override
+        protected void pulse()
+        {
+        }
         
     }
     

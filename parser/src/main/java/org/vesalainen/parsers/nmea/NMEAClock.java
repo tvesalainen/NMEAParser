@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parsers.nmea;
 
+import java.util.concurrent.TimeUnit;
 import org.vesalainen.util.Transactional;
 
 /**
@@ -94,14 +95,17 @@ public interface NMEAClock extends Transactional
      */
     int getYear();
     /**
-     * returns true if committed ever
+     * returns true if time is synchronized
      * @return 
      */
-    boolean isCommitted();
+    boolean isReady();
     /**
-     * Returns difference between NMEA time and real time in milli seconds.
-     * @return 
+     * Wait until synchronized
+     * @param timeout
+     * @param unit
+     * @return True if ready false if timeout
+     * @throws java.lang.InterruptedException
      */
-    long offset();
+    boolean waitUntilReady(long timeout, TimeUnit unit) throws InterruptedException;
 
 }
