@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
@@ -139,10 +140,19 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
     @Override
     public void run()
     {
-        config("started shutdown-hook");
-        ScheduledExecutorService oldPool = POOL;
-        POOL = null;
-        oldPool.shutdownNow();
+        try
+        {
+            config("started shutdown-hook");
+            ScheduledExecutorService oldPool = POOL;
+            POOL = null;
+            oldPool.shutdownNow();
+            config.store();
+            config("stored configuration");
+        }
+        catch (IOException ex)
+        {
+            log(SEVERE, ex, "shutting down");
+        }
     }
 
 }

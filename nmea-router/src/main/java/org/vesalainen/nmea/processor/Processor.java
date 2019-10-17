@@ -26,22 +26,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
-import org.vesalainen.nmea.jaxb.router.SntpBroadcasterType;
-import org.vesalainen.nmea.jaxb.router.SntpMulticasterType;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
-import org.vesalainen.nmea.jaxb.router.TimeSetterType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAService;
-import org.vesalainen.parsers.nmea.ais.AISService;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -130,13 +124,6 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                     TrackerType tt = (TrackerType) ob;
                     info("add Tracker");
                     process = new Tracker(tt, (ScheduledExecutorService) executor);
-                }
-                if (ob instanceof TimeSetterType)
-                {
-                    TimeSetterType timeSetterType = (TimeSetterType) ob;
-                    warning("not supported TimeSetterType");
-                    //TimeSetter timeSetter = new TimeSetter(timeSetterType);
-                    //addNMEAObserver(timeSetter);
                 }
                 if (ob instanceof SntpServerType)
                 {

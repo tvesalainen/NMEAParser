@@ -36,7 +36,6 @@ import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.router.Router;
 import static org.vesalainen.nmea.router.RouterManager.POOL;
 import org.vesalainen.nmea.router.filter.MessageFilter;
-import org.vesalainen.parsers.nmea.ais.AISMonitor;
 import org.vesalainen.parsers.nmea.ais.AISService;
 
 /**
@@ -159,6 +158,10 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                     }
                 }
                 cnt = ring.writeTo(sink);
+                if (cnt == 0)
+                {
+                    warning("%s read()=0", name);
+                }
                 finest("wrote rc=%d %s", cnt, pipe);
                 writeCount++;
                 writeBytes += cnt;

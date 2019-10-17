@@ -35,6 +35,7 @@ import org.vesalainen.net.sntp.SNTPServer;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAClock;
+import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
@@ -51,10 +52,12 @@ public class SNTPServerProc extends AnnotatedPropertyStore implements Stoppable
     private final CachedScheduledThreadPool executor;
     private boolean started;
     private long rootDelay;
+    private final SntpServerType sntpServerType;
     
     public SNTPServerProc(SntpServerType sntpServerType, CachedScheduledThreadPool executor) throws SocketException, UnknownHostException
     {
         super(MethodHandles.lookup());
+        this.sntpServerType = sntpServerType;
         this.executor = executor;
         if (sntpServerType.getRootDelay() != null)
         {
@@ -75,6 +78,10 @@ public class SNTPServerProc extends AnnotatedPropertyStore implements Stoppable
         {
             config("SNTPServer started");
             server = new SNTPServer(6, rootDelay, ReferenceClock.GPS, clock, executor);
+            if (sntpServerType.getServer() != null)
+            {
+                server.setServer(sntpServerType.getServer());
+            }
             server.start();
         }
     }
@@ -84,8 +91,10 @@ public class SNTPServerProc extends AnnotatedPropertyStore implements Stoppable
     {
         if (server != null)
         {
+            sntpServerType.setRootDelay(server.offset());
             server.stop();
             server = null;
+            config("SNTP stopped");
         }
     }
 

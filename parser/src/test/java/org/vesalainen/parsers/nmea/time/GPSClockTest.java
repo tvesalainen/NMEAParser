@@ -66,6 +66,8 @@ public class GPSClockTest
         clock.setYear(1970);
         clock.setMonth(1);
         clock.setDay(1);
+        clock.setTime(0, 0, 0, 100);
+        clock.commit(null);
         clock.setTime(0, 0, 0, 500);
         clock.commit(null);
         assertEquals(500, clock.millis());
@@ -107,6 +109,32 @@ public class GPSClockTest
             time.time = 1000000000L*s + 500000000;
             assertEquals(s*1000+500, clock.millis());
         }
+    }
+    @Test
+    public void testMonotonicy()
+    {
+        NanoTime time = new NanoTime();
+        GPSClock clock = GPSClock.getInstance(time, true);
+        for (int s=0;s<3;s++)
+        {
+            time.time = 1000000000L*s;
+            clock.start(null);
+            clock.setYear(1970);
+            clock.setMonth(1);
+            clock.setDay(1);
+            clock.setTime(0, 0, s, 0);
+            clock.commit(null);
+        }
+        clock.start(null);
+        clock.setYear(1970);
+        clock.setMonth(1);
+        clock.setDay(1);
+        clock.setTime(0, 0, 3, 0);
+        time.time = 1000000000L*3 + 500000000;
+        clock.commit(null);
+        assertEquals(3500, clock.millis());
+        time.time = 1000000000L*3 + 400000000;
+        assertEquals(3500, clock.millis());
     }
     private class NanoTime implements LongSupplier
     {

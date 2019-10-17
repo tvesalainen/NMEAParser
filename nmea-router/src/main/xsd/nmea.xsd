@@ -51,10 +51,7 @@
                     <xsd:element name="tracker" type="trackerType"/>
                     <xsd:element name="compressed-log" type="compressedLogType"/>
                     <xsd:element name="ais-log" type="aisLogType"/>
-                    <xsd:element name="sntp-broadcaster" type="sntp-broadcasterType"/>
-                    <xsd:element name="sntp-multicaster" type="sntp-multicasterType"/>
                     <xsd:element name="sntp-server" type="sntp-serverType"/>
-                    <xsd:element name="time-setter" type="timeSetterType"/>
                     <xsd:element name="compass-corrector" type="compassCorrectorType"/>
                 </xsd:choice>
             </xsd:extension>
@@ -171,19 +168,9 @@
         <xsd:attribute name="maxLogSize" type="xsd:unsignedLong"/>
         <xsd:attribute name="ttlMinutes" type="xsd:unsignedInt"/>
     </xsd:complexType>
-    <xsd:complexType name="timeSetterType">
-        <xsd:attribute name="cmd" type="xsd:string" use="required"/>
-        <xsd:attribute name="pollInterval" type="pollIntervalType"/>
-        <xsd:attribute name="maxDelta" type="millisType"/>
-    </xsd:complexType>
-    <xsd:complexType name="sntp-broadcasterType">
-        <xsd:attribute name="pollInterval" type="pollIntervalType"/>
-    </xsd:complexType>
-    <xsd:complexType name="sntp-multicasterType">
-        <xsd:attribute name="pollInterval" type="pollIntervalType"/>
-    </xsd:complexType>
     <xsd:complexType name="sntp-serverType">
         <xsd:attribute name="rootDelay" type="millisType"/>
+        <xsd:attribute name="server" type="xsd:string"/>
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
         <xsd:attribute name="configFile" type="xsd:string" use="required"/>

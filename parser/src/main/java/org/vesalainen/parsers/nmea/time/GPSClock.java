@@ -27,11 +27,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 import org.vesalainen.math.sliding.LongTimeoutSlidingMin;
 import org.vesalainen.parsers.nmea.NMEAClock;
+import org.vesalainen.time.AdjustableClock;
 import org.vesalainen.time.MutableInstant;
 import org.vesalainen.time.SimpleMutableDateTime;
 import org.vesalainen.util.logging.AttachedLogger;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * Transactional MutableClock.
@@ -116,6 +119,8 @@ public abstract class GPSClock extends Clock implements NMEAClock
                 {
                     ready.countDown();
                     ready = null;
+                    started();
+                    JavaLogging.getLogger(GPSClock.class).config("GPSClock is ready");
                 }
             }
             else
@@ -125,27 +130,29 @@ public abstract class GPSClock extends Clock implements NMEAClock
             lastTime.set(time);
         }
     }
-    protected abstract void pulse();
-
+    protected void started()
+    {
+    }
+    protected void pulse()
+    {
+    }
     protected void adjust()
     {
     }
-    protected MutableInstant time()
+    public Instant reference()
     {
-        return time;
+        return time.instant();
     }
     @Override
-    public final long millis()
+    public long millis()
     {
-        adjust();
-        return time().millis();
+        return time.millis();
     }
     
     @Override
-    public final Instant instant()
+    public Instant instant()
     {
-        adjust();
-        return time().instant();
+        return time.instant();
     }
 
     @Override
@@ -288,7 +295,7 @@ public abstract class GPSClock extends Clock implements NMEAClock
     @Override
     public String toString()
     {
-        return "GPSClock{" + time().instant().toString() + '}';
+        return "GPSClock{" + instant().toString() + '}';
     }
 
     public static final GPSClock getInstance(boolean live)
@@ -299,15 +306,20 @@ public abstract class GPSClock extends Clock implements NMEAClock
     {
         return live ? new LiveGPSClock(clock) : new FixedGPSClock(clock);
     }
-    public static final class LiveGPSClock extends GPSClock
+    public static final class LiveGPSClock extends GPSClock implements AdjustableClock, AttachedLogger
     {
         private static final int WINDOW_IN_MINUTES = 10;
         private static final long WINDOW = TimeUnit.MINUTES.toNanos(WINDOW_IN_MINUTES);
-        private ReentrantLock lock = new ReentrantLock();
         private MutableInstant pulse = new MutableInstant();
         private MutableInstant now = new MutableInstant();
         private MutableInstant corrected = new MutableInstant();
-        private LongTimeoutSlidingMin offset = new LongTimeoutSlidingMin(nanoTime, WINDOW_IN_MINUTES*60, WINDOW);
+        private MutableInstant last = new MutableInstant();
+        private LongTimeoutSlidingMin offset = new LongTimeoutSlidingMin(nanoTime, WINDOW_IN_MINUTES, WINDOW);
+        private long adjustment;
+        private LongSupplier millis = System::currentTimeMillis;
+        private Supplier<Instant> instant = Clock.systemUTC()::instant;
+        private boolean useSystem = true;
+        private ReentrantLock lock = new ReentrantLock();
 
         public LiveGPSClock(LongSupplier nanoTime)
         {
@@ -326,6 +338,24 @@ public abstract class GPSClock extends Clock implements NMEAClock
                 offset.accept(behind, t);
                 long dif = behind-offset.getMin();
                 pulse.plus(-dif);
+                if (doMillis() == System.currentTimeMillis())
+                {
+                    if (!useSystem)
+                    {
+                        useSystem = true;
+                        millis = System::currentTimeMillis;
+                        config("using system clock");
+                    }
+                }
+                else
+                {
+                    if (useSystem)
+                    {
+                        useSystem = false;
+                        millis = this::doMillis;
+                        config("using GPS clock");
+                    }
+                }
             }
             finally
             {
@@ -343,7 +373,16 @@ public abstract class GPSClock extends Clock implements NMEAClock
                 now.set(nanoTime.getAsLong());
                 long d = pulse.until(now);
                 corrected.set(time);
-                corrected.plus(d);
+                corrected.plus(d + adjustment);
+                // monotonic enforced
+                if (corrected.compareTo(last) < 0)
+                {
+                    corrected.set(last);
+                }
+                else
+                {
+                    last.set(corrected);
+                }
             }
             finally
             {
@@ -352,9 +391,43 @@ public abstract class GPSClock extends Clock implements NMEAClock
         }
 
         @Override
-        protected MutableInstant time()
+        protected void started()
         {
-            return corrected;
+            instant = this::doInstant;
+        }
+
+        private long doMillis()
+        {
+            adjust();
+            return corrected.millis();
+        }
+        @Override
+        public long millis()
+        {
+            return millis.getAsLong();
+        }
+
+        private Instant doInstant()
+        {
+            adjust();
+            return corrected.instant();
+        }
+        @Override
+        public Instant instant()
+        {
+            return instant.get();
+        }
+
+        @Override
+        public void adjust(long nanos)
+        {
+            adjustment += nanos;
+        }
+
+        @Override
+        public long offset()
+        {
+            return adjustment;
         }
 
     }
@@ -366,11 +439,6 @@ public abstract class GPSClock extends Clock implements NMEAClock
             super(nanoTime);
         }
 
-        @Override
-        protected void pulse()
-        {
-        }
-        
     }
     
 }

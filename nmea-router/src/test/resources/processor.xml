@@ -14,7 +14,7 @@
         <compass-corrector 
             configFile="c:\\temp\\deviation.txt" 
         />
-        <sntp-server rootDelay="1600" />
+        <sntp-server rootDelay="1600" server="pi3media"/>
         <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>
         <route prefix="$HCHDT" target="Net TCP"/>
