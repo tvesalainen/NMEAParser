@@ -344,7 +344,7 @@ public abstract class GPSClock extends Clock implements NMEAClock
                     {
                         useSystem = true;
                         millis = System::currentTimeMillis;
-                        config("using system clock");
+                        fine("using system clock");
                     }
                 }
                 else
@@ -353,7 +353,7 @@ public abstract class GPSClock extends Clock implements NMEAClock
                     {
                         useSystem = false;
                         millis = this::doMillis;
-                        config("using GPS clock");
+                        fine("using GPS clock");
                     }
                 }
             }
