@@ -18,7 +18,6 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +43,6 @@ import org.vesalainen.parser.util.ChecksumProvider;
 import org.vesalainen.parser.util.InputReader;
 import static org.vesalainen.parsers.nmea.Converter.*;
 import org.vesalainen.parsers.nmea.ais.AISBridge;
-import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.parsers.nmea.ais.AISObserver;
 import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.util.CharSequences;
