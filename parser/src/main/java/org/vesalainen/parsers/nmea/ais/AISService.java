@@ -166,11 +166,16 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
             return getLiveSet();
         }
     }
-    public static void fastBoot(WritableByteChannel ch) throws IOException
+    public static boolean fastBoot(WritableByteChannel ch) throws IOException
     {
         if (SINGLETON != null)
         {
             SINGLETON.bootAIS(ch);
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
     private void bootAIS(WritableByteChannel ch) throws IOException
@@ -180,6 +185,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         {
             for (NMEASentence ns : target.getPositionReport())
             {
+                fine("position report of %s", target);
                 ns.writeTo(ch);
             }
         }
@@ -187,6 +193,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         {
             for (NMEASentence ns : target.getStaticReport())
             {
+                fine("static report of %s", target);
                 ns.writeTo(ch);
             }
         }
