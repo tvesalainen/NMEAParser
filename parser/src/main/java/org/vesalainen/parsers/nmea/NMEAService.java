@@ -95,6 +95,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         this.out = out;
         this.executor = executor;
         nmeaDispatcher = NMEADispatcher.newInstance();
+        aisDispatcher = AISDispatcher.newInstance();
     }
     
     public void start()
@@ -138,7 +139,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
-            autoCloseables.add(ac);
+            addAutoCloseable(ac);
         }
     }
     
@@ -148,16 +149,12 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     }
     public void addAISObserver(PropertySetter propertySetter, boolean reportMissingProperties)
     {
-        if (aisDispatcher == null)
-        {
-            aisDispatcher = AISDispatcher.newInstance();
-        }
         addClock(propertySetter);
         aisDispatcher.addObserver(propertySetter, reportMissingProperties);
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
-            autoCloseables.add(ac);
+            addAutoCloseable(ac);
         }
     }
     
@@ -172,7 +169,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         if (propertyStore instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertyStore;
-            autoCloseables.add(ac);
+            addAutoCloseable(ac);
         }
     }
     
@@ -182,16 +179,12 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     }
     public void addAISObserver(AnnotatedPropertyStore propertyStore, boolean reportMissingProperties)
     {
-        if (aisDispatcher == null)
-        {
-            aisDispatcher = AISDispatcher.newInstance();
-        }
         addClock(propertyStore);
         aisDispatcher.addObserver(propertyStore, reportMissingProperties);
         if (propertyStore instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertyStore;
-            autoCloseables.add(ac);
+            addAutoCloseable(ac);
         }
     }
     
@@ -201,7 +194,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
-            autoCloseables.remove(ac);
+            removeAutoCloseable(ac);
         }
     }
     
@@ -211,7 +204,7 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         if (propertySetter instanceof AutoCloseable)
         {
             AutoCloseable ac = (AutoCloseable) propertySetter;
-            autoCloseables.remove(ac);
+            removeAutoCloseable(ac);
         }
     }
     private void addClock(PropertySetter propertySetter)
@@ -259,9 +252,28 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         {
             log(Level.SEVERE, ex, "");
         }
-        log(Level.SEVERE, "NMEA Service dies!!!");
+        finally
+        {
+            try
+            {
+                close();
+            }
+            catch (Exception ex)
+            {
+                log(Level.SEVERE, ex, "closing NMEAService");
+            }
+            log(Level.SEVERE, "NMEA Service dies!!!");
+        }
     }
 
+    public void addAutoCloseable(AutoCloseable autoCloseable)
+    {
+        addAutoCloseable(autoCloseable);
+    }
+    public void removeAutoCloseable(AutoCloseable autoCloseable)
+    {
+        removeAutoCloseable(autoCloseable);
+    }
     @Override
     public void close() throws Exception
     {
