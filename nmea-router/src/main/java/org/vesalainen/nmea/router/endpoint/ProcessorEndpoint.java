@@ -83,7 +83,7 @@ class ProcessorEndpoint extends Endpoint<ProcessorType,ByteBufferChannel>
         }
         catch (Throwable thr)
         {
-            log(SEVERE, thr, "processor stopper %s", thr.getMessage());
+            log(SEVERE, thr, "processor stopped %s", thr.getMessage());
         }
         finally
         {
