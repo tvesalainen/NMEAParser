@@ -77,7 +77,10 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                     POOL.submit(tcpEndpoint);
                     if (endpointType.isAisFastBoot() != null && endpointType.isAisFastBoot())
                     {
-                        AISService.fastBoot(socketChannel);
+                        if (!AISService.fastBoot(socketChannel))
+                        {
+                            warning("AISService.fastBoot not called");
+                        }
                     }
                 }
             }
