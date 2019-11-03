@@ -127,7 +127,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         boolean defect = (z & 4) == 4;
         if (!defect)
         {
-            NMEASentence dbt = NMEASentence.dbt(xx/10, UnitType.Foot);
+            NMEASentence dbt = NMEASentence.dpt(xx/10, 0, UnitType.Foot);
             dbt.writeTo(out);
         }
     }
