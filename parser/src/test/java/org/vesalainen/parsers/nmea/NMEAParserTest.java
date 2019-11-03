@@ -485,7 +485,8 @@ public class NMEAParserTest
                 "$IIDPT,007.4,+0.3,*47\r\n",
                 "$IIDPT,025.6,+0.3,*45\r\n",
                 "$IIDPT,016.5,+0.3,*46\r\n",
-                "$IIDPT,014.9,+0.3,*48\r\n"
+                "$IIDPT,014.9,+0.3,*48\r\n",
+                "$IIDPT,16.2,0*6B\r\n"
             };
             for (String nmea : nmeas)
             {
