@@ -18,6 +18,7 @@ package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
@@ -30,6 +31,7 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.PropertySetter;
+import org.vesalainen.net.InetClient;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.util.NMEASample;
 import org.vesalainen.nmea.util.NMEASampler;
@@ -42,11 +44,11 @@ import org.vesalainen.util.logging.JavaLogging;
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
+ * @param <T>
  */
-public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
+public class NMEAService<T extends ByteChannel & ScatteringByteChannel & GatheringByteChannel> extends JavaLogging implements Runnable, AutoCloseable
 {
-    protected ScatteringByteChannel in;
-    protected GatheringByteChannel out;
+    protected T channel;
     protected CachedScheduledThreadPool executor;
     private final NMEADispatcher nmeaDispatcher;
     private AISDispatcher aisDispatcher;
@@ -63,36 +65,13 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
     }
     public NMEAService(String address, int port, CachedScheduledThreadPool executor) throws IOException
     {
-        this(UnconnectedDatagramChannel.open(address, port, 100, true, true), executor);
+        this(InetClient.openChannel(address, port, 100, true, true), executor);
     }
 
-    public NMEAService(UnconnectedDatagramChannel channel) throws IOException
+    public NMEAService(T channel, CachedScheduledThreadPool executor) throws IOException
     {
-        this(channel, new CachedScheduledThreadPool());
-    }
-    public NMEAService(UnconnectedDatagramChannel channel, CachedScheduledThreadPool executor) throws IOException
-    {
-        this(channel, channel, executor);
-    }
-
-    public NMEAService(DatagramChannel channel) throws IOException
-    {
-        this(channel, new CachedScheduledThreadPool());
-    }
-    public NMEAService(DatagramChannel channel, CachedScheduledThreadPool executor) throws IOException
-    {
-        this(channel, channel, executor);
-    }
-
-    public NMEAService(ScatteringByteChannel in, GatheringByteChannel out) throws IOException
-    {
-        this(in, out, new CachedScheduledThreadPool());
-    }
-    public NMEAService(ScatteringByteChannel in, GatheringByteChannel out, CachedScheduledThreadPool executor) throws IOException
-    {
-        setLogger(this.getClass());
-        this.in = in;
-        this.out = out;
+        super(NMEAService.class);
+        this.channel = channel;
         this.executor = executor;
         nmeaDispatcher = NMEADispatcher.newInstance();
         aisDispatcher = AISDispatcher.newInstance();
@@ -237,16 +216,16 @@ public class NMEAService extends JavaLogging implements Runnable, AutoCloseable
         {
             NMEAParser parser = NMEAParser.newInstance();
             Supplier<InetSocketAddress> origin = ()->null;
-            if (in instanceof UnconnectedDatagramChannel)
+            if (channel instanceof UnconnectedDatagramChannel)
             {
-                UnconnectedDatagramChannel udc = (UnconnectedDatagramChannel) in;
+                UnconnectedDatagramChannel udc = (UnconnectedDatagramChannel) channel;
                 origin = ()->{return udc.getFromAddress();};
             }
             clock = GPSClock.getInstance(liveClock);
             setClockSupplier(()->clock);
             running.countDown();
             running = null;
-            parser.parse(in, clock, origin, nmeaDispatcher, aisDispatcher, executor);
+            parser.parse(channel, clock, origin, nmeaDispatcher, aisDispatcher, executor);
         }
         catch (Exception ex)
         {
