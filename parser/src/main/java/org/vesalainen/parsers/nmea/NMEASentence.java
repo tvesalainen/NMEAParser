@@ -98,7 +98,7 @@ public class NMEASentence
      */
     public static NMEASentence dpt(float meters, float offset, UnitType unit)
     {
-        return builder(SD, DBT)
+        return builder(SD, DPT)
                 .add(unit.convertTo(meters, Meter))
                 .add(unit.convertTo(offset, Meter))
                 .build();
