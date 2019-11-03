@@ -19,6 +19,7 @@ package org.vesalainen.nmea.processor;
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.file.Paths;
@@ -26,7 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.vesalainen.net.ObjectServer;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
+import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
@@ -41,15 +44,17 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
+ * @param <T>
  */
-public class Processor extends NMEAService implements Runnable, AutoCloseable
+public class Processor<T extends ByteChannel & ScatteringByteChannel & GatheringByteChannel> extends NMEAService<T> implements Runnable, AutoCloseable
 {
     private ProcessorType processorType;
     private List<Stoppable> processes = new ArrayList<>();
+    private ObjectServer dataServer;
 
-    public Processor(ProcessorType processorType, ScatteringByteChannel in, GatheringByteChannel out, CachedScheduledThreadPool executor) throws IOException
+    public Processor(ProcessorType processorType, T channel, CachedScheduledThreadPool executor) throws IOException
     {
-        super(in, out, executor);
+        super(channel, executor);
         this.processorType = processorType;
     }
 
@@ -59,6 +64,11 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
         try
         {
             super.start();
+            if (processorType.getDataAccessPort() != null)
+            {
+                dataServer = new ObjectServer(processorType.getDataAccessPort(), executor);
+                dataServer.start();
+            }
             if (running != null)
             {
                 running.await();
@@ -71,9 +81,9 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
             {
                 if (ob instanceof CompassCorrectorType)
                 {
-                    info("add Compass Corrector");
+                    info("starting Compass Corrector");
                     CompassCorrectorType type = (CompassCorrectorType) ob;
-                    CompassCorrector compassCorrector = new CompassCorrector(type, out, executor, this);
+                    CompassCorrector compassCorrector = new CompassCorrector(type, channel, executor, this);
                     processes.add(compassCorrector);
                     addNMEAObserver(compassCorrector);
                     
@@ -81,7 +91,7 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 }
                 if (ob instanceof AisLogType)
                 {
-                    info("add AIS Log");
+                    info("starting AIS Log");
                     AisLogType type = (AisLogType) ob;
                     String directory = type.getDirectory();
                     Long ttlMinutes = type.getTtlMinutes();
@@ -92,13 +102,13 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                             ttlMinutes != null ? ttlMinutes : 10, 
                             maxLogSize != null ? maxLogSize.longValue() : 1024*1024, 
                             executor,
-                            out);
+                            channel);
                     processes.add(aisLog);
                     continue;
                 }
                 if (ob instanceof CompressedLogType)
                 {
-                    info("add CompressedLog");
+                    info("starting CompressedLog");
                     CompressedLogType type = (CompressedLogType) ob;
                     CompressedLog compressedLog = new CompressedLog(type, executor);
                     processes.add(compressedLog);
@@ -110,29 +120,39 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
                 if (ob instanceof VariationSourceType)
                 {
                     VariationSourceType vst = (VariationSourceType) ob;
-                    info("add VariationSource");
-                    process = new VariationSource(out, vst, (ScheduledExecutorService) executor);
+                    info("starting VariationSource");
+                    process = new VariationSource(channel, vst, (ScheduledExecutorService) executor);
                 }
                 if (ob instanceof TrueWindSourceType)
                 {
                     TrueWindSourceType vst = (TrueWindSourceType) ob;
-                    info("add TrueWindSource");
-                    process = new TrueWindSource(out, vst, (ScheduledExecutorService) executor);
+                    info("starting TrueWindSource");
+                    process = new TrueWindSource(channel, vst, (ScheduledExecutorService) executor);
                 }
                 if (ob instanceof TrackerType)
                 {
                     TrackerType tt = (TrackerType) ob;
-                    info("add Tracker");
+                    info("starting Tracker");
                     process = new Tracker(tt, (ScheduledExecutorService) executor);
                 }
                 if (ob instanceof SntpServerType)
                 {
-                    info("add SntpServer");
+                    info("starting SntpServer");
                     SntpServerType sntpServerType = (SntpServerType) ob;
                     SNTPServerProc server = new SNTPServerProc(sntpServerType, executor);
                     processes.add(server);
                     addNMEAObserver(server);
                     server.start("");
+                    continue;
+                }
+                if (ob instanceof AnchorManagerType)
+                {
+                    info("starting AnchorManager");
+                    AnchorManagerType anchorManagerType = (AnchorManagerType) ob;
+                    AnchorManager anchorManager = new AnchorManager(this, anchorManagerType, executor);
+                    processes.add(anchorManager);
+                    addNMEAObserver(anchorManager);
+                    anchorManager.start("");
                     continue;
                 }
                 if (process == null)
@@ -149,6 +169,17 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
         }
     }
 
+    public void setData(String name, Object target)
+    {
+        if (dataServer != null)
+        {
+            dataServer.put(name, target);
+        }
+        else
+        {
+            warning("dataServer not configured");
+        }
+    }
     @Override
     public void stop()
     {
@@ -156,6 +187,10 @@ public class Processor extends NMEAService implements Runnable, AutoCloseable
         {
             process.stop();
         });
+        if (dataServer != null)
+        {
+            dataServer.stop();
+        }
         super.stop();
     }
     
