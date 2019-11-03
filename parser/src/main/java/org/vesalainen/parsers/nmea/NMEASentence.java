@@ -90,10 +90,23 @@ public class NMEASentence
                 .build();
     }
     /**
+     * Depth of Water
+     * @param meters Water depth relative to transducer, meters
+     * @param offset Offset from transducer, meters positive means distance from transducer to water line negative means distance from transducer to keel
+     * @param unit
+     * @return 
+     */
+    public static NMEASentence dpt(float meters, float offset, UnitType unit)
+    {
+        return builder(SD, DBT)
+                .add(unit.convertTo(meters, Meter))
+                .add(unit.convertTo(offset, Meter))
+                .build();
+    }
+    /**
      * Depth Below Transducer
      * @param depth
-     * @return
-     * @throws IOException 
+     * @return 
      */
     public static NMEASentence dbt(float depth, UnitType unit)
     {
