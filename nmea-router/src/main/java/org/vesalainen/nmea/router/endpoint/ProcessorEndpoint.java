@@ -46,7 +46,7 @@ class ProcessorEndpoint extends Endpoint<ProcessorType,ByteBufferChannel>
         ByteBufferChannel[] peers = ByteBufferChannel.open(4096, true);
         ByteBufferChannel pc1 = peers[0];
         ByteBufferChannel pc2 = peers[1];
-        processor = new Processor(endpointType, pc2, pc2, POOL);
+        processor = new Processor(endpointType, pc2, POOL);
         processor.start();
         pc1.setWriteTimeout(0, TimeUnit.MILLISECONDS);
         return pc1;
