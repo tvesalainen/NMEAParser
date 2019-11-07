@@ -16,11 +16,13 @@
  */
 package org.vesalainen.nmea.router;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.util.List;
 import java.util.Optional;
@@ -47,9 +49,6 @@ import org.vesalainen.nmea.jaxb.router.SeatalkType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
 import org.vesalainen.nmea.jaxb.router.TcpEndpointType;
 import org.vesalainen.nmea.script.ScriptParser;
-import org.vesalainen.parsers.nmea.MessageType;
-import org.vesalainen.parsers.nmea.NMEA;
-import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -58,7 +57,8 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class RouterConfig extends JavaLogging
 {
-    private File file;
+    private Path path;
+    private FileTime lastModified;
     private static JAXBContext jaxbCtx;
     private static ObjectFactory objectFactory;
     private static DatatypeFactory dataTypeFactory;
@@ -79,10 +79,10 @@ public class RouterConfig extends JavaLogging
         }
     }
 
-    public RouterConfig(File file)
+    public RouterConfig(Path path) throws IOException
     {
         super(RouterConfig.class);
-        this.file = file;
+        this.path = path;
         nmea = objectFactory.createNmea(objectFactory.createNmeaType());
     }
     
@@ -90,8 +90,9 @@ public class RouterConfig extends JavaLogging
     {
         Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller();
         unmarshaller.setListener(new Lst());
-        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(file);
+        nmea = (JAXBElement<NmeaType>) unmarshaller.unmarshal(path.toFile());
         checkScriptSyntax();
+        this.lastModified = Files.getLastModifiedTime(path);
     }
 
     public MessageDigest getDigest()
@@ -227,9 +228,17 @@ public class RouterConfig extends JavaLogging
     }
     public void store() throws IOException
     {
-        try (FileWriter writer = new FileWriter(file))
+        FileTime lmt = Files.getLastModifiedTime(path);
+        if (lastModified == null || lastModified.compareTo(lmt) == 0)
         {
-            store(writer);
+            try (FileWriter writer = new FileWriter(path.toFile()))
+            {
+                store(writer);
+            }
+        }
+        else
+        {
+            warning("Not storing because %s is modified after loading", path);
         }
     }
     public synchronized void store(Writer writer) throws IOException
