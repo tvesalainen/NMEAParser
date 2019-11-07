@@ -30,10 +30,6 @@
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>org.htmlparser</groupId>
-            <artifactId>htmlparser</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.vesalainen</groupId>
             <artifactId>test</artifactId>
             <scope>test</scope>

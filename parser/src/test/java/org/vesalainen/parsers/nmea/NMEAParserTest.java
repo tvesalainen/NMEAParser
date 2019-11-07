@@ -18,18 +18,13 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.channels.ScatteringByteChannel;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.function.Supplier;
 import static org.junit.Assert.*;
 import org.junit.Test;
-import org.vesalainen.parsers.nmea.ais.AISContext;
 import org.vesalainen.util.navi.Knots;
 
 /**

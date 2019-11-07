@@ -422,78 +422,6 @@ public class AbstractAISObserver implements AISObserver
     }
 
     @Override
-    public void setShape(SubareaType subareaType)
-    {
-        
-    }
-
-    @Override
-    public void setScale(int scale)
-    {
-        
-    }
-
-    @Override
-    public void setPrecision(int precision)
-    {
-        
-    }
-
-    @Override
-    public void setRadius(int radius)
-    {
-        
-    }
-
-    @Override
-    public void setEast(int east)
-    {
-        
-    }
-
-    @Override
-    public void setNorth(int north)
-    {
-        
-    }
-
-    @Override
-    public void setOrientation(int orientation)
-    {
-        
-    }
-
-    @Override
-    public void setLeft(int left)
-    {
-        
-    }
-
-    @Override
-    public void setRight(int right)
-    {
-        
-    }
-
-    @Override
-    public void setBearing(int bearing)
-    {
-        
-    }
-
-    @Override
-    public void setDistance(int distance)
-    {
-        
-    }
-
-    @Override
-    public void setText(String str)
-    {
-        
-    }
-
-    @Override
     public void setBerthLength(int meters)
     {
         
@@ -1309,6 +1237,12 @@ public class AbstractAISObserver implements AISObserver
     @Override
     public void setEtaMinute(int minute)
     {
+    }
+
+    @Override
+    public void setSubarea(CharSequence seq)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

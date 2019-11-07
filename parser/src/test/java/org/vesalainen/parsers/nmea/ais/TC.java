@@ -17,6 +17,9 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Timo Vesalainen
@@ -148,6 +151,34 @@ public class TC extends AbstractAISObserver
     int model = -1;
     int serial = -1;
     ManeuverIndicator maneuver;
+    int linkage;
+    AreaNoticeDescription notice;
+    int duration;
+    List<Area> area = new ArrayList<>();
+
+    @Override
+    public void setSubarea(CharSequence seq)
+    {
+        area.add(Area.getInstance(seq));
+    }
+
+    @Override
+    public void setDuration(int duration)
+    {
+        this.duration = duration;
+    }
+
+    @Override
+    public void setAreaNotice(AreaNoticeDescription areaNoticeDescription)
+    {
+        this.notice = areaNoticeDescription;
+    }
+
+    @Override
+    public void setLinkage(int id)
+    {
+        this.linkage = id;
+    }
 
     @Override
     public void setManeuver(ManeuverIndicator maneuverIndicator)

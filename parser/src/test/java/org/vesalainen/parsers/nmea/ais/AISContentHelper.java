@@ -113,4 +113,46 @@ public class AISContentHelper
         }
         return sb.toString();
     }
+
+    public String dumpLen(int... lengths)
+    {
+        StringBuilder sb = new StringBuilder();
+        int length = lengths.length;
+        int index = 0;
+        for (int ii=0;ii<length;ii++)
+        {
+            sb.append(index).append('[').append(lengths[ii]).append(']').append(": ");
+            if (ii < length-1)
+            {
+                sb.append(content.substring(index, index+lengths[ii]));
+            }
+            else
+            {
+                sb.append(content.substring(index));
+            }
+            sb.append('\n');
+            index += lengths[ii];
+        }
+        return sb.toString();
+    }
+    public String dumpInd(int... indeces)
+    {
+        StringBuilder sb = new StringBuilder();
+        int length = indeces.length;
+        for (int ii=0;ii<length;ii++)
+        {
+            sb.append(indeces[ii]).append(": ");
+            if (ii < length-1)
+            {
+                sb.append(content.substring(indeces[ii], indeces[ii+1]));
+            }
+            else
+            {
+                sb.append(content.substring(indeces[ii]));
+            }
+            sb.append('\n');
+        }
+        return sb.toString();
+    }
+    
 }

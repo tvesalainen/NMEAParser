@@ -384,66 +384,6 @@ public interface AISObserver extends Transactional
      * Shape of area
      * @param subareaType 
      */
-    void setShape(SubareaType subareaType);
-    /**
-     * Scale factor
-     * @param scale Exponent for area dimensions 1 = meters (default)
-     */
-    void setScale(int scale);
-    /**
-     * Precision
-     * @param precision Decimal places of precision (defaults to 4)
-     */
-    void setPrecision(int precision);
-    /**
-     * Radius
-     * @param radius Radius of area 0 = point (default), else 1-4095 * 10^scale m
-     */
-    void setRadius(int radius);
-    /**
-     * E dimension
-     * @param east Box dimension east 0 = N/S line (default), else 1-255 * 10^scale m
-     */
-    void setEast(int east);
-    /**
-     * N dimension
-     * @param north Box dimension north 0 = E/W line (default), else 1-255 * 10^scale m
-     */
-    void setNorth(int north);
-    /**
-     * Orientation
-     * @param orientation Degrees clockwise from true N, 0 = no rotation (default), else 1-359, 360-511 reserved.
-     */
-    void setOrientation(int orientation);
-    /**
-     * Left boundary
-     * @param left Degrees clockwise from true N, 0 = no rotation (default), else 1-359, 360-511 reserved.
-     */
-    void setLeft(int left);
-    /**
-     * Right boundary
-     * @param right Degrees clockwise from true N, 0 = no rotation (default), else 1-359, 360-511 reserved.
-     */
-    void setRight(int right);
-    /**
-     * Bearing
-     * @param bearing True bearing in half-degree steps from previous waypoint; 720 = N/A (default).
-     */
-    void setBearing(int bearing);
-    /**
-     * Distance
-     * @param distance Distance from prev. waypoint, 0 = no point (default), else 1-1023 * 10^scale m
-     */
-    void setDistance(int distance);
-    /**
-     * Text
-     * @param text
-     */
-    void setText(String text);
-    /**
-     * Berth length
-     * @param meters In 1m steps, 1-510m, 511 = >= 511m 0 = N/A (default).
-     */
     void setBerthLength(int meters);
     /**
      * Berth Water Depth
@@ -1156,5 +1096,7 @@ public interface AISObserver extends Transactional
      * @param minute 
      */
     public void setEtaMinute(int minute);
+
+    public void setSubarea(CharSequence seq);
 
 }

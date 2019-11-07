@@ -35,6 +35,12 @@ import org.vesalainen.parsers.mmsi.MMSIType;
 import static org.vesalainen.parsers.mmsi.MMSIType.CraftAssociatedWithParentShip;
 import org.vesalainen.parsers.nmea.ListStorage;
 import org.vesalainen.parsers.nmea.NMEAParser;
+import org.vesalainen.parsers.nmea.ais.Area.AssociatedText;
+import org.vesalainen.parsers.nmea.ais.Area.CircleArea;
+import org.vesalainen.parsers.nmea.ais.Area.PolylineArea;
+import org.vesalainen.parsers.nmea.ais.Area.RectangleArea;
+import org.vesalainen.parsers.nmea.ais.Area.SectorArea;
+import static org.vesalainen.parsers.nmea.ais.SubareaType.Sector;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -583,7 +589,7 @@ public class MessageTest
             fail(ex.getMessage());
         }
     }
-    @Test
+    //@Test
     public void type8DAC1FID22() throws IOException
     {
         String[] nmeas = new String[] {
@@ -603,6 +609,210 @@ public class MessageTest
             assertEquals(1, tc.dac);
             assertEquals(22, tc.fid);
         }
+    }
+    //@Test
+    public void type8DAC1FID22_2() throws IOException
+    {
+        String[] nmeas = new String[] {
+            "!AIVDM,2,1,1,A,81mg=5@0EP90FH=`02PMwvei=<><>N000`IrAhaQT2B,0*17\r\n!AIVDM,2,2,1,A,qQl40,3*5C\r\n",
+            "!AIVDM,2,1,2,A,81mg=5@0EP70FH=`02PMwpea=E2L>N000`IrAhaQT2B,0*11\r\n!AIVDM,2,2,2,A,qQl40,3*5F\r\n",
+            "!AIVDM,2,1,3,A,81mg=5@0EP60nH=`0C@MwVmA=NSD>N000`IrAhaQT2B,0*34\r\n!AIVDM,2,2,3,A,qQl40,3*5E\r\n",
+            "!AIVDM,2,1,4,A,81mg=5@0EP50FH=`02PMwInQ=OAl>N000`IrAhaQT2B,0*4E\r\n!AIVDM,2,2,4,A,qQl40,3*59\r\n",
+            "!AIVDM,2,1,5,A,81mg=5@0EP40FH=`02PMwpgI=E0<>N000`IrAhaQT2B,0*4D\r\n!AIVDM,2,2,5,A,qQl40,3*58\r\n",
+            "!AIVDM,2,1,6,A,81mg=5@0EP10FH=`02PMvULa=RT<>N000`IrAhaQT2B,0*1F\r\n!AIVDM,2,2,6,A,qQl40,3*5B\r\n"
+        };
+        for (String nmea : nmeas)
+        {
+            System.err.println(nmea);
+            AISContentHelper ach = new AISContentHelper(nmea);
+            TC tc = new TC();
+            parser.parse(nmea, null, tc);
+            assertNull(tc.rollbackReason);
+            assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
+            assertEquals(ach.getUInt(8, 38), tc.mmsi);
+            assertEquals(ach.getUInt(40, 50), tc.dac);
+            assertEquals(ach.getUInt(50, 56), tc.fid);
+        }
+    }
+    @Test
+    public void type8DAC1FID22_Circle() throws IOException
+    {
+        // !AIVDM,1,1,0,A,85M:Ih1KUQU6jAs85`0MK4lh<7=B42l0000,2*7F\r\n
+        String msg = "!AIVDM,1,1,0,A,85M:Ih1KUQU6jAs85`0MKFaH;k4>42l0000,2*0E\r\n";
+        AISContentHelper ach = new AISContentHelper(msg);
+        String dump = ach.dumpLen(6, 2, 30, 2, 10, 6, 10, 7, 4, 5, 5, 6, 18, 3, 2, 28, 27, 3, 12, 15, 7);
+        System.err.println(dump);
+        TC tc = new TC();
+        parser.parse(msg, null, tc);
+        assertNull(tc.rollbackReason);
+        assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
+        assertEquals(366123456, tc.mmsi);
+        assertEquals(366, tc.dac);
+        assertEquals(22, tc.fid);
+        assertEquals(101, tc.linkage);
+        assertEquals(AreaNoticeDescription.CautionAreaSurveyOperations, tc.notice);
+        assertEquals(9, tc.month);
+        assertEquals(4, tc.day);
+        assertEquals(15, tc.hour);
+        assertEquals(25, tc.minute);
+        assertEquals(2880, tc.duration);
+        assertTrue((tc.area.get(0) instanceof CircleArea));
+        CircleArea c = (CircleArea) tc.area.get(0);
+        assertEquals(-(71.0+56.1/60.0), c.getLongitude(), 1e-10);
+        assertEquals(41.0+14.2/60.0, c.getLatitude(), 1e-10);
+        assertEquals(1800, c.getRadius());
+    }
+    @Test
+    public void type8DAC1FID22_Rectangle() throws IOException
+    {
+        //String msg = "!AIVDM,1,1,0,A,85M:Ih1KUQVhjAs80e1MJCPP;uR91@:2`00,2*73\r\n";
+        String msg = "!AIVDM,1,1,0,A,85M:Ih1KUQVhjAs80e1MKJCh;iDq1@:2`00,2*12\r\n";
+        AISContentHelper ach = new AISContentHelper(msg);
+        String dump = ach.dumpLen(6, 2, 30, 2, 10, 6, 10, 7, 4, 5, 5, 6, 18, 3, 2, 28, 27, 3, 12, 15, 7);
+        System.err.println(dump);
+        TC tc = new TC();
+        parser.parse(msg, null, tc);
+        assertNull(tc.rollbackReason);
+        assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
+        assertEquals(366123456, tc.mmsi);
+        assertEquals(366, tc.dac);
+        assertEquals(22, tc.fid);
+        assertEquals(102, tc.linkage);
+        assertEquals(AreaNoticeDescription.ChartFeatureSubmergedObject, tc.notice);
+        assertEquals(9, tc.month);
+        assertEquals(4, tc.day);
+        assertEquals(15, tc.hour);
+        assertEquals(25, tc.minute);
+        assertEquals(360, tc.duration);
+        assertTrue((tc.area.get(0) instanceof RectangleArea));
+        RectangleArea r = (RectangleArea) tc.area.get(0);
+        assertEquals(-(71.0+53.6/60.0), r.getLongitude(), 1e-1);
+        assertEquals(41.0+8.52/60.0, r.getLatitude(), 1e-1);
+        assertEquals(400, r.getEast());
+        assertEquals(200, r.getNorth());
+        assertEquals(42, r.getOrientation());
+    }
+    @Test
+    public void type8DAC1FID22_Sector() throws IOException
+    {
+        String msg = "!AIVDM,1,1,0,A,85M:Ih1KUQW5BAs80e2eKiP8;hoV06BgL80,2*5E\r\n";
+        AISContentHelper ach = new AISContentHelper(msg);
+        String dump = ach.dumpLen(6, 2, 30, 2, 10, 6, 10, 7, 4, 5, 5, 6, 18, 3, 2, 28, 27, 3, 12, 15, 7);
+        System.err.println(dump);
+        TC tc = new TC();
+        parser.parse(msg, null, tc);
+        assertNull(tc.rollbackReason);
+        assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
+        assertEquals(366123456, tc.mmsi);
+        assertEquals(366, tc.dac);
+        assertEquals(22, tc.fid);
+        assertEquals(103, tc.linkage);
+        assertEquals(AreaNoticeDescription.CautionAreaDiversDown, tc.notice);
+        assertEquals(9, tc.month);
+        assertEquals(4, tc.day);
+        assertEquals(15, tc.hour);
+        assertEquals(25, tc.minute);
+        assertEquals(360, tc.duration);
+        assertTrue((tc.area.get(0) instanceof SectorArea));
+        SectorArea s = (SectorArea) tc.area.get(0);
+        assertEquals(-(71.0+45.1/60.0), s.getLongitude(), 1e-1);
+        assertEquals(41.0+7.0/60.0, s.getLatitude(), 1e-1);
+        assertEquals(5000, s.getRadius());
+        assertEquals(175, s.getLeft());
+        assertEquals(225, s.getRight());
+    }
+    @Test
+    public void type8DAC1FID22_PolylineAndText() throws IOException
+    {
+        String msg = "!AIVDM,2,1,0,A,85M:Ih1KUQ`tBAs85`0=KshH;iLe4000031JvP=uo0`GVBo8C0OA<000000000,0*0F\r\n!AIVDM,2,2,0,A,05D5CDP<9>5Pi0000,2*00\r\n";
+        AISContentHelper ach = new AISContentHelper(msg);
+        String dump = ach.dumpLen(6, 2, 30, 2, 10, 6, 10, 7, 4, 5, 5, 6, 18, 3, 2, 28, 27, 3, 12, 15, 7);
+        System.err.println(dump);
+        TC tc = new TC();
+        parser.parse(msg, null, tc);
+        assertNull(tc.rollbackReason);
+        assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
+        assertEquals(366123456, tc.mmsi);
+        assertEquals(366, tc.dac);
+        assertEquals(22, tc.fid);
+        assertEquals(104, tc.linkage);
+        assertEquals(AreaNoticeDescription.RouteRecommendedRoute, tc.notice);
+        assertEquals(9, tc.month);
+        assertEquals(4, tc.day);
+        assertEquals(15, tc.hour);
+        assertEquals(25, tc.minute);
+        assertEquals(2880, tc.duration);
+
+        assertTrue((tc.area.get(0) instanceof CircleArea));
+        CircleArea c = (CircleArea) tc.area.get(0);
+        assertEquals(-(71.0+40.9/60.0), c.getLongitude(), 1e-10);
+        assertEquals(41.0+8.9/60.0, c.getLatitude(), 1e-10);
+        assertEquals(0, c.getRadius());
+
+        assertTrue((tc.area.get(1) instanceof PolylineArea));
+        PolylineArea p = (PolylineArea) tc.area.get(1);
+        assertEquals(90, p.getAngle1());
+        assertEquals(2000, p.getDistance1());
+        assertEquals(111, p.getAngle2());
+        assertEquals(1500, p.getDistance2());
+        assertEquals(40, p.getAngle3());
+        assertEquals(755, p.getDistance3());
+        assertEquals(150, p.getAngle4());
+        assertEquals(1825, p.getDistance4());
+
+        assertTrue((tc.area.get(2) instanceof PolylineArea));
+        PolylineArea p2 = (PolylineArea) tc.area.get(2);
+        assertEquals(31, p2.getAngle1());
+        assertEquals(550, p2.getDistance1());
+        assertEquals(0, p2.getAngle2());
+        assertEquals(0, p2.getDistance2());
+        assertEquals(0, p2.getAngle3());
+        assertEquals(0, p2.getDistance3());
+        assertEquals(0, p2.getAngle4());
+        assertEquals(0, p2.getDistance4());
+
+        assertTrue((tc.area.get(3) instanceof AssociatedText));
+        AssociatedText t = (AssociatedText) tc.area.get(3);
+        assertEquals("TEST LINE 1", t.getText());
+    }
+    @Test
+    public void type8DAC1FID22_Polygon() throws IOException
+    {
+        String msg = "!AIVDM,1,1,0,A,85M:Ih1KUQa8jAs85`0=Ki@P;k:54000040tUPUTd000000000,4*2F\r\n";
+        AISContentHelper ach = new AISContentHelper(msg);
+        String dump = ach.dumpLen(6, 2, 30, 2, 10, 6, 10, 7, 4, 5, 5, 6, 18, 3, 2, 28, 27, 3, 12, 15, 7);
+        System.err.println(dump);
+        TC tc = new TC();
+        parser.parse(msg, null, tc);
+        assertNull(tc.rollbackReason);
+        assertEquals(MessageTypes.BinaryBroadcastMessage, tc.messageType);
+        assertEquals(366123456, tc.mmsi);
+        assertEquals(366, tc.dac);
+        assertEquals(22, tc.fid);
+        assertEquals(105, tc.linkage);
+        assertEquals(AreaNoticeDescription.CautionAreaClusterOfFishingVessels, tc.notice);
+        assertEquals(9, tc.month);
+        assertEquals(4, tc.day);
+        assertEquals(15, tc.hour);
+        assertEquals(25, tc.minute);
+        assertEquals(2880, tc.duration);
+
+        assertTrue((tc.area.get(0) instanceof CircleArea));
+        CircleArea c = (CircleArea) tc.area.get(0);
+        assertEquals(-(71.0+45.3/60.0), c.getLongitude(), 1e-1);
+        assertEquals(41.0+15.5/60.0, c.getLatitude(), 1e-1);
+        assertEquals(0, c.getRadius());
+
+        assertTrue((tc.area.get(1) instanceof PolylineArea));
+        PolylineArea p = (PolylineArea) tc.area.get(1);
+        assertEquals(60, p.getAngle1());
+        assertEquals(1200, p.getDistance1());
+        assertEquals(300, p.getAngle2());
+        assertEquals(1200, p.getDistance2());
+        assertEquals(0, p.getAngle3());
+        assertEquals(0, p.getDistance3());
+        assertEquals(0, p.getAngle4());
+        assertEquals(0, p.getDistance4());
     }
     @Test
     public void type9()
