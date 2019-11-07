@@ -80,12 +80,15 @@ public final class AISUtil
     }
     public static String makeString(CharSequence seq)
     {
+        return makeString(seq, 0, seq.length());
+    }
+    public static String makeString(CharSequence seq, int offset, int length)
+    {
         StringBuilder sb = new StringBuilder();
-        int length = seq.length();
         length = 6*(length / 6);    // force to 6 bit
         int bit = 0;
         int cc = 0;
-        for (int ii = 0; ii < length; ii++)
+        for (int ii = offset; ii < length; ii++)
         {
             bit++;
             cc <<= 1;
