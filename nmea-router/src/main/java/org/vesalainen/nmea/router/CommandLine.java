@@ -16,8 +16,9 @@
  */
 package org.vesalainen.nmea.router;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBException;
 import org.vesalainen.nmea.router.scanner.ConfigCreator;
@@ -33,7 +34,7 @@ public class CommandLine extends LoggingCommandLine
 
     public CommandLine()
     {
-        addArgument(File.class, "configuration file");
+        addArgument(Path.class, "configuration file");
         addOption("-f", "force port resolv", null, Boolean.FALSE);
         addOption("-rt", "resolv timeout", null, 2000L);
     }
@@ -45,11 +46,11 @@ public class CommandLine extends LoggingCommandLine
         CommandLine cmdArgs = new CommandLine();
         cmdArgs.command(args);
         JavaLogging log = JavaLogging.getLogger(CommandLine.class);
-        File configfile = (File) cmdArgs.getArgument("configuration file");
+        Path configfile = cmdArgs.getArgument("configuration file");
         try
         {
             RouterConfig config = new RouterConfig(configfile);
-            if (!configfile.exists())
+            if (!Files.exists(configfile))
             {
                 log.config("Config file %s doesn't exist. Creating...", configfile);
                 ConfigCreator configCreator = new ConfigCreator();
