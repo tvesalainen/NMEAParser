@@ -18,6 +18,7 @@ package org.vesalainen.nmea.router.scanner;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -71,9 +72,9 @@ public class ConfigCreator extends JavaLogging
         super(ConfigCreator.class);
     }
     
-    public RouterConfig createConfig(File file) throws IOException
+    public RouterConfig createConfig(Path path) throws IOException
     {
-        this.config = new RouterConfig(file);
+        this.config = new RouterConfig(path);
         config.getNmeaType().getAllDevices().addAll(SerialChannel.getAllPorts());
         
         PortScanner portScanner = new PortScanner(pool, scannedPorts, Collections.EMPTY_MAP);
