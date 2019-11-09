@@ -21,6 +21,8 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.util.Locale;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
@@ -35,6 +37,11 @@ import org.vesalainen.util.CharSequences;
  */
 public class NMEASentence
 {
+
+    public static void tll(String trg, double y, double x, String a, LocalTime now, char c, char c0)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     private ByteBuffer buffer;
     private CharSequence seq;
     /**
@@ -164,6 +171,16 @@ public class NMEASentence
         return builder(YC, MTW)
                 .add(unit.convertTo(temperature, Celsius))
                 .add(CELCIUS)
+                .build();
+    }
+    public static NMEASentence tll(int target, double latitude, double longitude, String name, LocalTime time, char status, String referenceTarget)
+    {
+        return builder(U0, TLL)
+                .add(target)
+                .add(latitude, longitude)
+                .add(time)
+                .add(status)
+                .add(referenceTarget)
                 .build();
     }
     /**
@@ -407,6 +424,19 @@ public class NMEASentence
             String str = String.format(Locale.US, "%.1f", fld);
             return write(str.endsWith(".0") ? str.substring(0, str.length()-2) : str);
         }
+        public Builder add(double latitude, double longitude)
+        {
+            add(latitude);
+            add(latitude>0?'N':'S');
+            add(longitude);
+            add(longitude>0?'E':'W');
+            return this;
+        }
+        public Builder add(LocalTime time)
+        {
+            add(String.format(Locale.US, "%02d%02d%02d", time.getHour(), time.getMinute(), time.getSecond()));
+            return this;
+        }
         /**
          * Add int field
          * @param fld
@@ -457,5 +487,6 @@ public class NMEASentence
             seq.chars().forEach(this::write);
             return this;
         }
+
     }
 }

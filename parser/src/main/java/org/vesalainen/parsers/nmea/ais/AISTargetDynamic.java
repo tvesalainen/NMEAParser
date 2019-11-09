@@ -75,57 +75,11 @@ public class AISTargetDynamic extends AnnotatedPropertyStore
     
     protected NMEASentence[] getMsg1()
     {
-        if (!Double.isNaN(latitude))
-        {
-            return new AISBuilder(PositionReportClassA, mmsi)
-                .integer(4, navigationStatus, NavigationStatus.NotDefinedDefault)
-                .rot(rateOfTurn)
-                .decimal(10, speed, 10)
-                .bool(positionAccuracy)
-                .decimal(28, longitude, 600000)
-                .decimal(27, latitude, 600000)
-                .decimal(12, course, 10)
-                .integer(9, heading)
-                .integer(6, second)
-                .integer(2, maneuver, ManeuverIndicator.NotAvailableDefault)
-                .spare(3)
-                .bool(raim)
-                .integer(19, radioStatus)
-                .build();
-        }
-        else
-        {
-            return AISBuilder.EMPTY;
-        }
+        return AISSentence.getMsg1(mmsi, navigationStatus, longitude, latitude, rateOfTurn, speed, positionAccuracy, course, heading, second, maneuver, raim, radioStatus);
     }
     protected NMEASentence[] getMsg18()
     {
-        if (!Double.isNaN(latitude))
-        {
-            return new AISBuilder(StandardClassBCSPositionReport, mmsi)
-                .spare(8)
-                .decimal(10, speed, 10)
-                .bool(positionAccuracy)
-                .decimal(28, longitude, 600000)
-                .decimal(27, latitude, 600000)
-                .decimal(12, course, 10)
-                .integer(9, heading)
-                .integer(6, second)
-                .spare(2)
-                .bool(csUnit)
-                .bool(display)
-                .bool(dsc)
-                .bool(band)
-                .bool(msg22)
-                .bool(assignedMode)
-                .bool(raim)
-                .integer(20, radioStatus)
-                .build();
-        }
-        else
-        {
-            return AISBuilder.EMPTY;
-        }
+        return AISSentence.getMsg18(mmsi, navigationStatus, longitude, latitude, speed, positionAccuracy, course, heading, second, csUnit, display, dsc, band, msg22, assignedMode, raim, radioStatus);
     }
     public void print(AISLogFile pw, boolean logExists) throws IOException
     {

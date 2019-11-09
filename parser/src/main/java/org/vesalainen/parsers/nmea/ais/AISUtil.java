@@ -78,11 +78,11 @@ public final class AISUtil
         }
         return (int) Math.round(Math.signum(turn)*Math.sqrt(Math.abs(turn))*4.733F);
     }
-    public static String makeString(CharSequence seq)
+    public static String makeString(CharSequence bin)
     {
-        return makeString(seq, 0, seq.length());
+        return makeString(bin, 0, bin.length());
     }
-    public static String makeString(CharSequence seq, int offset, int length)
+    public static String makeString(CharSequence bin, int offset, int length)
     {
         StringBuilder sb = new StringBuilder();
         length = 6*(length / 6);    // force to 6 bit
@@ -92,7 +92,7 @@ public final class AISUtil
         {
             bit++;
             cc <<= 1;
-            cc += seq.charAt(ii) - '0';
+            cc += bin.charAt(ii) - '0';
             if (bit == 6)
             {
                 if (cc == 0)    // terminating '@'

@@ -92,55 +92,11 @@ public class AISTargetData extends AnnotatedPropertyStore
     
     public NMEASentence[] getMsg5()
     {
-        return new AISBuilder(StaticAndVoyageRelatedData, mmsi)
-            .integer(2, aisVersion)
-            .integer(30, imoNumber)
-            .string(42, callSign)
-            .string(120, vesselName)
-            .integer(8, shipType, NotAvailableDefault)
-            .integer(9, dimensionToBow)
-            .integer(9, dimensionToStern)
-            .integer(6, dimensionToPort)
-            .integer(6, dimensionToStarboard)
-            .integer(4, epfd, EPFDFixTypes.UndefinedDefault)
-            .integer(4, etaMonth)
-            .integer(5, etaDay)
-            .integer(5, etaHour)
-            .integer(6, etaMinute)
-            .decimal(8, draught, 10)
-            .string(120, destination)
-            .bool(dte)
-            .spare(1)
-            .build();
+        return AISSentence.getMsg5(mmsi, aisVersion, imoNumber, callSign, vesselName, shipType, dimensionToBow, dimensionToStern, dimensionToPort, dimensionToStarboard, epfd, etaMonth, etaDay, etaHour, etaMinute, draught, destination, dte);
     }
     protected NMEASentence[] getMsg24()
     {
-        NMEASentence[] msg24A = new AISBuilder(StaticDataReport, mmsi)
-                .integer(2, 0)
-                .string(120, vesselName)
-                .spare(8)
-                .build();
-
-        AISBuilder b24 = new AISBuilder(StaticDataReport, mmsi)
-                .integer(2, 1)
-            .integer(8, shipType, NotAvailableDefault)
-                .string(18, vendorId)
-                .integer(4, unitModelCode)
-                .integer(20, serialNumber)
-                .string(42, callSign);
-        if (mothershipMMSI != 0)
-        {
-            b24.integer(30, mothershipMMSI);
-        }
-        else
-        {
-            b24.integer(9, dimensionToBow);
-            b24.integer(9, dimensionToStern);
-            b24.integer(6, dimensionToPort);
-            b24.integer(6, dimensionToStarboard);
-        }
-        NMEASentence[] msg24B = b24.build();
-        return new NMEASentence[]{msg24A[0], msg24B[0]};
+        return AISSentence.getMsg24(mmsi, callSign, vesselName, shipType, dimensionToBow, dimensionToStern, dimensionToPort, dimensionToStarboard, vendorId, unitModelCode, serialNumber, mothershipMMSI);
     }
     /**
      * Returns MMSI type of target

@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -35,12 +34,12 @@ import org.vesalainen.parsers.mmsi.MMSIType;
 import static org.vesalainen.parsers.mmsi.MMSIType.CraftAssociatedWithParentShip;
 import org.vesalainen.parsers.nmea.ListStorage;
 import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.parsers.nmea.ais.Area.AssociatedText;
-import org.vesalainen.parsers.nmea.ais.Area.CircleArea;
-import org.vesalainen.parsers.nmea.ais.Area.PolylineArea;
-import org.vesalainen.parsers.nmea.ais.Area.RectangleArea;
-import org.vesalainen.parsers.nmea.ais.Area.SectorArea;
-import static org.vesalainen.parsers.nmea.ais.SubareaType.Sector;
+import org.vesalainen.parsers.nmea.ais.areanotice.AssociatedText;
+import org.vesalainen.parsers.nmea.ais.areanotice.CircleArea;
+import org.vesalainen.parsers.nmea.ais.areanotice.PolygonArea;
+import org.vesalainen.parsers.nmea.ais.areanotice.PolylineArea;
+import org.vesalainen.parsers.nmea.ais.areanotice.RectangleArea;
+import org.vesalainen.parsers.nmea.ais.areanotice.SectorArea;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -663,6 +662,21 @@ public class MessageTest
         assertEquals(1800, c.getRadius());
     }
     @Test
+    public void type8DAC1FID22_Circle2() throws IOException
+    {
+        String msg = "!AIVDM,1,1,,A,81mg=5AKUP1FFT6`0UP9g5Bhqu<5t0p0055CD9=1D54000000,3*28\r\n";
+        AISContentHelper ach = new AISContentHelper(msg);
+        String dump = ach.dumpLen(6, 2, 30, 2, 10, 6, 10, 7, 4, 5, 5, 6, 18, 3, 2, 28, 27, 3, 12, 15, 7);
+        System.err.println(dump);
+        TC tc = new TC();
+        parser.parse(msg, null, tc);
+        assertNull(tc.rollbackReason);
+        assertTrue((tc.area.get(0) instanceof CircleArea));
+        CircleArea c = (CircleArea) tc.area.get(0);
+        double longitude = c.getLongitude();
+        double latitude = c.getLatitude();
+    }
+    @Test
     public void type8DAC1FID22_Rectangle() throws IOException
     {
         //String msg = "!AIVDM,1,1,0,A,85M:Ih1KUQVhjAs80e1MJCPP;uR91@:2`00,2*73\r\n";
@@ -751,25 +765,25 @@ public class MessageTest
 
         assertTrue((tc.area.get(1) instanceof PolylineArea));
         PolylineArea p = (PolylineArea) tc.area.get(1);
-        assertEquals(90, p.getAngle1());
-        assertEquals(2000, p.getDistance1());
-        assertEquals(111, p.getAngle2());
-        assertEquals(1500, p.getDistance2());
-        assertEquals(40, p.getAngle3());
-        assertEquals(755, p.getDistance3());
-        assertEquals(150, p.getAngle4());
-        assertEquals(1825, p.getDistance4());
+        assertEquals(90, p.getAngle(0));
+        assertEquals(2000, p.getDistance(0));
+        assertEquals(111, p.getAngle(1));
+        assertEquals(1500, p.getDistance(1));
+        assertEquals(40, p.getAngle(2));
+        assertEquals(755, p.getDistance(2));
+        assertEquals(150, p.getAngle(3));
+        assertEquals(1825, p.getDistance(3));
 
         assertTrue((tc.area.get(2) instanceof PolylineArea));
         PolylineArea p2 = (PolylineArea) tc.area.get(2);
-        assertEquals(31, p2.getAngle1());
-        assertEquals(550, p2.getDistance1());
-        assertEquals(0, p2.getAngle2());
-        assertEquals(0, p2.getDistance2());
-        assertEquals(0, p2.getAngle3());
-        assertEquals(0, p2.getDistance3());
-        assertEquals(0, p2.getAngle4());
-        assertEquals(0, p2.getDistance4());
+        assertEquals(31, p2.getAngle(0));
+        assertEquals(550, p2.getDistance(0));
+        assertEquals(0, p2.getAngle(1));
+        assertEquals(0, p2.getDistance(1));
+        assertEquals(0, p2.getAngle(2));
+        assertEquals(0, p2.getDistance(2));
+        assertEquals(0, p2.getAngle(3));
+        assertEquals(0, p2.getDistance(3));
 
         assertTrue((tc.area.get(3) instanceof AssociatedText));
         AssociatedText t = (AssociatedText) tc.area.get(3);
@@ -803,16 +817,16 @@ public class MessageTest
         assertEquals(41.0+15.5/60.0, c.getLatitude(), 1e-1);
         assertEquals(0, c.getRadius());
 
-        assertTrue((tc.area.get(1) instanceof PolylineArea));
-        PolylineArea p = (PolylineArea) tc.area.get(1);
-        assertEquals(60, p.getAngle1());
-        assertEquals(1200, p.getDistance1());
-        assertEquals(300, p.getAngle2());
-        assertEquals(1200, p.getDistance2());
-        assertEquals(0, p.getAngle3());
-        assertEquals(0, p.getDistance3());
-        assertEquals(0, p.getAngle4());
-        assertEquals(0, p.getDistance4());
+        assertTrue((tc.area.get(1) instanceof PolygonArea));
+        PolygonArea p = (PolygonArea) tc.area.get(1);
+        assertEquals(60, p.getAngle(0));
+        assertEquals(1200, p.getDistance(0));
+        assertEquals(300, p.getAngle(1));
+        assertEquals(1200, p.getDistance(1));
+        assertEquals(0, p.getAngle(2));
+        assertEquals(0, p.getDistance(2));
+        assertEquals(0, p.getAngle(3));
+        assertEquals(0, p.getDistance(3));
     }
     @Test
     public void type9()

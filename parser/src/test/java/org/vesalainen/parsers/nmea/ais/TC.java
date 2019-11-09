@@ -17,6 +17,7 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
+import org.vesalainen.parsers.nmea.ais.areanotice.Area;
 import java.util.ArrayList;
 import java.util.List;
 

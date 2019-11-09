@@ -16,9 +16,18 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
+import java.util.Collection;
+import org.vesalainen.math.Circle;
+import org.vesalainen.math.Polygon;
+import org.vesalainen.math.Sector;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.TalkerId;
+import org.vesalainen.parsers.nmea.ais.areanotice.AssociatedText;
+import org.vesalainen.parsers.nmea.ais.areanotice.CircleArea;
+import org.vesalainen.parsers.nmea.ais.areanotice.PolygonBuilder;
+import org.vesalainen.parsers.nmea.ais.areanotice.PolylineBuilder;
+import org.vesalainen.parsers.nmea.ais.areanotice.SectorArea;
 
 /**
  *
@@ -43,6 +52,12 @@ public final class AISBuilder
     
     public NMEASentence[] build()
     {
+        int length = sb.length();
+        while ((length % 8) != 0)
+        {
+            sb.append('0');
+            length = sb.length();
+        }
         int padding = (6 - sb.length() % 6) % 6;
         integer(padding, 0);
         PayloadParser pp = PayloadParser.getInstance();
@@ -140,6 +155,35 @@ public final class AISBuilder
         {
             sb.append((value>>ii) & 1);
         }
+        return this;
+    }
+    public AISBuilder polygon(Polygon polygon)
+    {
+        PolygonBuilder bldr = new PolygonBuilder();
+        polygon.forEach(bldr::add);
+        bldr.build(this);
+        return this;
+    }
+    public AISBuilder polyline(Polygon polygon)
+    {
+        PolylineBuilder bldr = new PolylineBuilder();
+        polygon.forEach(bldr::add);
+        bldr.build(this);
+        return this;
+    }
+    public AISBuilder circle(Circle circle)
+    {
+        new CircleArea(circle).build(this);
+        return this;
+    }
+    public AISBuilder sector(Sector sector)
+    {
+        new SectorArea(sector).build(this);
+        return this;
+    }
+    public AISBuilder associatedText(String text)
+    {
+        new AssociatedText(text).build(this);
         return this;
     }
     /**
