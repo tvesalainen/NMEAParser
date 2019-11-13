@@ -1433,7 +1433,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
             aisData.setDuration(duration);
         }
     }
-    @Terminal(expression="[01]{90}")
+    @Terminal(expression="[01]{8,90}")
     protected void subArea(CharSequence seq, @ParserContext("aisData") AISObserver aisData)
     {
         aisData.setSubarea(seq);

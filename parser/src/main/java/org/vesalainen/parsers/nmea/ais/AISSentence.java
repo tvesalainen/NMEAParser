@@ -23,6 +23,7 @@ import org.vesalainen.math.Polygon;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import static org.vesalainen.parsers.nmea.ais.CodesForShipType.*;
 import static org.vesalainen.parsers.nmea.ais.MessageTypes.*;
+import org.vesalainen.parsers.nmea.ais.areanotice.Area;
 
 /**
  *
@@ -146,6 +147,23 @@ public class AISSentence
         if (text != null)
         {
             bld.associatedText(text);
+        }
+        return bld.build();
+    }
+    static NMEASentence[] getMsg8(
+            int mmsi,
+            int dac,
+            int linkage,
+            AreaNoticeDescription notice,
+            ZonedDateTime date,
+            int duration,
+            Collection<Area> areas
+            )
+    {
+        AISBuilder bld = binaryBroadcastMessage(mmsi, dac, linkage, notice, date, duration);
+        for (Area area : areas)
+        {
+            area.build(bld);
         }
         return bld.build();
     }

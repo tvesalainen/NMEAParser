@@ -53,7 +53,9 @@
                     <xsd:element name="ais-log" type="aisLogType"/>
                     <xsd:element name="sntp-server" type="sntp-serverType"/>
                     <xsd:element name="compass-corrector" type="compassCorrectorType"/>
+                    <xsd:element name="anchor-manager" type="anchorManagerType"/>
                 </xsd:choice>
+                <xsd:attribute name="dataAccessPort" type="portType"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
@@ -171,6 +173,13 @@
     <xsd:complexType name="sntp-serverType">
         <xsd:attribute name="rootDelay" type="millisType"/>
         <xsd:attribute name="server" type="xsd:string"/>
+    </xsd:complexType>
+    <xsd:complexType name="anchorManagerType">
+        <xsd:attribute name="directory" type="xsd:string" use="required"/>
+        <xsd:attribute name="anchorWeight" type="xsd:unsignedInt" use="required"/>
+        <xsd:attribute name="chainDiameter" type="xsd:unsignedInt" use="required"/>
+        <xsd:attribute name="maxChainLength" type="xsd:unsignedInt" use="required"/>
+        <xsd:attribute name="maxFairleadTension" type="xsd:decimal"/>
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
         <xsd:attribute name="configFile" type="xsd:string" use="required"/>

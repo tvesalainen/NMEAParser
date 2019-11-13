@@ -16,7 +16,6 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import java.util.Collection;
 import org.vesalainen.math.Circle;
 import org.vesalainen.math.Polygon;
 import org.vesalainen.math.Sector;
@@ -69,8 +68,8 @@ public final class AISBuilder
             NMEASentence.Builder builder = NMEASentence.builder(TalkerId.AI, MessageType.VDM);
             builder.add(fragmentCount);
             builder.add(fragment);
-            builder.add();
-            builder.add("A");
+            builder.add('0');
+            builder.add('A');
             int beg = (fragment-1)*56;
             int end = Math.min(fragment*56, payload.length());
             builder.add(payload.substring(beg, end));

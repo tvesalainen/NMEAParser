@@ -17,6 +17,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.math.UnitType;
@@ -77,6 +78,25 @@ public class NMEASentenceTest
         NMEASentence mtw = NMEASentence.mtw(30, UnitType.Celsius);
         parser.parse(mtw.toString(), tc, null);
         assertEquals(30, ss.getFloat("waterTemperature"), 1e-1);
+    }
+    @Test
+    public void testTLL() throws IOException
+    {
+        SimpleStorage ss = new SimpleStorage();
+        NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+        LocalTime now = LocalTime.now();
+        NMEASentence tll = NMEASentence.tll(66, 60.12, 25.45, "test", now, 'T', "ref");
+        parser.parse(tll.toString(), tc, null);
+        //targetNumber c destinationWaypointLocation c targetName c targetTime c targetStatus c referenceTarget"
+        assertEquals(66, ss.getInt("targetNumber"));
+        assertEquals(60.12, ss.getDouble("destinationWaypointLatitude"), 1e-10);
+        assertEquals(25.45, ss.getDouble("destinationWaypointLongitude"), 1e-10);
+        assertEquals("test", ss.getProperty("targetName"));
+        assertEquals(now.getHour(), ss.getProperty("targetHour"));
+        assertEquals(now.getMinute(), ss.getProperty("targetMinute"));
+        assertEquals(now.getSecond(), ss.getFloat("targetSecond"), 1e-10);
+        assertEquals('T', ss.getProperty("targetStatus"));
+        assertEquals("ref", ss.getProperty("referenceTarget"));
     }
     @Test
     public void testTXT() throws IOException

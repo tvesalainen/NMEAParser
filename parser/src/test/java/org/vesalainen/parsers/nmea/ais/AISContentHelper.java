@@ -19,6 +19,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Objects;
 import org.vesalainen.parsers.nmea.ais.AISUtil;
 
 /**
@@ -62,6 +63,37 @@ public class AISContentHelper
         {
             return result + (-1<<l);
         }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 47 * hash + Objects.hashCode(this.content);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        final AISContentHelper other = (AISContentHelper) obj;
+        if (!Objects.equals(this.content, other.content))
+        {
+            return false;
+        }
+        return true;
     }
     /**
      * Return's ais content of nmea sentence(s) with '\\n' suffix
@@ -113,7 +145,10 @@ public class AISContentHelper
         }
         return sb.toString();
     }
-
+    public int getContentLength()
+    {
+        return content.length();
+    }
     public String dumpLen(int... lengths)
     {
         StringBuilder sb = new StringBuilder();
@@ -124,11 +159,25 @@ public class AISContentHelper
             sb.append(index).append('[').append(lengths[ii]).append(']').append(": ");
             if (ii < length-1)
             {
-                sb.append(content.substring(index, index+lengths[ii]));
+                if (content.length() >= index+lengths[ii])
+                {
+                    sb.append(content.substring(index, index+lengths[ii]));
+                }
+                else
+                {
+                    sb.append("...");
+                }
             }
             else
             {
-                sb.append(content.substring(index));
+                if (content.length() >= index)
+                {
+                    sb.append(content.substring(index));
+                }
+                else
+                {
+                    sb.append("...");
+                }
             }
             sb.append('\n');
             index += lengths[ii];

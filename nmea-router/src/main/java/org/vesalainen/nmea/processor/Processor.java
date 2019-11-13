@@ -149,7 +149,7 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                 {
                     info("starting AnchorManager");
                     AnchorManagerType anchorManagerType = (AnchorManagerType) ob;
-                    AnchorManager anchorManager = new AnchorManager(this, anchorManagerType, executor);
+                    AnchorManager anchorManager = new AnchorManager(this, channel, anchorManagerType, executor);
                     processes.add(anchorManager);
                     addNMEAObserver(anchorManager);
                     anchorManager.start("");

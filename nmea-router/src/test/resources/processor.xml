@@ -1,32 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110">
-    <tcp-endpoint name="TCP" port="12345" enable="true" aisFastBoot="true">
+<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110" allDevices="COM4 COM5" dontScan="">
+    <tcp-endpoint port="12345" aisFastBoot="true" name="TCP" enable="true">
         <route prefix="$RA" target="Proc"/>
         <route prefix="$EC" target="Proc"/>
     </tcp-endpoint>
-    <processor name="Proc" enable="true">
-        <true-wind-source/>
-        <tracker directory="c:\\temp" />
-        <compressed-log directory="c:\\temp" properties="latitude longitude"/>
-        <ais-log directory="c:\\temp" maxLogSize="4096" >
-            <ais-monitor refreshStaticData="true" interpolateSeconds="-1" />
-        </ais-log>
-        <compass-corrector 
-            configFile="c:\\temp\\deviation.txt" 
-        />
-        <sntp-server rootDelay="1600" server="pi3media"/>
+    <processor dataAccessPort="10111" name="Proc" enable="true">
         <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>
         <route prefix="$HCHDT" target="Net TCP"/>
+        <route prefix="$IITLL" target="TCP"/>
+        <true-wind-source/>
+        <tracker directory="c:\\temp"/>
+        <compressed-log directory="c:\\temp" properties="latitude longitude"/>
+        <ais-log directory="c:\\temp" maxLogSize="4096"/>
+        <compass-corrector configFile="c:\\temp\\deviation.txt"/>
+        <sntp-server rootDelay="1600" server="pi3media"/>
+        <anchor-manager directory="c:\\temp" anchorWeight="20" chainDiameter="10" maxChainLength="80"/>
     </processor>
-    <multicast-nmea-0183 name="Net" address="224.0.0.3" enable="true">
+    <multicast-nmea-0183 address="224.0.0.3" name="Net" enable="true">
         <route prefix="$GPRMC" target="Proc TCP"/>
         <route prefix="$IIMWV" target="Proc"/>
-        <route prefix="!AI" target="Proc TCP"/>
+        <route prefix="!AIVDM" target="Proc TCP"/>
         <route prefix="$YXXDR" target=""/>
         <route prefix="$GPGLL" target=""/>
         <route prefix="$GPRMB" target=""/>
-        <route prefix="$GPGGA" target=""/>
+        <route prefix="$GPGGA" target="Proc"/>
         <route prefix="$GPZDA" target=""/>
         <route prefix="$GPVTG" target=""/>
         <route prefix="$GPDTM" target=""/>
@@ -36,6 +34,6 @@
         <route prefix="$VH" target=""/>
         <route prefix="$YC" target=""/>
         <route prefix="$VW" target=""/>
-        <route prefix="$SD" target=""/>
+        <route prefix="$SD" target="Proc"/>
     </multicast-nmea-0183>
 </nmea>

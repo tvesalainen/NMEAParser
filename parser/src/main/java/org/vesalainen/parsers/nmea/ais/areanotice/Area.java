@@ -70,10 +70,5 @@ public abstract class Area
         }
         return scale;
     }
-    protected abstract void build(AISBuilder builder);
-    
-
-
-
-
+    public abstract void build(AISBuilder builder);
 }

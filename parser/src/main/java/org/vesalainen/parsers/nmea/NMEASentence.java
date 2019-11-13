@@ -22,7 +22,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.time.LocalTime;
-import java.time.temporal.Temporal;
 import java.util.Locale;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
@@ -38,10 +37,6 @@ import org.vesalainen.util.CharSequences;
 public class NMEASentence
 {
 
-    public static void tll(String trg, double y, double x, String a, LocalTime now, char c, char c0)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
     private ByteBuffer buffer;
     private CharSequence seq;
     /**
@@ -173,11 +168,23 @@ public class NMEASentence
                 .add(CELCIUS)
                 .build();
     }
+    /**
+     * 
+     * @param target Target Number (0-99)
+     * @param latitude Target Latitude
+     * @param longitude Target Longitude
+     * @param name Target name
+     * @param time UTC of data
+     * @param status Status (L=lost, Q=acquisition, T=tracking)
+     * @param referenceTarget R= reference target; null (,,)= otherwise
+     * @return 
+     */
     public static NMEASentence tll(int target, double latitude, double longitude, String name, LocalTime time, char status, String referenceTarget)
     {
-        return builder(U0, TLL)
+        return builder(II, TLL)
                 .add(target)
                 .add(latitude, longitude)
+                .add(name)
                 .add(time)
                 .add(status)
                 .add(referenceTarget)
@@ -426,9 +433,13 @@ public class NMEASentence
         }
         public Builder add(double latitude, double longitude)
         {
-            add(latitude);
+            double alat = Math.abs(latitude);
+            double alon = Math.abs(longitude);
+            int lat = (int) alat;
+            int lon = (int) alon;
+            add(String.format("%02d%07.4f", lat, (alat-lat)*60));
             add(latitude>0?'N':'S');
-            add(longitude);
+            add(String.format("%03d%07.4f", lon, (alon-lon)*60));
             add(longitude>0?'E':'W');
             return this;
         }

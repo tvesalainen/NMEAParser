@@ -17,28 +17,17 @@
 package org.vesalainen.nmea.processor;
 
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.time.Clock;
-import java.util.logging.Level;
-import static org.apache.commons.net.ntp.NtpV3Packet.*;
-import org.apache.commons.net.ntp.TimeStamp;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
-import org.vesalainen.code.PropertySetter;
-import org.vesalainen.net.sntp.NtpV4Packet;
 import org.vesalainen.net.sntp.ReferenceClock;
 import org.vesalainen.net.sntp.SNTPServer;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAClock;
-import org.vesalainen.parsers.nmea.time.GPSClock;
-import org.vesalainen.util.Transactional;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
-import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
