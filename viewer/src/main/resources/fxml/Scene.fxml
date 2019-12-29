@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="200" prefWidth="320" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="org.vesalainen.nmea.viewer.FXMLController">
+    <children>
+        <Button fx:id="button" layoutX="126" layoutY="90" onAction="#handleButtonAction" text="Click Me!" />
+        <Label fx:id="label" layoutX="126" layoutY="120" minHeight="16" maxHeight="20" minWidth="69" text="Label" />
+      <ToggleButton layoutX="70.0" layoutY="29.0" mnemonicParsing="false" text="Toklaa" textAlignment="CENTER" textFill="#e81212" />
+    </children>
+</AnchorPane>
