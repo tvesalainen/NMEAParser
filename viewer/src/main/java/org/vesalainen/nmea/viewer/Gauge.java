@@ -17,8 +17,6 @@
 package org.vesalainen.nmea.viewer;
 
 import java.io.IOException;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
@@ -31,7 +29,7 @@ import static org.vesalainen.nmea.viewer.PropertyTitleConverter.PROPERTY_TITLE_C
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class Gauge extends GridPane implements ViewerDataSourceConsumer
+public class Gauge extends GridPane
 {
 
     private final StringProperty propertyProperty = new SimpleStringProperty();
@@ -53,7 +51,6 @@ public class Gauge extends GridPane implements ViewerDataSourceConsumer
     @FXML private Label title;
     @FXML private Label unit;
     @FXML private Label value;
-    private ViewerDataSource dataSource;
 
     public Gauge()
     {
@@ -64,7 +61,6 @@ public class Gauge extends GridPane implements ViewerDataSourceConsumer
             loader.setController(this);
             loader.load();
             title.textProperty().bindBidirectional(propertyProperty, PROPERTY_TITLE_CONVERTER);
-            dataSource.register(propertyProperty.get(), value.textProperty(), unit.textProperty());
         }
         catch (IOException ex)
         {
@@ -72,10 +68,4 @@ public class Gauge extends GridPane implements ViewerDataSourceConsumer
         }
     }
 
-    @Override
-    public void accept(ViewerDataSource dataSource)
-    {
-        this.dataSource = dataSource;
-    }
-    
 }

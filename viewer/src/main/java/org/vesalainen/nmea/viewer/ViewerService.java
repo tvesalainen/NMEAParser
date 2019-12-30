@@ -16,11 +16,19 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.property.StringProperty;
+
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class ViewerService implements ViewerDataSource
 {
+
+    @Override
+    public void register(String property, StringProperty value, StringProperty unit)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

@@ -5,7 +5,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.vesalainen.nmea.viewer.ViewerController">
   <tabs>
     <Tab text="Sailing">
          <content>
@@ -26,9 +26,23 @@
             </GridPane>
          </content>
     </Tab>
-    <Tab text="Untitled Tab 2">
+    <Tab text="Preferences">
       <content>
-        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <Label layoutY="4.0" text="Host" />
+                  <TextField fx:id="host" layoutX="42.0" layoutY="-1.0" promptText="IP-address or hostname">
+                     <tooltip>
+                        <Tooltip text="Hostname or IP-address. Address can be also multicast or broadcast address&#9;" />
+                     </tooltip>
+                  </TextField>
+                  <Label layoutY="36.0" text="Port" />
+                  <TextField fx:id="port" layoutX="42.0" layoutY="31.0" promptText="Port number" text="10110">
+                     <tooltip>
+                        <Tooltip text="Host port number." />
+                     </tooltip>
+                  </TextField>
+               </children></AnchorPane>
       </content>
     </Tab>
   </tabs>

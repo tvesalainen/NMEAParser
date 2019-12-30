@@ -16,8 +16,12 @@ public class MainApp extends Application
     @Override
     public void start(Stage stage) throws Exception
     {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/viewer.fxml"));
-
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/viewer.fxml"));
+        Parent root = loader.load();
+        ViewerController controller = loader.getController();
+        ViewerPreferences preferences = new ViewerPreferences();
+        controller.bindPreferences(preferences);
+        
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
         fontSize.bind(scene.widthProperty().add(scene.heightProperty()).divide(80));

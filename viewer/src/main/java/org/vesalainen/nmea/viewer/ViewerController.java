@@ -16,12 +16,29 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import java.util.function.Consumer;
+import java.net.URL;
+import java.util.ResourceBundle;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.TextField;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public interface ViewerDataSourceConsumer extends Consumer<ViewerDataSource>
+public class ViewerController implements Initializable
 {
+    @FXML TextField host;
+    @FXML TextField port;
+    
+    @Override
+    public void initialize(URL location, ResourceBundle resources)
+    {
+        
+    }
+    public void bindPreferences(ViewerPreferences preferences)
+    {
+        preferences.bindString("host", "", host);
+        preferences.bindInteger("port", 0, port);
+    }
 }
