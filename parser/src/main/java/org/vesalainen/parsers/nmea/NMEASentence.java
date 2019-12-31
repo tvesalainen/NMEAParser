@@ -101,8 +101,8 @@ public class NMEASentence
     public static NMEASentence dpt(float meters, float offset, UnitType unit)
     {
         return builder(SD, DPT)
-                .add(unit.convertTo(meters, Meter))
-                .add(unit.convertTo(offset, Meter))
+                .add(unit.convertTo(meters, METER))
+                .add(unit.convertTo(offset, METER))
                 .build();
     }
     /**
@@ -113,11 +113,11 @@ public class NMEASentence
     public static NMEASentence dbt(float depth, UnitType unit)
     {
         return builder(SD, DBT)
-                .add(unit.convertTo(depth, Foot))
+                .add(unit.convertTo(depth, FOOT))
                 .add(FT)
-                .add(unit.convertTo(depth, Meter))
+                .add(unit.convertTo(depth, METER))
                 .add(M)
-                .add(unit.convertTo(depth, Fathom))
+                .add(unit.convertTo(depth, FATHOM))
                 .add(FATH)
                 .build();
     }
@@ -131,7 +131,7 @@ public class NMEASentence
     {
         return builder(VW, VHW)
                 .add().add().add().add()
-                .add(unit.convertTo(speed, Knot))
+                .add(unit.convertTo(speed, KNOT))
                 .add(KTS)
                 .add().add()
                 .build();
@@ -149,7 +149,7 @@ public class NMEASentence
         return builder(UP, MWV)
                 .add(windAngle)
                 .add(trueWind ? 'T' : 'R')
-                .add(unit.convertTo(windSpeed, Knot))
+                .add(unit.convertTo(windSpeed, KNOT))
                 .add(KTS)
                 .add('A')
                 .build();
@@ -164,7 +164,7 @@ public class NMEASentence
     public static NMEASentence mtw(float temperature, UnitType unit)
     {
         return builder(YC, MTW)
-                .add(unit.convertTo(temperature, Celsius))
+                .add(unit.convertTo(temperature, CELSIUS))
                 .add(CELCIUS)
                 .build();
     }

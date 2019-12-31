@@ -51,7 +51,7 @@ import org.vesalainen.util.navi.Location;
  */
 public class CompassCalibrator extends JavaLogging
 {
-    private static final double DISTANCE_TOLERANCE = UnitType.convert(10, Meter, NM);
+    private static final double DISTANCE_TOLERANCE = UnitType.convert(10, METER, NAUTICAL_MILE);
     private static final double DEGREE_TOLERANCE = 6;
     private static final long TIME_TOLERANCE = 2000;
     private Path path;
@@ -128,7 +128,7 @@ public class CompassCalibrator extends JavaLogging
         double aisLon = ais.getLongitude(aisIns);
         double maxLength = ais.getMaxLength(aisIns);
         double distanceToAis = Navis.distance(arpaIns.ownLat, arpaIns.ownLon, aisLat, aisLon);
-        double distanceToAisMeters = UnitType.convert(distanceToAis, NM, Meter);
+        double distanceToAisMeters = UnitType.convert(distanceToAis, NAUTICAL_MILE, METER);
         double maxAngle = 2*Math.toDegrees(Math.atan2(maxLength/2, distanceToAisMeters));
         if (maxAngle > DEGREE_TOLERANCE)
         {
@@ -137,7 +137,7 @@ public class CompassCalibrator extends JavaLogging
         }
         if (diff(distanceToAis, arpaIns.targetDistance) > DISTANCE_TOLERANCE)
         {
-            fine("%s too far %.0fm %.0fm", ais, UnitType.convert(distanceToAis, NM, Meter), UnitType.convert(arpaIns.targetDistance, NM, Meter));
+            fine("%s too far %.0fm %.0fm", ais, UnitType.convert(distanceToAis, NAUTICAL_MILE, METER), UnitType.convert(arpaIns.targetDistance, NAUTICAL_MILE, METER));
             return;
         }
         double bearingToAis = Navis.bearing(arpaIns.ownLat, arpaIns.ownLon, aisLat, aisLon);

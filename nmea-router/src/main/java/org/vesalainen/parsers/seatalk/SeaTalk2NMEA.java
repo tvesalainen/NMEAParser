@@ -127,7 +127,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         boolean defect = (z & 4) == 4;
         if (!defect)
         {
-            NMEASentence dbt = NMEASentence.dpt(xx/10, 0, UnitType.Foot);
+            NMEASentence dbt = NMEASentence.dpt(xx/10, 0, UnitType.FOOT);
             dbt.writeTo(out);
         }
     }
@@ -195,7 +195,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         if (!haveBetterVHW)
         {
             float knots = (float)xx/10;
-            NMEASentence vhw = NMEASentence.vhw(knots, UnitType.Knot);
+            NMEASentence vhw = NMEASentence.vhw(knots, UnitType.KNOT);
             vhw.writeTo(out);
         }
     }
@@ -209,7 +209,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         debug("m23");
         if (!haveBetterMTW)
         {
-            NMEASentence mtw = NMEASentence.mtw(c, UnitType.Celsius);
+            NMEASentence mtw = NMEASentence.mtw(c, UnitType.CELSIUS);
             mtw.writeTo(out);
         }
     }
@@ -232,7 +232,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         debug("m26");
         float knots = (float)xx/100;
         haveBetterVHW = true;
-        NMEASentence vhw = NMEASentence.vhw(knots, UnitType.Knot);
+        NMEASentence vhw = NMEASentence.vhw(knots, UnitType.KNOT);
         vhw.writeTo(out);
     }
     @Rule("'\\x27\\x01' integer")
@@ -244,7 +244,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         debug("m27");
         haveBetterMTW = true;
         float temp = (float)(xx-100)/10;
-        NMEASentence mtw = NMEASentence.mtw(temp, UnitType.Celsius);
+        NMEASentence mtw = NMEASentence.mtw(temp, UnitType.CELSIUS);
         mtw.writeTo(out);
     }
     @Rule("'\\x30\\x00' b")

@@ -39,16 +39,16 @@ public class Converter
     
     public static float toKnots(float velocity, char unit)
     {
-        return (float) getSpeedType(unit).convertTo(velocity, Knot);
+        return (float) getSpeedType(unit).convertTo(velocity, KNOT);
     }
     public static UnitType getSpeedType(char unit)
     {
         switch (unit)
         {
             case KTS:
-                return Knot;
+                return KNOT;
             case KMH:
-                return UnitType.KMH;
+                return UnitType.KILO_METERS_PER_HOUR;
             default:
                 throw new IllegalArgumentException(unit+" unknown expected N/M/K");
         }
@@ -58,11 +58,11 @@ public class Converter
         switch (unit)
         {
             case M:
-                return Meter;
+                return METER;
             case FATH:
-                return UnitType.Fathom;
+                return UnitType.FATHOM;
             case FT:
-                return UnitType.Foot;
+                return UnitType.FOOT;
             default:
                 throw new IllegalArgumentException(unit+" unknown expected N/M/K");
         }
@@ -72,7 +72,7 @@ public class Converter
         switch (unit)
         {
             case CELCIUS:
-                return UnitType.Celsius;
+                return UnitType.CELSIUS;
             default:
                 throw new IllegalArgumentException(unit+" unknown expected N/M/K");
         }
@@ -82,14 +82,14 @@ public class Converter
         switch (unit)
         {
             case N:
-                return UnitType.NM;
+                return UnitType.NAUTICAL_MILE;
             default:
                 throw new IllegalArgumentException(unit+" unknown expected N/M/K");
         }
     }
     public static float toMetersPerSecond(float velocity, char unit)
     {
-        return (float) getSpeedType(unit).convertTo(velocity, MS);
+        return (float) getSpeedType(unit).convertTo(velocity, METERS_PER_SECOND);
     }
 
     public static final char Left = 'L';
@@ -109,17 +109,17 @@ public class Converter
 
     public static float toCelsius(float temp, char unit)
     {
-        return (float) getTempType(unit).convertTo(temp, UnitType.Celsius);
+        return (float) getTempType(unit).convertTo(temp, UnitType.CELSIUS);
     }
 
     public static float toMeters(float depth, char unit)
     {
-        return (float) getDepthType(unit).convertTo(depth, Meter);
+        return (float) getDepthType(unit).convertTo(depth, METER);
     }
 
     public static float toNauticalMiles(float dist, char unit)
     {
-        return (float) getDistanceType(unit).convertTo(dist, UnitType.NM);
+        return (float) getDistanceType(unit).convertTo(dist, UnitType.NAUTICAL_MILE);
     }
 
 }

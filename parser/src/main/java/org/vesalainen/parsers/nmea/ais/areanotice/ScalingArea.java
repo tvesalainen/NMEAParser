@@ -35,14 +35,14 @@ public class ScalingArea extends Area
     {
         this.type = type;
         this.scale = scale(bits, values);
-        this.pow = MoreMath.pow(10, scale);
+        this.pow = MoreMath.power(10, scale);
     }
 
     public ScalingArea(CharSequence seq)
     {
         this.type = Primitives.parseInt(seq, 2, 0, 3);
         this.scale = Primitives.parseInt(seq, 2, 3, 5);
-        this.pow = MoreMath.pow(10, scale);
+        this.pow = MoreMath.power(10, scale);
     }
 
     public void build(AISBuilder builder)

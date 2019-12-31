@@ -66,10 +66,10 @@ class PolyArea extends ScalingArea
         int newScale = Stats.max(scale, scale(11, distance, data[1], data[3], data[5], data[7]));
         for (int ii = 0; ii < 4; ii++)
         {
-            data[2 * ii + 1] *= MoreMath.pow(10, newScale - scale);
+            data[2 * ii + 1] *= MoreMath.power(10, newScale - scale);
         }
         this.scale = newScale;
-        this.pow = MoreMath.pow(10, scale);
+        this.pow = MoreMath.power(10, scale);
         data[2 * index] = angle;
         data[2 * index + 1] = distance / pow;
     }

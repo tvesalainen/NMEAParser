@@ -148,7 +148,7 @@ public abstract class AbstractProperties
         return Double.MAX_VALUE;
     }
     /**
-     * Returns NMEA property category or Miscelleneous if property not found.
+     * Returns NMEA property category or MISCELLENEOUS if property not found.
      * @param property
      * @return 
      */
@@ -159,13 +159,13 @@ public abstract class AbstractProperties
         {
             return prop.nmeaCategory;
         }
-        return NMEACategory.Miscelleneous;
+        return NMEACategory.MISCELLENEOUS;
     }
     protected static class Prop
     {
         private final String property;
-        private UnitType unit = UnitType.Unitless;
-        private NMEACategory nmeaCategory = NMEACategory.Miscelleneous;
+        private UnitType unit = UnitType.UNITLESS;
+        private NMEACategory nmeaCategory = NMEACategory.MISCELLENEOUS;
         private Class<?> type;
         private double min = -Double.MAX_VALUE;
         private double max = Double.MAX_VALUE;

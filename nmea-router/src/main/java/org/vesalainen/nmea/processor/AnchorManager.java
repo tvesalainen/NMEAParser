@@ -54,7 +54,6 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
     private static final String ANCHOR_WATCH_FILENAME = ANCHOR_WATCH_NAME+".ser";
     private static final double DEFAULT_MAX_FAIRLEAD_TENSION = 2000;    // N
     private static final long DEPTH_EXPIRES = 100000;    // milli seconds
-    private static final float KNOTS_TO_METERS_PER_SECOND = 1852F/3600F;
     private static final float MAX_SPEED = 2F;
     private static final long REFRESH_PERIOD = 60000;
     @Property private Clock clock;
@@ -190,30 +189,40 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
         {
             if (can)
             {
-                config("start anchoring");
-                anchorWatch = new AnchorWatch();
-                anchorWatch.addWatcher(nmeaManager);
-                anchorWatch.setChainLength((int) horizontalScope);
-                processor.setData(ANCHOR_WATCH_NAME, anchorWatch);
+                startAnchoring();
             }
             else
             {
-                nmeaManager.stop();
-                processor.setData(ANCHOR_WATCH_NAME, null);
-                area = null;
-                anchorWatch = null;
-                try
-                {
-                    Files.deleteIfExists(path);
-                }
-                catch (IOException ex)
-                {
-                    log(SEVERE, ex, "deleting%s", path);
-                }
-                config("stop anchoring");
+                stopAnchoring();
             }
             anchoring = can;
         }
+    }
+
+    private void startAnchoring()
+    {
+        config("start anchoring");
+        anchorWatch = new AnchorWatch();
+        anchorWatch.addWatcher(nmeaManager);
+        anchorWatch.setChainLength((int) horizontalScope);
+        processor.setData(ANCHOR_WATCH_NAME, anchorWatch);
+    }
+
+    private void stopAnchoring()
+    {
+        nmeaManager.stop();
+        processor.setData(ANCHOR_WATCH_NAME, null);
+        area = null;
+        anchorWatch = null;
+        try
+        {
+            Files.deleteIfExists(path);
+        }
+        catch (IOException ex)
+        {
+            log(SEVERE, ex, "deleting%s", path);
+        }
+        config("stop anchoring");
     }
 
     private class NMEAManager implements Watcher, Serializable

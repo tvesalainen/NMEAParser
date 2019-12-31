@@ -82,7 +82,7 @@ public class TrueWindSource extends AbstractSampleConsumer
             finest("%s", trueWind);
             int trueAngle = (int) trueWind.getTrueAngle();
             double trueSpeed = trueWind.getTrueSpeed();
-            NMEASentence mwv = NMEASentence.mwv(trueAngle, trueSpeed, UnitType.Knot, true);
+            NMEASentence mwv = NMEASentence.mwv(trueAngle, trueSpeed, UnitType.KNOT, true);
             channel.write(mwv.getByteBuffer());
             finest("send MWV trueAngle=%d trueSpeed=%f", trueAngle, trueSpeed);
         }

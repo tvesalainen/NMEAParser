@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Timo Vesalainen <timo.vesalainen@iki.fi>
+ * Copyright (C) 2019 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,26 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.parsers.nmea;
+package org.vesalainen.nmea.processor.util;
+
+import java.nio.file.Paths;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public enum NMEACategory
+public class CompressedLogReaderT
 {
-    WIND,
-    BEARING,
-    DEPTH,
-    SPEED,
-    DISTANCE,
-    COORDINATE,
-    WAYPOINT,
-    GPS,
-    TEMPERATURE,
-    TURN,
-    RPM,
-    ATTITUDE,
-    ACCELERATION,
-    MISCELLENEOUS
+    
+    public CompressedLogReaderT()
+    {
+    }
+
+    @Test
+    public void test0()
+    {
+        //CompressedLogReader.readTransactional(Paths.get("c:\\temp"), this);
+    }
+    
 }

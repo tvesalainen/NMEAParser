@@ -11,3 +11,5 @@ doc-files/
 /nmea-router/target/
 /nmea-router/nbproject/
 /parser/nbproject/
+/viewer/target/
+/viewer/nbproject/

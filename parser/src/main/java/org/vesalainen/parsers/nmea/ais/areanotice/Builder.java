@@ -53,7 +53,7 @@ abstract class Builder<S extends Area, N extends PolyArea>
                 list.add(current);
                 index = 0;
             }
-            current.set(index, (int) Math.round(Navis.bearing(this.latitude, this.longitude, latitude, longitude)), (int) Math.round(UnitType.convert(Navis.distance(this.latitude, this.longitude, latitude, longitude), UnitType.NM, UnitType.Meter)));
+            current.set(index, (int) Math.round(Navis.bearing(this.latitude, this.longitude, latitude, longitude)), (int) Math.round(UnitType.convert(Navis.distance(this.latitude, this.longitude, latitude, longitude), UnitType.NAUTICAL_MILE, UnitType.METER)));
             index++;
         }
         this.longitude = longitude;
