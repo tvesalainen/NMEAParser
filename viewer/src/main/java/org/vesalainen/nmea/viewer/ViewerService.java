@@ -16,7 +16,10 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import java.util.Set;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableMap;
+import javafx.scene.Node;
 
 /**
  *
@@ -24,6 +27,11 @@ import javafx.beans.property.StringProperty;
  */
 public class ViewerService implements ViewerDataSource
 {
+
+    ViewerService(Set<Node> lookupAll)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public void register(String property, StringProperty value, StringProperty unit)

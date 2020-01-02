@@ -7,7 +7,7 @@
 
 <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.vesalainen.nmea.viewer.ViewerController">
   <tabs>
-    <Tab text="Sailing">
+    <Tab text="%sailingTab">
          <content>
             <GridPane>
               <columnConstraints>
@@ -26,24 +26,38 @@
             </GridPane>
          </content>
     </Tab>
-    <Tab text="Preferences">
-      <content>
-        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-               <children>
-                  <Label layoutY="4.0" text="Host" />
-                  <TextField fx:id="host" layoutX="42.0" layoutY="-1.0" promptText="IP-address or hostname">
-                     <tooltip>
-                        <Tooltip text="Hostname or IP-address. Address can be also multicast or broadcast address&#9;" />
-                     </tooltip>
-                  </TextField>
-                  <Label layoutY="36.0" text="Port" />
-                  <TextField fx:id="port" layoutX="42.0" layoutY="31.0" promptText="Port number" text="10110">
-                     <tooltip>
-                        <Tooltip text="Host port number." />
-                     </tooltip>
-                  </TextField>
-               </children></AnchorPane>
-      </content>
+    <Tab text="%preferencesTab">
+         <content>
+            <ScrollPane hbarPolicy="NEVER" prefHeight="200.0" prefWidth="200.0">
+               <content>
+                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="369.0" prefWidth="585.0">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="301.0" minWidth="10.0" prefWidth="140.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="471.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%host" />
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%port" GridPane.rowIndex="1" />
+                        <TextField fx:id="host" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%host" GridPane.columnIndex="1" />
+                        <TextField fx:id="port" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%depthUnit" GridPane.rowIndex="2" />
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%speedUnit" GridPane.rowIndex="3" />
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%temperatureUnit" GridPane.rowIndex="4" />
+                        <ComboBox fx:id="depthUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%depthUnit" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <ComboBox fx:id="speedUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%speedUnit" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <ComboBox fx:id="temperatureUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%temperatureUnit" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                     </children>
+                  </GridPane>
+               </content>
+            </ScrollPane>
+         </content>
     </Tab>
   </tabs>
 </TabPane>

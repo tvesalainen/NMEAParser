@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 import javafx.beans.binding.Binding;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.collections.FXCollections;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.util.StringConverter;
@@ -29,7 +32,9 @@ import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.FloatStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import javafx.util.converter.LongStringConverter;
+import org.vesalainen.fx.EnumStringConverter;
 import org.vesalainen.fx.PreferencesBindings;
+import org.vesalainen.math.UnitType;
 
 /**
  *
@@ -83,6 +88,13 @@ public class ViewerPreferences
         bindingPreferences.bindLongBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createLongBinding(key, def));
     }
+    public <E extends Enum<E>> void bindCombo(String key, ComboBox<E> combo, StringConverter<E> converter, E... values)
+    {
+        combo.setItems(FXCollections.observableArrayList(values));
+        combo.setConverter(converter);
+        bindingPreferences.bindEnumBiDirectional(key, values[0], combo.valueProperty());
+        bindings.put(key, bindingPreferences.createEnumBinding(key, values[0]));
+    }
     public String getString(String key)
     {
         return (String) get(key).getValue();
@@ -124,4 +136,5 @@ public class ViewerPreferences
         textField.textFormatterProperty().set(new TextFormatter<>(converter));
         return (TextFormatter<T>) textField.textFormatterProperty().get();
     }
+
 }

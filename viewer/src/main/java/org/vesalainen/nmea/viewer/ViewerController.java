@@ -20,7 +20,12 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import org.vesalainen.fx.EnumStringConverter;
+import org.vesalainen.fx.EnumTitleConverter;
+import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.*;
 
 /**
  *
@@ -30,6 +35,9 @@ public class ViewerController implements Initializable
 {
     @FXML TextField host;
     @FXML TextField port;
+    @FXML ComboBox<UnitType> depthUnit;
+    @FXML ComboBox<UnitType> speedUnit;
+    @FXML ComboBox<UnitType> temperatureUnit;
     
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -40,5 +48,9 @@ public class ViewerController implements Initializable
     {
         preferences.bindString("host", "", host);
         preferences.bindInteger("port", 0, port);
+        EnumTitleConverter converter = new EnumTitleConverter<>(UnitType.class);
+        preferences.bindCombo("depthUnit", depthUnit, converter, METER, FOOT, FATHOM);
+        preferences.bindCombo("speedUnit", speedUnit, converter, KNOT, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
+        preferences.bindCombo("temperatureUnit", temperatureUnit, converter, CELSIUS, FAHRENHEIT);
     }
 }
