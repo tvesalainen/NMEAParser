@@ -173,7 +173,7 @@ public class NMEASampler extends AbstractPropertySetter implements Runnable
     }
 
     @Override
-    public final String[] getPrefixes()
+    public final String[] getProperties()
     {
         return properties.toArray(new String[properties.size()]);
     }
