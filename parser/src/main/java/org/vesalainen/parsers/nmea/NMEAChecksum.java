@@ -17,6 +17,7 @@
 
 package org.vesalainen.parsers.nmea;
 
+import java.nio.ByteBuffer;
 import java.util.zip.Checksum;
 import org.vesalainen.parser.util.InputReader;
 
@@ -77,6 +78,10 @@ public class NMEAChecksum implements Checksum, CharSequence
         lastInputEnd = end;
     }
     */
+    public void update(byte[] b)
+    {
+        update(b, 0, b.length);
+    }
     @Override
     public void update(byte[] b, int off, int len)
     {
@@ -119,6 +124,14 @@ public class NMEAChecksum implements Checksum, CharSequence
         arr[offset+2] = toHex(value&0xf);
         arr[offset+3] = '\r';
         arr[offset+4] = '\n';
+    }
+    public void fillSuffix(ByteBuffer bb)
+    {
+        bb.put((byte)'*');
+        bb.put(toHex(value>>4));
+        bb.put(toHex(value&0xf));
+        bb.put((byte)'\r');
+        bb.put((byte)'\n');
     }
     /**
      * returns 5 char suffix

@@ -47,7 +47,7 @@ public class NMEASentenceTest
     {
         SimpleStorage ss = new SimpleStorage();
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-        NMEASentence dbt = NMEASentence.dbt(15, UnitType.Meter);
+        NMEASentence dbt = NMEASentence.dbt(15, UnitType.METER);
         parser.parse(dbt.toString(), tc, null);
         assertEquals(15, ss.getFloat("depthBelowTransducer"), 1e-2);
     }    
@@ -56,7 +56,7 @@ public class NMEASentenceTest
     {
         SimpleStorage ss = new SimpleStorage();
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-        NMEASentence vhw = NMEASentence.vhw(5.1, UnitType.Knot);
+        NMEASentence vhw = NMEASentence.vhw(5.1, UnitType.KNOT);
         parser.parse(vhw.toString(), tc, null);
         assertEquals(5.1, ss.getFloat("waterSpeed"), 1e-1);
     }
@@ -65,9 +65,9 @@ public class NMEASentenceTest
     {
         SimpleStorage ss = new SimpleStorage();
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-        NMEASentence mwv = NMEASentence.mwv(15, 15, UnitType.MS, true);
+        NMEASentence mwv = NMEASentence.mwv(15, 17, UnitType.METERS_PER_SECOND, true);
         parser.parse(mwv.toString(), tc, null);
-        assertEquals(15, ss.getFloat("windSpeed"), 1e-1);
+        assertEquals(17, ss.getFloat("windSpeed"), 1e-1);
         assertEquals(15, ss.getFloat("trueWindAngle"), 1e-1);
     }
     @Test
@@ -75,7 +75,7 @@ public class NMEASentenceTest
     {
         SimpleStorage ss = new SimpleStorage();
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-        NMEASentence mtw = NMEASentence.mtw(30, UnitType.Celsius);
+        NMEASentence mtw = NMEASentence.mtw(30, UnitType.CELSIUS);
         parser.parse(mtw.toString(), tc, null);
         assertEquals(30, ss.getFloat("waterTemperature"), 1e-1);
     }
@@ -119,13 +119,6 @@ public class NMEASentenceTest
     {
         String exp = "$PICOA,08,90,TXF,*1F\r\n";
         NMEASentence picoa = NMEASentence.builder("$PICOA,08,90,TXF,").build();
-        assertEquals(exp, picoa.toString());
-    }
-    @Test
-    public void testConstructor() throws IOException
-    {
-        String exp = "$PICOA,08,90,TXF,*1F\r\n";
-        NMEASentence picoa = new NMEASentence(exp);
         assertEquals(exp, picoa.toString());
     }
 }

@@ -106,16 +106,30 @@ public abstract class AbstractProperties
         return map.containsKey(property);
     }
     /**
-     * Returns NMEA property type 
+     * Returns NMEA property unit
      * @param property
      * @return 
      */
-    public UnitType getType(String property)
+    public UnitType getUnit(String property)
     {
         Prop prop = map.get(property);
         if (prop != null)
         {
             return prop.unit;
+        }
+        return null;
+    }
+    /**
+     * Returns NMEA property type
+     * @param property
+     * @return 
+     */
+    public Class<?> getType(String property)
+    {
+        Prop prop = map.get(property);
+        if (prop != null)
+        {
+            return prop.type;
         }
         return null;
     }
