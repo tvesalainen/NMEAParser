@@ -19,7 +19,6 @@ package org.vesalainen.parsers.nmea;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ByteChannel;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;

@@ -19,8 +19,6 @@ package org.vesalainen.nmea.viewer;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.beans.binding.Binding;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -32,9 +30,7 @@ import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.FloatStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import javafx.util.converter.LongStringConverter;
-import org.vesalainen.fx.EnumStringConverter;
 import org.vesalainen.fx.PreferencesBindings;
-import org.vesalainen.math.UnitType;
 
 /**
  *

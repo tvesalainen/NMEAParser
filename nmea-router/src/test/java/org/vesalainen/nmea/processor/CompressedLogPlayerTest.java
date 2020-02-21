@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Timo Vesalainen <timo.vesalainen@iki.fi>
+ * Copyright (C) 2020 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,17 +14,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.viewer;
+package org.vesalainen.nmea.processor;
 
-import javafx.beans.property.StringProperty;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.junit.Test;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public interface ViewerDataSource
+public class CompressedLogPlayerTest
 {
+    
+    public CompressedLogPlayerTest()
+    {
+    }
 
-    void register(String property, StringProperty value, StringProperty unit);
+    @Test
+    public void test() throws IOException
+    {
+        Path dir = Paths.get("src\\test\\resources");
+        dir = dir.toAbsolutePath();
+        try (CompressedLogPlayer log = CompressedLogPlayer.open("224.0.0.3", 10110, Files.list(dir).filter((p)->p.getFileName().toString().endsWith(".mea"))))
+        {
+            
+        }
+    }
     
 }

@@ -15,6 +15,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 public class MainApp extends Application
 {
@@ -23,17 +24,27 @@ public class MainApp extends Application
     private ViewerController controller;
     private ViewerService service;
     private ResourceBundle bundle;
-    
+    private CachedScheduledThreadPool executor;
+
+    @Override
+    public void init() throws Exception
+    {
+        executor = new CachedScheduledThreadPool();
+    }
+
     @Override
     public void start(Stage stage) throws Exception
     {
-        bundle = ResourceBundle.getBundle(I18n.class.getName(), Locale.getDefault());
+        Locale locale = Locale.getDefault();
+        bundle = ResourceBundle.getBundle(I18n.class.getName(), locale);
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/viewer.fxml"), bundle);
         Parent root = loader.load();
         controller = loader.getController();
         preferences = new ViewerPreferences();
         controller.bindPreferences(preferences);
-        service = new ViewerService(root.lookupAll(".gauge"));
+        service = new ViewerService(executor, preferences, locale);
+        service.register(root.lookupAll(".gauge"));
+        service.start();
         
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
@@ -42,6 +53,13 @@ public class MainApp extends Application
         stage.setTitle("NMEA Viewer");
         stage.setScene(scene);
         stage.show();
+    }
+
+    @Override
+    public void stop() throws Exception
+    {
+        service.stop();
+        executor.shutdownNow();
     }
 
     /**

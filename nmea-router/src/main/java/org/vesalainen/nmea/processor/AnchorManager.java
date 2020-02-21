@@ -260,7 +260,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
         public void stop()
         {
             config("stop TLL");
-            tll = NMEASentence.tll(0, estimated.getY(), estimated.getX(), "Anchor", LocalTime.now(clock), 'L', "");
+            tll = NMEASentence.tll(0, estimated.getY(), estimated.getX(), "Anchor", clock, 'L', "");
             transmit();
             tll = null;
         }
@@ -291,7 +291,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
         public void estimated(Circle estimated)
         {
             char status = tll == null ? 'Q' : 'T';
-            tll = NMEASentence.tll(0, estimated.getY(), estimated.getX(), "Anchor", LocalTime.now(clock), status, "");
+            tll = NMEASentence.tll(0, estimated.getY(), estimated.getX(), "Anchor", clock, status, "");
             transmit();
             this.estimated = estimated;
         }

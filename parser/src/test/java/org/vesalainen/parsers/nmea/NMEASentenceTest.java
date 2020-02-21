@@ -17,7 +17,10 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalTime;
+import static java.time.ZoneOffset.UTC;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.vesalainen.math.UnitType;
@@ -35,6 +38,21 @@ public class NMEASentenceTest
 
     @Test
     public void testRMC() throws IOException
+    {
+        SimpleStorage ss = new SimpleStorage();
+        NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+        Clock clock = Clock.fixed(Instant.now(), UTC);
+        LocalTime now = LocalTime.now(clock);
+        NMEASentence rmc = NMEASentence.rmc(clock, 60, 25, 5, 90, 14);
+        parser.parse(rmc.toString(), tc, null);
+        assertEquals(60, ss.getDouble("latitude"), 1e-5);
+        assertEquals(25, ss.getDouble("longitude"), 1e-5);
+        assertEquals(5, ss.getFloat("speedOverGround"), 1e-5);
+        assertEquals(90, ss.getFloat("trackMadeGood"), 1e-5);
+        assertEquals(14, ss.getFloat("magneticVariation"), 1e-5);
+    }
+    @Test
+    public void testRMCVar() throws IOException
     {
         SimpleStorage ss = new SimpleStorage();
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
@@ -84,8 +102,9 @@ public class NMEASentenceTest
     {
         SimpleStorage ss = new SimpleStorage();
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-        LocalTime now = LocalTime.now();
-        NMEASentence tll = NMEASentence.tll(66, 60.12, 25.45, "test", now, 'T', "ref");
+        Clock clock = Clock.fixed(Instant.now(), UTC);
+        LocalTime now = LocalTime.now(clock);
+        NMEASentence tll = NMEASentence.tll(66, 60.12, 25.45, "test", clock, 'T', "ref");
         parser.parse(tll.toString(), tc, null);
         //targetNumber c destinationWaypointLocation c targetName c targetTime c targetStatus c referenceTarget"
         assertEquals(66, ss.getInt("targetNumber"));

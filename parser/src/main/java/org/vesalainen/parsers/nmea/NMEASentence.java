@@ -22,6 +22,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import static java.nio.charset.StandardCharsets.US_ASCII;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +31,6 @@ import java.util.Locale;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import static org.vesalainen.parsers.nmea.Converter.*;
@@ -44,42 +44,40 @@ import org.vesalainen.util.CharSequences;
  */
 public class NMEASentence
 {
-    private Bind[] buffer;
+    private Bind[] binds;
     private NMEAChecksum checksum = new NMEAChecksum();
+    private static ThreadLocal<ByteBuffer> buffer = ThreadLocal.withInitial(()->ByteBuffer.allocate(100));
     /**
      * Creates NMEASentence from array
      * @param buffer 
      */
     private NMEASentence(Bind[] buffer)
     {
-        this.buffer = buffer;
-        if (!NMEA.isNMEAOrAIS(toString()))
-        {
-            throw new IllegalArgumentException(toString()+" not valid");
-        }
+        this.binds = buffer;
     }
     /**
      * Recommended Minimum Specific GNSS Data - only declination
-     * @param declination
+     * @param magneticVariation
      * @return 
      */
-    public static NMEASentence rmc(double declination)
+    public static NMEASentence rmc(double magneticVariation)
     {
-        return rmc(()->declination);
+        return rmc(null, null, null, null, null, ()->magneticVariation);
     }
-    public static NMEASentence rmc(DoubleSupplier declination)
+    public static NMEASentence rmc(Clock clock, double latitude, double longitude, double sog, double tmg, double magneticVariation)
+    {
+        return rmc(()->clock, ()->latitude, ()->longitude, ()->sog, ()->tmg, ()->magneticVariation);
+    }
+    public static NMEASentence rmc(Supplier<Clock> clock, DoubleSupplier latitude, DoubleSupplier longitude, DoubleSupplier speedOverGround, DoubleSupplier trackMadeGood, DoubleSupplier magneticVariation)
     {
         return builder(IN, RMC)
-                .add()      // utc
+                .bindLocalTime(clock)      // utc
                 .add('A')   // status
-                .add()      // lat
-                .add()      // N / S
-                .add()      // lon
-                .add()      // E / W
-                .add()      // sog
-                .add()      // tmg
-                .add()      // ddmmyy
-                .bindDegrees(declination)    // Magnetic variation degrees
+                .bindCoordinates(latitude, longitude)
+                .bindDouble(speedOverGround)      // sog
+                .bindDouble(trackMadeGood)      // tmg
+                .bindLocalDate(clock)      // ddmmyy
+                .bindDegrees(magneticVariation)    // Magnetic variation degrees
                 .add('A')   // FAA
                 .build();
     }
@@ -183,22 +181,22 @@ public class NMEASentence
      * @param latitude Target Latitude
      * @param longitude Target Longitude
      * @param name Target name
-     * @param time UTC of data
+     * @param clock UTC of data
      * @param status Status (L=lost, Q=acquisition, T=tracking)
      * @param referenceTarget R= reference target; null (,,)= otherwise
      * @return 
      */
-    public static NMEASentence tll(int target, double latitude, double longitude, CharSequence name, LocalTime time, char status, CharSequence referenceTarget)
+    public static NMEASentence tll(int target, double latitude, double longitude, CharSequence name, Clock clock, char status, CharSequence referenceTarget)
     {
-        return tll(()->target, ()->latitude, ()->longitude, ()->name, ()->time, ()->String.valueOf(status), ()->referenceTarget);
+        return tll(()->target, ()->latitude, ()->longitude, ()->name, ()->clock, ()->String.valueOf(status), ()->referenceTarget);
     }
-    public static NMEASentence tll(IntSupplier target, DoubleSupplier latitude, DoubleSupplier longitude, Supplier<CharSequence> name, Supplier<LocalTime> time, Supplier<CharSequence> status, Supplier<CharSequence> referenceTarget)
+    public static NMEASentence tll(IntSupplier target, DoubleSupplier latitude, DoubleSupplier longitude, Supplier<CharSequence> name, Supplier<Clock> clock ,Supplier<CharSequence> status, Supplier<CharSequence> referenceTarget)
     {
         return builder(II, TLL)
                 .bind(target)
-                .bind(latitude, longitude)
+                .bindCoordinates(latitude, longitude)
                 .bindString(name)
-                .bindLocalTime(time)
+                .bindLocalTime(clock)
                 .bindString(status)
                 .bindString(referenceTarget)
                 .build();
@@ -228,7 +226,7 @@ public class NMEASentence
     public static NMEASentence hdm(DoubleSupplier magneticHeading)
     {
         return builder(HC, HDM)
-                .bind(magneticHeading)
+                .bindDouble(magneticHeading)
                 .add('M')
                 .build();
     }
@@ -239,7 +237,7 @@ public class NMEASentence
     public static NMEASentence hdt(DoubleSupplier trueHeading)
     {
         return builder(HC, HDT)
-                .bind(trueHeading)
+                .bindDouble(trueHeading)
                 .add('T')
                 .build();
     }
@@ -250,7 +248,7 @@ public class NMEASentence
     public static NMEASentence hdg(DoubleSupplier magneticHeading, DoubleSupplier deviation, DoubleSupplier variation)
     {
         return builder(HC, HDG)
-                .bind(magneticHeading)
+                .bindDouble(magneticHeading)
                 .bindDegrees(deviation)
                 .bindDegrees(variation)
                 .build();
@@ -326,15 +324,20 @@ public class NMEASentence
      * Write sentence to bb
      * @param bb 
      */
-    public void writeTo(ByteBuffer bb)
+    public void writeTo(ByteBuffer byteBuffer)
     {
-        for (Bind b : buffer)
+        for (Bind b : binds)
         {
-            ByteBuffer arr = b.array();
-            bb.put(arr);
-            checksum.update(arr.array());
+            ByteBuffer bb = b.array();
+            byte[] array = bb.array();
+            int arrayOffset = bb.arrayOffset();
+            int remaining = bb.remaining();
+            byteBuffer.put(bb);
+            bb.flip();
+            checksum.update(array, arrayOffset, remaining);
+            bb.flip();
         }
-        checksum.fillSuffix(bb);
+        checksum.fillSuffix(byteBuffer);
     }
     /**
      * Write sentence to out
@@ -343,15 +346,8 @@ public class NMEASentence
      */
     public void writeTo(OutputStream out) throws IOException
     {
-        for (Bind b : buffer)
-        {
-            byte[] array = b.array().array();
-            out.write(array);
-            checksum.update(array, 0, array.length);
-        }
-        byte[] cs = new byte[5];
-        checksum.fillSuffix(cs);
-        out.write(cs);
+        ByteBuffer bb = fillBuffer();
+        out.write(bb.array(), 0, bb.remaining());
     }
     /**
      * Write sentence to out
@@ -360,19 +356,13 @@ public class NMEASentence
      */
     public void writeTo(Appendable out) throws IOException
     {
-        out.append(toString());
+        ByteBuffer bb = fillBuffer();
+        out.append(CharSequences.getAsciiCharSequence(bb));
     }
     public void writeTo(WritableByteChannel channel) throws IOException
     {
-        for (Bind b : buffer)
-        {
-            ByteBuffer array = b.array();
-            channel.write(array);
-            checksum.update(array.array());
-        }
-        ByteBuffer cs = ByteBuffer.allocate(5);
-        checksum.fillSuffix(cs);
-        channel.write(cs);
+        ByteBuffer bb = fillBuffer();
+        channel.write(bb);
     }
     /**
      * Returns sentence as string
@@ -381,7 +371,16 @@ public class NMEASentence
     @Override
     public String toString()
     {
-        return CharSequences.getAsciiCharSequence(getByteBuffer()).toString();
+        ByteBuffer bb = fillBuffer();
+        return CharSequences.getAsciiCharSequence(bb).toString();
+    }
+    private ByteBuffer fillBuffer()
+    {
+        ByteBuffer bb = buffer.get();
+        bb.clear();
+        writeTo(bb);
+        bb.flip();
+        return bb;
     }
     /**
      * Creates NMEASentence builder. Builder is initialized with '$'/'!', talker-id
@@ -406,6 +405,7 @@ public class NMEASentence
     {
         return new Builder(prefix, fields);
     }
+
     public static final class Builder
     {
         private List<Bind> buffer = new ArrayList<>();
@@ -462,52 +462,87 @@ public class NMEASentence
             return this;
         }
         /**
-         * Add double field
-         * @param fld
+         * Bind double field
+         * @param fldsup
          * @return 
          */
-        public Builder bind(DoubleSupplier fldsup)
+        public Builder bindDouble(DoubleSupplier fldsup)
         {
-            Builder.this.bind(()->
+            if (fldsup != null)
             {
-                double fld = fldsup.getAsDouble();
-                StringBuilder sb = new StringBuilder();
-                sb.append(',');
-                String str = String.format(Locale.US, "%.1f", fld);
-                return wrap(str.endsWith(".0") ? str.substring(0, str.length()-2) : str);
-            });
+                bind(()->
+                {
+                    double fld = fldsup.getAsDouble();
+                    String str = String.format(Locale.US, ",%.1f", fld);
+                    return wrap(str.endsWith(".0") ? str.substring(0, str.length()-2) : str);
+                });
+            }
+            else
+            {
+                bind(()->wrap(','));
+            }
             return this;
         }
-        public Builder bind(DoubleSupplier latsup, DoubleSupplier  lonsup)
+        public Builder bindCoordinates(DoubleSupplier latsup, DoubleSupplier  lonsup)
         {
-            Builder.this.bind(()->
+            if (latsup != null && lonsup != null)
             {
-                double latitude = latsup.getAsDouble();
-                double longitude = lonsup.getAsDouble();
-                StringBuilder sb = new StringBuilder();
-                double alat = Math.abs(latitude);
-                double alon = Math.abs(longitude);
-                int lat = (int) alat;
-                int lon = (int) alon;
-                sb.append(',');
-                sb.append(String.format("%02d%07.4f", lat, (alat-lat)*60));
-                sb.append(',');
-                sb.append(latitude>0?'N':'S');
-                sb.append(',');
-                sb.append(String.format("%03d%07.4f", lon, (alon-lon)*60));
-                sb.append(',');
-                sb.append(longitude>0?'E':'W');
-                return wrap(sb);
-            });
+                bind(()->
+                {
+                    double latitude = latsup.getAsDouble();
+                    double longitude = lonsup.getAsDouble();
+                    StringBuilder sb = new StringBuilder();
+                    double alat = Math.abs(latitude);
+                    double alon = Math.abs(longitude);
+                    int lat = (int) alat;
+                    int lon = (int) alon;
+                    sb.append(',');
+                    sb.append(String.format("%02d%07.4f", lat, (alat-lat)*60));
+                    sb.append(',');
+                    sb.append(latitude>0?'N':'S');
+                    sb.append(',');
+                    sb.append(String.format("%03d%07.4f", lon, (alon-lon)*60));
+                    sb.append(',');
+                    sb.append(longitude>0?'E':'W');
+                    return wrap(sb);
+                });
+            }
+            else
+            {
+                bind(()->wrap(",,,,"));
+            }
             return this;
         }
-        public Builder bindLocalTime(Supplier<LocalTime> time)
+        public Builder bindLocalTime(Supplier<Clock> clock)
         {
-            Builder.this.bind(()->
+            if (clock != null)
             {
-                LocalTime t = time.get();
-                return wrap(String.format(Locale.US, ",%02d%02d%02d", t.getHour(), t.getMinute(), t.getSecond()));
-            });
+                bind(()->
+                {
+                    LocalTime t = LocalTime.now(clock.get());
+                    return wrap(String.format(Locale.US, ",%02d%02d%02d", t.getHour(), t.getMinute(), t.getSecond()));
+                });
+            }
+            else
+            {
+                bind(()->wrap(','));
+            }
+            return this;
+        }
+        public Builder bindLocalDate(Supplier<Clock> clock)
+        {
+            if (clock != null)
+            {
+                bind(()->
+                {
+                    LocalDate t = LocalDate.now(clock.get());
+                    return wrap(String.format(Locale.US, ",%02d%02d%02d", t.getDayOfMonth(), t.getMonthValue(), t.getYear()%100));
+                });
+            }
+            else
+            {
+                bind(()->wrap(','));
+            }
             return this;
         }
         /**
@@ -559,57 +594,79 @@ public class NMEASentence
             buffer.add(()->wrap(seq));
             return this;
         }
-        private Builder bindArray(Supplier<byte[]> b)
-        {
-            buffer.add(new ArrayBind(b));
-            return this;
-        }
-
         private Builder bindString(Supplier<CharSequence> seq)
         {
-            buffer.add(()->
+            if (seq != null)
             {
-                CharSequence value;
-                try
+                bind(()->
                 {
-                    value = CharSequences.getAsciiCharSequence(seq.get().toString().getBytes("NMEA"));
-                }
-                catch (UnsupportedEncodingException ex)
-                {
-                    throw new IllegalArgumentException(ex);
-                }
-                return wrap(String.format(Locale.US, ",%s", value));
-            });
+                    CharSequence value;
+                    try
+                    {
+                        value = CharSequences.getAsciiCharSequence(seq.get().toString().getBytes("NMEA"));
+                    }
+                    catch (UnsupportedEncodingException ex)
+                    {
+                        throw new IllegalArgumentException(ex);
+                    }
+                    return wrap(String.format(Locale.US, ",%s", value));
+                });
+            }
+            else
+            {
+                bind(()->wrap(','));
+            }
             return this;
         }
 
         private Builder bind(IntSupplier supplier)
         {
-            buffer.add(()->
+            if (supplier != null)
             {
-                int value = supplier.getAsInt();
-                return wrap(String.format(Locale.US, ",%d", value));
-            });
+                bind(()->
+                {
+                    int value = supplier.getAsInt();
+                    return wrap(String.format(Locale.US, ",%d", value));
+                });
+            }
+            else
+            {
+                bind(()->wrap(','));
+            }
             return this;
         }
 
         private Builder bindDegrees(DoubleSupplier declsup)
         {
-            buffer.add(()->
+            if (declsup != null)
             {
-                double declination = declsup.getAsDouble();
-                return wrap(String.format(Locale.US, ",%.1f,%c", Math.abs(declination), declination > 0 ? 'E' : 'W'));
-            });
+                bind(()->
+                {
+                    double declination = declsup.getAsDouble();
+                    return wrap(String.format(Locale.US, ",%.1f,%c", Math.abs(declination), declination > 0 ? 'E' : 'W'));
+                });
+            }
+            else
+            {
+                bind(()->wrap(",,"));
+            }
             return this;
         }
 
         private Builder bind(UnitType from, DoubleSupplier supplier, UnitType to)
         {
-            buffer.add(()->
+            if (supplier != null)
             {
-                double value = supplier.getAsDouble();
-                return wrap(String.format(Locale.US, ",%.1f", from.convertTo(value, to)));
-            });
+                bind(()->
+                {
+                    double value = supplier.getAsDouble();
+                    return wrap(String.format(Locale.US, ",%.1f", from.convertTo(value, to)));
+                });
+            }
+            else
+            {
+                bind(()->wrap(','));
+            }
             return this;
         }
 
@@ -634,67 +691,5 @@ public class NMEASentence
     private interface Bind
     {
         ByteBuffer array();
-    }
-    private static class LiteralBind implements Bind
-    {
-        private ByteBuffer array;
-
-        public LiteralBind(byte cc)
-        {
-            this(wrap(cc));
-        }
-
-        public LiteralBind(byte[] arr)
-        {
-            this(wrap(arr));
-        }
-
-        public LiteralBind(ByteBuffer array)
-        {
-            this.array = array;
-        }
-
-        @Override
-        public ByteBuffer array()
-        {
-            return array;
-        }
-    }
-    private static class ArrayBind implements Bind
-    {
-        private Supplier<byte[]> array;
-
-        public ArrayBind(Supplier<byte[]> array)
-        {
-            this.array = array;
-        }
-        
-        @Override
-        public ByteBuffer array()
-        {
-            return wrap(array.get());
-        }
-        
-    }
-    private static class CharSequenceBind implements Bind
-    {
-        private Supplier<CharSequence> seq;
-
-        public CharSequenceBind(Supplier<CharSequence> seq)
-        {
-            this.seq = seq;
-        }
-        
-        @Override
-        public ByteBuffer array()
-        {
-            String str = seq.get().toString();
-            if (str.indexOf(',') != -1 || str.indexOf('*') != -1)
-            {
-                throw new IllegalArgumentException(str+" contains (,) or (*)");
-            }
-            return wrap(str.getBytes(US_ASCII));
-        }
-        
     }
 }
