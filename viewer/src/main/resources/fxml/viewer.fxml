@@ -20,8 +20,9 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Gauge propertyProperty="depth" />
-                  <Gauge propertyProperty="speed" GridPane.rowIndex="1" />
+                  <Gauge propertyProperty="depthOfWater" />
+                  <Gauge propertyProperty="waterSpeed" GridPane.rowIndex="1" />
+                  <Gauge propertyProperty="waterTemperature" GridPane.rowIndex="2" />
                </children>
             </GridPane>
          </content>

@@ -63,6 +63,10 @@ public class CompressedLogPlayer implements AutoCloseable
     {
         try
         {
+            if (sender != null)
+            {
+                sender.stop();
+            }
             channel.close();
         }
         catch (IOException ex)

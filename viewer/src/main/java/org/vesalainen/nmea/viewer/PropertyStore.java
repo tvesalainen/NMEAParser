@@ -17,6 +17,13 @@
 package org.vesalainen.nmea.viewer;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 
@@ -26,12 +33,55 @@ import org.vesalainen.code.Property;
  */
 public class PropertyStore extends AnnotatedPropertyStore
 {
-    private @Property float depth;
-    private @Property float speed;
+    private @Property double latitude;
+    private @Property double longitude;
+    private @Property float depthOfWater;
+    private @Property float waterSpeed;
+    private @Property float waterTemperature;
     
+    private final Map<String,ObservableProperty> listenerMap = new HashMap<>();
+
     public PropertyStore()
     {
         super(MethodHandles.lookup());
+        for (String property : getProperties())
+        {
+            listenerMap.put(property, new ObservableProperty());
+        }
+    }
+
+    @Override
+    public void commit(String reason, Collection<String> updatedProperties)
+    {
+        updatedProperties.stream().map((property) -> listenerMap.get(property)).forEach((observableProperty) ->
+        {
+            observableProperty.invalidate();
+        });
     }
     
+    public Observable getObservable(String property)
+    {
+        return listenerMap.get(property);
+    }
+    private class ObservableProperty implements Observable
+    {
+        private List<InvalidationListener> listeners = new ArrayList<>();
+        
+        public void invalidate()
+        {
+            listeners.forEach((l)->l.invalidated(this));
+        }
+        @Override
+        public void addListener(InvalidationListener listener)
+        {
+            listeners.add(listener);
+        }
+
+        @Override
+        public void removeListener(InvalidationListener listener)
+        {
+            listeners.remove(listener);
+        }
+        
+    }
 }

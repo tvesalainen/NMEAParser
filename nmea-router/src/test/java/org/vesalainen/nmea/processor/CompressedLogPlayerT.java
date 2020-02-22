@@ -26,10 +26,10 @@ import org.junit.Test;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CompressedLogPlayerTest
+public class CompressedLogPlayerT
 {
     
-    public CompressedLogPlayerTest()
+    public CompressedLogPlayerT()
     {
     }
 
@@ -38,9 +38,12 @@ public class CompressedLogPlayerTest
     {
         Path dir = Paths.get("src\\test\\resources");
         dir = dir.toAbsolutePath();
-        try (CompressedLogPlayer log = CompressedLogPlayer.open("224.0.0.3", 10110, Files.list(dir).filter((p)->p.getFileName().toString().endsWith(".mea"))))
+        while (true)
         {
-            
+            try (CompressedLogPlayer log = CompressedLogPlayer.open("224.0.0.3", 10110, Files.list(dir).filter((p)->p.getFileName().toString().endsWith(".mea"))))
+            {
+
+            }
         }
     }
     

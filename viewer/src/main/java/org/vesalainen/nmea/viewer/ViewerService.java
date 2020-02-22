@@ -16,12 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,7 +25,6 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.parsers.nmea.NMEACategory;
@@ -53,7 +47,6 @@ public class ViewerService implements InvalidationListener
     private boolean isInvalid;
     private final Binding<String> hostBinding;
     private final Binding<Integer> portBinding;
-    private final Map<String,ObservableProperty> listenerMap = new HashMap<>();
     
     public ViewerService(CachedScheduledThreadPool executor, ViewerPreferences preferences, Locale locale)
     {
@@ -65,10 +58,6 @@ public class ViewerService implements InvalidationListener
         portBinding = preferences.get("port");
         portBinding.addListener(this);
         
-        for (String property : propertyStore.getProperties())
-        {
-            listenerMap.put(property, new ObservableProperty());
-        }
     }
 
     public void register(Set<Node> nodes)
@@ -94,7 +83,7 @@ public class ViewerService implements InvalidationListener
         {
             throw new IllegalArgumentException(property+" is not NMEAProperty");
         }
-        ObservableProperty dependency = listenerMap.get(property);
+        Observable dependency = propertyStore.getObservable(property);
         if (dependency == null)
         {
             throw new UnsupportedOperationException(property+" is not supported");
@@ -102,6 +91,7 @@ public class ViewerService implements InvalidationListener
         double max = nmeaProperties.getMax(property);
         double min = nmeaProperties.getMin(property);
         Class<?> type = nmeaProperties.getType(property);
+        UnitType unit = nmeaProperties.getUnit(property);
         Binding<UnitType> unitBinding = getUnitBinding(property);
         StringBinding unitStringBinding = Bindings.createStringBinding(()->unitBinding.getValue().getUnit(), unitBinding);
         gauge.propertyUnitProperty().bind(unitStringBinding);
@@ -109,7 +99,7 @@ public class ViewerService implements InvalidationListener
         switch (type.getSimpleName())
         {
             case "float":
-                stringBinding = Bindings.createStringBinding(()->String.format(locale, "%.1f", unitBinding.getValue().convertTo(propertyStore.getFloat(property), unitBinding.getValue())), dependency, unitBinding);
+                stringBinding = Bindings.createStringBinding(()->String.format(locale, "%.1f", unit.convertTo(propertyStore.getFloat(property), unitBinding.getValue())), dependency, unitBinding);
                 break;
             default:
                 throw new UnsupportedOperationException(type+" not supported");
@@ -123,9 +113,11 @@ public class ViewerService implements InvalidationListener
         switch (cat)
         {
             case DEPTH:
-                return preferences.get("depth");
+                return preferences.get("depthUnit");
             case SPEED:
-                return preferences.get("speed");
+                return preferences.get("speedUnit");
+            case TEMPERATURE:
+                return preferences.get("temperatureUnit");
             default:
                 throw new UnsupportedOperationException(cat+" not supported");
         }
@@ -145,7 +137,7 @@ public class ViewerService implements InvalidationListener
             nmeaService.start();
             isInvalid = false;
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             Logger.getLogger(ViewerService.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -163,26 +155,5 @@ public class ViewerService implements InvalidationListener
     void stop()
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    private class ObservableProperty implements Observable
-    {
-        private List<InvalidationListener> listeners = new ArrayList<>();
-        
-        public void invalidate()
-        {
-            listeners.forEach((l)->l.invalidated(this));
-        }
-        @Override
-        public void addListener(InvalidationListener listener)
-        {
-            listeners.add(listener);
-        }
-
-        @Override
-        public void removeListener(InvalidationListener listener)
-        {
-            listeners.remove(listener);
-        }
-        
     }
 }
