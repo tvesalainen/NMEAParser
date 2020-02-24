@@ -18,11 +18,13 @@ package org.vesalainen.nmea.viewer;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.beans.binding.Binding;
+import javafx.beans.property.Property;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import org.vesalainen.fx.EnumStringConverter;
+import javafx.util.converter.FloatStringConverter;
 import org.vesalainen.fx.EnumTitleConverter;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
@@ -35,6 +37,7 @@ public class ViewerController implements Initializable
 {
     @FXML TextField host;
     @FXML TextField port;
+    @FXML TextField transducerOffset;
     @FXML ComboBox<UnitType> depthUnit;
     @FXML ComboBox<UnitType> speedUnit;
     @FXML ComboBox<UnitType> temperatureUnit;
@@ -52,5 +55,6 @@ public class ViewerController implements Initializable
         preferences.bindCombo("depthUnit", depthUnit, converter, METER, FOOT, FATHOM);
         preferences.bindCombo("speedUnit", speedUnit, converter, KNOT, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
         preferences.bindCombo("temperatureUnit", temperatureUnit, converter, CELSIUS, FAHRENHEIT);
+        preferences.bindFloat("transducerOffset", 0, transducerOffset);
     }
 }

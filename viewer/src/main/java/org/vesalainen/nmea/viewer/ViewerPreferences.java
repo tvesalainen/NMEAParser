@@ -19,6 +19,7 @@ package org.vesalainen.nmea.viewer;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.beans.binding.Binding;
+import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -50,37 +51,61 @@ public class ViewerPreferences
     
     public void bindString(String key, String def, TextField textField)
     {
-        TextFormatter<String> formatter = setFormatter(textField, DEFAULT_STRING_CONVERTER);
+        bindString(key, def, textField, DEFAULT_STRING_CONVERTER);
+    }
+    public void bindString(String key, String def, TextField textField, StringConverter<String> converter)
+    {
+        TextFormatter<String> formatter = setFormatter(textField, converter);
         bindingPreferences.bindBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createStringBinding(key, def));
     }
     public void bindBoolean(String key, boolean def, TextField textField)
     {
-        TextFormatter<Boolean> formatter = setFormatter(textField, BOOLEAN_STRING_CONVERTER);
+        bindBoolean(key, def, textField, BOOLEAN_STRING_CONVERTER);
+    }
+    public void bindBoolean(String key, boolean def, TextField textField, StringConverter<Boolean> converter)
+    {
+        TextFormatter<Boolean> formatter = setFormatter(textField, converter);
         bindingPreferences.bindBooleanBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createBooleanBinding(key, def));
     }
     public void bindDouble(String key, double def, TextField textField)
     {
-        TextFormatter<Double> formatter = setFormatter(textField, DOUBLE_STRING_CONVERTER);
+        bindDouble(key, def, textField, DOUBLE_STRING_CONVERTER);
+    }
+    public void bindDouble(String key, double def, TextField textField, StringConverter<Double> converter)
+    {
+        TextFormatter<Double> formatter = setFormatter(textField, converter);
         bindingPreferences.bindDoubleBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createDoubleBinding(key, def));
     }
     public void bindFloat(String key, float def, TextField textField)
     {
-        TextFormatter<Float> formatter = setFormatter(textField, FLOAT_STRING_CONVERTER);
+        bindFloat(key, def, textField, FLOAT_STRING_CONVERTER);
+    }
+    public void bindFloat(String key, float def, TextField textField, StringConverter<Float> converter)
+    {
+        TextFormatter<Float> formatter = setFormatter(textField, converter);
         bindingPreferences.bindFloatBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createFloatBinding(key, def));
     }
     public void bindInteger(String key, int def, TextField textField)
     {
-        TextFormatter<Integer> formatter = setFormatter(textField, INTEGER_STRING_CONVERTER);
+        bindInteger(key, def, textField, INTEGER_STRING_CONVERTER);
+    }
+    public void bindInteger(String key, int def, TextField textField, StringConverter<Integer> converter)
+    {
+        TextFormatter<Integer> formatter = setFormatter(textField, converter);
         bindingPreferences.bindIntegerBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createIntegerBinding(key, def));
     }
     public void bindLong(String key, long def, TextField textField)
     {
-        TextFormatter<Long> formatter = setFormatter(textField, LONG_STRING_CONVERTER);
+        bindLong(key, def, textField, LONG_STRING_CONVERTER);
+    }
+    public void bindLong(String key, long def, TextField textField, StringConverter<Long> converter)
+    {
+        TextFormatter<Long> formatter = setFormatter(textField, converter);
         bindingPreferences.bindLongBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createLongBinding(key, def));
     }
@@ -93,29 +118,35 @@ public class ViewerPreferences
     }
     public String getString(String key)
     {
-        return (String) get(key).getValue();
+        return (String) getBinding(key).getValue();
     }
     public boolean getBoolean(String key)
     {
-        return (Boolean) get(key).getValue();
+        return (Boolean) getBinding(key).getValue();
     }
     public double getDouble(String key)
     {
-        return (Double) get(key).getValue();
+        return (Double) getBinding(key).getValue();
     }
     public float getFloat(String key)
     {
-        return (Float) get(key).getValue();
+        return (Float) getBinding(key).getValue();
     }
     public int getInteger(String key)
     {
-        return (Integer) get(key).getValue();
+        return (Integer) getBinding(key).getValue();
     }
     public long getLong(String key)
     {
-        return (Long) get(key).getValue();
+        return (Long) getBinding(key).getValue();
     }
-    public <T> Binding<T> get(String key)
+
+    public <T> Property<T> getProperty(String key)
+    {
+        return bindingPreferences.getProperty(key);
+    }
+    
+    public <T> Binding<T> getBinding(String key)
     {
         Binding<T> binding = (Binding<T>) bindings.get(key);
         if (binding != null)

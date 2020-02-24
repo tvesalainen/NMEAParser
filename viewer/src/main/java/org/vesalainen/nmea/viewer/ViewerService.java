@@ -53,9 +53,9 @@ public class ViewerService implements InvalidationListener
         this.executor = executor;
         this.preferences = preferences;
         this.locale = locale;
-        hostBinding = preferences.get("host");
+        hostBinding = preferences.getBinding("host");
         hostBinding.addListener(this);
-        portBinding = preferences.get("port");
+        portBinding = preferences.getBinding("port");
         portBinding.addListener(this);
         
     }
@@ -113,11 +113,11 @@ public class ViewerService implements InvalidationListener
         switch (cat)
         {
             case DEPTH:
-                return preferences.get("depthUnit");
+                return preferences.getBinding("depthUnit");
             case SPEED:
-                return preferences.get("speedUnit");
+                return preferences.getBinding("speedUnit");
             case TEMPERATURE:
-                return preferences.get("temperatureUnit");
+                return preferences.getBinding("temperatureUnit");
             default:
                 throw new UnsupportedOperationException(cat+" not supported");
         }

@@ -5,7 +5,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.vesalainen.nmea.viewer.ViewerController">
+<TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="416.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.vesalainen.nmea.viewer.ViewerController">
   <tabs>
     <Tab text="%sailingTab">
          <content>
@@ -39,7 +39,8 @@
                     <rowConstraints>
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
@@ -54,6 +55,12 @@
                         <ComboBox fx:id="depthUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%depthUnit" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                         <ComboBox fx:id="speedUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%speedUnit" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                         <ComboBox fx:id="temperatureUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%temperatureUnit" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                        <TextField fx:id="transducerOffset" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%transducerOffset" text="%transducerOffsetHelp" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                           <tooltip>
+                              <Tooltip text="%transducerOffsetHelp" />
+                           </tooltip>
+                        </TextField>
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%transducerOffset" GridPane.rowIndex="5" />
                      </children>
                   </GridPane>
                </content>

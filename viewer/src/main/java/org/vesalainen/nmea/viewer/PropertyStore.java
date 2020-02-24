@@ -20,12 +20,17 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentSkipListSet;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import org.vesalainen.util.CollectionHelp;
 
 /**
  *
@@ -40,6 +45,7 @@ public class PropertyStore extends AnnotatedPropertyStore
     private @Property float waterTemperature;
     
     private final Map<String,ObservableProperty> listenerMap = new HashMap<>();
+    private final NavigableSet<String> updated = new ConcurrentSkipListSet<>();
 
     public PropertyStore()
     {
@@ -53,12 +59,30 @@ public class PropertyStore extends AnnotatedPropertyStore
     @Override
     public void commit(String reason, Collection<String> updatedProperties)
     {
-        updatedProperties.stream().map((property) -> listenerMap.get(property)).forEach((observableProperty) ->
-        {
-            observableProperty.invalidate();
-        });
+        invalidate(updatedProperties);
     }
     
+    private void invalidate(String... updatedProperties)
+    {
+        invalidate(CollectionHelp.create(updatedProperties));
+    }
+    private void invalidate(Collection<String> updatedProperties)
+    {
+        updated.addAll(updatedProperties);
+        Platform.runLater(this::invalidate);
+    }
+    private void invalidate()
+    {
+        Iterator<String> iterator = updated.iterator();
+        while (iterator.hasNext())
+        {
+            String property = iterator.next();
+            iterator.remove();
+            ObservableProperty observableProperty = listenerMap.get(property);
+            observableProperty.invalidate();
+        }
+    }
+
     public Observable getObservable(String property)
     {
         return listenerMap.get(property);
