@@ -18,7 +18,6 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -97,6 +96,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "nmeaSentence", value = "ttm c targetNumber c targetDistance c bearingFromOwnShip c bearingUnit c targetSpeed c targetCourse c courseUnit c distanceOfCPA c timeToCPA c distanceUnit c targetName c targetStatus c referenceTarget"),
     @Rule(left = "nmeaSentence", value = "txt c totalNumberOfMessages c messageNumber c targetName c message"),
     @Rule(left = "nmeaSentence", value = "vhw c waterHeading c waterHeading c waterSpeed c waterSpeed"),
+    @Rule(left = "nmeaSentence", value = "vlw c waterDistance c waterDistanceSinceReset"),
     @Rule(left = "nmeaSentence", value = "vtg c track c track c speed c speed faaModeIndicator"),
     @Rule(left = "nmeaSentence", value = "vtg c trueCourseOverGround c magneticCourseOverGround c speedOverGroundKnots c speedOverGroundKilometers"),
     @Rule(left = "nmeaSentence", value = "vwr c windDirection c windSpeed c windSpeed c windSpeed"),
@@ -188,6 +188,8 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "localZoneMinutes", value = "c skip?"),
     @Rule(left = "windDirection", value = "c skip?"),
     @Rule(left = "waterHeading", value = "c skip?"),
+    @Rule(left = "waterDistance", value = "c skip?"),
+    @Rule(left = "waterDistanceSinceReset", value = "c skip?"),
     @Rule(left = "waterSpeed", value = "c skip?"),
     @Rule(left = "track", value = "c skip?"),
     @Rule(left = "speed", value = "c skip?"),
@@ -645,6 +647,24 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             @ParserContext("data") NMEAObserver data)
     {
         data.setWaterSpeed(toKnots(waterSpeed, unit));
+    }
+
+    @Rule("decimal c letter")
+    protected void waterDistance(
+            float waterDistance,
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setWaterDistance(toNauticalMiles(waterDistance, unit));
+    }
+
+    @Rule("decimal c letter")
+    protected void waterDistanceSinceReset(
+            float waterDistanceSinceReset,
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setWaterDistanceSinceReset(toNauticalMiles(waterDistanceSinceReset, unit));
     }
 
     @Rule("decimal")
