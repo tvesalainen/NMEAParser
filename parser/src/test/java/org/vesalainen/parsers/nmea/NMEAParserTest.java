@@ -1363,6 +1363,67 @@ public class NMEAParserTest
     }
 
     @Test
+    public void vhw()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$VWVHW,10,T,15,M,1.23,N,,*04\r\n"
+
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, false, null, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.VHW, ss.getProperty("messageType"));
+                assertEquals(TalkerId.VW, ss.getProperty("talkerId"));
+                assertEquals(10, ss.getFloat("trueWaterHeading"), Epsilon);
+                assertEquals(15, ss.getFloat("magneticWaterHeading"), Epsilon);
+                assertEquals(1.23, ss.getFloat("waterSpeed"), Epsilon);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void vlw()
+    {
+        try
+        {
+            String[] nmeas = new String[] {
+                "$VWVLW,345.6,N,23.4,N*7D\r\n"
+
+            };
+            for (String nmea : nmeas)
+            {
+                System.err.println(nmea);
+                SimpleStorage ss = new SimpleStorage();
+                NMEAObserver tc = ss.getStorage(NMEAObserver.class);
+                parser.parse(nmea, false, null, tc, null);
+                NMEAContentHelper nch = new NMEAContentHelper(nmea);
+                assertNull(ss.getRollbackReason());
+                assertEquals(MessageType.VLW, ss.getProperty("messageType"));
+                assertEquals(TalkerId.VW, ss.getProperty("talkerId"));
+                assertEquals(345.6, ss.getFloat("waterDistance"), Epsilon);
+                assertEquals(23.4, ss.getFloat("waterDistanceSinceReset"), Epsilon);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
     public void vtg()
     {
         try
