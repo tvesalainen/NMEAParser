@@ -146,6 +146,18 @@ public class ViewerPreferences
         return bindingPreferences.getProperty(key);
     }
     
+    public Binding<Number> getNumberBinding(String key)
+    {
+        Binding<Number> binding = (Binding<Number>) bindings.get(key);
+        if (binding != null)
+        {
+            return binding;
+        }
+        else
+        {
+            throw new UnsupportedOperationException(key+" not supported");
+        }
+    }
     public <T> Binding<T> getBinding(String key)
     {
         Binding<T> binding = (Binding<T>) bindings.get(key);

@@ -37,10 +37,12 @@ public class ViewerController implements Initializable
 {
     @FXML TextField host;
     @FXML TextField port;
-    @FXML TextField transducerOffset;
     @FXML ComboBox<UnitType> depthUnit;
     @FXML ComboBox<UnitType> speedUnit;
     @FXML ComboBox<UnitType> temperatureUnit;
+    @FXML TextField transducerOffset;
+    @FXML TextField keelOffset;
+    @FXML TextField timeToLive;
     
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -56,5 +58,7 @@ public class ViewerController implements Initializable
         preferences.bindCombo("speedUnit", speedUnit, converter, KNOT, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
         preferences.bindCombo("temperatureUnit", temperatureUnit, converter, CELSIUS, FAHRENHEIT);
         preferences.bindFloat("transducerOffset", 0, transducerOffset);
+        preferences.bindFloat("keelOffset", 0, keelOffset);
+        preferences.bindLong("timeToLive", 60, timeToLive);
     }
 }

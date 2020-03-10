@@ -23,6 +23,11 @@
                   <Gauge propertyProperty="depthOfWater" />
                   <Gauge propertyProperty="waterSpeed" GridPane.rowIndex="1" />
                   <Gauge propertyProperty="waterTemperature" GridPane.rowIndex="2" />
+                  <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.columnIndex="1" GridPane.rowSpan="2147483647">
+                     <children>
+                        <ResizableCanvas />
+                     </children>
+                  </StackPane>
                </children>
             </GridPane>
          </content>
@@ -39,6 +44,8 @@
                     <rowConstraints>
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -61,6 +68,18 @@
                            </tooltip>
                         </TextField>
                         <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%transducerOffset" GridPane.rowIndex="5" />
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%keelOffset" GridPane.rowIndex="6" />
+                        <TextField fx:id="keelOffset" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%keelOffset" text="%keelOffsetHelp" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                           <tooltip>
+                              <Tooltip text="%keelOffsetHelp" />
+                           </tooltip>
+                        </TextField>
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%timeToLive" GridPane.rowIndex="7" />
+                        <TextField fx:id="timeToLive" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%timeToLive" text="%timeToLiveHelp" GridPane.columnIndex="1" GridPane.rowIndex="7">
+                           <tooltip>
+                              <Tooltip text="%timeToLiveHelp" />
+                           </tooltip>
+                        </TextField>
                      </children>
                   </GridPane>
                </content>

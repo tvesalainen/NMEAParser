@@ -42,7 +42,7 @@ public class ViewerService implements InvalidationListener
     private final ViewerPreferences preferences;
     private final Locale locale;
     private NMEAService nmeaService;
-    private final PropertyStore propertyStore = new PropertyStore();
+    private final PropertyStore propertyStore;
     private final NMEAProperties nmeaProperties = NMEAProperties.getInstance();
     private boolean isInvalid;
     private final Binding<String> hostBinding;
@@ -53,6 +53,7 @@ public class ViewerService implements InvalidationListener
         this.executor = executor;
         this.preferences = preferences;
         this.locale = locale;
+        this.propertyStore = new PropertyStore(executor, preferences);
         hostBinding = preferences.getBinding("host");
         hostBinding.addListener(this);
         portBinding = preferences.getBinding("port");
@@ -83,7 +84,7 @@ public class ViewerService implements InvalidationListener
         {
             throw new IllegalArgumentException(property+" is not NMEAProperty");
         }
-        Observable dependency = propertyStore.getObservable(property);
+        Observable dependency = propertyStore.registerNode(property, gauge);
         if (dependency == null)
         {
             throw new UnsupportedOperationException(property+" is not supported");

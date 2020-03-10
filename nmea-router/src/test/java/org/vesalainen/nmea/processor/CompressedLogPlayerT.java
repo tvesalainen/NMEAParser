@@ -38,7 +38,7 @@ public class CompressedLogPlayerT
     {
         Path dir = Paths.get("src\\test\\resources");
         dir = dir.toAbsolutePath();
-        while (true)
+        //while (true)
         {
             try (CompressedLogPlayer log = CompressedLogPlayer.open("224.0.0.3", 10110, Files.list(dir).filter((p)->p.getFileName().toString().endsWith(".mea"))))
             {
