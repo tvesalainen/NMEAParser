@@ -793,4 +793,12 @@ public interface NMEAObserver extends Transactional
     public void setTimeToCPA(float time);
 
     public void setDistanceUnit(char units);
+
+    @NMEACat(DISTANCE)
+    @Unit(value=NAUTICAL_MILE, min=0)
+    public void setWaterDistance(float distance);
+
+    @NMEACat(DISTANCE)
+    @Unit(value=NAUTICAL_MILE, min=0)
+    public void setWaterDistanceSinceReset(float distance);
 }
