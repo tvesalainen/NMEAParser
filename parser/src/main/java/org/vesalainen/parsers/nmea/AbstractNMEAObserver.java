@@ -844,4 +844,14 @@ public class AbstractNMEAObserver implements NMEAObserver
     {
     }
 
+    @Override
+    public void setWaterDistance(float distance)
+    {
+    }
+
+    @Override
+    public void setWaterDistanceSinceReset(float distance)
+    {
+    }
+
 }
