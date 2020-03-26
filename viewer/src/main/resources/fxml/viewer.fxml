@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import org.vesalainen.nmea.viewer.*?>
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
@@ -25,7 +26,7 @@
                   <Gauge propertyProperty="waterTemperature" GridPane.rowIndex="2" />
                   <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.columnIndex="1" GridPane.rowSpan="2147483647">
                      <children>
-                        <ResizableCanvas />
+                        <CompassRingCanvas />
                      </children>
                   </StackPane>
                </children>

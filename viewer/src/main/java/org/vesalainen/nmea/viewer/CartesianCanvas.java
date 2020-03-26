@@ -18,9 +18,12 @@ package org.vesalainen.nmea.viewer;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.geometry.VPos;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.chart.NumberAxis;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
+import org.vesalainen.ui.Transforms;
 
 /**
  *
@@ -29,35 +32,57 @@ import javafx.scene.paint.Color;
 public class CartesianCanvas extends ResizableCanvas
 {
 
-    private final DoubleProperty maxValue = new SimpleDoubleProperty(1);
+    protected final double max;
 
-    public double getMaxValue()
+    public CartesianCanvas()
     {
-        return maxValue.get();
+        this(1);
     }
 
-    public void setMaxValue(double value)
+    protected CartesianCanvas(double maxValue)
     {
-        maxValue.set(value);
-    }
-
-    public DoubleProperty maxValueProperty()
-    {
-        return maxValue;
+        this.max = maxValue;
     }
 
     @Override
-    protected void onDraw()
+    protected final void onDraw()
     {
         double width = getWidth();
         double height = getHeight();
+        if (getWidth() > 0 && getHeight() > 0)
+        {
+            GraphicsContext gc = getGraphicsContext2D();
+            Transforms.createScreenTransform(
+                    width, 
+                    height, 
+                    -max, 
+                    -max, 
+                    max, 
+                    max, 
+                    true, 
+                    (double mxx, double mxy, double myx, double myy, double tx, double ty)->
+                    {
+                        gc.setTransform(mxx, myx, mxy, myy, tx, ty);
+                    });
 
-        GraphicsContext gc = getGraphicsContext2D();
-        gc.clearRect(0, 0, width, height);
-
-        gc.setStroke(Color.RED);
-        gc.strokeLine(0, 0, width, height);
-        gc.strokeLine(0, height, width, 0);
+            gc.clearRect(-max, -max, 2*max, 2*max);
+            onDraw(gc);
+        }
     }
-    
+    /**
+     * On call the gc is set to cartesian coordinates x (-max to max) y (-max to max)
+     * @param gc 
+     */
+    protected void onDraw(GraphicsContext gc)
+    {
+        double width = getWidth();
+        double height = getHeight();
+        gc.setFont(Font.font(height/10));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setTextBaseline(VPos.CENTER);
+        gc.fillText("0", 0, max);
+        gc.setStroke(Color.RED);
+        gc.strokeLine(-max, 0, max, 0);
+        gc.strokeLine(0, -max, 0, max);
+    }
 }
