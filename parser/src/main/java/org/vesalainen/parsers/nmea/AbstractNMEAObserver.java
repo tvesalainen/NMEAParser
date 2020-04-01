@@ -32,60 +32,12 @@ public class AbstractNMEAObserver implements NMEAObserver
     {
         this.clock = clock;
     }
-    
-    /**
-     * Returns distance in NM from (lat1, lon1) to (lat2, lon2)
-     * @param lat1 in degrees
-     * @param lon1 in degrees
-     * @param lat2 in degrees
-     * @param lon2 in degrees
-     * @return 
-     */
-    public static double distance(double lat1, double lon1, double lat2, double lon2)
-    {
-        // TO DO use GC with long distance
-        double dep = departure(lat1, lat2);
-        return (double) (60*Math.sqrt(square(lat1-lat2)+square(dep*(lon1-lon2))));
-    }
-    
-    private static double square(double d)
-    {
-        return d*d;
-    }
-    /**
-     * Returns bearing in degrees from (lat1, lon1) to (lat2, lon2)
-     * @param lat1 in degrees
-     * @param lon1 in degrees
-     * @param lat2 in degrees
-     * @param lon2 in degrees
-     * @return 
-     */
-    public static double bearing(double lat1, double lon1, double lat2, double lon2)
-    {
-        double dep = departure(lat1, lat2);
-        double aa = dep*(lon2-lon1);
-        double bb = lat2-lat1;
-        double dd = (double) Math.atan2(aa, bb);
-        if (dd < 0)
-        {
-            dd += 2*Math.PI;
-        }
-        return (double) Math.toDegrees(dd);
-    }
-    
-    /**
-     * 
-     * @param lat1 Latitude in degrees
-     * @param lat2 Latitude in degrees
-     * @return 
-     */
-    public static double departure(double lat1, double lat2)
-    {
-        assert lat1 >= -90 && lat1 <= 90;
-        assert lat2 >= -90 && lat2 <= 90;
-        return (double) Math.cos(Math.toRadians((lat2+lat1)/2));
-    }
 
+    @Override
+    public void setEpochMillis(long millis)
+    {
+    }
+    
     @Override
     public void setTalkerId(TalkerId talkerId)
     {
