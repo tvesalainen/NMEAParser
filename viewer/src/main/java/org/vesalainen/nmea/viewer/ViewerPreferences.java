@@ -21,9 +21,11 @@ import java.util.Map;
 import javafx.beans.binding.Binding;
 import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
+import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 import javafx.util.converter.BooleanStringConverter;
 import javafx.util.converter.DefaultStringConverter;
@@ -31,6 +33,7 @@ import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.FloatStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import javafx.util.converter.LongStringConverter;
+import org.vesalainen.fx.ColorStringConverter;
 import org.vesalainen.fx.PreferencesBindings;
 
 /**
@@ -45,6 +48,7 @@ public class ViewerPreferences
     public static final FloatStringConverter FLOAT_STRING_CONVERTER = new FloatStringConverter();
     public static final IntegerStringConverter INTEGER_STRING_CONVERTER = new IntegerStringConverter();
     public static final LongStringConverter LONG_STRING_CONVERTER = new LongStringConverter();
+    public static final ColorStringConverter COLOR_STRING_CONVERTER = new ColorStringConverter();
     
     private PreferencesBindings bindingPreferences = PreferencesBindings.userNodeForPackage(ViewerPreferences.class);
     private Map<String,Binding<?>> bindings = new HashMap<>();
@@ -56,7 +60,7 @@ public class ViewerPreferences
     public void bindString(String key, String def, TextField textField, StringConverter<String> converter)
     {
         TextFormatter<String> formatter = setFormatter(textField, converter);
-        bindingPreferences.bindBiDirectional(key, def, formatter.valueProperty());
+        bindingPreferences.bindStringBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createStringBinding(key, def));
     }
     public void bindBoolean(String key, boolean def, TextField textField)
@@ -115,6 +119,11 @@ public class ViewerPreferences
         combo.setConverter(converter);
         bindingPreferences.bindEnumBiDirectional(key, values[0], combo.valueProperty());
         bindings.put(key, bindingPreferences.createEnumBinding(key, values[0]));
+    }
+    public void bindColor(String key, Color def, ColorPicker colorPicker)
+    {
+        bindingPreferences.bindBiDirectional(key, def, colorPicker.valueProperty(), COLOR_STRING_CONVERTER);
+        bindings.put(key, bindingPreferences.createObjectBinding(key, def, COLOR_STRING_CONVERTER));
     }
     public String getString(String key)
     {

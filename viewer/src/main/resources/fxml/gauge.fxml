@@ -18,8 +18,8 @@
       <RowConstraints maxHeight="260.0" minHeight="10.0" percentHeight="85.0" prefHeight="260.0" vgrow="ALWAYS" />
   </rowConstraints>
    <children>
-      <Label fx:id="title" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="titleStyle" text="Title" />
-      <Label fx:id="unit" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="unitStyle" text="Unit" GridPane.columnIndex="1" />
-      <Label fx:id="value" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="valueStyle" text="Value" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+      <Label fx:id="titleLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="titleStyle" text="Title" />
+      <Label fx:id="unitLabel" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="unitStyle" text="Unit" GridPane.columnIndex="1" />
+      <Label fx:id="valueLabel" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="valueStyle" text="Value" GridPane.columnSpan="2" GridPane.rowIndex="1" />
    </children>
 </fx:root>

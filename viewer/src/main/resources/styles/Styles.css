@@ -1,4 +1,8 @@
-.button {
-    -fx-font-weight: bold;
+.root
+{
+    -fx-font-family: "Comic Sans MS";
 }
-.valueStyle {-fx-font-size: 10em}
+.resizable-canvas
+{
+    -fx-text-fill: -fx-text-background-color;
+}

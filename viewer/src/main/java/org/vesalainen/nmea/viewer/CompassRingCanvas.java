@@ -35,6 +35,7 @@ public class CompassRingCanvas extends CartesianCanvas
     public CompassRingCanvas()
     {
         super(100);
+        getStyleClass().add("compass-ring-canvas");
     }
 
     @Override
@@ -46,12 +47,8 @@ public class CompassRingCanvas extends CartesianCanvas
         boolean have10 = height >= LIMIT10;
         boolean have5 = height >= LIMIT5;
         boolean have1 = height >= LIMIT1;
-        if (haveText)
-        {
-            gc.setFont(Font.font(10));
-            gc.setTextAlign(TextAlignment.CENTER);
-            gc.setTextBaseline(VPos.CENTER);
-        }
+        gc.setFill(getTextFill());
+        String fontFamily = getFont().getFamily();
         for (int ii = 0;ii <360;ii++)
         {
             switch (ii)
@@ -66,7 +63,7 @@ public class CompassRingCanvas extends CartesianCanvas
                 case 330:
                     if (haveText)
                     {
-                        String path = SVGHelp.toPath("calibre", 10, 0, 0, max, String.valueOf(ii), org.vesalainen.ui.TextAlignment.MIDDLE_X);
+                        String path = SVGHelp.toPath(fontFamily, 10, 0, 0, max, String.valueOf(ii), org.vesalainen.ui.TextAlignment.MIDDLE_X);
                         gc.beginPath();
                         gc.appendSVGPath(path);
                         gc.closePath();

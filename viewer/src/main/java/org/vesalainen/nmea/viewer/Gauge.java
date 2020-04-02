@@ -35,58 +35,59 @@ import javafx.scene.layout.GridPane;
 public class Gauge extends GridPane implements Initializable
 {
 
-    private final StringProperty propertyProperty = new SimpleStringProperty();
+    private final StringProperty name = new SimpleStringProperty();
 
-    public String getPropertyProperty()
+    public String getName()
     {
-        return propertyProperty.get();
+        return name.get();
     }
 
-    public void setPropertyProperty(String value)
+    public void setName(String value)
     {
-        propertyProperty.set(value);
+        name.set(value);
     }
 
-    public StringProperty propertyPropertyProperty()
+    public StringProperty nameProperty()
     {
-        return propertyProperty;
+        return name;
     }
-    private StringProperty propertyUnit;
+    private StringProperty value;
 
-    public String getPropertyUnit()
+    public String getValue()
     {
-        return propertyUnit.get();
-    }
-
-    public void setPropertyUnit(String value)
-    {
-        propertyUnit.set(value);
+        return value.get();
     }
 
-    public StringProperty propertyUnitProperty()
+    public void setValue(String v)
     {
-        return propertyUnit;
-    }
-    private StringProperty propertyValue;
-
-    public String getPropertyValue()
-    {
-        return propertyValue.get();
+        value.set(v);
     }
 
-    public void setPropertyValue(String value)
+    public StringProperty valueProperty()
     {
-        propertyValue.set(value);
+        return value;
+    }
+    private StringProperty unit;
+
+    public String getUnit()
+    {
+        return unit.get();
     }
 
-    public StringProperty propertyValueProperty()
+    public void setUnit(String value)
     {
-        return propertyValue;
+        unit.set(value);
     }
+
+    public StringProperty unitProperty()
+    {
+        return unit;
+    }
+
     
-    @FXML private Label title;
-    @FXML private Label unit;
-    @FXML private Label value;
+    @FXML private Label titleLabel;
+    @FXML private Label unitLabel;
+    @FXML private Label valueLabel;
 
     public Gauge()
     {
@@ -107,9 +108,9 @@ public class Gauge extends GridPane implements Initializable
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-        I18n.bind(title.textProperty(), resources, propertyProperty);
-        propertyUnit = unit.textProperty();
-        propertyValue = value.textProperty();
+        I18n.bind(titleLabel.textProperty(), resources, name);
+        unit = unitLabel.textProperty();
+        value = valueLabel.textProperty();
     }
 
 }

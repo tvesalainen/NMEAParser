@@ -42,6 +42,12 @@ public class RotatingCanvas extends CartesianCanvas
     {
         return angle;
     }
+
+    protected RotatingCanvas(double maxValue)
+    {
+        super(maxValue);
+    }
+    
     /**
      * When overriding first call super.onDraw to set angle
      * @param gc 

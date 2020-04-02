@@ -18,13 +18,12 @@ package org.vesalainen.nmea.viewer;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.beans.binding.Binding;
-import javafx.beans.property.Property;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import javafx.util.converter.FloatStringConverter;
+import javafx.scene.paint.Color;
 import org.vesalainen.fx.EnumTitleConverter;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
@@ -43,6 +42,10 @@ public class ViewerController implements Initializable
     @FXML TextField transducerOffset;
     @FXML TextField keelOffset;
     @FXML TextField timeToLive;
+    @FXML TextField solarDepressionAngle;
+    @FXML ColorPicker dayBackgroundColor;
+    @FXML ColorPicker nightBackgroundColor;
+    @FXML ColorPicker twilightBackgroundColor;
     
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -60,5 +63,9 @@ public class ViewerController implements Initializable
         preferences.bindFloat("transducerOffset", 0, transducerOffset);
         preferences.bindFloat("keelOffset", 0, keelOffset);
         preferences.bindLong("timeToLive", 60, timeToLive);
+        preferences.bindDouble("solarDepressionAngle", 6, solarDepressionAngle);
+        preferences.bindColor("dayBackgroundColor", Color.web("#ececec"), dayBackgroundColor);
+        preferences.bindColor("nightBackgroundColor", Color.BLACK, nightBackgroundColor);
+        preferences.bindColor("twilightBackgroundColor", Color.LIGHTGRAY, twilightBackgroundColor);
     }
 }

@@ -24,9 +24,13 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.paint.Color;
 import org.vesalainen.math.UnitType;
+import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.parsers.nmea.NMEACategory;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.parsers.nmea.NMEAService;
@@ -47,6 +51,9 @@ public class ViewerService implements InvalidationListener
     private boolean isInvalid;
     private final Binding<String> hostBinding;
     private final Binding<Integer> portBinding;
+    private final Binding<Color> dayBackgroundColorBinding;
+    private final Binding<Color> nightBackgroundColorBinding;
+    private final Binding<Color> twilightBackgroundColorBinding;
     
     public ViewerService(CachedScheduledThreadPool executor, ViewerPreferences preferences, Locale locale)
     {
@@ -58,7 +65,9 @@ public class ViewerService implements InvalidationListener
         hostBinding.addListener(this);
         portBinding = preferences.getBinding("port");
         portBinding.addListener(this);
-        
+        dayBackgroundColorBinding = preferences.getBinding("dayBackgroundColor");
+        nightBackgroundColorBinding = preferences.getBinding("nightBackgroundColor");
+        twilightBackgroundColorBinding = preferences.getBinding("twilightBackgroundColor");
     }
 
     public void register(Set<Node> nodes)
@@ -69,6 +78,11 @@ public class ViewerService implements InvalidationListener
     public void start()
     {
         openNMEAService();
+        propertyStore.start();
+    }
+    void stop()
+    {
+        propertyStore.stop();
     }
     private void register(Node node)
     {
@@ -79,7 +93,7 @@ public class ViewerService implements InvalidationListener
     }
     private void registerGauge(Gauge gauge)
     {
-        String property = gauge.getPropertyProperty();
+        String property = gauge.getName();
         if (!nmeaProperties.isProperty(property))
         {
             throw new IllegalArgumentException(property+" is not NMEAProperty");
@@ -95,7 +109,7 @@ public class ViewerService implements InvalidationListener
         UnitType unit = nmeaProperties.getUnit(property);
         Binding<UnitType> unitBinding = getUnitBinding(property);
         StringBinding unitStringBinding = Bindings.createStringBinding(()->unitBinding.getValue().getUnit(), unitBinding);
-        gauge.propertyUnitProperty().bind(unitStringBinding);
+        gauge.unitProperty().bind(unitStringBinding);
         StringBinding stringBinding;
         switch (type.getSimpleName())
         {
@@ -105,7 +119,7 @@ public class ViewerService implements InvalidationListener
             default:
                 throw new UnsupportedOperationException(type+" not supported");
         }
-        gauge.propertyValueProperty().bind(stringBinding);
+        gauge.valueProperty().bind(stringBinding);
     }
     private Binding<UnitType> getUnitBinding(String property)
     {
@@ -153,8 +167,31 @@ public class ViewerService implements InvalidationListener
         }
     }
 
-    void stop()
+    public void bindBackgroundColors(Parent root)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ObjectBinding<SolarWatch.DayPhase> dayPhaseProperty = propertyStore.dayPhaseProperty();
+        StringBinding colorBinding = Bindings.createStringBinding(()->
+        {
+            switch (dayPhaseProperty.getValue())
+            {
+                case DAY:
+                    return colorToString(dayBackgroundColorBinding.getValue());
+                case NIGHT:
+                    return colorToString(nightBackgroundColorBinding.getValue());
+                case TWILIGHT:
+                    return colorToString(twilightBackgroundColorBinding.getValue());
+                default:
+                    throw new UnsupportedOperationException(dayPhaseProperty.getValue()+" not supported");
+            }
+        }, dayPhaseProperty, dayBackgroundColorBinding, nightBackgroundColorBinding, twilightBackgroundColorBinding);
+        root.styleProperty().bind(Bindings.concat("-fx-base: ", colorBinding, ";"));
+    }
+    private String colorToString(Color color)
+    {
+        return String.format(Locale.US, "#%02X%02X%02X", 
+                (int)(color.getRed()*255.0),
+                (int)(color.getGreen()*255.0),
+                (int)(color.getBlue()*255.0)
+        );
     }
 }

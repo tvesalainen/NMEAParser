@@ -16,8 +16,6 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -36,11 +34,13 @@ public class CartesianCanvas extends ResizableCanvas
 
     public CartesianCanvas()
     {
-        this(1);
+        super(true);
+        this.max = 100;
     }
 
     protected CartesianCanvas(double maxValue)
     {
+        super(true);
         this.max = maxValue;
     }
 
@@ -49,7 +49,7 @@ public class CartesianCanvas extends ResizableCanvas
     {
         double width = getWidth();
         double height = getHeight();
-        if (getWidth() > 0 && getHeight() > 0)
+        if (width > 0 && height > 0)
         {
             GraphicsContext gc = getGraphicsContext2D();
             Transforms.createScreenTransform(

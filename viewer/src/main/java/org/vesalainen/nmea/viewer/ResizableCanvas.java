@@ -18,21 +18,26 @@ package org.vesalainen.nmea.viewer;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import javafx.beans.binding.When;
-import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.css.CssMetaData;
+import javafx.css.SimpleStyleableObjectProperty;
+import javafx.css.Styleable;
+import javafx.css.StyleablePropertyFactory;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
-import org.vesalainen.fx.CanvasPlotter;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
 
 /**
  *
@@ -40,26 +45,57 @@ import org.vesalainen.fx.CanvasPlotter;
  */
 public class ResizableCanvas extends Canvas implements Initializable
 {
+    private static final StyleablePropertyFactory<ResizableCanvas> FACTORY = 
+            new StyleablePropertyFactory<>(Canvas.getClassCssMetaData());
+    private static final CssMetaData<ResizableCanvas,Font> FONT = FACTORY.createFontCssMetaData("-fx-font", s->s.font);
+    private static final CssMetaData<ResizableCanvas,Paint> TEXT_FILL = FACTORY.createPaintCssMetaData("-fx-text-fill", s->s.textFill, Color.BLACK, true);
+    
+    private final SimpleStyleableObjectProperty<Font> font = new SimpleStyleableObjectProperty<>(FONT, this, "font");
 
-    private final BooleanProperty square = new SimpleBooleanProperty(true);
-
-    public boolean isSquare()
+    public Font getFont()
     {
-        return square.get();
+        return font.get();
     }
 
-    public void setSquare(boolean value)
+    public void setFont(Font value)
     {
-        square.set(value);
+        font.set(value);
     }
 
-    public BooleanProperty squareProperty()
+    public ObjectProperty fontProperty()
     {
-        return square;
+        return font;
     }
+    private final SimpleStyleableObjectProperty<Paint> textFill = new SimpleStyleableObjectProperty<>(TEXT_FILL, this, "textFill");
+
+    public Paint getTextFill()
+    {
+        return textFill.get();
+    }
+
+    public void setTextFill(Paint value)
+    {
+        textFill.set(value);
+    }
+
+    public ObjectProperty textFillProperty()
+    {
+        return textFill;
+    }
+    
+
+    private boolean square;
+    protected URL location;
+    protected ResourceBundle resources;
 
     public ResizableCanvas()
     {
+    }
+
+    public ResizableCanvas(boolean square)
+    {
+        getStyleClass().add("resizable-canvas");
+        this.square = square;
         try
         {
             ResourceBundle bundle = ResourceBundle.getBundle(I18n.class.getName(), Locale.getDefault());
@@ -72,6 +108,18 @@ public class ResizableCanvas extends Canvas implements Initializable
         {
             throw new IllegalArgumentException(ex);
         }
+        parentProperty().addListener(this::setParent);
+    }
+
+    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData()
+    {
+        return FACTORY.getCssMetaData();
+    }
+
+    @Override
+    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData()
+    {
+        return FACTORY.getCssMetaData();
     }
 
     @Override
@@ -94,20 +142,13 @@ public class ResizableCanvas extends Canvas implements Initializable
 
     protected void onDraw()
     {
-        if (getWidth() > 0 && getHeight() > 0)
-        {
-            CanvasPlotter plotter = new CanvasPlotter(this);
-            plotter.setFont("arial", 0, 1);
-            plotter.drawCircle(0, 0, 1);
-            plotter.drawCoordinates();
-            plotter.plot();
-        }
     }
 
     @Override
-    public void initialize(URL location, ResourceBundle resources)
+    public final void initialize(URL location, ResourceBundle resources)
     {
-        parentProperty().addListener(this::setParent);
+        this.location = location; 
+        this.resources = resources; 
     }
     private void setParent(ObservableValue<? extends Parent> observable, Parent oldValue, Parent newParent)
     {
@@ -116,23 +157,25 @@ public class ResizableCanvas extends Canvas implements Initializable
             Region region = (Region) newParent;
             ReadOnlyDoubleProperty regionWidth = region.widthProperty();
             ReadOnlyDoubleProperty regionHeight = region.heightProperty();
-            regionWidth.addListener(evt -> onDraw());
-            regionHeight.addListener(evt -> onDraw());
             
-            widthProperty()
-                    .bind(
-                            new When(square)
-                                    .then(new When(regionWidth.lessThanOrEqualTo(regionHeight))
-                                            .then(regionWidth)
-                                            .otherwise(regionHeight))
-                                    .otherwise(regionWidth));
-            heightProperty()
-                    .bind(
-                            new When(square)
-                                    .then(new When(regionHeight.lessThanOrEqualTo(regionWidth))
-                                            .then(regionHeight)
-                                            .otherwise(regionWidth))
-                                    .otherwise(regionHeight));
+            if (square)
+            {
+                widthProperty()
+                        .bind(new When(regionWidth.lessThanOrEqualTo(regionHeight))
+                                                .then(regionWidth)
+                                                .otherwise(regionHeight));
+                heightProperty()
+                        .bind(new When(regionHeight.lessThanOrEqualTo(regionWidth))
+                                                .then(regionHeight)
+                                                .otherwise(regionWidth));
+            }
+            else
+            {
+                widthProperty().bind(regionWidth);
+                heightProperty().bind(regionHeight);
+            }
+            widthProperty().addListener(evt -> onDraw());
+            heightProperty().addListener(evt -> onDraw());
         }
         else
         {

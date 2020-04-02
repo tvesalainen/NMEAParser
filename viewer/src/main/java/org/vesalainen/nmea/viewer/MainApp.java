@@ -1,6 +1,7 @@
 package org.vesalainen.nmea.viewer;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -14,6 +15,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -43,13 +45,12 @@ public class MainApp extends Application
         preferences = new ViewerPreferences();
         controller.bindPreferences(preferences);
         service = new ViewerService(executor, preferences, locale);
-        service.register(root.lookupAll(".gauge"));
+        service.register(root.lookupAll("*"));
         service.start();
-        
+        service.bindBackgroundColors(root);
+
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
-        fontSize.bind(scene.widthProperty().add(scene.heightProperty()).divide(80));
-        root.styleProperty().bind(Bindings.concat("-fx-font-size: ", fontSize.asString(), ";"));
         stage.setTitle("NMEA Viewer");
         stage.setScene(scene);
         stage.show();

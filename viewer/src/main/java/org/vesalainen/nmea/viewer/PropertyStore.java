@@ -25,20 +25,24 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.binding.Binding;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
 import javafx.beans.binding.LongBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.scene.Node;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import org.vesalainen.navi.SolarWatch;
+import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.util.CollectionHelp;
+import org.vesalainen.util.ConcurrentHashMapList;
+import org.vesalainen.util.MapList;
 import org.vesalainen.util.TimeToLiveSet;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -48,6 +52,7 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  */
 public class PropertyStore extends AnnotatedPropertyStore
 {
+    private @Property long epochMillis;
     private @Property double latitude;
     private @Property double longitude;
     private @Property float depthOfWater;
@@ -61,7 +66,10 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final NavigableSet<String> updated = new ConcurrentSkipListSet<>();
     private final TimeToLiveSet<String> actives;
     private final LongBinding timeToLiveBinding;
-    private final Map<String,Node> nodes = new ConcurrentHashMap<>();
+    private final MapList<String,Node> nodes = new ConcurrentHashMapList<>();
+    private final DoubleBinding solarDepressionAngleBinding;
+    private SolarWatch solarWatch;
+    private ObjectBinding<DayPhase> dayPhaseProperty;
 
     public PropertyStore(CachedScheduledThreadPool executor, ViewerPreferences preferences)
     {
@@ -71,12 +79,28 @@ public class PropertyStore extends AnnotatedPropertyStore
         this.transducerOffsetBinding = (FloatBinding) preferences.getNumberBinding("transducerOffset");
         this.timeToLiveBinding = (LongBinding)preferences.getNumberBinding("timeToLive");
         this.actives = new TimeToLiveSet<>(Clock.systemUTC(), preferences.getLong("timeToLive"), SECONDS, this::setDisable);
+        this.solarDepressionAngleBinding = (DoubleBinding) preferences.getNumberBinding("solarDepressionAngle");
+        this.solarWatch = new SolarWatch(()->epochMillis, executor, 1, MINUTES, ()->latitude, ()->longitude, ()->solarDepressionAngleBinding.doubleValue());
+        this.dayPhaseProperty = Bindings.createObjectBinding(()->solarWatch.getPhase());
+        solarWatch.addObserver((p)->dayPhaseProperty.invalidate());
         for (String property : getProperties())
         {
             listenerMap.put(property, new ObservableProperty());
             actives.add(property);
         }
         checkDisabled();
+    }
+    public ObjectBinding<DayPhase> dayPhaseProperty()
+    {
+        return dayPhaseProperty;
+    }
+    public void start()
+    {
+        solarWatch.start();
+    }
+    public void stop()
+    {
+        solarWatch.stop();
     }
     
     @Property public float getDepthBelowKeel()
@@ -117,10 +141,10 @@ public class PropertyStore extends AnnotatedPropertyStore
      */
     private void setDisable(String property)
     {
-        Node node = nodes.get(property);
+        List<Node> node = nodes.get(property);
         if (node != null)
         {
-            node.setDisable(true);
+            node.forEach((n)->n.setDisable(true));
         }
     }
     @Override
@@ -149,11 +173,7 @@ public class PropertyStore extends AnnotatedPropertyStore
         {
             String property = iterator.next();
             iterator.remove();
-            Node node = nodes.get(property);
-            if (node != null)
-            {
-                node.setDisable(false);
-            }
+            setDisable(property);
             actives.add(property, ttl, SECONDS);
             ObservableProperty observableProperty = listenerMap.get(property);
             observableProperty.invalidate();
@@ -162,7 +182,7 @@ public class PropertyStore extends AnnotatedPropertyStore
 
     public Observable registerNode(String property, Node node)
     {
-        nodes.put(property, node);
+        nodes.add(property, node);
         node.setDisable(true);
         return listenerMap.get(property);
     }
