@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import org.vesalainen.code.SimplePropertySetterDispatcher;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEADispatcher;
 import org.vesalainen.parsers.nmea.NMEAParser;

@@ -56,10 +56,15 @@ public interface NMEAObserver extends Transactional
      */
     void setClock(Clock clock);
     /**
-     * Set taker id of sentence
+     * Set millis seconds from epoch using NMEA Clock.
+     * @param millis 
+     */
+    void setEpochMillis(long millis);
+    /**
+     * Set talker id of sentence
      * @param talkerId 
      */
-    public void setTalkerId(TalkerId talkerId);
+    void setTalkerId(TalkerId talkerId);
     /**
      * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
@@ -801,4 +806,5 @@ public interface NMEAObserver extends Transactional
     @NMEACat(DISTANCE)
     @Unit(value=NAUTICAL_MILE, min=0)
     public void setWaterDistanceSinceReset(float distance);
+
 }

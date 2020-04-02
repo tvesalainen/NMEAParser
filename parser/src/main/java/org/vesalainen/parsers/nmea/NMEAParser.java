@@ -18,6 +18,7 @@
 package org.vesalainen.parsers.nmea;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -1167,10 +1168,12 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             int hour,
             int minute,
             float second,
+            @ParserContext("data") NMEAObserver data,
             @ParserContext("clock") NMEAClock clock)
     {
         int s = (int) second;
         clock.setTime(hour, minute, s, (int)((second - (float)s)*1000));
+        data.setEpochMillis(((Clock)clock).millis());
     }
 
     @Rule("digit2 digit2 digit2")
