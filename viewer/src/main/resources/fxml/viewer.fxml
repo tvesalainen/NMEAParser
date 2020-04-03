@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -14,7 +15,6 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import org.vesalainen.nmea.viewer.CompassRingCanvas?>
-<?import org.vesalainen.nmea.viewer.Gauge?>
 <?import org.vesalainen.nmea.viewer.GaugeCanvas?>
 <?import org.vesalainen.nmea.viewer.WindArrowCanvas?>
 
@@ -35,11 +35,19 @@
                <children>
                   <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
                      <children>
-                        <GaugeCanvas property="%depthOfWater" />
+                        <GaugeCanvas property="depthOfWater" />
                      </children>
                   </StackPane>
-                  <Gauge name="waterSpeed" GridPane.rowIndex="1" />
-                  <Gauge name="waterTemperature" GridPane.rowIndex="2" />
+                  <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.rowIndex="1">
+                     <children>
+                        <GaugeCanvas property="waterSpeed" />
+                     </children>
+                  </StackPane>
+                  <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.rowIndex="2">
+                     <children>
+                        <GaugeCanvas property="waterTemperature" />
+                     </children>
+                  </StackPane>
                   <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.columnIndex="1" GridPane.rowSpan="2147483647">
                      <children>
                         <CompassRingCanvas />
@@ -130,7 +138,66 @@
                         </GridPane>
                      </content>
                   </TitledPane>
-                  <TitledPane prefHeight="200.0" prefWidth="200.0" text="%backgroundColors">
+                  <TitledPane animated="false" text="%colors">
+                     <content>
+                        <GridPane>
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="209.0" minWidth="10.0" prefWidth="209.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="138.0" minWidth="10.0" prefWidth="121.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="124.0" minWidth="10.0" prefWidth="116.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%backgroundColor" GridPane.rowIndex="1" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%dayColor" GridPane.columnIndex="1" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%twilightColor" GridPane.columnIndex="2" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%nightColor" GridPane.columnIndex="3" />
+                              <ColorPicker fx:id="dayBackgroundColor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <ColorPicker fx:id="nightBackgroundColor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                              <ColorPicker fx:id="twilightBackgroundColor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                           </children>
+                        </GridPane>
+                     </content>
+                  </TitledPane>
+                  <TitledPane prefHeight="200.0" prefWidth="200.0" text="%nightMode">
+                     <content>
+                        <GridPane>
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%solarDepressionAngle" GridPane.rowIndex="2" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%solarUpdateSeconds" GridPane.rowIndex="3" />
+                              <TextField fx:id="solarDepressionAngle" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                 <tooltip>
+                                    <Tooltip text="%solarDepressionAngleHelp" />
+                                 </tooltip>
+                              </TextField>
+                              <TextField fx:id="solarUpdateSeconds" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                 <tooltip>
+                                    <Tooltip text="%solarDepressionAngleHelp" />
+                                 </tooltip>
+                              </TextField>
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%dayPhase" GridPane.rowIndex="1" />
+                              <CheckBox fx:id="solarAutomation" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%solarAutomation" />
+                              <ComboBox fx:id="dayPhase" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                           </children>
+                        </GridPane>
+                     </content>
+                  </TitledPane>
+                  <TitledPane animated="false" text="%fontFamily">
                      <content>
                         <GridPane>
                           <columnConstraints>
@@ -139,23 +206,10 @@
                           </columnConstraints>
                           <rowConstraints>
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%solarDepressionAngle" />
-                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%dayBackgroundColor" GridPane.rowIndex="1" />
-                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%nightBackgroundColor" GridPane.rowIndex="2" />
-                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%twilightBackgroundColor" GridPane.rowIndex="3" />
-                              <TextField fx:id="solarDepressionAngle" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1">
-                                 <tooltip>
-                                    <Tooltip text="%solarDepressionAngleHelp" />
-                                 </tooltip>
-                              </TextField>
-                              <ColorPicker fx:id="dayBackgroundColor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <ColorPicker fx:id="nightBackgroundColor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <ColorPicker fx:id="twilightBackgroundColor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%fontFamily" />
+                              <ComboBox fx:id="fontFamily" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" />
                            </children>
                         </GridPane>
                      </content>

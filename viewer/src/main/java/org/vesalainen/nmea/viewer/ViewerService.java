@@ -90,6 +90,12 @@ public class ViewerService implements InvalidationListener
         {
             registerGauge((Gauge) node);
         }
+        if (node instanceof PropertyBindable)
+        {
+            PropertyBindable bindable = (PropertyBindable) node;
+            String[] bound = bindable.bind(preferences, propertyStore);
+            propertyStore.registerNode(node, bound);
+        }
     }
     private void registerGauge(Gauge gauge)
     {
@@ -123,19 +129,7 @@ public class ViewerService implements InvalidationListener
     }
     private Binding<UnitType> getUnitBinding(String property)
     {
-        NMEACategory cat = nmeaProperties.getCategory(property);
-        UnitType unit = nmeaProperties.getUnit(property);
-        switch (cat)
-        {
-            case DEPTH:
-                return preferences.getBinding("depthUnit");
-            case SPEED:
-                return preferences.getBinding("speedUnit");
-            case TEMPERATURE:
-                return preferences.getBinding("temperatureUnit");
-            default:
-                throw new UnsupportedOperationException(cat+" not supported");
-        }
+        return preferences.getCategoryBinding(property);
     }
 
     private void openNMEAService()
@@ -167,7 +161,7 @@ public class ViewerService implements InvalidationListener
         }
     }
 
-    public void bindBackgroundColors(Parent root)
+    public StringBinding bindBackgroundColors()
     {
         ObjectBinding<SolarWatch.DayPhase> dayPhaseProperty = propertyStore.dayPhaseProperty();
         StringBinding colorBinding = Bindings.createStringBinding(()->
@@ -184,7 +178,7 @@ public class ViewerService implements InvalidationListener
                     throw new UnsupportedOperationException(dayPhaseProperty.getValue()+" not supported");
             }
         }, dayPhaseProperty, dayBackgroundColorBinding, nightBackgroundColorBinding, twilightBackgroundColorBinding);
-        root.styleProperty().bind(Bindings.concat("-fx-base: ", colorBinding, ";"));
+        return colorBinding;
     }
     private String colorToString(Color color)
     {

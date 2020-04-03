@@ -8,6 +8,7 @@ import java.util.Set;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableMap;
@@ -47,7 +48,12 @@ public class MainApp extends Application
         service = new ViewerService(executor, preferences, locale);
         service.register(root.lookupAll("*"));
         service.start();
-        service.bindBackgroundColors(root);
+        
+        StringBinding colorBinding = service.bindBackgroundColors();
+        root.styleProperty().bind(Bindings.concat(
+                "-fx-base: ", colorBinding, ";",
+                "-fx-font-family: ", preferences.getBinding("fontFamily"), ";")
+        );
 
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");

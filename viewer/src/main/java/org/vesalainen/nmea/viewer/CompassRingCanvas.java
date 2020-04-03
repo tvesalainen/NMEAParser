@@ -16,10 +16,8 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import javafx.geometry.VPos;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
+import javafx.scene.paint.Paint;
 import org.vesalainen.ui.SVGHelp;
 
 /**
@@ -36,6 +34,7 @@ public class CompassRingCanvas extends CartesianCanvas
     {
         super(100);
         getStyleClass().add("compass-ring-canvas");
+        textFillProperty().addListener(evt->onDraw());
     }
 
     @Override
@@ -47,7 +46,9 @@ public class CompassRingCanvas extends CartesianCanvas
         boolean have10 = height >= LIMIT10;
         boolean have5 = height >= LIMIT5;
         boolean have1 = height >= LIMIT1;
-        gc.setFill(getTextFill());
+        Paint textFill = getTextFill();
+        gc.setFill(textFill);
+        gc.setStroke(textFill);
         String fontFamily = getFont().getFamily();
         for (int ii = 0;ii <360;ii++)
         {

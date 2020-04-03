@@ -53,16 +53,16 @@ public class I18n extends ResourceBundle
         return resources.elements();
     }
     
-    public static void bind(StringProperty target, ResourceBundle resources, StringProperty key)
+    public static void bind(StringProperty target, ResourceBundle resources, ObservableStringValue key)
     {
         target.bind(new ObservableResource(resources, key));
     }
     private static class ObservableResource implements ObservableStringValue
     {
         private ResourceBundle resources;
-        private StringProperty key;
+        private ObservableStringValue key;
 
-        public ObservableResource(ResourceBundle resources, StringProperty key)
+        public ObservableResource(ResourceBundle resources, ObservableStringValue key)
         {
             this.resources = resources;
             this.key = key;

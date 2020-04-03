@@ -16,30 +16,31 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import java.util.List;
 import static java.util.Locale.US;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.FloatProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.css.CssMetaData;
-import javafx.css.SimpleStyleableObjectProperty;
-import javafx.css.Styleable;
-import javafx.css.StyleablePropertyFactory;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.*;
+import org.vesalainen.text.CamelCase;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class GaugeCanvas extends ResizableCanvas
+public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
 {
+    private UnitType origUnit = UNITLESS;
     private final StringProperty title = new SimpleStringProperty();
 
     private String getTitle()
@@ -73,23 +74,23 @@ public class GaugeCanvas extends ResizableCanvas
     {
         return property;
     }
-    private final FloatProperty value = new SimpleFloatProperty();
+    private final DoubleProperty value = new SimpleDoubleProperty();
 
-    public float getValue()
+    public double getValue()
     {
         return value.get();
     }
 
-    public void setValue(float v)
+    public void setValue(double v)
     {
         value.set(v);
     }
 
-    public FloatProperty valueProperty()
+    public DoubleProperty valueProperty()
     {
         return value;
     }
-    private final ObjectProperty<UnitType> unit = new SimpleObjectProperty<>();
+    private final ObjectProperty<UnitType> unit = new SimpleObjectProperty<>(UNITLESS);
 
     UnitType getUnit()
     {
@@ -105,6 +106,23 @@ public class GaugeCanvas extends ResizableCanvas
     {
         return unit;
     }
+    private final StringProperty unitTitle = new SimpleStringProperty();
+
+    String getUnitTitle()
+    {
+        return unitTitle.get();
+    }
+
+    void setUnitTitle(String value)
+    {
+        unitTitle.set(value);
+    }
+
+    StringProperty unitTitleProperty()
+    {
+        return unitTitle;
+    }
+    
     private final StringProperty format = new SimpleStringProperty("% 5.1f");
 
     public String getFormat()
@@ -125,9 +143,26 @@ public class GaugeCanvas extends ResizableCanvas
     {
         super(false);
         getStyleClass().add("gauge-canvas");
-        I18n.bind(titleProperty(), resources, property);
     }
 
+    @Override
+    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    {
+        getStyleClass().add(CamelCase.delimitedLower(property.getValue(), "-"));
+        I18n.bind(titleProperty(), resources, property);
+        I18n.bind(unitTitleProperty(), resources, Bindings.createStringBinding(()->CamelCase.property(unit.getValue().name())+"Unit", unit));
+        
+        String prop = property.getValue();
+        origUnit = propertyStore.getOriginalUnit(prop);
+        unitProperty().bind(preferences.getCategoryBinding(prop));
+        valueProperty().bind(propertyStore.getBinding(prop));
+        
+        valueProperty().addListener(evt->onDraw());
+        unitProperty().addListener(evt->onDraw());
+        disabledProperty().addListener(evt->onDraw());
+        
+        return new String[]{property.getValue()};
+    }
     @Override
     protected void onDraw()
     {
@@ -143,21 +178,17 @@ public class GaugeCanvas extends ResizableCanvas
             gc.setFont(Font.font(fontFamily, height));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(String.format(US, format.getValue(), value.floatValue()), width/2, height/2, width);
+            gc.fillText(String.format(US, getFormat(), origUnit.convertTo(getValue(), unit.getValue()), getValue()), width/2, height/2, width);
             // title
             gc.setFont(Font.font(fontFamily, height/10));
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setTextBaseline(VPos.TOP);
             gc.fillText(title.getValue(), 0, 0, 0.8*width);
             // unit
-            UnitType unitType = unit.getValue();
-            if (unitType != null)
-            {
-                gc.setFont(Font.font(fontFamily, height/10));
-                gc.setTextAlign(TextAlignment.RIGHT);
-                gc.setTextBaseline(VPos.TOP);
-                gc.fillText(unitType.getUnit(), width, 0, 0.2*width);
-            }
+            gc.setFont(Font.font(fontFamily, height/10));
+            gc.setTextAlign(TextAlignment.RIGHT);
+            gc.setTextBaseline(VPos.TOP);
+            gc.fillText(unitTitle.getValue(), width, 0, 0.2*width);
         }
     }
     

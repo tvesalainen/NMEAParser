@@ -19,6 +19,7 @@ package org.vesalainen.nmea.viewer;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.beans.binding.Binding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ColorPicker;
@@ -35,6 +36,9 @@ import javafx.util.converter.IntegerStringConverter;
 import javafx.util.converter.LongStringConverter;
 import org.vesalainen.fx.ColorStringConverter;
 import org.vesalainen.fx.PreferencesBindings;
+import org.vesalainen.math.UnitType;
+import org.vesalainen.parsers.nmea.NMEACategory;
+import org.vesalainen.parsers.nmea.NMEAProperties;
 
 /**
  *
@@ -113,17 +117,22 @@ public class ViewerPreferences
         bindingPreferences.bindLongBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createLongBinding(key, def));
     }
-    public <E extends Enum<E>> void bindCombo(String key, ComboBox<E> combo, StringConverter<E> converter, E... values)
+    public <T> void bindCombo(String key, T def, ComboBox<T> combo, StringConverter<T> converter, T... values)
     {
         combo.setItems(FXCollections.observableArrayList(values));
         combo.setConverter(converter);
-        bindingPreferences.bindEnumBiDirectional(key, values[0], combo.valueProperty());
-        bindings.put(key, bindingPreferences.createEnumBinding(key, values[0]));
+        bindingPreferences.bindBiDirectional(key, def, combo.valueProperty(), converter);
+        bindings.put(key, bindingPreferences.createObjectBinding(key, def, converter));
     }
     public void bindColor(String key, Color def, ColorPicker colorPicker)
     {
         bindingPreferences.bindBiDirectional(key, def, colorPicker.valueProperty(), COLOR_STRING_CONVERTER);
         bindings.put(key, bindingPreferences.createObjectBinding(key, def, COLOR_STRING_CONVERTER));
+    }
+    public void bindBoolean(String key, boolean def, BooleanProperty b)
+    {
+        bindingPreferences.bindBooleanBiDirectional(key, def, b);
+        bindings.put(key, bindingPreferences.createBooleanBinding(key, def));
     }
     public String getString(String key)
     {
@@ -183,6 +192,33 @@ public class ViewerPreferences
     {
         textField.textFormatterProperty().set(new TextFormatter<>(converter));
         return (TextFormatter<T>) textField.textFormatterProperty().get();
+    }
+
+    public Binding<UnitType> getCategoryBinding(String property)
+    {
+        NMEACategory cat = NMEAProperties.getInstance().getCategory(property);
+        if (cat != null)
+        {
+            switch (cat)
+            {
+                case DEPTH:
+                    return getBinding("depthUnit");
+                case SPEED:
+                    return getBinding("speedUnit");
+                case TEMPERATURE:
+                    return getBinding("temperatureUnit");
+                default:
+                    throw new UnsupportedOperationException(cat+" not supported");
+            }
+        }
+        else
+        {
+            switch (property)
+            {
+                default:
+                    throw new UnsupportedOperationException(property+" has no category");
+            }
+        }
     }
 
 }

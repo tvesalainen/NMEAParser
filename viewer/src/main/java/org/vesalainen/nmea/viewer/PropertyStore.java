@@ -34,12 +34,15 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
 import javafx.beans.binding.LongBinding;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.scene.Node;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import org.vesalainen.math.UnitType;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
+import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.ConcurrentHashMapList;
 import org.vesalainen.util.MapList;
@@ -62,7 +65,7 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final CachedScheduledThreadPool executor;
     private final FloatBinding keelOffsetBinding;
     private final FloatBinding transducerOffsetBinding;
-    private final Map<String,ObservableProperty> listenerMap = new HashMap<>();
+    private final Map<String,NumberBinding> boundMap = new HashMap<>();
     private final NavigableSet<String> updated = new ConcurrentSkipListSet<>();
     private final TimeToLiveSet<String> actives;
     private final LongBinding timeToLiveBinding;
@@ -80,15 +83,40 @@ public class PropertyStore extends AnnotatedPropertyStore
         this.timeToLiveBinding = (LongBinding)preferences.getNumberBinding("timeToLive");
         this.actives = new TimeToLiveSet<>(Clock.systemUTC(), preferences.getLong("timeToLive"), SECONDS, this::setDisable);
         this.solarDepressionAngleBinding = (DoubleBinding) preferences.getNumberBinding("solarDepressionAngle");
-        this.solarWatch = new SolarWatch(()->epochMillis, executor, 1, MINUTES, ()->latitude, ()->longitude, ()->solarDepressionAngleBinding.doubleValue());
+        this.solarWatch = new SolarWatch(()->epochMillis, executor, ()->preferences.getLong("solarUpdateSeconds"), ()->latitude, ()->longitude, ()->solarDepressionAngleBinding.doubleValue());
         this.dayPhaseProperty = Bindings.createObjectBinding(()->solarWatch.getPhase());
-        solarWatch.addObserver((p)->dayPhaseProperty.invalidate());
+        solarWatch.addObserver((p)->Platform.runLater(dayPhaseProperty::invalidate));
         for (String property : getProperties())
         {
-            listenerMap.put(property, new ObservableProperty());
+            boundMap.put(property, createBinding(property));
             actives.add(property);
         }
         checkDisabled();
+    }
+    private NumberBinding createBinding(String property)
+    {
+        Class<?> type = getType(property);
+        if (type == null)
+        {
+            throw new IllegalArgumentException(type+" not a property");
+        }
+        switch (type.getSimpleName())
+        {
+            case "int":
+                return Bindings.createIntegerBinding(()->getInt(property));
+            case "long":
+                return Bindings.createLongBinding(()->getLong(property));
+            case "float":
+                return Bindings.createFloatBinding(()->getFloat(property));
+            case "double":
+                return Bindings.createDoubleBinding(()->getDouble(property));
+            default:
+                throw new UnsupportedOperationException(type+" not supported");
+        }
+    }
+    public NumberBinding getBinding(String property)
+    {
+        return boundMap.get(property);
     }
     public ObjectBinding<DayPhase> dayPhaseProperty()
     {
@@ -175,8 +203,8 @@ public class PropertyStore extends AnnotatedPropertyStore
             iterator.remove();
             setDisable(property);
             actives.add(property, ttl, SECONDS);
-            ObservableProperty observableProperty = listenerMap.get(property);
-            observableProperty.invalidate();
+            NumberBinding binding = boundMap.get(property);
+            binding.invalidate();
         }
     }
 
@@ -184,27 +212,32 @@ public class PropertyStore extends AnnotatedPropertyStore
     {
         nodes.add(property, node);
         node.setDisable(true);
-        return listenerMap.get(property);
+        return boundMap.get(property);
     }
-    private class ObservableProperty implements Observable
-    {
-        private List<InvalidationListener> listeners = new ArrayList<>();
-        
-        public void invalidate()
-        {
-            listeners.forEach((l)->l.invalidated(this));
-        }
-        @Override
-        public void addListener(InvalidationListener listener)
-        {
-            listeners.add(listener);
-        }
 
-        @Override
-        public void removeListener(InvalidationListener listener)
+    public UnitType getOriginalUnit(String property)
+    {
+        UnitType unit = NMEAProperties.getInstance().getUnit(property);
+        if (unit != null)
         {
-            listeners.remove(listener);
+            return unit;
         }
-        
+        else
+        {
+            switch (property)
+            {
+                default:
+                    throw new UnsupportedOperationException(property+" has no unit");
+            }
+        }
+    }
+
+    public void registerNode(Node node, String... boundProperties)
+    {
+        for (String property : boundProperties)
+        {
+            nodes.add(property, node);
+            node.setDisable(true);
+        }
     }
 }
