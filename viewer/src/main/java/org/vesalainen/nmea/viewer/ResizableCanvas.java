@@ -49,6 +49,7 @@ public class ResizableCanvas extends Canvas implements Initializable
             new StyleablePropertyFactory<>(Canvas.getClassCssMetaData());
     private static final CssMetaData<ResizableCanvas,Font> FONT = FACTORY.createFontCssMetaData("-fx-font", s->s.font);
     private static final CssMetaData<ResizableCanvas,Paint> TEXT_FILL = FACTORY.createPaintCssMetaData("-fx-text-fill", s->s.textFill, Color.BLACK, true);
+    private static final CssMetaData<ResizableCanvas,Paint> BACKGROUND = FACTORY.createPaintCssMetaData("-fx-background", s->s.background, Color.WHITE, true);
     
     private final SimpleStyleableObjectProperty<Font> font = new SimpleStyleableObjectProperty<>(FONT, this, "font");
 
@@ -82,6 +83,22 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
         return textFill;
     }
+    private final SimpleStyleableObjectProperty<Paint> background = new SimpleStyleableObjectProperty<>(BACKGROUND, this, "background");
+
+    public Paint getBackground()
+    {
+        return background.get();
+    }
+
+    public void setBackground(Paint value)
+    {
+        background.set(value);
+    }
+
+    public ObjectProperty backgroundProperty()
+    {
+        return background;
+    }
     
 
     private boolean square;
@@ -90,11 +107,15 @@ public class ResizableCanvas extends Canvas implements Initializable
 
     public ResizableCanvas()
     {
+        this(false);
     }
 
     public ResizableCanvas(boolean square)
     {
         getStyleClass().add("resizable-canvas");
+        fontProperty().addListener(evt->onDraw());
+        textFillProperty().addListener(evt->onDraw());
+        backgroundProperty().addListener(evt->onDraw());
         this.square = square;
         try
         {
@@ -121,7 +142,25 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
         return FACTORY.getCssMetaData();
     }
-
+    /**
+     * Returns color whose brightness is double the current background.
+     * @param origColor
+     * @return 
+     */
+    protected Color getColor(Color origColor)
+    {
+        Paint bg = getBackground();
+        if (bg instanceof Color)
+        {
+            Color bgColor = (Color) bg;
+            double brightness = 0.5*bgColor.getBrightness()+0.5;
+            return Color.hsb(origColor.getHue(), origColor.getSaturation(), brightness, origColor.getOpacity());
+        }
+        else
+        {
+            return origColor;
+        }
+    }
     @Override
     public double prefHeight(double width)
     {

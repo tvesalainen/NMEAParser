@@ -26,11 +26,15 @@ import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
+import javafx.beans.binding.When;
+import javafx.beans.value.ObservableBooleanValue;
+import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.paint.Color;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.navi.SolarWatch;
+import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.parsers.nmea.NMEACategory;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.parsers.nmea.NMEAService;
@@ -163,7 +167,14 @@ public class ViewerService implements InvalidationListener
 
     public StringBinding bindBackgroundColors()
     {
-        ObjectBinding<SolarWatch.DayPhase> dayPhaseProperty = propertyStore.dayPhaseProperty();
+        ObjectBinding<DayPhase> autoPhaseProperty = propertyStore.dayPhaseProperty();
+        Binding<DayPhase> forcedPhaseProperty = preferences.getBinding("dayPhase");
+        Binding<Boolean> solarAutomation = preferences.getBinding("solarAutomation");
+        
+        Binding<DayPhase> dayPhaseProperty = new When((ObservableBooleanValue) solarAutomation)
+                .then(autoPhaseProperty)
+                .otherwise((ObservableObjectValue)forcedPhaseProperty);
+                
         StringBinding colorBinding = Bindings.createStringBinding(()->
         {
             switch (dayPhaseProperty.getValue())
@@ -175,9 +186,9 @@ public class ViewerService implements InvalidationListener
                 case TWILIGHT:
                     return colorToString(twilightBackgroundColorBinding.getValue());
                 default:
-                    throw new UnsupportedOperationException(dayPhaseProperty.getValue()+" not supported");
+                    throw new UnsupportedOperationException(autoPhaseProperty.getValue()+" not supported");
             }
-        }, dayPhaseProperty, dayBackgroundColorBinding, nightBackgroundColorBinding, twilightBackgroundColorBinding);
+        }, solarAutomation, autoPhaseProperty, forcedPhaseProperty, dayBackgroundColorBinding, nightBackgroundColorBinding, twilightBackgroundColorBinding);
         return colorBinding;
     }
     private String colorToString(Color color)

@@ -83,5 +83,6 @@ public class ViewerController implements Initializable
         preferences.bindBoolean("solarAutomation", true, solarAutomation.selectedProperty());
         EnumTitleConverter dayPhaseConverter = new EnumTitleConverter<>(DayPhase.class);
         preferences.bindCombo("dayPhase", DAY, dayPhase, dayPhaseConverter, DAY, TWILIGHT, NIGHT);
+        dayPhase.disableProperty().bind(solarAutomation.selectedProperty());
     }
 }

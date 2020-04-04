@@ -34,7 +34,6 @@ public class CompassRingCanvas extends CartesianCanvas
     {
         super(100);
         getStyleClass().add("compass-ring-canvas");
-        textFillProperty().addListener(evt->onDraw());
     }
 
     @Override

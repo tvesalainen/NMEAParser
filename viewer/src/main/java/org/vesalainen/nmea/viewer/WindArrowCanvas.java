@@ -19,8 +19,10 @@ package org.vesalainen.nmea.viewer;
 import javafx.beans.property.FloatProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 import org.vesalainen.fx.FXPathMaker;
 import org.vesalainen.navi.WindArrow;
+import org.vesalainen.ui.path.FunctionalPathMaker;
 
 /**
  *
@@ -63,7 +65,7 @@ public class WindArrowCanvas extends RotatingCanvas
     }
 
     private final GraphicsContext gc;
-    private final FXPathMaker pathMaker;
+    private final PathMaker pathMaker;
     private final WindArrow windArrow;
 
     public WindArrowCanvas()
@@ -71,7 +73,7 @@ public class WindArrowCanvas extends RotatingCanvas
         super(50);
         getStyleClass().add("wind-arror-canvas");
         this.gc = getGraphicsContext2D();
-        this.pathMaker = new FXPathMaker(gc);
+        this.pathMaker = new PathMaker(gc, this);
         this.windArrow = new WindArrow(pathMaker);
     }
 
@@ -80,7 +82,28 @@ public class WindArrowCanvas extends RotatingCanvas
     {
         super.onDraw(gc);
         gc.scale(1, -1);
-        windArrow.draw(90);
+        windArrow.draw(20);
     }
     
+    private class PathMaker extends FunctionalPathMaker<Color>
+    {
+        private PathMaker(GraphicsContext gc, WindArrowCanvas wac)
+        {
+            super(
+                    gc::beginPath, 
+                    gc::moveTo, 
+                    gc::lineTo, 
+                    gc::quadraticCurveTo, 
+                    gc::bezierCurveTo, 
+                    ()->
+                    {
+                        gc.closePath();
+                        gc.fill();
+                    }, 
+                    gc::setFill, 
+                    (s)->wac.getColor(Color.web(s))
+            );
+        }
+        
+    }
 }
