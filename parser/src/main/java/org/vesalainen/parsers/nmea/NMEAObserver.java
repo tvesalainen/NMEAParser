@@ -492,14 +492,20 @@ public interface NMEAObserver extends Transactional
     void setTrueWindAngle(float windAngle);
     /**
      * Returns the wind speed.
-     * <p>Note! Is it relative or true depends on which setXXXWindAngle was called
-     * in same transaction. (before commit)
      * MWV, VWR
      * @param metersInSecond
      */
     @NMEACat(WIND)
     @Unit(value=METERS_PER_SECOND, min=0, max=100)
-    void setWindSpeed(float metersInSecond);
+    void setRelativeWindSpeed(float metersInSecond);
+    /**
+     * Returns the wind speed.
+     * MWV, VWR
+     * @param metersInSecond
+     */
+    @NMEACat(WIND)
+    @Unit(value=METERS_PER_SECOND, min=0, max=100)
+    void setTrueWindSpeed(float metersInSecond);
     /**
      * ROT
  Rate Of TURN, degrees per minute, "-" means bow turns to port
