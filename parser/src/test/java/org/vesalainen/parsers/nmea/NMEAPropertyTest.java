@@ -14,37 +14,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.parsers.nmea;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CompressedLogPlayerT
+public class NMEAPropertyTest
 {
     
-    public CompressedLogPlayerT()
+    public NMEAPropertyTest()
     {
     }
 
     @Test
-    public void test() throws IOException
+    public void testSomeMethod()
     {
-        Path dir = Paths.get("src\\test\\resources");
-        dir = dir.toAbsolutePath();
-        while (true)
-        {
-            try (CompressedLogPlayer log = CompressedLogPlayer.open("224.0.0.3", 10110, Files.list(dir).filter((p)->p.getFileName().toString().endsWith(".mea"))))
-            {
-
-            }
-        }
     }
     
 }

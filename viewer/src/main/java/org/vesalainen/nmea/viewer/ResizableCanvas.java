@@ -21,10 +21,12 @@ import java.net.URL;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.beans.binding.When;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.css.CssMetaData;
 import javafx.css.SimpleStyleableObjectProperty;
@@ -52,6 +54,8 @@ public class ResizableCanvas extends Canvas implements Initializable
     private static final CssMetaData<ResizableCanvas,Paint> BACKGROUND = FACTORY.createPaintCssMetaData("-fx-background", s->s.background, Color.WHITE, true);
     
     private final SimpleStyleableObjectProperty<Font> font = new SimpleStyleableObjectProperty<>(FONT, this, "font");
+    private boolean pendingReDraw;
+    private boolean pendingReSize;
 
     public Font getFont()
     {
@@ -99,6 +103,22 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
         return background;
     }
+    private final BooleanProperty mouseEditable = new SimpleBooleanProperty(true);
+
+    public boolean isMouseEditable()
+    {
+        return mouseEditable.get();
+    }
+
+    public void setMouseEditable(boolean value)
+    {
+        mouseEditable.set(value);
+    }
+
+    public BooleanProperty mouseEditableProperty()
+    {
+        return mouseEditable;
+    }
     
 
     private boolean square;
@@ -113,9 +133,9 @@ public class ResizableCanvas extends Canvas implements Initializable
     public ResizableCanvas(boolean square)
     {
         getStyleClass().add("resizable-canvas");
-        fontProperty().addListener(evt->onDraw());
-        textFillProperty().addListener(evt->onDraw());
-        backgroundProperty().addListener(evt->onDraw());
+        fontProperty().addListener(evt->reDraw());
+        textFillProperty().addListener(evt->reDraw());
+        backgroundProperty().addListener(evt->reDraw());
         this.square = square;
         try
         {
@@ -142,23 +162,26 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
         return FACTORY.getCssMetaData();
     }
+    
     /**
      * Returns color whose brightness is double the current background.
-     * @param origColor
+     * @param color
      * @return 
      */
-    protected Color getColor(Color origColor)
+    protected Paint adjustColor(Paint color)
     {
         Paint bg = getBackground();
-        if (bg instanceof Color)
+        if ((bg instanceof Color) && (color instanceof Color))
         {
             Color bgColor = (Color) bg;
-            double brightness = 0.5*bgColor.getBrightness()+0.5;
+            Color origColor = (Color) color;
+            double bgBrightness = bgColor.getBrightness();
+            double brightness = origColor.getBrightness()*Math.max(bgBrightness, 0.5);
             return Color.hsb(origColor.getHue(), origColor.getSaturation(), brightness, origColor.getOpacity());
         }
         else
         {
-            return origColor;
+            return color;
         }
     }
     @Override
@@ -179,6 +202,47 @@ public class ResizableCanvas extends Canvas implements Initializable
         return true;
     }
 
+    protected void reSize()
+    {
+        if (!pendingReSize)
+        {
+            pendingReSize = true;
+            Platform.runLater(this::onReSize);
+        }
+    }
+    private void onReSize()
+    {
+        try
+        {
+            onSize();
+        }
+        finally
+        {
+            pendingReSize = false;
+        }
+    }
+    protected void onSize()
+    {
+    }
+    protected void reDraw()
+    {
+        if (!pendingReDraw)
+        {
+            pendingReDraw = true;
+            Platform.runLater(this::onReDraw);
+        }
+    }
+    private void onReDraw()
+    {
+        try
+        {
+            onDraw();
+        }
+        finally
+        {
+            pendingReDraw = false;
+        }
+    }
     protected void onDraw()
     {
     }
@@ -213,8 +277,8 @@ public class ResizableCanvas extends Canvas implements Initializable
                 widthProperty().bind(regionWidth);
                 heightProperty().bind(regionHeight);
             }
-            widthProperty().addListener(evt -> onDraw());
-            heightProperty().addListener(evt -> onDraw());
+            widthProperty().addListener(evt -> reSize());
+            heightProperty().addListener(evt -> reSize());
         }
         else
         {

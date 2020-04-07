@@ -14,8 +14,11 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
+<?import org.vesalainen.nmea.viewer.BoatCanvas?>
 <?import org.vesalainen.nmea.viewer.CompassRingCanvas?>
+<?import org.vesalainen.nmea.viewer.CourseSpeedCanvas?>
 <?import org.vesalainen.nmea.viewer.GaugeCanvas?>
+<?import org.vesalainen.nmea.viewer.MagneticVariationCanvas?>
 <?import org.vesalainen.nmea.viewer.WindArrowCanvas?>
 
 <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="416.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.vesalainen.nmea.viewer.ViewerController">
@@ -51,7 +54,10 @@
                   <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.columnIndex="1" GridPane.rowSpan="2147483647">
                      <children>
                         <CompassRingCanvas />
+                        <BoatCanvas />
                         <WindArrowCanvas />
+                        <MagneticVariationCanvas />
+                        <CourseSpeedCanvas />
                      </children>
                   </StackPane>
                </children>
@@ -81,6 +87,37 @@
                           </children>
                         </GridPane>
                      </content></TitledPane>
+                  <TitledPane animated="false" text="%boatData">
+                     <content>
+                        <GridPane>
+                           <columnConstraints>
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                           </rowConstraints>
+                           <children>
+                              <TextField fx:id="transducerOffset" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%transducerOffset" text="%transducerOffsetHelp" GridPane.columnIndex="1">
+                                 <tooltip>
+                                    <Tooltip text="%transducerOffsetHelp" />
+                                 </tooltip>
+                              </TextField>
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%transducerOffset" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%keelOffset" GridPane.rowIndex="1" />
+                              <TextField fx:id="keelOffset" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%keelOffset" text="%keelOffsetHelp" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                 <tooltip>
+                                    <Tooltip text="%keelOffsetHelp" />
+                                 </tooltip>
+                              </TextField>
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%waterLineLength" GridPane.rowIndex="2" />
+                              <TextField fx:id="waterLineLength" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                           </children>
+                        </GridPane>
+                     </content>
+                  </TitledPane>
                 <TitledPane animated="false" text="%units">
                      <content>
                         <GridPane>
@@ -92,8 +129,6 @@
                             <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                             <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                             <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
-                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
-                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                           </rowConstraints>
                            <children>
                               <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%depthUnit" />
@@ -102,18 +137,6 @@
                               <ComboBox fx:id="depthUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%depthUnit" GridPane.columnIndex="1" />
                               <ComboBox fx:id="speedUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%speedUnit" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <ComboBox fx:id="temperatureUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%temperatureUnit" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <TextField fx:id="transducerOffset" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%transducerOffset" text="%transducerOffsetHelp" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                                 <tooltip>
-                                    <Tooltip text="%transducerOffsetHelp" />
-                                 </tooltip>
-                              </TextField>
-                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%transducerOffset" GridPane.rowIndex="3" />
-                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%keelOffset" GridPane.rowIndex="4" />
-                              <TextField fx:id="keelOffset" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%keelOffset" text="%keelOffsetHelp" GridPane.columnIndex="1" GridPane.rowIndex="4">
-                                 <tooltip>
-                                    <Tooltip text="%keelOffsetHelp" />
-                                 </tooltip>
-                              </TextField>
                            </children>
                         </GridPane>
                      </content></TitledPane>
@@ -210,6 +233,37 @@
                            <children>
                               <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%fontFamily" />
                               <ComboBox fx:id="fontFamily" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" />
+                           </children>
+                        </GridPane>
+                     </content>
+                  </TitledPane>
+                  <TitledPane prefHeight="200.0" prefWidth="200.0" text="%simulation">
+                     <content>
+                        <GridPane>
+                           <columnConstraints>
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                              <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                           </rowConstraints>
+                           <children>
+                              <CheckBox fx:id="simulate" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%simulate" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%speed" GridPane.columnIndex="1" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%direction" GridPane.columnIndex="2" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%boat" GridPane.rowIndex="1" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%wind" GridPane.rowIndex="2" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%current" GridPane.rowIndex="3" />
+                              <TextField fx:id="simBoatSpeed" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <TextField fx:id="simBoatCourse" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <TextField fx:id="simWindSpeed" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <TextField fx:id="simWindDirection" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <TextField fx:id="simCurrentSpeed" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <TextField fx:id="simCurrentDirection" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="2" GridPane.rowIndex="3" />
                            </children>
                         </GridPane>
                      </content>

@@ -48,6 +48,7 @@ public class ViewerController implements Initializable
     @FXML ComboBox<UnitType> temperatureUnit;
     @FXML TextField transducerOffset;
     @FXML TextField keelOffset;
+    @FXML TextField waterLineLength;
     @FXML TextField timeToLive;
     @FXML TextField solarDepressionAngle;
     @FXML TextField solarUpdateSeconds;
@@ -57,6 +58,13 @@ public class ViewerController implements Initializable
     @FXML ComboBox<String> fontFamily;
     @FXML ComboBox<DayPhase> dayPhase;
     @FXML CheckBox solarAutomation;
+    @FXML CheckBox simulate;
+    @FXML TextField simBoatSpeed;
+    @FXML TextField simBoatDirection;
+    @FXML TextField simWindSpeed;
+    @FXML TextField simWindDirection;
+    @FXML TextField simCurrentSpeed;
+    @FXML TextField simCurrentDirection;
     
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -73,6 +81,7 @@ public class ViewerController implements Initializable
         preferences.bindCombo("temperatureUnit", CELSIUS, temperatureUnit, converter, CELSIUS, FAHRENHEIT);
         preferences.bindFloat("transducerOffset", 0, transducerOffset);
         preferences.bindFloat("keelOffset", 0, keelOffset);
+        preferences.bindFloat("waterLineLength", 10, waterLineLength);
         preferences.bindLong("timeToLive", 60, timeToLive);
         preferences.bindDouble("solarDepressionAngle", 6, solarDepressionAngle);
         preferences.bindLong("solarUpdateSeconds", 60, solarUpdateSeconds);
@@ -84,5 +93,13 @@ public class ViewerController implements Initializable
         EnumTitleConverter dayPhaseConverter = new EnumTitleConverter<>(DayPhase.class);
         preferences.bindCombo("dayPhase", DAY, dayPhase, dayPhaseConverter, DAY, TWILIGHT, NIGHT);
         dayPhase.disableProperty().bind(solarAutomation.selectedProperty());
+        // simulation
+        preferences.bindBoolean("simulate", false, simulate.selectedProperty());
+        preferences.bindFloat("simBoatSpeed", 5, simBoatSpeed);
+        preferences.bindFloat("simBoatDirection", 0, simBoatDirection);
+        preferences.bindFloat("simWindSpeed", 10, simWindSpeed);
+        preferences.bindFloat("simWindDirection", 90, simWindDirection);
+        preferences.bindFloat("simCurrentSpeed", 1, simCurrentSpeed);
+        preferences.bindFloat("simCurrentDirection", 270, simCurrentDirection);
     }
 }

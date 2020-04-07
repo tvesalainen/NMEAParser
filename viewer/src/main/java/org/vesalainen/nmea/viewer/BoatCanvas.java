@@ -14,37 +14,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.viewer;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import org.junit.Test;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CompressedLogPlayerT
+public class BoatCanvas extends RotatingCanvas
 {
     
-    public CompressedLogPlayerT()
+    public BoatCanvas()
     {
+        super(50);
     }
 
-    @Test
-    public void test() throws IOException
+    @Override
+    protected void onDraw(GraphicsContext gc)
     {
-        Path dir = Paths.get("src\\test\\resources");
-        dir = dir.toAbsolutePath();
-        while (true)
-        {
-            try (CompressedLogPlayer log = CompressedLogPlayer.open("224.0.0.3", 10110, Files.list(dir).filter((p)->p.getFileName().toString().endsWith(".mea"))))
-            {
-
-            }
-        }
+        Paint color = adjustColor(Color.NAVY);
+        gc.setStroke(color);
+        
+        gc.beginPath();
+        gc.moveTo(-20, -40);
+        gc.bezierCurveTo(-20, 10, -20, 10, 0, 50);
+        gc.bezierCurveTo(20, 10, 20, 10, 20, -40);
+        gc.bezierCurveTo(0, -45, 0, -45, -20, -40);
+        gc.closePath();
+        gc.stroke();
     }
     
 }

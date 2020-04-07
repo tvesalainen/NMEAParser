@@ -14,37 +14,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.parsers.nmea;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import org.junit.Test;
+import static org.junit.Assert.*;
+import org.vesalainen.text.CamelCase;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CompressedLogPlayerT
+public class NMEAPropertyGen
 {
     
-    public CompressedLogPlayerT()
+    public NMEAPropertyGen()
     {
     }
 
     @Test
-    public void test() throws IOException
+    public void generate()
     {
-        Path dir = Paths.get("src\\test\\resources");
-        dir = dir.toAbsolutePath();
-        while (true)
+        NMEAProperties p = NMEAProperties.getInstance();
+        List<String> list = new ArrayList<>(p.getAllProperties());
+        list.sort(null);
+        list.forEach((property)->
         {
-            try (CompressedLogPlayer log = CompressedLogPlayer.open("224.0.0.3", 10110, Files.list(dir).filter((p)->p.getFileName().toString().endsWith(".mea"))))
-            {
-
-            }
-        }
+            System.err.println(String.format(Locale.US, "\t%s(NMEACategory.%s, UnitType.%s, %s.class),", 
+                    CamelCase.delimitedUpper(property, "_"),
+                    p.getCategory(property),
+                    p.getUnit(property),
+                    p.getType(property).getSimpleName()
+                    ));
+        });
+        
     }
     
 }

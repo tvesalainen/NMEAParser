@@ -14,37 +14,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.viewer;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import org.junit.Test;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CompressedLogPlayerT
+public class MagneticVariationCanvas extends RotatingCanvas implements PropertyBindable
 {
     
-    public CompressedLogPlayerT()
+    public MagneticVariationCanvas()
     {
-    }
-
-    @Test
-    public void test() throws IOException
-    {
-        Path dir = Paths.get("src\\test\\resources");
-        dir = dir.toAbsolutePath();
-        while (true)
-        {
-            try (CompressedLogPlayer log = CompressedLogPlayer.open("224.0.0.3", 10110, Files.list(dir).filter((p)->p.getFileName().toString().endsWith(".mea"))))
-            {
-
-            }
-        }
+        super(100);
     }
     
+    @Override
+    protected void onDraw(GraphicsContext gc)
+    {
+        Paint color = adjustColor(Color.RED);
+        gc.setFill(color);
+        
+        gc.beginPath();
+        gc.moveTo(-2, 90);
+        gc.lineTo(0, 100);
+        gc.lineTo(2, 90);
+        gc.closePath();
+        gc.fill();
+    }
+
+    @Override
+    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    {
+        angleProperty().bind(propertyStore.getBinding("magneticVariation"));
+        return new String[]{"magneticVariation"};
+    }
 }

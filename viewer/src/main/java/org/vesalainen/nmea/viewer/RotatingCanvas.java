@@ -16,9 +16,14 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.transform.NonInvertibleTransformException;
 
 /**
  *
@@ -43,19 +48,53 @@ public class RotatingCanvas extends CartesianCanvas
         return angle;
     }
 
+    protected Point2D mousePressed;
+    
     protected RotatingCanvas(double maxValue)
     {
         super(maxValue);
+        angleProperty().addListener(evt->rotate());
+        onMousePressedProperty().setValue((e)->{if (isMouseEditable()) onMousePressed(e);});
+        onMouseDraggedProperty().setValue((e)->{if (isMouseEditable()) onMouseDragged(e);});
     }
-    
-    /**
-     * When overriding first call super.onDraw to set angle
-     * @param gc 
-     */
+
+    private void rotate()
+    {
+        GraphicsContext gc = getGraphicsContext2D();
+        gc.setTransform(transform);
+        gc.rotate(-getAngle());
+        onDraw();
+    }
     @Override
     protected void onDraw(GraphicsContext gc)
     {
-        gc.rotate(360-angle.doubleValue());
     }
     
+    protected void onMousePressed(MouseEvent e)
+    {
+        try
+        {
+            mousePressed = transform.inverseTransform(e.getX(), e.getY());
+        }
+        catch (NonInvertibleTransformException ex)
+        {
+            throw new RuntimeException(ex);
+        }
+    }
+    protected void onMouseDragged(MouseEvent e)
+    {
+        try
+        {
+            Point2D p = transform.inverseTransform(e.getX(), e.getY());
+            double a1 = Math.toDegrees(Math.atan2(mousePressed.getY(), mousePressed.getX()));
+            double a2 = Math.toDegrees(Math.atan2(p.getY(), p.getX()));
+            setAngle(getAngle()+a1-a2);
+            System.err.println(String.format("%f %f %f", a1-a2, a1, a2));
+            mousePressed = p;
+        }
+        catch (NonInvertibleTransformException ex)
+        {
+            throw new RuntimeException(ex);
+        }
+    }
 }

@@ -21,6 +21,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.transform.Affine;
+import javafx.scene.transform.Transform;
 import org.vesalainen.ui.Transforms;
 
 /**
@@ -31,7 +33,8 @@ public class CartesianCanvas extends ResizableCanvas
 {
 
     protected final double max;
-
+    protected final Affine transform = new Affine();
+    
     public CartesianCanvas()
     {
         super(true);
@@ -45,7 +48,7 @@ public class CartesianCanvas extends ResizableCanvas
     }
 
     @Override
-    protected final void onDraw()
+    protected void onSize()
     {
         double width = getWidth();
         double height = getHeight();
@@ -62,9 +65,21 @@ public class CartesianCanvas extends ResizableCanvas
                     true, 
                     (double mxx, double mxy, double myx, double myy, double tx, double ty)->
                     {
-                        gc.setTransform(mxx, myx, mxy, myy, tx, ty);
+                        transform.setToTransform(mxx, mxy, tx, myx, myy, ty);
                     });
+            gc.setTransform(transform);
+            onDraw();
+        }
+    }
 
+    @Override
+    protected final void onDraw()
+    {
+        double width = getWidth();
+        double height = getHeight();
+        if (width > 0 && height > 0)
+        {
+            GraphicsContext gc = getGraphicsContext2D();
             gc.clearRect(-max, -max, 2*max, 2*max);
             onDraw(gc);
         }

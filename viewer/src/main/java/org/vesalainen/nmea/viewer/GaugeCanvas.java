@@ -19,10 +19,8 @@ package org.vesalainen.nmea.viewer;
 import static java.util.Locale.US;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.FloatProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -157,9 +155,9 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         unitProperty().bind(preferences.getCategoryBinding(prop));
         valueProperty().bind(propertyStore.getBinding(prop));
         
-        valueProperty().addListener(evt->onDraw());
-        unitProperty().addListener(evt->onDraw());
-        disabledProperty().addListener(evt->onDraw());
+        valueProperty().addListener(evt->reDraw());
+        unitProperty().addListener(evt->reDraw());
+        disabledProperty().addListener(evt->reDraw());
         
         return new String[]{property.getValue()};
     }
@@ -172,7 +170,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         {
             GraphicsContext gc = getGraphicsContext2D();
             gc.clearRect(0, 0, width, height);
-            gc.setFill(getTextFill());
+            gc.setFill(adjustColor(getTextFill()));
             String fontFamily = getFont().getFamily();
             // value
             gc.setFont(Font.font(fontFamily, height));

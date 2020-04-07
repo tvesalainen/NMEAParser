@@ -61,6 +61,10 @@ public class PropertyStore extends AnnotatedPropertyStore
     private @Property float depthOfWater;
     private @Property float waterSpeed;
     private @Property float waterTemperature;
+    private @Property float trueHeading;
+    private @Property float speedOverGround;
+    private @Property float trackMadeGood;
+    private @Property float magneticVariation;
     
     private final CachedScheduledThreadPool executor;
     private final FloatBinding keelOffsetBinding;

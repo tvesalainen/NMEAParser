@@ -45,7 +45,7 @@ public class CompassRingCanvas extends CartesianCanvas
         boolean have10 = height >= LIMIT10;
         boolean have5 = height >= LIMIT5;
         boolean have1 = height >= LIMIT1;
-        Paint textFill = getTextFill();
+        Paint textFill = adjustColor(getTextFill());
         gc.setFill(textFill);
         gc.setStroke(textFill);
         String fontFamily = getFont().getFamily();
