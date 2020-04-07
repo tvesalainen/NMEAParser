@@ -85,7 +85,7 @@ public class NMEASentenceTest
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
         NMEASentence mwv = NMEASentence.mwv(15, 17, UnitType.METERS_PER_SECOND, true);
         parser.parse(mwv.toString(), tc, null);
-        assertEquals(17, ss.getFloat("windSpeed"), 1e-1);
+        assertEquals(17, ss.getFloat("trueWindSpeed"), 1e-1);
         assertEquals(15, ss.getFloat("trueWindAngle"), 1e-1);
     }
     @Test
