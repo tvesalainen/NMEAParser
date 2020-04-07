@@ -811,7 +811,7 @@ public class NMEAParserTest
                 assertEquals(TalkerId.II, ss.getProperty("talkerId"));
                 String rt = nch.getPrefix(2);
                 assertEquals(nch.getFloat(1), ss.getFloat(rt+"WindAngle"), Epsilon);
-                assertEquals(Knots.toMetersPerSecond(nch.getFloat(3)), ss.getFloat("windSpeed"), Epsilon);
+                assertEquals(Knots.toMetersPerSecond(nch.getFloat(3)), ss.getFloat(rt+"WindSpeed"), Epsilon);
             }
         }
         catch (Exception ex)
@@ -849,7 +849,7 @@ public class NMEAParserTest
                 {
                     assertEquals(nch.getFloat(1), ss.getFloat("relativeWindAngle"), Epsilon);
                 }
-                assertEquals(Knots.toMetersPerSecond(nch.getFloat(3)), ss.getFloat("windSpeed"), Epsilon);
+                assertEquals(Knots.toMetersPerSecond(nch.getFloat(3)), ss.getFloat("relativeWindSpeed"), Epsilon);
             }
         }
         catch (Exception ex)
