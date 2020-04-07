@@ -487,11 +487,6 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setWindSpeed(float metersInSecond)
-    {
-    }
-
-    @Override
     public void setTrueWaterHeading(float degrees)
     {
     }
@@ -803,6 +798,16 @@ public class AbstractNMEAObserver implements NMEAObserver
 
     @Override
     public void setWaterDistanceSinceReset(float distance)
+    {
+    }
+
+    @Override
+    public void setRelativeWindSpeed(float metersInSecond)
+    {
+    }
+
+    @Override
+    public void setTrueWindSpeed(float metersInSecond)
     {
     }
 
