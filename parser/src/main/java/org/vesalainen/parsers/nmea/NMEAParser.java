@@ -83,7 +83,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "nmeaSentence", value = "hdm c heading"),
     @Rule(left = "nmeaSentence", value = "hdt c heading"),
     @Rule(left = "nmeaSentence", value = "mtw c waterTemperature"),
-    @Rule(left = "nmeaSentence", value = "mwv c windAngle c windSpeed c status"),
+    @Rule(left = "nmeaSentence", value = "mwv c windAngleSpeed c status"),
     @Rule(left = "nmeaSentence", value = "r00 c waypoints"),
     @Rule(left = "nmeaSentence", value = "rma c status c location c timeDifference c speedOverGround c trackMadeGood c magneticVariation"),
     @Rule(left = "nmeaSentence", value = "rmb c status c crossTrackErrorNM c waypointToWaypoint c destinationWaypointLocation c rangeToDestination c bearingToDestination c destinationClosingVelocity c arrivalStatus faaModeIndicator"),
@@ -100,7 +100,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "nmeaSentence", value = "vlw c waterDistance c waterDistanceSinceReset"),
     @Rule(left = "nmeaSentence", value = "vtg c track c track c speed c speed faaModeIndicator"),
     @Rule(left = "nmeaSentence", value = "vtg c trueCourseOverGround c magneticCourseOverGround c speedOverGroundKnots c speedOverGroundKilometers"),
-    @Rule(left = "nmeaSentence", value = "vwr c windDirection c windSpeed c windSpeed c windSpeed"),
+    @Rule(left = "nmeaSentence", value = "vwr c relativeWindDirection c relativeWindSpeed c relativeWindSpeed c relativeWindSpeed"),
     @Rule(left = "nmeaSentence", value = "wcv c velocityToWaypoint c waypoint"),
     @Rule(left = "nmeaSentence", value = "wnc c distanceToWaypoint c distanceToWaypoint c waypointToWaypoint"),
     @Rule(left = "nmeaSentence", value = "wpl c destinationWaypointLocation c waypoint"),
@@ -159,7 +159,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "timeDifference", value = "c skip?"),
     @Rule(left = "arrivalCircleRadius", value = "c skip?"),
     @Rule(left = "depthOfWater", value = "c skip?"),
-    @Rule(left = "windSpeed"),
+    @Rule(left = "relativeWindSpeed"),
     @Rule(left = "destinationWaypointLocation", value = "c c c"),
     @Rule(left = "location", value = "c c c"),
     @Rule(left = "trackMadeGood"),
@@ -187,7 +187,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "propellerPitch"),
     @Rule(left = "localZoneHours", value = "c skip?"),
     @Rule(left = "localZoneMinutes", value = "c skip?"),
-    @Rule(left = "windDirection", value = "c skip?"),
+    @Rule(left = "relativeWindDirection", value = "c skip?"),
     @Rule(left = "waterHeading", value = "c skip?"),
     @Rule(left = "waterDistance", value = "c skip?"),
     @Rule(left = "waterDistanceSinceReset", value = "c skip?"),
@@ -606,7 +606,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     }
 
     @Rule("decimal c letter")
-    protected void windDirection(
+    protected void relativeWindDirection(
             float windDirection,
             char unit,
             @ParserContext("data") NMEAObserver data)
@@ -724,32 +724,36 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         data.setRateOfTurn(rateOfTurn);
     }
 
-    @Rule("decimal c letter")
-    protected void windAngle(
+    @Rule("decimal c letter c decimal c letter")
+    protected void windAngleSpeed(
             float windAngle,
-            char unit,
-            @ParserContext("data") NMEAObserver data)
-    {
-        switch (unit)
-        {
-            case 'T':
-                data.setTrueWindAngle(windAngle);
-                break;
-            case 'R':
-                data.setRelativeWindAngle(windAngle);
-                break;
-            default:
-                throw new IllegalArgumentException(unit+ "expected T/R");
-        }
-    }
-
-    @Rule("decimal c letter")
-    protected void windSpeed(
+            char tr,
             float windSpeed,
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setWindSpeed(toMetersPerSecond(windSpeed, unit));
+        switch (tr)
+        {
+            case 'T':
+                data.setTrueWindAngle(windAngle);
+                data.setTrueWindSpeed(toMetersPerSecond(windSpeed, unit));
+                break;
+            case 'R':
+                data.setRelativeWindAngle(windAngle);
+                data.setRelativeWindSpeed(toMetersPerSecond(windSpeed, unit));
+                break;
+            default:
+                throw new IllegalArgumentException(tr+ "expected T/R");
+        }
+    }
+
+    @Rule("decimal c letter")
+    protected void relativeWindSpeed(
+            float windSpeed,
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setRelativeWindSpeed(toMetersPerSecond(windSpeed, unit));
     }
 
     @Rule("decimal c letter")
