@@ -14,12 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.parsers.nmea;
+package org.vesalainen.nmea.viewer;
 
+import d3.env.TSAGeoMag;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,8 +31,8 @@ import static java.util.logging.Level.SEVERE;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.math.UnitType;
-import org.vesalainen.navi.Navis;
 import org.vesalainen.nmea.util.Stoppable;
+import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -40,32 +42,31 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stoppable
 {
     private @Property Clock clock;
-    private @Property float magneticVariation;
+    private @Property double latitude;
+    private @Property double longitude;
     private @Property float depthOfWater;
     private @Property float waterTemperature;
     private @Property float waterSpeed;
     private @Property float trueHeading;
-    private @Property float windDirection;
-    private @Property float windSpeed;
+    private @Property float relativeWindAngle;
+    private @Property float relativeWindSpeed;
     private @Property float pitch;
     private @Property float roll;
+    private @Property float speedOverGround;
+    private @Property float trackMadeGood;
     
     private final WritableByteChannel channel;
     private final CachedScheduledThreadPool executor;
     private ScheduledFuture<?> future;
     private Set<String> updated = new HashSet<>();
-    
-    private double latitude;
-    private double longitude;
-    private double lastLatitude;
-    private double lastLongitude;
-    private long coordinateUpdate;
-    private long lastCoordinateUpdate;
+    private final TSAGeoMag geoMag = new TSAGeoMag();
     
     private final NMEASentence rmc;
     private final NMEASentence dbt;
     private final NMEASentence hdt;
     private final NMEASentence mtw;
+    private final NMEASentence mwv;
+    private final NMEASentence vhw;
     
     public NMEASender(WritableByteChannel channel)
     {
@@ -74,6 +75,7 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
     public NMEASender(WritableByteChannel channel, CachedScheduledThreadPool executor)
     {
         super(MethodHandles.lookup());
+        this.clock = clock;
         this.channel = channel;
         this.executor = executor;
         
@@ -81,42 +83,21 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
                 ()->clock, 
                 ()->latitude, 
                 ()->longitude, 
-                this::speedOverGround, 
-                this::trackMadeGood, 
-                ()->magneticVariation);
+                ()->speedOverGround, 
+                ()->trackMadeGood, 
+                this::magneticVariation)
+                ;
         this.dbt = NMEASentence.dbt(()->depthOfWater, UnitType.METER);
         this.hdt = NMEASentence.hdt(()->trueHeading);
         this.mtw = NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS);
+        this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.METERS_PER_SECOND, false);
+        this.vhw = NMEASentence.vhw(()->waterSpeed, UnitType.KNOT);
     }
 
-    @Property public void setLatitude(double latitude)
+    public double magneticVariation()
     {
-        lastLatitude = this.latitude;
-        this.latitude = latitude;
-        lastCoordinateUpdate = coordinateUpdate;
-        coordinateUpdate = clock.millis();
-    }
-
-    @Property public void setLongitude(double longitude)
-    {
-        lastLongitude = this.longitude;
-        this.longitude = longitude;
-    }
-
-    private double speedOverGround()
-    {
-        if (coordinateUpdate > lastCoordinateUpdate)
-        {
-            return Navis.speed(lastCoordinateUpdate, lastLatitude, lastLongitude, coordinateUpdate, latitude, longitude);
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    private double trackMadeGood()
-    {
-        return Navis.bearing(lastLatitude, lastLongitude, latitude, longitude);
+        ZonedDateTime now = ZonedDateTime.now(clock);
+        return geoMag.getDeclination(latitude, longitude, (double)(now.getYear()+now.getDayOfYear()/365.0), 0);
     }
     public void start()
     {
@@ -152,6 +133,8 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
             dbt.writeTo(channel);
             hdt.writeTo(channel);
             mtw.writeTo(channel);
+            mwv.writeTo(channel);
+            vhw.writeTo(channel);
             updated.clear();
         }
         catch (IOException ex)

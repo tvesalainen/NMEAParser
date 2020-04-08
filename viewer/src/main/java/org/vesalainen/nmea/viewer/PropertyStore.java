@@ -65,6 +65,8 @@ public class PropertyStore extends AnnotatedPropertyStore
     private @Property float speedOverGround;
     private @Property float trackMadeGood;
     private @Property float magneticVariation;
+    private @Property float relativeWindAngle;
+    private @Property float relativeWindSpeed;
     
     private final CachedScheduledThreadPool executor;
     private final FloatBinding keelOffsetBinding;
@@ -182,6 +184,7 @@ public class PropertyStore extends AnnotatedPropertyStore
     @Override
     public void commit(String reason, Collection<String> updatedProperties)
     {
+        System.err.println(updatedProperties);
         invalidate(updatedProperties);
     }
     

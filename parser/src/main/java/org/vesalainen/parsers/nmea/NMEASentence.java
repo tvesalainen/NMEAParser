@@ -148,7 +148,7 @@ public class NMEASentence
     {
         return mwv(()->windAngle, ()->windSpeed, from, trueWind);
     }
-    public static NMEASentence mwv(IntSupplier windAngle, DoubleSupplier windSpeed, UnitType from, boolean trueWind)
+    public static NMEASentence mwv(DoubleSupplier windAngle, DoubleSupplier windSpeed, UnitType from, boolean trueWind)
     {
         return builder(UP, MWV)
                 .bind(windAngle)
@@ -627,6 +627,23 @@ public class NMEASentence
                 {
                     int value = supplier.getAsInt();
                     return wrap(String.format(Locale.US, ",%d", value));
+                });
+            }
+            else
+            {
+                bind(()->wrap(','));
+            }
+            return this;
+        }
+
+        private Builder bind(DoubleSupplier supplier)
+        {
+            if (supplier != null)
+            {
+                bind(()->
+                {
+                    double value = supplier.getAsDouble();
+                    return wrap(String.format(Locale.US, ",%.1f", value));
                 });
             }
             else

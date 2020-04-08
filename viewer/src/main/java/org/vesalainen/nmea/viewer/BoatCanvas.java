@@ -24,7 +24,7 @@ import javafx.scene.paint.Paint;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class BoatCanvas extends RotatingCanvas
+public class BoatCanvas extends RotatingCanvas implements PropertyBindable
 {
     
     public BoatCanvas()
@@ -45,6 +45,13 @@ public class BoatCanvas extends RotatingCanvas
         gc.bezierCurveTo(0, -45, 0, -45, -20, -40);
         gc.closePath();
         gc.stroke();
+    }
+
+    @Override
+    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    {
+        angleProperty().bind(propertyStore.getBinding("trueHeading"));
+        return new String[]{"trueHeading"};
     }
     
 }

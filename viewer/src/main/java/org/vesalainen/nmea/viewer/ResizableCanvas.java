@@ -103,7 +103,7 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
         return background;
     }
-    private final BooleanProperty mouseEditable = new SimpleBooleanProperty(true);
+    private final BooleanProperty mouseEditable = new SimpleBooleanProperty(false);
 
     public boolean isMouseEditable()
     {

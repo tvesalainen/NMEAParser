@@ -259,7 +259,7 @@
                               <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%wind" GridPane.rowIndex="2" />
                               <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%current" GridPane.rowIndex="3" />
                               <TextField fx:id="simBoatSpeed" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <TextField fx:id="simBoatCourse" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <TextField fx:id="simBoatDirection" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                               <TextField fx:id="simWindSpeed" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <TextField fx:id="simWindDirection" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                               <TextField fx:id="simCurrentSpeed" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="3" />

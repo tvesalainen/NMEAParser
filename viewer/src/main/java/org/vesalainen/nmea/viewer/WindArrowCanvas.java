@@ -16,8 +16,6 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import javafx.beans.property.FloatProperty;
-import javafx.beans.property.SimpleFloatProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -28,7 +26,7 @@ import org.vesalainen.ui.path.FunctionalPathMaker;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class WindArrowCanvas extends RotatingValueCanvas
+public class WindArrowCanvas extends RotatingValueCanvas implements PropertyBindable
 {
 
     private final GraphicsContext gc;
@@ -50,6 +48,14 @@ public class WindArrowCanvas extends RotatingValueCanvas
         gc.scale(1, -1);
         windArrow.draw(getValue());
         gc.scale(1, -1);
+    }
+
+    @Override
+    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    {
+        angleProperty().bind(propertyStore.getBinding("relativeWindAngle"));
+        valueProperty().bind(propertyStore.getBinding("relativeWindSpeed"));
+        return new String[]{"relativeWindAngle", "relativeWindSpeed"};
     }
     
     private class PathMaker extends FunctionalPathMaker<Paint>

@@ -52,6 +52,7 @@ public class ViewerService implements InvalidationListener
     private NMEAService nmeaService;
     private final PropertyStore propertyStore;
     private final NMEAProperties nmeaProperties = NMEAProperties.getInstance();
+    private final Simulator simulator;
     private boolean isInvalid;
     private final Binding<String> hostBinding;
     private final Binding<Integer> portBinding;
@@ -65,6 +66,7 @@ public class ViewerService implements InvalidationListener
         this.preferences = preferences;
         this.locale = locale;
         this.propertyStore = new PropertyStore(executor, preferences);
+        this.simulator = new Simulator(preferences, executor);
         hostBinding = preferences.getBinding("host");
         hostBinding.addListener(this);
         portBinding = preferences.getBinding("port");

@@ -24,7 +24,7 @@ import javafx.scene.shape.StrokeLineCap;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CourseSpeedCanvas extends RotatingValueCanvas
+public class CourseSpeedCanvas extends RotatingValueCanvas implements PropertyBindable
 {
     private static final int GAP = 4;
     public CourseSpeedCanvas()
@@ -35,16 +35,19 @@ public class CourseSpeedCanvas extends RotatingValueCanvas
     @Override
     protected void onDraw(GraphicsContext gc)
     {
-        gc.setStroke(adjustColor(Color.ORANGE));
-        gc.setLineCap(StrokeLineCap.ROUND);
-        gc.setLineWidth(4);
-        gc.setLineDashes(dashes());
-        gc.strokeLine(0, 0, 0, max-GAP);
+        double value = getValue();
+        if (value > 0)
+        {
+            gc.setStroke(adjustColor(Color.ORANGE));
+            gc.setLineCap(StrokeLineCap.ROUND);
+            gc.setLineWidth(4);
+            gc.setLineDashes(dashes(value));
+            gc.strokeLine(0, 0, 0, max-GAP);
+        }
     }
 
-    private double[] dashes()
+    private double[] dashes(double value)
     {
-        double value = getValue();
         int ceil = (int) Math.ceil(value);
         int ceil1 = ceil-1;
         double[] arr = new double[2*ceil];
@@ -57,6 +60,14 @@ public class CourseSpeedCanvas extends RotatingValueCanvas
         arr[2*ceil1] = d*(value-ceil1);
         arr[2*ceil1+1] = 0;
         return arr;
+    }
+
+    @Override
+    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    {
+        angleProperty().bind(propertyStore.getBinding("trackMadeGood"));
+        valueProperty().bind(propertyStore.getBinding("speedOverGround"));
+        return new String[]{"trackMadeGood", "speedOverGround"};
     }
     
     
