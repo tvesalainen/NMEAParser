@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import org.vesalainen.parsers.nmea.NMEASender;
 import static java.lang.Math.*;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
@@ -118,12 +119,12 @@ public class BoatSimulator implements Runnable, Stoppable
         double driftAngle = Navis.angleDiff(trueHeading, trackMadeGood);
         double radWDir = toRadians(wDir);
         double radTrackMadeGood = toRadians(trackMadeGood);
-        double x = wSpeed*sin(radWDir) - speedOverGround*sin(radTrackMadeGood);
-        double y = wSpeed*cos(radWDir) - speedOverGround*cos(radTrackMadeGood);
+        double y = wSpeed*sin(radWDir) + speedOverGround*sin(radTrackMadeGood);
+        double x = wSpeed*cos(radWDir) + speedOverGround*cos(radTrackMadeGood);
         double relativeWindSpeed = Math.hypot(x, y);
-        sender.set("relativeWindSpeed", (float)KNOT.convertTo(relativeWindSpeed, METERS_PER_SECOND));
+        sender.set("relativeWindSpeed", (float)relativeWindSpeed);
         double windAngleOverGround = Math.toDegrees(Math.atan2(y, x));
-        double relativeWindAngle = Navis.normalizeAngle(windAngleOverGround - driftAngle);
+        double relativeWindAngle = Navis.normalizeAngle(windAngleOverGround - trueHeading);
         sender.set("relativeWindAngle", (float)relativeWindAngle);
         
         sender.commit("simulation");

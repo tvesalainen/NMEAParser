@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.viewer;
+package org.vesalainen.parsers.nmea;
 
 import d3.env.TSAGeoMag;
 import java.io.IOException;
@@ -90,7 +90,7 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
         this.dbt = NMEASentence.dbt(()->depthOfWater, UnitType.METER);
         this.hdt = NMEASentence.hdt(()->trueHeading);
         this.mtw = NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS);
-        this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.METERS_PER_SECOND, false);
+        this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.KNOT, false);
         this.vhw = NMEASentence.vhw(()->waterSpeed, UnitType.KNOT);
     }
 

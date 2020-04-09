@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -33,13 +34,19 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
+import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.LongBinding;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.scene.Node;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import org.vesalainen.fx.FunctionalDoubleBinding;
+import org.vesalainen.fx.FunctionalFloatBinding;
+import org.vesalainen.fx.FunctionalIntegerBinding;
+import org.vesalainen.fx.FunctionalLongBinding;
 import org.vesalainen.math.UnitType;
+import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.parsers.nmea.NMEAProperties;
@@ -98,6 +105,13 @@ public class PropertyStore extends AnnotatedPropertyStore
             actives.add(property);
         }
         checkDisabled();
+        FloatBinding dow = (FloatBinding) boundMap.get("depthOfWater");
+        FloatBinding dbk = (FloatBinding) boundMap.get("depthBelowKeel");
+        FloatBinding dbs = (FloatBinding) boundMap.get("depthBelowSurface");
+        FloatBinding dbt = (FloatBinding) boundMap.get("depthBelowTransducer");
+        dbk.addListener(b->dow.invalidate());
+        dbs.addListener(b->dow.invalidate());
+        dbt.addListener(b->dow.invalidate());
     }
     private NumberBinding createBinding(String property)
     {
@@ -109,13 +123,13 @@ public class PropertyStore extends AnnotatedPropertyStore
         switch (type.getSimpleName())
         {
             case "int":
-                return Bindings.createIntegerBinding(()->getInt(property));
+                return new FunctionalIntegerBinding(()->getInt(property));
             case "long":
-                return Bindings.createLongBinding(()->getLong(property));
+                return new FunctionalLongBinding(()->getLong(property));
             case "float":
-                return Bindings.createFloatBinding(()->getFloat(property));
+                return new FunctionalFloatBinding(()->getFloat(property));
             case "double":
-                return Bindings.createDoubleBinding(()->getDouble(property));
+                return new FunctionalDoubleBinding(()->getDouble(property));
             default:
                 throw new UnsupportedOperationException(type+" not supported");
         }
@@ -137,6 +151,38 @@ public class PropertyStore extends AnnotatedPropertyStore
         solarWatch.stop();
     }
     
+    @Property public float getWindAngleOverGround()
+    {
+        double driftAngle = Navis.angleDiff(trueHeading, trackMadeGood);
+        double relAngleOG = relativeWindAngle - driftAngle;
+        double radRelAngleOG = toRadians(relAngleOG);
+        double radTrackMadeGood = toRadians(trackMadeGood);
+        double x = cos(radRelAngleOG)*relativeWindSpeed - cos(radTrackMadeGood)*speedOverGround;
+        double y = sin(radRelAngleOG)*relativeWindSpeed - sin(radTrackMadeGood)*speedOverGround;
+        double trueSpeed = Math.hypot(x, y);
+        double trueAngle = Math.toDegrees(Math.atan2(y, x));
+        if (trueAngle < 0)
+        {
+            trueAngle += 360.0;
+        }
+        return (float) trueAngle;
+    }
+    @Property public float getWindSpeedOverGround()
+    {
+        double driftAngle = Navis.angleDiff(trueHeading, trackMadeGood);
+        double relAngleOG = relativeWindAngle - driftAngle;
+        double radRelAngleOG = toRadians(relAngleOG);
+        double radTrackMadeGood = toRadians(trackMadeGood);
+        double x = cos(radRelAngleOG)*relativeWindSpeed - cos(radTrackMadeGood)*speedOverGround;
+        double y = sin(radRelAngleOG)*relativeWindSpeed - sin(radTrackMadeGood)*speedOverGround;
+        double trueSpeed = Math.hypot(x, y);
+        double trueAngle = Math.toDegrees(Math.atan2(y, x));
+        if (trueAngle < 0)
+        {
+            trueAngle += 360.0;
+        }
+        return (float) trueSpeed;
+    }
     @Property public float getDepthBelowKeel()
     {
         return depthOfWater - keelOffsetBinding.get();
@@ -152,17 +198,14 @@ public class PropertyStore extends AnnotatedPropertyStore
     @Property public void setDepthBelowKeel(float meters)
     {
         depthOfWater = meters + keelOffsetBinding.get();
-        updated.add("depthOfWater");
     }
     @Property public void setDepthBelowSurface(float meters)
     {
         depthOfWater = meters;
-        updated.add("depthOfWater");
     }
     @Property public void setDepthBelowTransducer(float meters)
     {
         depthOfWater = meters + transducerOffsetBinding.get();
-        updated.add("depthOfWater");
     }
     private void checkDisabled()
     {
@@ -184,7 +227,8 @@ public class PropertyStore extends AnnotatedPropertyStore
     @Override
     public void commit(String reason, Collection<String> updatedProperties)
     {
-        System.err.println(updatedProperties);
+        updated.add("windSpeedOverGround");
+        updated.add("windAngleOverGround");
         invalidate(updatedProperties);
     }
     

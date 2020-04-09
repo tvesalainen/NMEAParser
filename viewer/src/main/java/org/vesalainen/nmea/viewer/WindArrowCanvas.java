@@ -53,9 +53,9 @@ public class WindArrowCanvas extends RotatingValueCanvas implements PropertyBind
     @Override
     public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
-        angleProperty().bind(propertyStore.getBinding("relativeWindAngle"));
-        valueProperty().bind(propertyStore.getBinding("relativeWindSpeed"));
-        return new String[]{"relativeWindAngle", "relativeWindSpeed"};
+        angleProperty().bind(propertyStore.getBinding("windAngleOverGround"));
+        valueProperty().bind(propertyStore.getBinding("windSpeedOverGround"));
+        return new String[]{"windAngleOverGround", "windSpeedOverGround"};
     }
     
     private class PathMaker extends FunctionalPathMaker<Paint>
