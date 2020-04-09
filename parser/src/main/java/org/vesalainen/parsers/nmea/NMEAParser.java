@@ -736,11 +736,11 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         {
             case 'T':
                 data.setTrueWindAngle(windAngle);
-                data.setTrueWindSpeed(toMetersPerSecond(windSpeed, unit));
+                data.setTrueWindSpeed(toKnots(windSpeed, unit));
                 break;
             case 'R':
                 data.setRelativeWindAngle(windAngle);
-                data.setRelativeWindSpeed(toMetersPerSecond(windSpeed, unit));
+                data.setRelativeWindSpeed(toKnots(windSpeed, unit));
                 break;
             default:
                 throw new IllegalArgumentException(tr+ "expected T/R");
@@ -753,7 +753,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setRelativeWindSpeed(toMetersPerSecond(windSpeed, unit));
+        data.setRelativeWindSpeed(toKnots(windSpeed, unit));
     }
 
     @Rule("decimal c letter")

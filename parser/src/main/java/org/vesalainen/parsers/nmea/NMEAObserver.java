@@ -496,7 +496,7 @@ public interface NMEAObserver extends Transactional
      * @param metersInSecond
      */
     @NMEACat(WIND)
-    @Unit(value=METERS_PER_SECOND, min=0, max=100)
+    @Unit(value=KNOT, min=0, max=100)
     void setRelativeWindSpeed(float metersInSecond);
     /**
      * Returns the wind speed.
@@ -504,7 +504,7 @@ public interface NMEAObserver extends Transactional
      * @param metersInSecond
      */
     @NMEACat(WIND)
-    @Unit(value=METERS_PER_SECOND, min=0, max=100)
+    @Unit(value=KNOT, min=0, max=100)
     void setTrueWindSpeed(float metersInSecond);
     /**
      * ROT
