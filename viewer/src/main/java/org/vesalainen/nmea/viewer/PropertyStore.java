@@ -86,6 +86,12 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final DoubleBinding solarDepressionAngleBinding;
     private SolarWatch solarWatch;
     private ObjectBinding<DayPhase> dayPhaseProperty;
+    private final FunctionalDoubleBinding radRelativeAngleOverGround;
+    private final FunctionalDoubleBinding radTrackMadeGood;
+    private final FunctionalDoubleBinding windOverGroundX;
+    private final FunctionalDoubleBinding windOverGroundY;
+    private final FunctionalDoubleBinding windSpeedOverGround;
+    private final FunctionalDoubleBinding windAngleOverGround;
 
     public PropertyStore(CachedScheduledThreadPool executor, ViewerPreferences preferences)
     {
@@ -112,6 +118,34 @@ public class PropertyStore extends AnnotatedPropertyStore
         dbk.addListener(b->dow.invalidate());
         dbs.addListener(b->dow.invalidate());
         dbt.addListener(b->dow.invalidate());
+
+        FloatBinding th = (FloatBinding) boundMap.get("trueHeading");
+        FloatBinding rwa = (FloatBinding) boundMap.get("relativeWindAngle");
+        FloatBinding tmg = (FloatBinding) boundMap.get("trackMadeGood");
+        FloatBinding rws = (FloatBinding) boundMap.get("relativeWindSpeed");
+        FloatBinding sog = (FloatBinding) boundMap.get("speedOverGround");
+        
+        radRelativeAngleOverGround = new FunctionalDoubleBinding(()->toRadians(Navis.normalizeAngle(trueHeading + relativeWindAngle)), th, rwa);
+        radTrackMadeGood = new FunctionalDoubleBinding(()->toRadians(trackMadeGood), tmg);
+        windOverGroundX = new FunctionalDoubleBinding(()->
+                cos(radRelativeAngleOverGround.doubleValue())*relativeWindSpeed - cos(radTrackMadeGood.doubleValue())*speedOverGround,
+                radRelativeAngleOverGround,
+                rws,
+                radTrackMadeGood,
+                sog);
+        windOverGroundY = new FunctionalDoubleBinding(()->
+                sin(radRelativeAngleOverGround.doubleValue())*relativeWindSpeed - sin(radTrackMadeGood.doubleValue())*speedOverGround,
+                radRelativeAngleOverGround,
+                rws,
+                radTrackMadeGood,
+                sog);
+        windSpeedOverGround = new FunctionalDoubleBinding(()->
+                Math.hypot(windOverGroundY.doubleValue(), windOverGroundX.doubleValue()), 
+                windOverGroundX, windOverGroundY);
+        windAngleOverGround = new FunctionalDoubleBinding(()->
+                Navis.normalizeAngle(Math.toDegrees(Math.atan2(windOverGroundY.doubleValue(), windOverGroundX.doubleValue()))), 
+                windOverGroundX, windOverGroundY);
+        
     }
     private NumberBinding createBinding(String property)
     {
@@ -134,6 +168,16 @@ public class PropertyStore extends AnnotatedPropertyStore
                 throw new UnsupportedOperationException(type+" not supported");
         }
     }
+    private Observable[] dependencies(String... properties)
+    {
+        Observable[] res = new Observable[properties.length];
+        int idx = 0;
+        for (String property : properties)
+        {
+            res[idx++] = boundMap.get(property);
+        }
+        return res;
+    }
     public NumberBinding getBinding(String property)
     {
         return boundMap.get(property);
@@ -153,35 +197,11 @@ public class PropertyStore extends AnnotatedPropertyStore
     
     @Property public float getWindAngleOverGround()
     {
-        double driftAngle = Navis.angleDiff(trueHeading, trackMadeGood);
-        double relAngleOG = relativeWindAngle - driftAngle;
-        double radRelAngleOG = toRadians(relAngleOG);
-        double radTrackMadeGood = toRadians(trackMadeGood);
-        double x = cos(radRelAngleOG)*relativeWindSpeed - cos(radTrackMadeGood)*speedOverGround;
-        double y = sin(radRelAngleOG)*relativeWindSpeed - sin(radTrackMadeGood)*speedOverGround;
-        double trueSpeed = Math.hypot(x, y);
-        double trueAngle = Math.toDegrees(Math.atan2(y, x));
-        if (trueAngle < 0)
-        {
-            trueAngle += 360.0;
-        }
-        return (float) trueAngle;
+        return windAngleOverGround.floatValue();
     }
     @Property public float getWindSpeedOverGround()
     {
-        double driftAngle = Navis.angleDiff(trueHeading, trackMadeGood);
-        double relAngleOG = relativeWindAngle - driftAngle;
-        double radRelAngleOG = toRadians(relAngleOG);
-        double radTrackMadeGood = toRadians(trackMadeGood);
-        double x = cos(radRelAngleOG)*relativeWindSpeed - cos(radTrackMadeGood)*speedOverGround;
-        double y = sin(radRelAngleOG)*relativeWindSpeed - sin(radTrackMadeGood)*speedOverGround;
-        double trueSpeed = Math.hypot(x, y);
-        double trueAngle = Math.toDegrees(Math.atan2(y, x));
-        if (trueAngle < 0)
-        {
-            trueAngle += 360.0;
-        }
-        return (float) trueSpeed;
+        return windSpeedOverGround.floatValue();
     }
     @Property public float getDepthBelowKeel()
     {

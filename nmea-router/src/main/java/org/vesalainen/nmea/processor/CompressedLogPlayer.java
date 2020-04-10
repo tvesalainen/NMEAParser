@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.vesalainen.io.CompressedInput;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
-import org.vesalainen.nmea.viewer.NMEASender;
+import org.vesalainen.parsers.nmea.NMEASender;
 import org.vesalainen.time.SimpleClock;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
