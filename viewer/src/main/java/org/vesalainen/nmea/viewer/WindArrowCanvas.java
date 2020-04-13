@@ -43,8 +43,9 @@ public class WindArrowCanvas extends RotatingValueCanvas implements PropertyBind
     }
 
     @Override
-    protected void onDraw(GraphicsContext gc)
+    protected void onDraw()
     {
+        GraphicsContext gc = getGraphicsContext2D();
         gc.scale(1, -1);
         windArrow.draw(getValue());
         gc.scale(1, -1);

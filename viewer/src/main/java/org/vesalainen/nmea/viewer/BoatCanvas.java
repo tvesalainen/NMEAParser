@@ -33,8 +33,9 @@ public class BoatCanvas extends RotatingCanvas implements PropertyBindable
     }
 
     @Override
-    protected void onDraw(GraphicsContext gc)
+    protected void onDraw()
     {
+        GraphicsContext gc = getGraphicsContext2D();
         Paint color = adjustColor(Color.NAVY);
         gc.setStroke(color);
         

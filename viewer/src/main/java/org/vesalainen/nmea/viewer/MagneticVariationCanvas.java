@@ -33,8 +33,9 @@ public class MagneticVariationCanvas extends RotatingCanvas implements PropertyB
     }
     
     @Override
-    protected void onDraw(GraphicsContext gc)
+    protected void onDraw()
     {
+        GraphicsContext gc = getGraphicsContext2D();
         Paint color = adjustColor(Color.RED);
         gc.setFill(color);
         

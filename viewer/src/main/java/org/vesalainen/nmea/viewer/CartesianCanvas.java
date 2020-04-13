@@ -22,7 +22,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Affine;
-import javafx.scene.transform.Transform;
 import org.vesalainen.ui.Transforms;
 
 /**
@@ -48,7 +47,7 @@ public class CartesianCanvas extends ResizableCanvas
     }
 
     @Override
-    protected void onSize()
+    protected void transform()
     {
         double width = getWidth();
         double height = getHeight();
@@ -68,36 +67,8 @@ public class CartesianCanvas extends ResizableCanvas
                         transform.setToTransform(mxx, mxy, tx, myx, myy, ty);
                     });
             gc.setTransform(transform);
-            onDraw();
+            gc.clearRect(-max, -max, 2*max, 2*max);
         }
     }
 
-    @Override
-    protected final void onDraw()
-    {
-        double width = getWidth();
-        double height = getHeight();
-        if (width > 0 && height > 0)
-        {
-            GraphicsContext gc = getGraphicsContext2D();
-            gc.clearRect(-max, -max, 2*max, 2*max);
-            onDraw(gc);
-        }
-    }
-    /**
-     * On call the gc is set to cartesian coordinates x (-max to max) y (-max to max)
-     * @param gc 
-     */
-    protected void onDraw(GraphicsContext gc)
-    {
-        double width = getWidth();
-        double height = getHeight();
-        gc.setFont(Font.font(height/10));
-        gc.setTextAlign(TextAlignment.CENTER);
-        gc.setTextBaseline(VPos.CENTER);
-        gc.fillText("0", 0, max);
-        gc.setStroke(Color.RED);
-        gc.strokeLine(-max, 0, max, 0);
-        gc.strokeLine(0, -max, 0, max);
-    }
 }

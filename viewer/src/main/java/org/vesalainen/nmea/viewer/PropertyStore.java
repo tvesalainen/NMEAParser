@@ -19,7 +19,6 @@ package org.vesalainen.nmea.viewer;
 import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
 import java.time.Clock;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,13 +27,12 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 import static java.util.concurrent.TimeUnit.*;
+import java.util.function.Predicate;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
-import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.LongBinding;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -50,7 +48,6 @@ import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.parsers.nmea.NMEAProperties;
-import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.ConcurrentHashMapList;
 import org.vesalainen.util.MapList;
 import org.vesalainen.util.TimeToLiveSet;
@@ -79,7 +76,7 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final FloatBinding keelOffsetBinding;
     private final FloatBinding transducerOffsetBinding;
     private final Map<String,NumberBinding> boundMap = new HashMap<>();
-    private final NavigableSet<String> updated = new ConcurrentSkipListSet<>();
+    private final NavigableSet<String> modified = new ConcurrentSkipListSet<>();
     private final TimeToLiveSet<String> actives;
     private final LongBinding timeToLiveBinding;
     private final MapList<String,Node> nodes = new ConcurrentHashMapList<>();
@@ -100,7 +97,7 @@ public class PropertyStore extends AnnotatedPropertyStore
         this.keelOffsetBinding = (FloatBinding) preferences.getNumberBinding("keelOffset");
         this.transducerOffsetBinding = (FloatBinding) preferences.getNumberBinding("transducerOffset");
         this.timeToLiveBinding = (LongBinding)preferences.getNumberBinding("timeToLive");
-        this.actives = new TimeToLiveSet<>(Clock.systemUTC(), preferences.getLong("timeToLive"), SECONDS, this::setDisable);
+        this.actives = new TimeToLiveSet<>(Clock.systemUTC(), preferences.getLong("timeToLive"), SECONDS, (p)->setDisable(p, true));
         this.solarDepressionAngleBinding = (DoubleBinding) preferences.getNumberBinding("solarDepressionAngle");
         this.solarWatch = new SolarWatch(()->epochMillis, executor, ()->preferences.getLong("solarUpdateSeconds"), ()->latitude, ()->longitude, ()->solarDepressionAngleBinding.doubleValue());
         this.dayPhaseProperty = Bindings.createObjectBinding(()->solarWatch.getPhase());
@@ -111,41 +108,47 @@ public class PropertyStore extends AnnotatedPropertyStore
             actives.add(property);
         }
         checkDisabled();
-        FloatBinding dow = (FloatBinding) boundMap.get("depthOfWater");
-        FloatBinding dbk = (FloatBinding) boundMap.get("depthBelowKeel");
-        FloatBinding dbs = (FloatBinding) boundMap.get("depthBelowSurface");
-        FloatBinding dbt = (FloatBinding) boundMap.get("depthBelowTransducer");
-        dbk.addListener(b->dow.invalidate());
-        dbs.addListener(b->dow.invalidate());
-        dbt.addListener(b->dow.invalidate());
+        FloatBinding depthOfWaterBinding = (FloatBinding) boundMap.get("depthOfWater");
+        FloatBinding depthBelowKeelBinding = (FloatBinding) boundMap.get("depthBelowKeel");
+        FloatBinding depthBelowSurfaceBinding = (FloatBinding) boundMap.get("depthBelowSurface");
+        FloatBinding depthBelowTransducerBinding = (FloatBinding) boundMap.get("depthBelowTransducer");
+        depthBelowKeelBinding.addListener(b->depthOfWaterBinding.invalidate());
+        depthBelowSurfaceBinding.addListener(b->depthOfWaterBinding.invalidate());
+        depthBelowTransducerBinding.addListener(b->depthOfWaterBinding.invalidate());
 
-        FloatBinding th = (FloatBinding) boundMap.get("trueHeading");
-        FloatBinding rwa = (FloatBinding) boundMap.get("relativeWindAngle");
-        FloatBinding tmg = (FloatBinding) boundMap.get("trackMadeGood");
-        FloatBinding rws = (FloatBinding) boundMap.get("relativeWindSpeed");
-        FloatBinding sog = (FloatBinding) boundMap.get("speedOverGround");
+        FloatBinding trueHeadingBinding = (FloatBinding) boundMap.get("trueHeading");
+        FloatBinding relativeWindAngleBinding = (FloatBinding) boundMap.get("relativeWindAngle");
+        FloatBinding trackMadeGoodBinding = (FloatBinding) boundMap.get("trackMadeGood");
+        FloatBinding relativeWindSpeedBinding = (FloatBinding) boundMap.get("relativeWindSpeed");
+        FloatBinding speedOverGroundBinding = (FloatBinding) boundMap.get("speedOverGround");
         
-        radRelativeAngleOverGround = new FunctionalDoubleBinding(()->toRadians(Navis.normalizeAngle(trueHeading + relativeWindAngle)), th, rwa);
-        radTrackMadeGood = new FunctionalDoubleBinding(()->toRadians(trackMadeGood), tmg);
+        radRelativeAngleOverGround = new FunctionalDoubleBinding(
+                ()->toRadians(Navis.normalizeAngle(trueHeading + relativeWindAngle)), 
+                trueHeadingBinding, 
+                relativeWindAngleBinding);
+        radTrackMadeGood = new FunctionalDoubleBinding(
+                ()->toRadians(trackMadeGood), 
+                trackMadeGoodBinding);
         windOverGroundX = new FunctionalDoubleBinding(()->
                 cos(radRelativeAngleOverGround.doubleValue())*relativeWindSpeed - cos(radTrackMadeGood.doubleValue())*speedOverGround,
                 radRelativeAngleOverGround,
-                rws,
                 radTrackMadeGood,
-                sog);
+                relativeWindSpeedBinding,
+                speedOverGroundBinding);
         windOverGroundY = new FunctionalDoubleBinding(()->
                 sin(radRelativeAngleOverGround.doubleValue())*relativeWindSpeed - sin(radTrackMadeGood.doubleValue())*speedOverGround,
                 radRelativeAngleOverGround,
-                rws,
                 radTrackMadeGood,
-                sog);
+                relativeWindSpeedBinding,
+                speedOverGroundBinding);
         windSpeedOverGround = new FunctionalDoubleBinding(()->
                 Math.hypot(windOverGroundY.doubleValue(), windOverGroundX.doubleValue()), 
                 windOverGroundX, windOverGroundY);
         windAngleOverGround = new FunctionalDoubleBinding(()->
                 Navis.normalizeAngle(Math.toDegrees(Math.atan2(windOverGroundY.doubleValue(), windOverGroundX.doubleValue()))), 
                 windOverGroundX, windOverGroundY);
-        
+        boundMap.put("windSpeedOverGround", windSpeedOverGround);
+        boundMap.put("windAngleOverGround", windAngleOverGround);
     }
     private NumberBinding createBinding(String property)
     {
@@ -157,13 +160,13 @@ public class PropertyStore extends AnnotatedPropertyStore
         switch (type.getSimpleName())
         {
             case "int":
-                return new FunctionalIntegerBinding(()->getInt(property));
+                return new FunctionalIntegerBinding(getIntSupplier(property));
             case "long":
-                return new FunctionalLongBinding(()->getLong(property));
+                return new FunctionalLongBinding(getLongSupplier(property));
             case "float":
-                return new FunctionalFloatBinding(()->getFloat(property));
+                return new FunctionalFloatBinding(getDoubleSupplier(property));
             case "double":
-                return new FunctionalDoubleBinding(()->getDouble(property));
+                return new FunctionalDoubleBinding(getDoubleSupplier(property));
             default:
                 throw new UnsupportedOperationException(type+" not supported");
         }
@@ -236,44 +239,49 @@ public class PropertyStore extends AnnotatedPropertyStore
      * this is run in platform thread
      * @param property 
      */
-    private void setDisable(String property)
+    private void setDisable(String property, boolean disabled)
     {
         List<Node> node = nodes.get(property);
         if (node != null)
         {
-            node.forEach((n)->n.setDisable(true));
+            node.forEach((n)->n.setDisable(disabled));
         }
     }
+
     @Override
-    public void commit(String reason, Collection<String> updatedProperties)
+    public void commit(String reason, Collection<String> updatedProperties, Predicate<String> isModified)
     {
-        updated.add("windSpeedOverGround");
-        updated.add("windAngleOverGround");
-        invalidate(updatedProperties);
-    }
-    
-    private void invalidate(String... updatedProperties)
-    {
-        invalidate(CollectionHelp.create(updatedProperties));
-    }
-    private void invalidate(Collection<String> updatedProperties)
-    {
-        updated.addAll(updatedProperties);
-        Platform.runLater(this::invalidate);
+        boolean newModified = false;
+        long ttl = timeToLiveBinding.get();
+        for (String property : updatedProperties)
+        {
+            boolean newEntry = actives.add(property, ttl, SECONDS);
+            if (newEntry)
+            {
+                System.err.println(property+" NEW");
+                Platform.runLater(()->setDisable(property, false));
+            }
+            if (isModified.test(property))
+            {
+                modified.add(property);
+                newModified = true;
+            }
+        }
+        if (newModified)
+        {
+            Platform.runLater(this::invalidate);
+        }
     }
     /**
      * this is run in platform thread
      */
     private void invalidate()
     {
-        long ttl = timeToLiveBinding.get();
-        Iterator<String> iterator = updated.iterator();
+        Iterator<String> iterator = modified.iterator();
         while (iterator.hasNext())
         {
             String property = iterator.next();
             iterator.remove();
-            setDisable(property);
-            actives.add(property, ttl, SECONDS);
             NumberBinding binding = boundMap.get(property);
             binding.invalidate();
         }

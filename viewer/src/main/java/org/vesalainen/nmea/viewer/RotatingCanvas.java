@@ -53,23 +53,19 @@ public class RotatingCanvas extends CartesianCanvas
     protected RotatingCanvas(double maxValue)
     {
         super(maxValue);
-        angleProperty().addListener(evt->rotate());
+        angleProperty().addListener(evt->reDraw());
         onMousePressedProperty().setValue((e)->{if (isMouseEditable()) onMousePressed(e);});
         onMouseDraggedProperty().setValue((e)->{if (isMouseEditable()) onMouseDragged(e);});
     }
 
-    private void rotate()
+    protected void transform()
     {
+        super.transform();
         GraphicsContext gc = getGraphicsContext2D();
         gc.setTransform(transform);
         gc.rotate(-getAngle());
         onDraw();
     }
-    @Override
-    protected void onDraw(GraphicsContext gc)
-    {
-    }
-    
     protected void onMousePressed(MouseEvent e)
     {
         try

@@ -33,8 +33,9 @@ public class CourseSpeedCanvas extends RotatingValueCanvas implements PropertyBi
     }
 
     @Override
-    protected void onDraw(GraphicsContext gc)
+    protected void onDraw()
     {
+        GraphicsContext gc = getGraphicsContext2D();
         double value = getValue();
         if (value > 0)
         {

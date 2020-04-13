@@ -55,7 +55,6 @@ public class ResizableCanvas extends Canvas implements Initializable
     
     private final SimpleStyleableObjectProperty<Font> font = new SimpleStyleableObjectProperty<>(FONT, this, "font");
     private boolean pendingReDraw;
-    private boolean pendingReSize;
 
     public Font getFont()
     {
@@ -177,6 +176,10 @@ public class ResizableCanvas extends Canvas implements Initializable
             Color origColor = (Color) color;
             double bgBrightness = bgColor.getBrightness();
             double brightness = origColor.getBrightness()*Math.max(bgBrightness, 0.5);
+            if (isDisabled())
+            {
+                brightness = 0.5;
+            }
             return Color.hsb(origColor.getHue(), origColor.getSaturation(), brightness, origColor.getOpacity());
         }
         else
@@ -202,28 +205,6 @@ public class ResizableCanvas extends Canvas implements Initializable
         return true;
     }
 
-    protected void reSize()
-    {
-        if (!pendingReSize)
-        {
-            pendingReSize = true;
-            Platform.runLater(this::onReSize);
-        }
-    }
-    private void onReSize()
-    {
-        try
-        {
-            onSize();
-        }
-        finally
-        {
-            pendingReSize = false;
-        }
-    }
-    protected void onSize()
-    {
-    }
     protected void reDraw()
     {
         if (!pendingReDraw)
@@ -236,12 +217,16 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
         try
         {
+            transform();
             onDraw();
         }
         finally
         {
             pendingReDraw = false;
         }
+    }
+    protected void transform()
+    {
     }
     protected void onDraw()
     {
@@ -277,12 +262,13 @@ public class ResizableCanvas extends Canvas implements Initializable
                 widthProperty().bind(regionWidth);
                 heightProperty().bind(regionHeight);
             }
-            widthProperty().addListener(evt -> reSize());
-            heightProperty().addListener(evt -> reSize());
+            widthProperty().addListener(evt -> reDraw());
+            heightProperty().addListener(evt -> reDraw());
         }
         else
         {
             System.err.println(newParent+" not suitable for ResizableCanvas");
         }
     }
+
 }

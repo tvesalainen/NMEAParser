@@ -146,11 +146,11 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
     @Override
     public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
-        getStyleClass().add(CamelCase.delimitedLower(property.getValue(), "-"));
+        String prop = getProperty();
+        getStyleClass().add(CamelCase.delimitedLower(prop, "-"));
         I18n.bind(titleProperty(), resources, property);
         I18n.bind(unitTitleProperty(), resources, Bindings.createStringBinding(()->CamelCase.property(unit.getValue().name())+"Unit", unit));
         
-        String prop = property.getValue();
         origUnit = propertyStore.getOriginalUnit(prop);
         unitProperty().bind(preferences.getCategoryBinding(prop));
         valueProperty().bind(propertyStore.getBinding(prop));
@@ -158,8 +158,9 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         valueProperty().addListener(evt->reDraw());
         unitProperty().addListener(evt->reDraw());
         disabledProperty().addListener(evt->reDraw());
+        disabledProperty().addListener(evt->System.err.println(prop+" "+evt));
         
-        return new String[]{property.getValue()};
+        return new String[]{prop};
     }
     @Override
     protected void onDraw()

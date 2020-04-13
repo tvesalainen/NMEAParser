@@ -37,8 +37,9 @@ public class CompassRingCanvas extends CartesianCanvas
     }
 
     @Override
-    protected void onDraw(GraphicsContext gc)
+    protected void onDraw()
     {
+        GraphicsContext gc = getGraphicsContext2D();
         double width = getWidth();
         double height = getHeight();
         boolean haveText = height >= TEXT_LIMIT;
