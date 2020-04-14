@@ -16,8 +16,6 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Point2D;
@@ -64,7 +62,6 @@ public class RotatingCanvas extends CartesianCanvas
         GraphicsContext gc = getGraphicsContext2D();
         gc.setTransform(transform);
         gc.rotate(-getAngle());
-        onDraw();
     }
     protected void onMousePressed(MouseEvent e)
     {

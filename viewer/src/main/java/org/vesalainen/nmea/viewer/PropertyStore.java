@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import static java.util.concurrent.TimeUnit.*;
 import java.util.function.Predicate;
@@ -89,6 +90,14 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final FunctionalDoubleBinding windOverGroundY;
     private final FunctionalDoubleBinding windSpeedOverGround;
     private final FunctionalDoubleBinding windAngleOverGround;
+    private final FloatBinding depthOfWaterBinding;
+    private final FloatBinding depthBelowKeelBinding;
+    private final FloatBinding depthBelowTransducerBinding;
+    private final FunctionalDoubleBinding radTrueHeading;
+    private final FunctionalDoubleBinding currentOverGroundX;
+    private final FunctionalDoubleBinding currentOverGroundY;
+    private final FunctionalDoubleBinding currentSpeedOverGround;
+    private final FunctionalDoubleBinding currentAngleOverGround;
 
     public PropertyStore(CachedScheduledThreadPool executor, ViewerPreferences preferences)
     {
@@ -108,14 +117,21 @@ public class PropertyStore extends AnnotatedPropertyStore
             actives.add(property);
         }
         checkDisabled();
-        FloatBinding depthOfWaterBinding = (FloatBinding) boundMap.get("depthOfWater");
-        FloatBinding depthBelowKeelBinding = (FloatBinding) boundMap.get("depthBelowKeel");
-        FloatBinding depthBelowSurfaceBinding = (FloatBinding) boundMap.get("depthBelowSurface");
-        FloatBinding depthBelowTransducerBinding = (FloatBinding) boundMap.get("depthBelowTransducer");
-        depthBelowKeelBinding.addListener(b->depthOfWaterBinding.invalidate());
-        depthBelowSurfaceBinding.addListener(b->depthOfWaterBinding.invalidate());
-        depthBelowTransducerBinding.addListener(b->depthOfWaterBinding.invalidate());
-
+        // depth
+        depthOfWaterBinding = (FloatBinding) boundMap.get("depthOfWater");
+        depthBelowKeelBinding = new FunctionalFloatBinding(
+                ()->depthOfWaterBinding.get() - keelOffsetBinding.get(),
+                depthOfWaterBinding,
+                keelOffsetBinding
+        );
+        boundMap.put("depthBelowKeel", depthBelowKeelBinding);
+        depthBelowTransducerBinding = new FunctionalFloatBinding(
+                ()->depthOfWaterBinding.get() - transducerOffsetBinding.get(),
+                depthOfWaterBinding,
+                transducerOffsetBinding
+        );
+        boundMap.put("depthBelowTransducer", depthBelowTransducerBinding);
+        // wind
         FloatBinding trueHeadingBinding = (FloatBinding) boundMap.get("trueHeading");
         FloatBinding relativeWindAngleBinding = (FloatBinding) boundMap.get("relativeWindAngle");
         FloatBinding trackMadeGoodBinding = (FloatBinding) boundMap.get("trackMadeGood");
@@ -123,20 +139,20 @@ public class PropertyStore extends AnnotatedPropertyStore
         FloatBinding speedOverGroundBinding = (FloatBinding) boundMap.get("speedOverGround");
         
         radRelativeAngleOverGround = new FunctionalDoubleBinding(
-                ()->toRadians(Navis.normalizeAngle(trueHeading + relativeWindAngle)), 
+                ()->toRadians(Navis.normalizeAngle(trueHeadingBinding.doubleValue() + relativeWindAngleBinding.doubleValue())), 
                 trueHeadingBinding, 
                 relativeWindAngleBinding);
         radTrackMadeGood = new FunctionalDoubleBinding(
-                ()->toRadians(trackMadeGood), 
+                ()->toRadians(trackMadeGoodBinding.doubleValue()), 
                 trackMadeGoodBinding);
         windOverGroundX = new FunctionalDoubleBinding(()->
-                cos(radRelativeAngleOverGround.doubleValue())*relativeWindSpeed - cos(radTrackMadeGood.doubleValue())*speedOverGround,
+                cos(radRelativeAngleOverGround.doubleValue())*relativeWindSpeedBinding.doubleValue() - cos(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
                 radRelativeAngleOverGround,
                 radTrackMadeGood,
                 relativeWindSpeedBinding,
                 speedOverGroundBinding);
         windOverGroundY = new FunctionalDoubleBinding(()->
-                sin(radRelativeAngleOverGround.doubleValue())*relativeWindSpeed - sin(radTrackMadeGood.doubleValue())*speedOverGround,
+                sin(radRelativeAngleOverGround.doubleValue())*relativeWindSpeedBinding.doubleValue() - sin(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
                 radRelativeAngleOverGround,
                 radTrackMadeGood,
                 relativeWindSpeedBinding,
@@ -149,6 +165,31 @@ public class PropertyStore extends AnnotatedPropertyStore
                 windOverGroundX, windOverGroundY);
         boundMap.put("windSpeedOverGround", windSpeedOverGround);
         boundMap.put("windAngleOverGround", windAngleOverGround);
+        // current
+        FloatBinding waterSpeedBinding = (FloatBinding) boundMap.get("waterSpeed");
+        radTrueHeading = new FunctionalDoubleBinding(
+                ()->toRadians(trueHeadingBinding.doubleValue()), 
+                trueHeadingBinding);
+        currentOverGroundX = new FunctionalDoubleBinding(()->
+                cos(radTrueHeading.doubleValue())*waterSpeedBinding.doubleValue() - cos(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
+                radTrueHeading,
+                radTrackMadeGood,
+                waterSpeedBinding,
+                speedOverGroundBinding);
+        currentOverGroundY = new FunctionalDoubleBinding(()->
+                sin(radTrueHeading.doubleValue())*waterSpeedBinding.doubleValue() - sin(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
+                radTrueHeading,
+                radTrackMadeGood,
+                waterSpeedBinding,
+                speedOverGroundBinding);
+        currentSpeedOverGround = new FunctionalDoubleBinding(()->
+                Math.hypot(currentOverGroundY.doubleValue(), currentOverGroundX.doubleValue()), 
+                currentOverGroundX, currentOverGroundY);
+        currentAngleOverGround = new FunctionalDoubleBinding(()->
+                Navis.normalizeAngle(Math.toDegrees(Math.atan2(currentOverGroundY.doubleValue(), currentOverGroundX.doubleValue()))), 
+                currentOverGroundX, currentOverGroundY);
+        boundMap.put("currentSpeedOverGround", currentSpeedOverGround);
+        boundMap.put("currentAngleOverGround", currentAngleOverGround);
     }
     private NumberBinding createBinding(String property)
     {
@@ -171,16 +212,6 @@ public class PropertyStore extends AnnotatedPropertyStore
                 throw new UnsupportedOperationException(type+" not supported");
         }
     }
-    private Observable[] dependencies(String... properties)
-    {
-        Observable[] res = new Observable[properties.length];
-        int idx = 0;
-        for (String property : properties)
-        {
-            res[idx++] = boundMap.get(property);
-        }
-        return res;
-    }
     public NumberBinding getBinding(String property)
     {
         return boundMap.get(property);
@@ -198,6 +229,14 @@ public class PropertyStore extends AnnotatedPropertyStore
         solarWatch.stop();
     }
     
+    @Property public float getCurrentAngleOverGround()
+    {
+        return currentAngleOverGround.floatValue();
+    }
+    @Property public float getCurrentSpeedOverGround()
+    {
+        return currentSpeedOverGround.floatValue();
+    }
     @Property public float getWindAngleOverGround()
     {
         return windAngleOverGround.floatValue();
@@ -208,27 +247,36 @@ public class PropertyStore extends AnnotatedPropertyStore
     }
     @Property public float getDepthBelowKeel()
     {
-        return depthOfWater - keelOffsetBinding.get();
+        return depthBelowKeelBinding.get();
     }
     @Property public float getDepthBelowSurface()
     {
-        return depthOfWater;
+        return depthOfWaterBinding.get();
     }
     @Property public float getDepthBelowTransducer()
     {
-        return depthOfWater - transducerOffsetBinding.get();
+        return depthBelowTransducerBinding.get();
     }
     @Property public void setDepthBelowKeel(float meters)
     {
-        depthOfWater = meters + keelOffsetBinding.get();
+        setDepthOfWater(meters + keelOffsetBinding.get());
     }
     @Property public void setDepthBelowSurface(float meters)
     {
-        depthOfWater = meters;
+        setDepthOfWater(meters);
     }
     @Property public void setDepthBelowTransducer(float meters)
     {
-        depthOfWater = meters + transducerOffsetBinding.get();
+        setDepthOfWater(meters + transducerOffsetBinding.get());
+    }
+    private void setDepthOfWater(float dow)
+    {
+        activate("depthOfWater");
+        if (depthOfWater != dow)
+        {
+            modified.add("depthOfWater");
+            depthOfWater = dow;
+        }
     }
     private void checkDisabled()
     {
@@ -252,15 +300,9 @@ public class PropertyStore extends AnnotatedPropertyStore
     public void commit(String reason, Collection<String> updatedProperties, Predicate<String> isModified)
     {
         boolean newModified = false;
-        long ttl = timeToLiveBinding.get();
         for (String property : updatedProperties)
         {
-            boolean newEntry = actives.add(property, ttl, SECONDS);
-            if (newEntry)
-            {
-                System.err.println(property+" NEW");
-                Platform.runLater(()->setDisable(property, false));
-            }
+            activate(property);
             if (isModified.test(property))
             {
                 modified.add(property);
@@ -271,6 +313,11 @@ public class PropertyStore extends AnnotatedPropertyStore
         {
             Platform.runLater(this::invalidate);
         }
+    }
+    private void activate(String property)
+    {
+        long ttl = timeToLiveBinding.get();
+        actives.add(property, ttl, SECONDS);
     }
     /**
      * this is run in platform thread
@@ -290,7 +337,6 @@ public class PropertyStore extends AnnotatedPropertyStore
     public Observable registerNode(String property, Node node)
     {
         nodes.add(property, node);
-        node.setDisable(true);
         return boundMap.get(property);
     }
 
@@ -316,7 +362,7 @@ public class PropertyStore extends AnnotatedPropertyStore
         for (String property : boundProperties)
         {
             nodes.add(property, node);
-            node.setDisable(true);
         }
     }
+
 }

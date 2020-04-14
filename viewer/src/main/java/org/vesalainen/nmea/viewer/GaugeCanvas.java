@@ -158,7 +158,6 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         valueProperty().addListener(evt->reDraw());
         unitProperty().addListener(evt->reDraw());
         disabledProperty().addListener(evt->reDraw());
-        disabledProperty().addListener(evt->System.err.println(prop+" "+evt));
         
         return new String[]{prop};
     }

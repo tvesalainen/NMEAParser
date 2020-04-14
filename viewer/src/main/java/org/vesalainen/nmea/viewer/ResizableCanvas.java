@@ -217,6 +217,7 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
         try
         {
+            setDisabled(false);
             transform();
             onDraw();
         }

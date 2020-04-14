@@ -19,6 +19,7 @@ package org.vesalainen.nmea.viewer;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import org.vesalainen.fx.InterpolatingColor;
 import org.vesalainen.navi.WindArrow;
 import org.vesalainen.ui.path.FunctionalPathMaker;
 
@@ -32,6 +33,7 @@ public class WindArrowCanvas extends RotatingValueCanvas implements PropertyBind
     private final GraphicsContext gc;
     private final PathMaker pathMaker;
     private final WindArrow windArrow;
+    private InterpolatingColor windColor = new InterpolatingColor(0, 180, 20, 50, 40, -40, 80, -80);
 
     public WindArrowCanvas()
     {
@@ -59,8 +61,14 @@ public class WindArrowCanvas extends RotatingValueCanvas implements PropertyBind
         return new String[]{"windAngleOverGround", "windSpeedOverGround"};
     }
     
+    private Color color(String s)
+    {
+        return windColor.color(getValue());
+    }
+    
     private class PathMaker extends FunctionalPathMaker<Paint>
     {
+
         private PathMaker(GraphicsContext gc, WindArrowCanvas wac)
         {
             super(
@@ -75,9 +83,8 @@ public class WindArrowCanvas extends RotatingValueCanvas implements PropertyBind
                         gc.fill();
                     }, 
                     gc::setFill, 
-                    (s)->wac.adjustColor(Color.web(s))
+                    (s)->wac.adjustColor(color(s))
             );
         }
-        
     }
 }
