@@ -54,11 +54,11 @@ public class WindArrowCanvas extends RotatingValueCanvas implements PropertyBind
     }
 
     @Override
-    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
         angleProperty().bind(propertyStore.getBinding("windAngleOverGround"));
         valueProperty().bind(propertyStore.getBinding("windSpeedOverGround"));
-        return new String[]{"windAngleOverGround", "windSpeedOverGround"};
+        disableProperty().bind(propertyStore.getDisableBind("windAngleOverGround", "windSpeedOverGround"));
     }
     
     private Color color(String s)

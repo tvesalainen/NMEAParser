@@ -36,6 +36,10 @@ import javafx.util.converter.IntegerStringConverter;
 import javafx.util.converter.LongStringConverter;
 import org.vesalainen.fx.ColorStringConverter;
 import org.vesalainen.fx.PreferencesBindings;
+import org.vesalainen.fx.ValidatingDoubleStringConverter;
+import org.vesalainen.fx.ValidatingFloatStringConverter;
+import org.vesalainen.fx.ValidatingIntegerStringConverter;
+import org.vesalainen.fx.ValidatingLongStringConverter;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.parsers.nmea.NMEACategory;
 import org.vesalainen.parsers.nmea.NMEAProperties;
@@ -81,6 +85,10 @@ public class ViewerPreferences
     {
         bindDouble(key, def, textField, DOUBLE_STRING_CONVERTER);
     }
+    public void bindDouble(String key, double def, double min, double max, TextField textField)
+    {
+        bindDouble(key, def, textField, new ValidatingDoubleStringConverter(min, max));
+    }
     public void bindDouble(String key, double def, TextField textField, StringConverter<Double> converter)
     {
         TextFormatter<Double> formatter = setFormatter(textField, converter);
@@ -90,6 +98,10 @@ public class ViewerPreferences
     public void bindFloat(String key, float def, TextField textField)
     {
         bindFloat(key, def, textField, FLOAT_STRING_CONVERTER);
+    }
+    public void bindFloat(String key, float def, float min, float max, TextField textField)
+    {
+        bindFloat(key, def, textField, new ValidatingFloatStringConverter(min, max));
     }
     public void bindFloat(String key, float def, TextField textField, StringConverter<Float> converter)
     {
@@ -101,6 +113,10 @@ public class ViewerPreferences
     {
         bindInteger(key, def, textField, INTEGER_STRING_CONVERTER);
     }
+    public void bindInteger(String key, int def, int min, int max, TextField textField)
+    {
+        bindInteger(key, def, textField, new ValidatingIntegerStringConverter(min, max));
+    }
     public void bindInteger(String key, int def, TextField textField, StringConverter<Integer> converter)
     {
         TextFormatter<Integer> formatter = setFormatter(textField, converter);
@@ -110,6 +126,10 @@ public class ViewerPreferences
     public void bindLong(String key, long def, TextField textField)
     {
         bindLong(key, def, textField, LONG_STRING_CONVERTER);
+    }
+    public void bindLong(String key, long def, long min, long max, TextField textField)
+    {
+        bindLong(key, def, textField, new ValidatingLongStringConverter(min, max));
     }
     public void bindLong(String key, long def, TextField textField, StringConverter<Long> converter)
     {

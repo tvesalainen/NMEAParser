@@ -23,6 +23,6 @@ package org.vesalainen.nmea.viewer;
 public interface PropertyBindable
 {
 
-    String[] bind(ViewerPreferences preferences, PropertyStore propertyStore);
+    void bind(ViewerPreferences preferences, PropertyStore propertyStore);
     
 }

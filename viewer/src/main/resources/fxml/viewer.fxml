@@ -142,7 +142,7 @@
                            </children>
                         </GridPane>
                      </content></TitledPane>
-                  <TitledPane animated="false" text="%timeToLive">
+                  <TitledPane animated="false" text="%timeOuts">
                      <content>
                         <GridPane>
                           <columnConstraints>
@@ -151,12 +151,19 @@
                           </columnConstraints>
                           <rowConstraints>
                             <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                            <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                           </rowConstraints>
                            <children>
                               <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%timeToLive" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%trendTimeout" GridPane.rowIndex="1" />
                               <TextField fx:id="timeToLive" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%timeToLive" text="%timeToLiveHelp" GridPane.columnIndex="1">
                                  <tooltip>
                                     <Tooltip text="%timeToLiveHelp" />
+                                 </tooltip>
+                              </TextField>
+                              <TextField fx:id="trendTimeout" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%trendTimeout" text="%trendTimeoutHelp" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                 <tooltip>
+                                    <Tooltip text="%trendTimeoutHelp" />
                                  </tooltip>
                               </TextField>
                            </children>

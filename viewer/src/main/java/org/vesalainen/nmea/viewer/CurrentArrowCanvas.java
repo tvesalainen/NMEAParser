@@ -50,11 +50,11 @@ public class CurrentArrowCanvas extends RotatingValueCanvas implements PropertyB
     }
 
     @Override
-    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
         angleProperty().bind(propertyStore.getBinding("currentAngleOverGround"));
         valueProperty().bind(propertyStore.getBinding("currentSpeedOverGround"));
-        return new String[]{"currentAngleOverGround", "currentSpeedOverGround"};
+        disableProperty().bind(propertyStore.getDisableBind("currentAngleOverGround", "currentSpeedOverGround"));
     }
     
 }

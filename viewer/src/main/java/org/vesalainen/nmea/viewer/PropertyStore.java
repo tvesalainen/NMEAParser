@@ -22,22 +22,22 @@ import java.time.Clock;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import static java.util.concurrent.TimeUnit.*;
 import java.util.function.Predicate;
 import javafx.application.Platform;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
 import javafx.beans.binding.LongBinding;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.ObjectBinding;
-import javafx.scene.Node;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ObservableBooleanValue;
+import javafx.beans.value.ObservableValue;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.fx.FunctionalDoubleBinding;
@@ -49,8 +49,6 @@ import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.parsers.nmea.NMEAProperties;
-import org.vesalainen.util.ConcurrentHashMapList;
-import org.vesalainen.util.MapList;
 import org.vesalainen.util.TimeToLiveSet;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -77,10 +75,10 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final FloatBinding keelOffsetBinding;
     private final FloatBinding transducerOffsetBinding;
     private final Map<String,NumberBinding> boundMap = new HashMap<>();
+    private final Map<String,ObservableBooleanValue> disableMap = new HashMap<>();
     private final NavigableSet<String> modified = new ConcurrentSkipListSet<>();
     private final TimeToLiveSet<String> actives;
     private final LongBinding timeToLiveBinding;
-    private final MapList<String,Node> nodes = new ConcurrentHashMapList<>();
     private final DoubleBinding solarDepressionAngleBinding;
     private SolarWatch solarWatch;
     private ObjectBinding<DayPhase> dayPhaseProperty;
@@ -114,7 +112,7 @@ public class PropertyStore extends AnnotatedPropertyStore
         for (String property : getProperties())
         {
             boundMap.put(property, createBinding(property));
-            actives.add(property);
+            disableMap.put(property, new SimpleBooleanProperty(this, property, true));
         }
         checkDisabled();
         // depth
@@ -131,6 +129,9 @@ public class PropertyStore extends AnnotatedPropertyStore
                 transducerOffsetBinding
         );
         boundMap.put("depthBelowTransducer", depthBelowTransducerBinding);
+        bindDisable("depthBelowKeel", "depthOfWater");
+        bindDisable("depthBelowTransducer", "depthOfWater");
+        bindDisable("depthBelowSurface", "depthOfWater");
         // wind
         FloatBinding trueHeadingBinding = (FloatBinding) boundMap.get("trueHeading");
         FloatBinding relativeWindAngleBinding = (FloatBinding) boundMap.get("relativeWindAngle");
@@ -165,6 +166,8 @@ public class PropertyStore extends AnnotatedPropertyStore
                 windOverGroundX, windOverGroundY);
         boundMap.put("windSpeedOverGround", windSpeedOverGround);
         boundMap.put("windAngleOverGround", windAngleOverGround);
+        ObservableBooleanValue windDisableBind = bindDisable("windSpeedOverGround", "trueHeading", "relativeWindAngle", "trackMadeGood", "relativeWindSpeed", "speedOverGround");
+        disableMap.put("windAngleOverGround", windDisableBind);
         // current
         FloatBinding waterSpeedBinding = (FloatBinding) boundMap.get("waterSpeed");
         radTrueHeading = new FunctionalDoubleBinding(
@@ -190,6 +193,24 @@ public class PropertyStore extends AnnotatedPropertyStore
                 currentOverGroundX, currentOverGroundY);
         boundMap.put("currentSpeedOverGround", currentSpeedOverGround);
         boundMap.put("currentAngleOverGround", currentAngleOverGround);
+        ObservableBooleanValue currentDisableBind = bindDisable("currentSpeedOverGround", "trueHeading", "trackMadeGood", "waterSpeed", "speedOverGround");
+        disableMap.put("currentAngleOverGround", currentDisableBind);
+    }
+    private ObservableBooleanValue bindDisable(String property, String... dependencies)
+    {
+        ObservableBooleanValue disableBind = getDisableBind(dependencies);
+        disableMap.put(property, disableBind);
+        return disableBind;
+    }
+    public ObservableBooleanValue getDisableBind(String... properties)
+    {
+        ObservableBooleanValue sbp = disableMap.get(properties[0]);
+        for (int ii=1;ii<properties.length;ii++)
+        {
+            ObservableBooleanValue  sbpx = disableMap.get(properties[ii]);
+            sbp = Bindings.or(sbp, sbpx);
+        }
+        return sbp;
     }
     private NumberBinding createBinding(String property)
     {
@@ -289,11 +310,8 @@ public class PropertyStore extends AnnotatedPropertyStore
      */
     private void setDisable(String property, boolean disabled)
     {
-        List<Node> node = nodes.get(property);
-        if (node != null)
-        {
-            node.forEach((n)->n.setDisable(disabled));
-        }
+        SimpleBooleanProperty sbp = (SimpleBooleanProperty) disableMap.get(property);
+        sbp.set(disabled);
     }
 
     @Override
@@ -317,7 +335,11 @@ public class PropertyStore extends AnnotatedPropertyStore
     private void activate(String property)
     {
         long ttl = timeToLiveBinding.get();
-        actives.add(property, ttl, SECONDS);
+        boolean newEntry = actives.add(property, ttl, SECONDS);
+        if (newEntry)
+        {
+            Platform.runLater(()->setDisable(property, false));
+        }
     }
     /**
      * this is run in platform thread
@@ -334,12 +356,6 @@ public class PropertyStore extends AnnotatedPropertyStore
         }
     }
 
-    public Observable registerNode(String property, Node node)
-    {
-        nodes.add(property, node);
-        return boundMap.get(property);
-    }
-
     public UnitType getOriginalUnit(String property)
     {
         UnitType unit = NMEAProperties.getInstance().getUnit(property);
@@ -354,14 +370,6 @@ public class PropertyStore extends AnnotatedPropertyStore
                 default:
                     throw new UnsupportedOperationException(property+" has no unit");
             }
-        }
-    }
-
-    public void registerNode(Node node, String... boundProperties)
-    {
-        for (String property : boundProperties)
-        {
-            nodes.add(property, node);
         }
     }
 

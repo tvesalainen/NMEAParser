@@ -49,10 +49,10 @@ public class BoatCanvas extends RotatingCanvas implements PropertyBindable
     }
 
     @Override
-    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
         angleProperty().bind(propertyStore.getBinding("trueHeading"));
-        return new String[]{"trueHeading"};
+        disableProperty().bind(propertyStore.getDisableBind("trueHeading"));
     }
     
 }

@@ -48,9 +48,9 @@ public class MagneticVariationCanvas extends RotatingCanvas implements PropertyB
     }
 
     @Override
-    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
         angleProperty().bind(propertyStore.getBinding("magneticVariation"));
-        return new String[]{"magneticVariation"};
+        disableProperty().bind(propertyStore.getDisableBind("magneticVariation"));
     }
 }

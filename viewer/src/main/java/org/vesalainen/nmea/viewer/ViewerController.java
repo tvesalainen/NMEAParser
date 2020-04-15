@@ -49,6 +49,7 @@ public class ViewerController implements Initializable
     @FXML TextField keelOffset;
     @FXML TextField waterLineLength;
     @FXML TextField timeToLive;
+    @FXML TextField trendTimeout;
     @FXML TextField solarDepressionAngle;
     @FXML TextField solarUpdateSeconds;
     @FXML ColorPicker dayBackgroundColor;
@@ -73,17 +74,18 @@ public class ViewerController implements Initializable
     public void bindPreferences(ViewerPreferences preferences)
     {
         preferences.bindString("host", "", host);
-        preferences.bindInteger("port", 0, port);
+        preferences.bindInteger("port", 0, 0, 65535, port);
         EnumTitleConverter converter = new EnumTitleConverter<>(UnitType.class);
         preferences.bindCombo("depthUnit", METER, depthUnit, converter, METER, FOOT, FATHOM);
         preferences.bindCombo("speedUnit", KNOT, speedUnit, converter, KNOT, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
         preferences.bindCombo("temperatureUnit", CELSIUS, temperatureUnit, converter, CELSIUS, FAHRENHEIT);
-        preferences.bindFloat("transducerOffset", 0, transducerOffset);
-        preferences.bindFloat("keelOffset", 0, keelOffset);
-        preferences.bindFloat("waterLineLength", 10, waterLineLength);
-        preferences.bindLong("timeToLive", 60, timeToLive);
-        preferences.bindDouble("solarDepressionAngle", 6, solarDepressionAngle);
-        preferences.bindLong("solarUpdateSeconds", 60, solarUpdateSeconds);
+        preferences.bindFloat("transducerOffset", 0, 0, 5, transducerOffset);
+        preferences.bindFloat("keelOffset", 0, 0, 20, keelOffset);
+        preferences.bindFloat("waterLineLength", 10, 0, 1000, waterLineLength);
+        preferences.bindLong("timeToLive", 5, 1, 60, timeToLive);
+        preferences.bindLong("trendTimeout", 30, 1, 60, trendTimeout);
+        preferences.bindDouble("solarDepressionAngle", 6, 0, 90, solarDepressionAngle);
+        preferences.bindLong("solarUpdateSeconds", 60, 1, Long.MAX_VALUE, solarUpdateSeconds);
         preferences.bindColor("dayBackgroundColor", Color.web("#ececec"), dayBackgroundColor);
         preferences.bindColor("nightBackgroundColor", Color.BLACK, nightBackgroundColor);
         preferences.bindColor("twilightBackgroundColor", Color.LIGHTGRAY, twilightBackgroundColor);
@@ -94,11 +96,11 @@ public class ViewerController implements Initializable
         dayPhase.disableProperty().bind(solarAutomation.selectedProperty());
         // simulation
         preferences.bindBoolean("simulate", false, simulate.selectedProperty());
-        preferences.bindFloat("simBoatSpeed", 5, simBoatSpeed);
-        preferences.bindFloat("simBoatDirection", 0, simBoatDirection);
-        preferences.bindFloat("simWindSpeed", 10, simWindSpeed);
-        preferences.bindFloat("simWindDirection", 90, simWindDirection);
-        preferences.bindFloat("simCurrentSpeed", 1, simCurrentSpeed);
-        preferences.bindFloat("simCurrentDirection", 270, simCurrentDirection);
+        preferences.bindFloat("simBoatSpeed", 5, 0, 100, simBoatSpeed);
+        preferences.bindFloat("simBoatDirection", 0, 0, 359, simBoatDirection);
+        preferences.bindFloat("simWindSpeed", 10, 0, 300, simWindSpeed);
+        preferences.bindFloat("simWindDirection", 90, 0, 359, simWindDirection);
+        preferences.bindFloat("simCurrentSpeed", 1, 0, 10, simCurrentSpeed);
+        preferences.bindFloat("simCurrentDirection", 270, 0, 359, simCurrentDirection);
     }
 }

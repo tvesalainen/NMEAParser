@@ -30,12 +30,9 @@ import javafx.beans.binding.When;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.paint.Color;
 import org.vesalainen.math.UnitType;
-import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
-import org.vesalainen.parsers.nmea.NMEACategory;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
@@ -92,46 +89,11 @@ public class ViewerService implements InvalidationListener
     }
     private void register(Node node)
     {
-        if (node instanceof Gauge)
-        {
-            registerGauge((Gauge) node);
-        }
         if (node instanceof PropertyBindable)
         {
             PropertyBindable bindable = (PropertyBindable) node;
-            String[] bound = bindable.bind(preferences, propertyStore);
-            propertyStore.registerNode(node, bound);
+            bindable.bind(preferences, propertyStore);
         }
-    }
-    private void registerGauge(Gauge gauge)
-    {
-        String property = gauge.getName();
-        if (!nmeaProperties.isProperty(property))
-        {
-            throw new IllegalArgumentException(property+" is not NMEAProperty");
-        }
-        Observable dependency = propertyStore.registerNode(property, gauge);
-        if (dependency == null)
-        {
-            throw new UnsupportedOperationException(property+" is not supported");
-        }
-        double max = nmeaProperties.getMax(property);
-        double min = nmeaProperties.getMin(property);
-        Class<?> type = nmeaProperties.getType(property);
-        UnitType unit = nmeaProperties.getUnit(property);
-        Binding<UnitType> unitBinding = getUnitBinding(property);
-        StringBinding unitStringBinding = Bindings.createStringBinding(()->unitBinding.getValue().getUnit(), unitBinding);
-        gauge.unitProperty().bind(unitStringBinding);
-        StringBinding stringBinding;
-        switch (type.getSimpleName())
-        {
-            case "float":
-                stringBinding = Bindings.createStringBinding(()->String.format(locale, "%.1f", unit.convertTo(propertyStore.getFloat(property), unitBinding.getValue())), dependency, unitBinding);
-                break;
-            default:
-                throw new UnsupportedOperationException(type+" not supported");
-        }
-        gauge.valueProperty().bind(stringBinding);
     }
     private Binding<UnitType> getUnitBinding(String property)
     {

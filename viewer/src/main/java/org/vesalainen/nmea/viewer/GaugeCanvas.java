@@ -17,6 +17,9 @@
 package org.vesalainen.nmea.viewer;
 
 import static java.util.Locale.US;
+import static java.util.concurrent.TimeUnit.*;
+import java.util.function.DoubleUnaryOperator;
+import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -30,6 +33,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
+import org.vesalainen.math.sliding.TimeoutSlidingStats;
 import org.vesalainen.text.CamelCase;
 
 /**
@@ -40,6 +44,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
 {
     private UnitType origUnit = UNITLESS;
     private final StringProperty title = new SimpleStringProperty();
+    private TimeoutSlidingStats stats;
 
     private String getTitle()
     {
@@ -144,7 +149,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
     }
 
     @Override
-    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
         String prop = getProperty();
         getStyleClass().add(CamelCase.delimitedLower(prop, "-"));
@@ -157,9 +162,18 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         
         valueProperty().addListener(evt->reDraw());
         unitProperty().addListener(evt->reDraw());
-        disabledProperty().addListener(evt->reDraw());
         
-        return new String[]{prop};
+        Binding<Number> trendTimeout = preferences.getNumberBinding("trendTimeout");
+        long minutes = trendTimeout.getValue().longValue();
+        createStats(minutes);
+        trendTimeout.addListener((b, o, n)->createStats(n.longValue()));
+        
+        disabledProperty().addListener(evt->reDraw());
+        disableProperty().bind(propertyStore.getDisableBind(prop));
+    }
+    private void createStats(long minutes)
+    {
+        stats = new TimeoutSlidingStats((int) MINUTES.toSeconds(minutes), MINUTES.toMillis(minutes));
     }
     @Override
     protected void onDraw()
@@ -172,11 +186,14 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
             gc.clearRect(0, 0, width, height);
             gc.setFill(adjustColor(getTextFill()));
             String fontFamily = getFont().getFamily();
+            
+            double val = getValue();
+            trend(gc, width, height, val);
             // value
             gc.setFont(Font.font(fontFamily, height));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(String.format(US, getFormat(), origUnit.convertTo(getValue(), unit.getValue()), getValue()), width/2, height/2, width);
+            gc.fillText(String.format(US, getFormat(), origUnit.convertTo(val, unit.getValue()), val), width/2, height/2, width);
             // title
             gc.setFont(Font.font(fontFamily, height/10));
             gc.setTextAlign(TextAlignment.LEFT);
@@ -187,6 +204,34 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
             gc.setTextAlign(TextAlignment.RIGHT);
             gc.setTextBaseline(VPos.TOP);
             gc.fillText(unitTitle.getValue(), width, 0, 0.2*width);
+        }
+    }
+
+    private void trend(GraphicsContext gc, double width, double height, double val)
+    {
+        stats.accept(val);
+        int count = stats.count();
+        if (count > 1)
+        {
+            double min = stats.getMin();
+            double max = stats.getMax();
+            long timeout = stats.getTimeout();
+            long lastTime = stats.lastTime();
+            double dx = width/timeout;
+            double x0 = lastTime - timeout;
+            double dy = height/max;
+            DoubleUnaryOperator tx = (t)->dx*(t-x0);
+            DoubleUnaryOperator ty = (v)->height-v*dy;
+            gc.beginPath();
+            gc.moveTo(tx.applyAsDouble(stats.firstTime()), tx.applyAsDouble(stats.first()));
+            stats.forEach((t,v)->
+            {
+                double x = tx.applyAsDouble(t);
+                double y = ty.applyAsDouble(v);
+                gc.appendSVGPath("H"+x+"V"+y);
+            });
+            gc.closePath();
+            gc.stroke();
         }
     }
     

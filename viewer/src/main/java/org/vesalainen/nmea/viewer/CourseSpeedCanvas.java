@@ -64,11 +64,11 @@ public class CourseSpeedCanvas extends RotatingValueCanvas implements PropertyBi
     }
 
     @Override
-    public String[] bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
         angleProperty().bind(propertyStore.getBinding("trackMadeGood"));
         valueProperty().bind(propertyStore.getBinding("speedOverGround"));
-        return new String[]{"trackMadeGood", "speedOverGround"};
+        disableProperty().bind(propertyStore.getDisableBind("trackMadeGood", "speedOverGround"));
     }
     
     

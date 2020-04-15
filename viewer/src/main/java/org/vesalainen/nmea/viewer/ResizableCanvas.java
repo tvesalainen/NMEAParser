@@ -132,9 +132,7 @@ public class ResizableCanvas extends Canvas implements Initializable
     public ResizableCanvas(boolean square)
     {
         getStyleClass().add("resizable-canvas");
-        fontProperty().addListener(evt->reDraw());
-        textFillProperty().addListener(evt->reDraw());
-        backgroundProperty().addListener(evt->reDraw());
+
         this.square = square;
         try
         {
@@ -149,6 +147,10 @@ public class ResizableCanvas extends Canvas implements Initializable
             throw new IllegalArgumentException(ex);
         }
         parentProperty().addListener(this::setParent);
+        fontProperty().addListener(evt->reDraw());
+        textFillProperty().addListener(evt->reDraw());
+        backgroundProperty().addListener(evt->reDraw());
+        disabledProperty().addListener(evt->reDraw());
     }
 
     public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData()
@@ -217,7 +219,6 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
         try
         {
-            setDisabled(false);
             transform();
             onDraw();
         }
