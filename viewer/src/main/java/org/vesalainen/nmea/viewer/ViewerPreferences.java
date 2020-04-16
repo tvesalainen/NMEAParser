@@ -21,6 +21,7 @@ import java.util.Map;
 import javafx.beans.binding.Binding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
@@ -61,6 +62,10 @@ public class ViewerPreferences
     private PreferencesBindings bindingPreferences = PreferencesBindings.userNodeForPackage(ViewerPreferences.class);
     private Map<String,Binding<?>> bindings = new HashMap<>();
     
+    public void bindString(String key, String def, StringProperty property)
+    {
+        bindingPreferences.bindStringBiDirectional(key, def, property);
+    }
     public void bindString(String key, String def, TextField textField)
     {
         bindString(key, def, textField, DEFAULT_STRING_CONVERTER);

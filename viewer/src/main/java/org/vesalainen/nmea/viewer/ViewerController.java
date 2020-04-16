@@ -50,6 +50,7 @@ public class ViewerController implements Initializable
     @FXML TextField waterLineLength;
     @FXML TextField timeToLive;
     @FXML TextField trendTimeout;
+    @FXML TextField trendPeriod;
     @FXML TextField solarDepressionAngle;
     @FXML TextField solarUpdateSeconds;
     @FXML ColorPicker dayBackgroundColor;
@@ -84,6 +85,7 @@ public class ViewerController implements Initializable
         preferences.bindFloat("waterLineLength", 10, 0, 1000, waterLineLength);
         preferences.bindLong("timeToLive", 5, 1, 60, timeToLive);
         preferences.bindLong("trendTimeout", 30, 1, 60, trendTimeout);
+        preferences.bindLong("trendPeriod", 1, 1, 60, trendPeriod);
         preferences.bindDouble("solarDepressionAngle", 6, 0, 90, solarDepressionAngle);
         preferences.bindLong("solarUpdateSeconds", 60, 1, Long.MAX_VALUE, solarUpdateSeconds);
         preferences.bindColor("dayBackgroundColor", Color.web("#ececec"), dayBackgroundColor);

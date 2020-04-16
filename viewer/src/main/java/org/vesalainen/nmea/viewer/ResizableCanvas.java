@@ -45,7 +45,7 @@ import javafx.scene.text.Font;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class ResizableCanvas extends Canvas implements Initializable
+public class ResizableCanvas extends Canvas
 {
     private static final StyleablePropertyFactory<ResizableCanvas> FACTORY = 
             new StyleablePropertyFactory<>(Canvas.getClassCssMetaData());
@@ -121,8 +121,6 @@ public class ResizableCanvas extends Canvas implements Initializable
     
 
     private boolean square;
-    protected URL location;
-    protected ResourceBundle resources;
 
     public ResizableCanvas()
     {
@@ -234,12 +232,6 @@ public class ResizableCanvas extends Canvas implements Initializable
     {
     }
 
-    @Override
-    public final void initialize(URL location, ResourceBundle resources)
-    {
-        this.location = location; 
-        this.resources = resources; 
-    }
     private void setParent(ObservableValue<? extends Parent> observable, Parent oldValue, Parent newParent)
     {
         if (newParent instanceof Region)

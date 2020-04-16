@@ -21,12 +21,13 @@
 <?import org.vesalainen.nmea.viewer.MagneticVariationCanvas?>
 <?import org.vesalainen.nmea.viewer.WindArrowCanvas?>
 <?import org.vesalainen.nmea.viewer.CurrentArrowCanvas?>
+<?import org.vesalainen.nmea.viewer.GaugePane?>
 
 <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="416.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.vesalainen.nmea.viewer.ViewerController">
   <tabs>
     <Tab text="%sailingTab">
          <content>
-            <GridPane>
+            <GridPane id="sailingGridPane" >
               <columnConstraints>
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -37,11 +38,7 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
-                     <children>
-                        <GaugeCanvas property="depthOfWater" />
-                     </children>
-                  </StackPane>
+                   <GaugePane GridPane.columnIndex="0" GridPane.rowIndex="0" />
                   <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.rowIndex="1">
                      <children>
                         <GaugeCanvas property="waterSpeed" />
@@ -152,10 +149,12 @@
                           <rowConstraints>
                             <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                             <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                            <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                           </rowConstraints>
                            <children>
                               <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%timeToLive" />
                               <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%trendTimeout" GridPane.rowIndex="1" />
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%trendPeriod" GridPane.rowIndex="2" />
                               <TextField fx:id="timeToLive" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%timeToLive" text="%timeToLiveHelp" GridPane.columnIndex="1">
                                  <tooltip>
                                     <Tooltip text="%timeToLiveHelp" />
@@ -164,6 +163,11 @@
                               <TextField fx:id="trendTimeout" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%trendTimeout" text="%trendTimeoutHelp" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                  <tooltip>
                                     <Tooltip text="%trendTimeoutHelp" />
+                                 </tooltip>
+                              </TextField>
+                              <TextField fx:id="trendPeriod" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="%trendPeriod" text="%trendPeriod" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                 <tooltip>
+                                    <Tooltip text="%trendPeriod" />
                                  </tooltip>
                               </TextField>
                            </children>

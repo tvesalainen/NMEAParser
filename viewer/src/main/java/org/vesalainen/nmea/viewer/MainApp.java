@@ -1,22 +1,16 @@
 package org.vesalainen.nmea.viewer;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.Set;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.collections.ObservableMap;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -39,7 +33,7 @@ public class MainApp extends Application
     public void start(Stage stage) throws Exception
     {
         Locale locale = Locale.getDefault();
-        bundle = ResourceBundle.getBundle(I18n.class.getName(), locale);
+        bundle = I18n.get(locale);
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/viewer.fxml"), bundle);
         Parent root = loader.load();
         controller = loader.getController();

@@ -17,9 +17,6 @@
 package org.vesalainen.nmea.viewer;
 
 import static java.util.Locale.US;
-import static java.util.concurrent.TimeUnit.*;
-import java.util.function.DoubleUnaryOperator;
-import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -33,7 +30,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
-import org.vesalainen.math.sliding.TimeoutSlidingStats;
 import org.vesalainen.text.CamelCase;
 
 /**
@@ -44,7 +40,6 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
 {
     private UnitType origUnit = UNITLESS;
     private final StringProperty title = new SimpleStringProperty();
-    private TimeoutSlidingStats stats;
 
     private String getTitle()
     {
@@ -153,8 +148,8 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
     {
         String prop = getProperty();
         getStyleClass().add(CamelCase.delimitedLower(prop, "-"));
-        I18n.bind(titleProperty(), resources, property);
-        I18n.bind(unitTitleProperty(), resources, Bindings.createStringBinding(()->CamelCase.property(unit.getValue().name())+"Unit", unit));
+        I18n.bind(titleProperty(), property);
+        I18n.bind(unitTitleProperty(), Bindings.createStringBinding(()->CamelCase.property(unit.getValue().name())+"Unit", unit));
         
         origUnit = propertyStore.getOriginalUnit(prop);
         unitProperty().bind(preferences.getCategoryBinding(prop));
@@ -163,17 +158,8 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         valueProperty().addListener(evt->reDraw());
         unitProperty().addListener(evt->reDraw());
         
-        Binding<Number> trendTimeout = preferences.getNumberBinding("trendTimeout");
-        long minutes = trendTimeout.getValue().longValue();
-        createStats(minutes);
-        trendTimeout.addListener((b, o, n)->createStats(n.longValue()));
-        
         disabledProperty().addListener(evt->reDraw());
         disableProperty().bind(propertyStore.getDisableBind(prop));
-    }
-    private void createStats(long minutes)
-    {
-        stats = new TimeoutSlidingStats((int) MINUTES.toSeconds(minutes), MINUTES.toMillis(minutes));
     }
     @Override
     protected void onDraw()
@@ -188,7 +174,6 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
             String fontFamily = getFont().getFamily();
             
             double val = getValue();
-            trend(gc, width, height, val);
             // value
             gc.setFont(Font.font(fontFamily, height));
             gc.setTextAlign(TextAlignment.CENTER);
@@ -207,32 +192,4 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         }
     }
 
-    private void trend(GraphicsContext gc, double width, double height, double val)
-    {
-        stats.accept(val);
-        int count = stats.count();
-        if (count > 1)
-        {
-            double min = stats.getMin();
-            double max = stats.getMax();
-            long timeout = stats.getTimeout();
-            long lastTime = stats.lastTime();
-            double dx = width/timeout;
-            double x0 = lastTime - timeout;
-            double dy = height/max;
-            DoubleUnaryOperator tx = (t)->dx*(t-x0);
-            DoubleUnaryOperator ty = (v)->height-v*dy;
-            gc.beginPath();
-            gc.moveTo(tx.applyAsDouble(stats.firstTime()), tx.applyAsDouble(stats.first()));
-            stats.forEach((t,v)->
-            {
-                double x = tx.applyAsDouble(t);
-                double y = ty.applyAsDouble(v);
-                gc.appendSVGPath("H"+x+"V"+y);
-            });
-            gc.closePath();
-            gc.stroke();
-        }
-    }
-    
 }

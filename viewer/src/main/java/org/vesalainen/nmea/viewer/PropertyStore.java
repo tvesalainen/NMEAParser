@@ -29,7 +29,6 @@ import static java.util.concurrent.TimeUnit.*;
 import java.util.function.Predicate;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
 import javafx.beans.binding.LongBinding;
@@ -37,7 +36,6 @@ import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
-import javafx.beans.value.ObservableValue;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.fx.FunctionalDoubleBinding;
@@ -233,6 +231,12 @@ public class PropertyStore extends AnnotatedPropertyStore
                 throw new UnsupportedOperationException(type+" not supported");
         }
     }
+
+    public CachedScheduledThreadPool getExecutor()
+    {
+        return executor;
+    }
+    
     public NumberBinding getBinding(String property)
     {
         return boundMap.get(property);

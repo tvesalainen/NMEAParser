@@ -16,13 +16,14 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Vector;
-import javafx.beans.InvalidationListener;
+import javafx.beans.property.ReadOnlyStringPropertyBase;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableStringValue;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.text.CamelCase;
@@ -33,7 +34,8 @@ import org.vesalainen.text.CamelCase;
  */
 public class I18n extends ResourceBundle
 {
-
+    private static final Map<Locale,ResourceBundle> map = new HashMap<>();
+    
     private Vector<String> resources = new Vector<>();
     public I18n()
     {
@@ -41,6 +43,20 @@ public class I18n extends ResourceBundle
         resources.addAll(nmeaProperties.getAllProperties());
     }
 
+    public static ResourceBundle get()
+    {
+        return get(Locale.getDefault());
+    }
+    public static ResourceBundle get(Locale locale)
+    {
+        ResourceBundle rb = map.get(locale);
+        if (rb == null)
+        {
+            rb = ResourceBundle.getBundle(I18n.class.getName(), locale);
+            map.put(locale, rb);
+        }
+        return rb;
+    }
     @Override
     protected Object handleGetObject(String key)
     {
@@ -53,11 +69,15 @@ public class I18n extends ResourceBundle
         return resources.elements();
     }
     
-    public static void bind(StringProperty target, ResourceBundle resources, ObservableStringValue key)
+    public static I18nString getI18nString(String key)
     {
-        target.bind(new ObservableResource(resources, key));
+        return new I18nString(key, get().getString(key));
     }
-    private static class ObservableResource implements ObservableStringValue
+    public static void bind(StringProperty target, ObservableStringValue key)
+    {
+        target.bind(new ObservableResource(get(), key));
+    }
+    private static class ObservableResource extends ReadOnlyStringPropertyBase
     {
         private ResourceBundle resources;
         private ObservableStringValue key;
@@ -75,31 +95,44 @@ public class I18n extends ResourceBundle
         }
 
         @Override
-        public void addListener(ChangeListener<? super String> listener)
+        public Object getBean()
         {
+            return resources;
         }
 
         @Override
-        public void removeListener(ChangeListener<? super String> listener)
+        public String getName()
         {
+            return key.get();
+        }
+
+    }
+    public static class I18nString implements Comparable<I18nString>
+    {
+        private String key;
+        private String string;
+
+        public I18nString(String key, String string)
+        {
+            this.key = key;
+            this.string = string;
+        }
+
+        public String getKey()
+        {
+            return key;
         }
 
         @Override
-        public String getValue()
+        public String toString()
         {
-            return get();
+            return string;
         }
 
         @Override
-        public void addListener(InvalidationListener listener)
+        public int compareTo(I18nString o)
         {
-            key.addListener(listener);
-        }
-
-        @Override
-        public void removeListener(InvalidationListener listener)
-        {
-            key.removeListener(listener);
+            return string.compareTo(o.string);
         }
         
     }

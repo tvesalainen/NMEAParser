@@ -16,11 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import javafx.geometry.VPos;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Affine;
 import org.vesalainen.ui.Transforms;
 
