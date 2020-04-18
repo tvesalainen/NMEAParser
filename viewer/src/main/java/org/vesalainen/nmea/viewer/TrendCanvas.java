@@ -16,14 +16,18 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.*;
 import java.util.function.DoubleUnaryOperator;
+import javafx.application.Platform;
 import javafx.beans.binding.Binding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Paint;
+import javafx.scene.transform.Affine;
 import org.vesalainen.math.sliding.TimeoutSlidingStats;
+import org.vesalainen.ui.Transforms;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
@@ -33,8 +37,14 @@ public class TrendCanvas extends ResizableCanvas implements PropertyBindable
 {
     private final PathHelper pathHelper;
     private final ReadOnlyDoubleProperty value;
-
+    private final FunctionalInvalidationListener updateListener = new FunctionalInvalidationListener(this::updateValue);
     private TimeoutSlidingStats stats;
+    private CachedScheduledThreadPool executor;
+    private Binding<Number> trendPeriod;
+    private double mxx;
+    private double myy;
+    private double tx;
+    private double ty;
 
     public TrendCanvas(DoubleProperty value)
     {
@@ -45,17 +55,25 @@ public class TrendCanvas extends ResizableCanvas implements PropertyBindable
     @Override
     public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
+        this.executor = propertyStore.getExecutor();
+        this.trendPeriod = preferences.getNumberBinding("trendPeriod");
         Binding<Number> trendTimeout = preferences.getNumberBinding("trendTimeout");
         long minutes = trendTimeout.getValue().longValue();
         createStats(minutes);
         trendTimeout.addListener((b, o, n)->createStats(n.longValue()));
         
-        value.addListener(evt->updateValue());
+        updateListener.bind(value);
+        schedule();
     }
 
     private void updateValue()
     {
         stats.accept(value.doubleValue());
+    }
+    private void schedule()
+    {
+        Platform.runLater(this::draw);
+        executor.schedule(()->schedule(), trendPeriod.getValue().longValue(), SECONDS);
     }
     private void draw()
     {
@@ -66,30 +84,47 @@ public class TrendCanvas extends ResizableCanvas implements PropertyBindable
             double height = getHeight();
             GraphicsContext gc = getGraphicsContext2D();
             gc.clearRect(0, 0, width, height);
-            gc.setFill(adjustColor(getTextFill()));
-            double min = stats.getMin();
             double max = stats.getMax();
+            double ave = stats.fast();
             long timeout = stats.getTimeout();
             long lastTime = System.currentTimeMillis();
-            double dx = width/timeout;
-            double x0 = lastTime - timeout;
-            double dy = height/max;
-            DoubleUnaryOperator tx = (t)->dx*(t-x0);
-            DoubleUnaryOperator ty = (v)->height-v*dy;
+            double minX = lastTime-timeout;
+            Transforms.createScreenTransform(
+                    width, 
+                    height, 
+                    minX, 
+                    0, 
+                    lastTime, 
+                    2*ave, 
+                    false, 
+                    (double mxx, double mxy, double myx, double myy, double tx, double ty)->
+                    {
+                        this.mxx = mxx;
+                        this.myy = myy;
+                        this.tx = tx;
+                        this.ty = ty;
+                    });
+            gc.clearRect(minX, 0, timeout, max);
+            gc.setStroke(adjustColor(getTextFill()));
             pathHelper.beginPath();
-            pathHelper.moveTo(tx.applyAsDouble(stats.firstTime()), tx.applyAsDouble(stats.first()));
+            pathHelper.moveTo(fx(stats.firstTime()), fy(stats.first()));
             stats.forEach((t,v)->
             {
-                double x = tx.applyAsDouble(t);
-                double y = ty.applyAsDouble(v);
-                pathHelper.horizontalLineTo(x);
-                pathHelper.verticalLineTo(y);
+                pathHelper.horizontalLineTo(fx(t));
+                pathHelper.verticalLineTo(fy(v));
             });
-            pathHelper.closePath();
+            pathHelper.horizontalLineTo(fx(lastTime));
             pathHelper.stroke();
         }
     }
-    
+    private double fx(double t)
+    {
+        return mxx*t+tx;
+    }
+    private double fy(double x)
+    {
+        return myy*x+ty;
+    }
     private void createStats(long minutes)
     {
         stats = new TimeoutSlidingStats((int) MINUTES.toSeconds(minutes), MINUTES.toMillis(minutes));
@@ -108,14 +143,12 @@ public class TrendCanvas extends ResizableCanvas implements PropertyBindable
 
         public void verticalLineTo(double y1)
         {
-            y = y1;
-            gc.lineTo(x, y1);
+            lineTo(x, y1);
         }
 
         public void horizontalLineTo(double x1)
         {
-            x = x1;
-            gc.lineTo(x1, y);
+            lineTo(x1, y);
         }
 
         public void beginPath()

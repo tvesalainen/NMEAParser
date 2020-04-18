@@ -21,6 +21,7 @@ import java.util.Map;
 import javafx.beans.binding.Binding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ColorPicker;
@@ -41,9 +42,7 @@ import org.vesalainen.fx.ValidatingDoubleStringConverter;
 import org.vesalainen.fx.ValidatingFloatStringConverter;
 import org.vesalainen.fx.ValidatingIntegerStringConverter;
 import org.vesalainen.fx.ValidatingLongStringConverter;
-import org.vesalainen.math.UnitType;
-import org.vesalainen.parsers.nmea.NMEACategory;
-import org.vesalainen.parsers.nmea.NMEAProperties;
+import static org.vesalainen.math.UnitType.DEGREE;
 
 /**
  *
@@ -58,6 +57,8 @@ public class ViewerPreferences
     public static final IntegerStringConverter INTEGER_STRING_CONVERTER = new IntegerStringConverter();
     public static final LongStringConverter LONG_STRING_CONVERTER = new LongStringConverter();
     public static final ColorStringConverter COLOR_STRING_CONVERTER = new ColorStringConverter();
+    
+    public static final ReadOnlyObjectWrapper DEGREE_BINDING = new ReadOnlyObjectWrapper(DEGREE);
     
     private PreferencesBindings bindingPreferences = PreferencesBindings.userNodeForPackage(ViewerPreferences.class);
     private Map<String,Binding<?>> bindings = new HashMap<>();
@@ -217,33 +218,6 @@ public class ViewerPreferences
     {
         textField.textFormatterProperty().set(new TextFormatter<>(converter));
         return (TextFormatter<T>) textField.textFormatterProperty().get();
-    }
-
-    public Binding<UnitType> getCategoryBinding(String property)
-    {
-        NMEACategory cat = NMEAProperties.getInstance().getCategory(property);
-        if (cat != null)
-        {
-            switch (cat)
-            {
-                case DEPTH:
-                    return getBinding("depthUnit");
-                case SPEED:
-                    return getBinding("speedUnit");
-                case TEMPERATURE:
-                    return getBinding("temperatureUnit");
-                default:
-                    throw new UnsupportedOperationException(cat+" not supported");
-            }
-        }
-        else
-        {
-            switch (property)
-            {
-                default:
-                    throw new UnsupportedOperationException(property+" has no category");
-            }
-        }
     }
 
 }

@@ -39,7 +39,7 @@ import org.vesalainen.text.CamelCase;
 public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
 {
     private UnitType origUnit = UNITLESS;
-    private final StringProperty title = new SimpleStringProperty();
+    private final StringProperty title = new SimpleStringProperty(this, "title");
 
     private String getTitle()
     {
@@ -56,7 +56,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         return title;
     }
 
-    private final StringProperty property = new SimpleStringProperty();
+    private final StringProperty property = new SimpleStringProperty(this, "property");
 
     public String getProperty()
     {
@@ -72,7 +72,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
     {
         return property;
     }
-    private final DoubleProperty value = new SimpleDoubleProperty();
+    private final DoubleProperty value = new SimpleDoubleProperty(this, "value");
 
     public double getValue()
     {
@@ -88,7 +88,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
     {
         return value;
     }
-    private final ObjectProperty<UnitType> unit = new SimpleObjectProperty<>(UNITLESS);
+    private final ObjectProperty<UnitType> unit = new SimpleObjectProperty<>(this, "unit", UNITLESS);
 
     UnitType getUnit()
     {
@@ -104,7 +104,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
     {
         return unit;
     }
-    private final StringProperty unitTitle = new SimpleStringProperty();
+    private final StringProperty unitTitle = new SimpleStringProperty(this, "unitTitle");
 
     String getUnitTitle()
     {
@@ -121,7 +121,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         return unitTitle;
     }
     
-    private final StringProperty format = new SimpleStringProperty("% 5.1f");
+    private final StringProperty format = new SimpleStringProperty(this, "format", "% 5.1f");
 
     public String getFormat()
     {
@@ -152,13 +152,11 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         I18n.bind(unitTitleProperty(), Bindings.createStringBinding(()->CamelCase.property(unit.getValue().name())+"Unit", unit));
         
         origUnit = propertyStore.getOriginalUnit(prop);
-        unitProperty().bind(preferences.getCategoryBinding(prop));
+        unitProperty().bind(propertyStore.getCategoryBinding(prop));
         valueProperty().bind(propertyStore.getBinding(prop));
+
+        onReDrawListener.bind(valueProperty(), unitProperty(), disabledProperty());
         
-        valueProperty().addListener(evt->reDraw());
-        unitProperty().addListener(evt->reDraw());
-        
-        disabledProperty().addListener(evt->reDraw());
         disableProperty().bind(propertyStore.getDisableBind(prop));
     }
     @Override

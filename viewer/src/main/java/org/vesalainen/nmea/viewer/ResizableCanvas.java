@@ -17,11 +17,9 @@
 package org.vesalainen.nmea.viewer;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import javafx.application.Platform;
 import javafx.beans.binding.When;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -33,7 +31,6 @@ import javafx.css.SimpleStyleableObjectProperty;
 import javafx.css.Styleable;
 import javafx.css.StyleablePropertyFactory;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.Region;
@@ -54,7 +51,6 @@ public class ResizableCanvas extends Canvas
     private static final CssMetaData<ResizableCanvas,Paint> BACKGROUND = FACTORY.createPaintCssMetaData("-fx-background", s->s.background, Color.WHITE, true);
     
     private final SimpleStyleableObjectProperty<Font> font = new SimpleStyleableObjectProperty<>(FONT, this, "font");
-    private boolean pendingReDraw;
 
     public Font getFont()
     {
@@ -102,7 +98,7 @@ public class ResizableCanvas extends Canvas
     {
         return background;
     }
-    private final BooleanProperty mouseEditable = new SimpleBooleanProperty(false);
+    private final BooleanProperty mouseEditable = new SimpleBooleanProperty(this, "mouseEditable", false);
 
     public boolean isMouseEditable()
     {
@@ -119,6 +115,7 @@ public class ResizableCanvas extends Canvas
         return mouseEditable;
     }
     
+    protected final FunctionalInvalidationListener onReDrawListener = new FunctionalInvalidationListener(this::onReDraw);
 
     private boolean square;
 
@@ -145,10 +142,7 @@ public class ResizableCanvas extends Canvas
             throw new IllegalArgumentException(ex);
         }
         parentProperty().addListener(this::setParent);
-        fontProperty().addListener(evt->reDraw());
-        textFillProperty().addListener(evt->reDraw());
-        backgroundProperty().addListener(evt->reDraw());
-        disabledProperty().addListener(evt->reDraw());
+        onReDrawListener.bind(widthProperty(), heightProperty(), fontProperty(), textFillProperty(), backgroundProperty(), disabledProperty());
     }
 
     public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData()
@@ -205,25 +199,10 @@ public class ResizableCanvas extends Canvas
         return true;
     }
 
-    protected void reDraw()
-    {
-        if (!pendingReDraw)
-        {
-            pendingReDraw = true;
-            Platform.runLater(this::onReDraw);
-        }
-    }
     private void onReDraw()
     {
-        try
-        {
-            transform();
-            onDraw();
-        }
-        finally
-        {
-            pendingReDraw = false;
-        }
+        transform();
+        onDraw();
     }
     protected void transform()
     {
@@ -256,8 +235,6 @@ public class ResizableCanvas extends Canvas
                 widthProperty().bind(regionWidth);
                 heightProperty().bind(regionHeight);
             }
-            widthProperty().addListener(evt -> reDraw());
-            heightProperty().addListener(evt -> reDraw());
         }
         else
         {

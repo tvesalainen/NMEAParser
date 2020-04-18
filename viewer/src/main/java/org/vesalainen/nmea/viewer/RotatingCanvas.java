@@ -29,7 +29,7 @@ import javafx.scene.transform.NonInvertibleTransformException;
  */
 public class RotatingCanvas extends CartesianCanvas
 {
-    private final DoubleProperty angle = new SimpleDoubleProperty(0);
+    private final DoubleProperty angle = new SimpleDoubleProperty(this, "angle", 0);
 
     public double getAngle()
     {
@@ -51,7 +51,7 @@ public class RotatingCanvas extends CartesianCanvas
     protected RotatingCanvas(double maxValue)
     {
         super(maxValue);
-        angleProperty().addListener(evt->reDraw());
+        onReDrawListener.bind(angleProperty());
         onMousePressedProperty().setValue((e)->{if (isMouseEditable()) onMousePressed(e);});
         onMouseDraggedProperty().setValue((e)->{if (isMouseEditable()) onMouseDragged(e);});
     }

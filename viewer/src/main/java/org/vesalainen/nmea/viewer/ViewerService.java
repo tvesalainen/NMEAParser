@@ -95,11 +95,6 @@ public class ViewerService implements InvalidationListener
             bindable.bind(preferences, propertyStore);
         }
     }
-    private Binding<UnitType> getUnitBinding(String property)
-    {
-        return preferences.getCategoryBinding(property);
-    }
-
     private void openNMEAService()
     {
         try

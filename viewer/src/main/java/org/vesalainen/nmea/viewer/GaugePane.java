@@ -18,19 +18,19 @@ package org.vesalainen.nmea.viewer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import org.vesalainen.nmea.viewer.I18n.I18nString;
-import org.vesalainen.text.CamelCase;
+import static org.vesalainen.parsers.nmea.NMEACategory.*;
 
 /**
  *
@@ -39,7 +39,7 @@ import org.vesalainen.text.CamelCase;
 public class GaugePane extends StackPane implements PropertyBindable
 {
 
-    private final StringProperty property = new SimpleStringProperty();
+    private final StringProperty property = new SimpleStringProperty(this, "property", "");
     private ViewerPreferences preferences;
     private PropertyStore propertyStore;
 
@@ -64,20 +64,17 @@ public class GaugePane extends StackPane implements PropertyBindable
         this.preferences = preferences;
         this.propertyStore = propertyStore;
         String prop = getProperty();
-        if (prop == null || prop.isEmpty())
+        Parent parent = getParent();
+        if (parent instanceof GridPane)
         {
-            Parent parent = getParent();
-            if (parent instanceof GridPane)
-            {
-                GridPane gridPane = (GridPane) parent;
-                String parentId = gridPane.getId();
-                Integer columnIndex = GridPane.getColumnIndex(this);
-                Integer rowIndex = GridPane.getRowIndex(this);
-                int col = columnIndex != null ? columnIndex : 0;
-                int row = rowIndex != null ? rowIndex : 0;
-                String id = parentId+"-"+col+"-"+row;
-                preferences.bindString(id, "", property);
-            }
+            GridPane gridPane = (GridPane) parent;
+            String parentId = gridPane.getId();
+            Integer columnIndex = GridPane.getColumnIndex(this);
+            Integer rowIndex = GridPane.getRowIndex(this);
+            int col = columnIndex != null ? columnIndex : 0;
+            int row = rowIndex != null ? rowIndex : 0;
+            String id = parentId+"-"+col+"-"+row;
+            preferences.bindString(id, prop, property);
         }
         prop = getProperty();
         if (propertyStore.hasProperty(prop))
@@ -94,7 +91,26 @@ public class GaugePane extends StackPane implements PropertyBindable
 
     private void bind2(String prop)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        setProperty(prop);
+        ObservableList<Node> children = getChildren();
+        children.clear();
+        
+        GaugeCanvas gauge = new GaugeCanvas();
+        gauge.setProperty(prop);
+        gauge.bind(preferences, propertyStore);
+        switch (propertyStore.getOriginalUnit(prop).getCategory())
+        {
+            case COORDINATE:
+            case PLANE_ANGLE:
+            case TIME:
+                break;
+            default:
+                TrendCanvas trend = new TrendCanvas(gauge.valueProperty());
+                trend.bind(preferences, propertyStore);
+                children.add(trend);
+                break;
+        }
+        children.add(gauge);
     }
 
     private void onMousePressed(MouseEvent e)

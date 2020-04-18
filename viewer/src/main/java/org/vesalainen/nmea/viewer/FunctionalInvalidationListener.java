@@ -16,54 +16,52 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.scene.input.ScrollEvent;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class RotatingValueCanvas extends RotatingCanvas
+public class FunctionalInvalidationListener implements InvalidationListener, Runnable
 {
+    private Runnable runner;
+    private boolean valid = true;
 
-    private final DoubleProperty value = new SimpleDoubleProperty(this, "value");
-
-    public double getValue()
+    public FunctionalInvalidationListener(Runnable runner)
     {
-        return value.get();
-    }
-
-    public void setValue(double v)
-    {
-        value.set(v);
-    }
-
-    public DoubleProperty valueProperty()
-    {
-        return value;
+        this.runner = runner;
     }
     
-    public RotatingValueCanvas()
+    public void bind(Observable... observables)
     {
-        this(100);
+        for (Observable observable : observables)
+        {
+            observable.addListener(this);
+        }
     }
-    public RotatingValueCanvas(double maxValue)
+    @Override
+    public void invalidated(Observable observable)
     {
-        super(maxValue);
-        onReDrawListener.bind(valueProperty());
-        onScrollProperty().setValue((e)->{if (isMouseEditable()) onScroll(e);});
+        if (valid)
+        {
+            valid = false;
+            Platform.runLater(this);
+        }
+    }
+
+    @Override
+    public void run()
+    {
+        try
+        {
+            runner.run();
+        }
+        finally
+        {
+            valid = true;
+        }
     }
     
-    private void onScroll(ScrollEvent e)
-    {
-        if (e.getDeltaY()>0)
-        {
-            setValue(getValue()+0.5);
-        }
-        else
-        {
-            setValue(Math.max(getValue()-0.5, 0));
-        }
-    }
 }

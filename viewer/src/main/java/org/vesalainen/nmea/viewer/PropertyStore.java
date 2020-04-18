@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import static java.util.concurrent.TimeUnit.*;
 import java.util.function.Predicate;
 import javafx.application.Platform;
+import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
@@ -43,9 +44,12 @@ import org.vesalainen.fx.FunctionalFloatBinding;
 import org.vesalainen.fx.FunctionalIntegerBinding;
 import org.vesalainen.fx.FunctionalLongBinding;
 import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
+import org.vesalainen.parsers.nmea.NMEACategory;
+import static org.vesalainen.parsers.nmea.NMEACategory.*;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.TimeToLiveSet;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
@@ -70,6 +74,7 @@ public class PropertyStore extends AnnotatedPropertyStore
     private @Property float relativeWindSpeed;
     
     private final CachedScheduledThreadPool executor;
+    private final ViewerPreferences preferences;
     private final FloatBinding keelOffsetBinding;
     private final FloatBinding transducerOffsetBinding;
     private final Map<String,NumberBinding> boundMap = new HashMap<>();
@@ -99,6 +104,7 @@ public class PropertyStore extends AnnotatedPropertyStore
     {
         super(MethodHandles.lookup());
         this.executor = executor;
+        this.preferences = preferences;
         this.keelOffsetBinding = (FloatBinding) preferences.getNumberBinding("keelOffset");
         this.transducerOffsetBinding = (FloatBinding) preferences.getNumberBinding("transducerOffset");
         this.timeToLiveBinding = (LongBinding)preferences.getNumberBinding("timeToLive");
@@ -115,13 +121,13 @@ public class PropertyStore extends AnnotatedPropertyStore
         checkDisabled();
         // depth
         depthOfWaterBinding = (FloatBinding) boundMap.get("depthOfWater");
-        depthBelowKeelBinding = new FunctionalFloatBinding(
+        depthBelowKeelBinding = new FunctionalFloatBinding("depthBelowKeelBinding",
                 ()->depthOfWaterBinding.get() - keelOffsetBinding.get(),
                 depthOfWaterBinding,
                 keelOffsetBinding
         );
         boundMap.put("depthBelowKeel", depthBelowKeelBinding);
-        depthBelowTransducerBinding = new FunctionalFloatBinding(
+        depthBelowTransducerBinding = new FunctionalFloatBinding("depthBelowTransducerBinding",
                 ()->depthOfWaterBinding.get() - transducerOffsetBinding.get(),
                 depthOfWaterBinding,
                 transducerOffsetBinding
@@ -137,29 +143,33 @@ public class PropertyStore extends AnnotatedPropertyStore
         FloatBinding relativeWindSpeedBinding = (FloatBinding) boundMap.get("relativeWindSpeed");
         FloatBinding speedOverGroundBinding = (FloatBinding) boundMap.get("speedOverGround");
         
-        radRelativeAngleOverGround = new FunctionalDoubleBinding(
+        radRelativeAngleOverGround = new FunctionalDoubleBinding("radRelativeAngleOverGround",
                 ()->toRadians(Navis.normalizeAngle(trueHeadingBinding.doubleValue() + relativeWindAngleBinding.doubleValue())), 
                 trueHeadingBinding, 
                 relativeWindAngleBinding);
-        radTrackMadeGood = new FunctionalDoubleBinding(
+        radTrackMadeGood = new FunctionalDoubleBinding("radTrackMadeGood",
                 ()->toRadians(trackMadeGoodBinding.doubleValue()), 
                 trackMadeGoodBinding);
-        windOverGroundX = new FunctionalDoubleBinding(()->
+        windOverGroundX = new FunctionalDoubleBinding("windOverGroundX",
+                ()->
                 cos(radRelativeAngleOverGround.doubleValue())*relativeWindSpeedBinding.doubleValue() - cos(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
                 radRelativeAngleOverGround,
                 radTrackMadeGood,
                 relativeWindSpeedBinding,
                 speedOverGroundBinding);
-        windOverGroundY = new FunctionalDoubleBinding(()->
+        windOverGroundY = new FunctionalDoubleBinding("windOverGroundY",
+                ()->
                 sin(radRelativeAngleOverGround.doubleValue())*relativeWindSpeedBinding.doubleValue() - sin(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
                 radRelativeAngleOverGround,
                 radTrackMadeGood,
                 relativeWindSpeedBinding,
                 speedOverGroundBinding);
-        windSpeedOverGround = new FunctionalDoubleBinding(()->
+        windSpeedOverGround = new FunctionalDoubleBinding("windSpeedOverGround",
+                ()->
                 Math.hypot(windOverGroundY.doubleValue(), windOverGroundX.doubleValue()), 
                 windOverGroundX, windOverGroundY);
-        windAngleOverGround = new FunctionalDoubleBinding(()->
+        windAngleOverGround = new FunctionalDoubleBinding("windAngleOverGround",
+                ()->
                 Navis.normalizeAngle(Math.toDegrees(Math.atan2(windOverGroundY.doubleValue(), windOverGroundX.doubleValue()))), 
                 windOverGroundX, windOverGroundY);
         boundMap.put("windSpeedOverGround", windSpeedOverGround);
@@ -168,25 +178,29 @@ public class PropertyStore extends AnnotatedPropertyStore
         disableMap.put("windAngleOverGround", windDisableBind);
         // current
         FloatBinding waterSpeedBinding = (FloatBinding) boundMap.get("waterSpeed");
-        radTrueHeading = new FunctionalDoubleBinding(
+        radTrueHeading = new FunctionalDoubleBinding("radTrueHeading",
                 ()->toRadians(trueHeadingBinding.doubleValue()), 
                 trueHeadingBinding);
-        currentOverGroundX = new FunctionalDoubleBinding(()->
+        currentOverGroundX = new FunctionalDoubleBinding("currentOverGroundX",
+                ()->
                 cos(radTrueHeading.doubleValue())*waterSpeedBinding.doubleValue() - cos(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
                 radTrueHeading,
                 radTrackMadeGood,
                 waterSpeedBinding,
                 speedOverGroundBinding);
-        currentOverGroundY = new FunctionalDoubleBinding(()->
+        currentOverGroundY = new FunctionalDoubleBinding("currentOverGroundY",
+                ()->
                 sin(radTrueHeading.doubleValue())*waterSpeedBinding.doubleValue() - sin(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
                 radTrueHeading,
                 radTrackMadeGood,
                 waterSpeedBinding,
                 speedOverGroundBinding);
-        currentSpeedOverGround = new FunctionalDoubleBinding(()->
+        currentSpeedOverGround = new FunctionalDoubleBinding("currentSpeedOverGround",
+                ()->
                 Math.hypot(currentOverGroundY.doubleValue(), currentOverGroundX.doubleValue()), 
                 currentOverGroundX, currentOverGroundY);
-        currentAngleOverGround = new FunctionalDoubleBinding(()->
+        currentAngleOverGround = new FunctionalDoubleBinding("currentAngleOverGround",
+                ()->
                 Navis.normalizeAngle(Math.toDegrees(Math.atan2(currentOverGroundY.doubleValue(), currentOverGroundX.doubleValue()))), 
                 currentOverGroundX, currentOverGroundY);
         boundMap.put("currentSpeedOverGround", currentSpeedOverGround);
@@ -220,13 +234,13 @@ public class PropertyStore extends AnnotatedPropertyStore
         switch (type.getSimpleName())
         {
             case "int":
-                return new FunctionalIntegerBinding(getIntSupplier(property));
+                return new FunctionalIntegerBinding(property, getIntSupplier(property));
             case "long":
-                return new FunctionalLongBinding(getLongSupplier(property));
+                return new FunctionalLongBinding(property, getLongSupplier(property));
             case "float":
-                return new FunctionalFloatBinding(getDoubleSupplier(property));
+                return new FunctionalFloatBinding(property, getDoubleSupplier(property));
             case "double":
-                return new FunctionalDoubleBinding(getDoubleSupplier(property));
+                return new FunctionalDoubleBinding(property, getDoubleSupplier(property));
             default:
                 throw new UnsupportedOperationException(type+" not supported");
         }
@@ -356,10 +370,16 @@ public class PropertyStore extends AnnotatedPropertyStore
             String property = iterator.next();
             iterator.remove();
             NumberBinding binding = boundMap.get(property);
+            if ("speedOverGround".equals(property)) 
+                System.err.println();
             binding.invalidate();
         }
     }
-
+    /**
+     * Returns propertys original unit sent by parser.
+     * @param property
+     * @return 
+     */
     public UnitType getOriginalUnit(String property)
     {
         UnitType unit = NMEAProperties.getInstance().getUnit(property);
@@ -371,10 +391,65 @@ public class PropertyStore extends AnnotatedPropertyStore
         {
             switch (property)
             {
+                case "windAngleOverGround":
+                case "currentAngleOverGround":
+                    return DEGREE;
+                case "windSpeedOverGround":
+                case "currentSpeedOverGround":
+                    return KNOT;
                 default:
                     throw new UnsupportedOperationException(property+" has no unit");
             }
         }
     }
-
+    public NMEACategory getNMEACategory(String property)
+    {
+        NMEAProperties nmeaProperties = NMEAProperties.getInstance();
+        if (nmeaProperties.isProperty(property))
+        {
+            return nmeaProperties.getCategory(property);
+        }
+        else
+        {
+            switch (property)
+            {
+                case "windAngleOverGround":
+                case "currentAngleOverGround":
+                    return BEARING;
+                case "windSpeedOverGround":
+                case "currentSpeedOverGround":
+                    return SPEED;
+                default:
+                    throw new UnsupportedOperationException(property+" has no unit");
+            }
+        }
+    }
+    public Binding<UnitType> getCategoryBinding(String property)
+    {
+        NMEACategory cat = getNMEACategory(property);
+        if (cat != null)
+        {
+            switch (cat)
+            {
+                case DEPTH:
+                    return preferences.getBinding("depthUnit");
+                case SPEED:
+                    return preferences.getBinding("speedUnit");
+                case TEMPERATURE:
+                    return preferences.getBinding("temperatureUnit");
+                case BEARING:
+                    return (Binding<UnitType>) ViewerPreferences.DEGREE_BINDING;
+                default:
+                    throw new UnsupportedOperationException(cat+" not supported");
+            }
+        }
+        else
+        {
+            switch (property)
+            {
+                default:
+                    throw new UnsupportedOperationException(property+" has no category");
+            }
+        }
+    }
 }
