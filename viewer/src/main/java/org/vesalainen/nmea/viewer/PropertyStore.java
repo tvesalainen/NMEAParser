@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import static java.util.concurrent.TimeUnit.*;
 import java.util.function.Predicate;
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -83,8 +84,10 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final TimeToLiveSet<String> actives;
     private final LongBinding timeToLiveBinding;
     private final DoubleBinding solarDepressionAngleBinding;
-    private SolarWatch solarWatch;
-    private ObjectBinding<DayPhase> dayPhaseProperty;
+    private final SolarWatch solarWatch;
+    private final ObjectBinding<DayPhase> dayPhaseProperty;
+    private final SimpleObservable trendPulse = new SimpleObservable(this, "trendPulse");
+    private final Binding<Number> trendPeriod;
     private final FunctionalDoubleBinding radRelativeAngleOverGround;
     private final FunctionalDoubleBinding radTrackMadeGood;
     private final FunctionalDoubleBinding windOverGroundX;
@@ -118,7 +121,7 @@ public class PropertyStore extends AnnotatedPropertyStore
             boundMap.put(property, createBinding(property));
             disableMap.put(property, new SimpleBooleanProperty(this, property, true));
         }
-        checkDisabled();
+        this.trendPeriod = preferences.getNumberBinding("trendPeriod");
         // depth
         depthOfWaterBinding = (FloatBinding) boundMap.get("depthOfWater");
         depthBelowKeelBinding = new FunctionalFloatBinding("depthBelowKeelBinding",
@@ -207,6 +210,9 @@ public class PropertyStore extends AnnotatedPropertyStore
         boundMap.put("currentAngleOverGround", currentAngleOverGround);
         ObservableBooleanValue currentDisableBind = bindDisable("currentSpeedOverGround", "trueHeading", "trackMadeGood", "waterSpeed", "speedOverGround");
         disableMap.put("currentAngleOverGround", currentDisableBind);
+        
+        checkDisabled();
+        scheduleTrendPulse();
     }
     private ObservableBooleanValue bindDisable(String property, String... dependencies)
     {
@@ -246,6 +252,17 @@ public class PropertyStore extends AnnotatedPropertyStore
         }
     }
 
+    private void scheduleTrendPulse()
+    {
+        trendPulse.invalidate();
+        executor.schedule(()->scheduleTrendPulse(), trendPeriod.getValue().longValue(), SECONDS);
+    }
+
+    public Observable getTrendPulse()
+    {
+        return trendPulse;
+    }
+    
     public CachedScheduledThreadPool getExecutor()
     {
         return executor;
@@ -370,13 +387,11 @@ public class PropertyStore extends AnnotatedPropertyStore
             String property = iterator.next();
             iterator.remove();
             NumberBinding binding = boundMap.get(property);
-            if ("speedOverGround".equals(property)) 
-                System.err.println();
             binding.invalidate();
         }
     }
     /**
-     * Returns propertys original unit sent by parser.
+     * Returns property's original unit sent by parser.
      * @param property
      * @return 
      */

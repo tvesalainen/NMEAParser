@@ -38,6 +38,7 @@ public class TrendCanvas extends ResizableCanvas implements PropertyBindable
     private final PathHelper pathHelper;
     private final ReadOnlyDoubleProperty value;
     private final FunctionalInvalidationListener updateListener = new FunctionalInvalidationListener(this::updateValue);
+    private final FunctionalInvalidationListener trendPulseListener = new FunctionalInvalidationListener(this::draw);
     private TimeoutSlidingStats stats;
     private CachedScheduledThreadPool executor;
     private Binding<Number> trendPeriod;
@@ -56,24 +57,19 @@ public class TrendCanvas extends ResizableCanvas implements PropertyBindable
     public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
     {
         this.executor = propertyStore.getExecutor();
-        this.trendPeriod = preferences.getNumberBinding("trendPeriod");
         Binding<Number> trendTimeout = preferences.getNumberBinding("trendTimeout");
         long minutes = trendTimeout.getValue().longValue();
         createStats(minutes);
         trendTimeout.addListener((b, o, n)->createStats(n.longValue()));
         
         updateListener.bind(value);
-        schedule();
+        trendPulseListener.bind(propertyStore.getTrendPulse());
+        visibleProperty();
     }
 
     private void updateValue()
     {
         stats.accept(value.doubleValue());
-    }
-    private void schedule()
-    {
-        Platform.runLater(this::draw);
-        executor.schedule(()->schedule(), trendPeriod.getValue().longValue(), SECONDS);
     }
     private void draw()
     {

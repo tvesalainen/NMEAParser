@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import org.vesalainen.nmea.viewer.BoatCanvas?>
+<?import org.vesalainen.nmea.viewer.CompassRingCanvas?>
+<?import org.vesalainen.nmea.viewer.CourseSpeedCanvas?>
+<?import org.vesalainen.nmea.viewer.GaugeCanvas?>
+<?import org.vesalainen.nmea.viewer.MagneticVariationCanvas?>
+<?import org.vesalainen.nmea.viewer.WindArrowCanvas?>
+<?import org.vesalainen.nmea.viewer.CurrentArrowCanvas?>
+<?import org.vesalainen.nmea.viewer.GaugePane?>
+
+<GridPane id="sailingGridPane" >
+    <columnConstraints>
+        <ColumnConstraints percentWidth="50"  />
+        <ColumnConstraints percentWidth="50" />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints percentHeight="33"  />
+        <RowConstraints percentHeight="33" />
+        <RowConstraints percentHeight="33" />
+    </rowConstraints>
+    <children>
+        <GaugePane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0"  />
+        <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.rowIndex="1">
+            <children>
+                <GaugeCanvas property="waterSpeed" />
+            </children>
+        </StackPane>
+        <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.rowIndex="2">
+            <children>
+                <GaugeCanvas property="waterTemperature" />
+            </children>
+        </StackPane>
+        <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.columnIndex="1" GridPane.rowSpan="2147483647">
+            <children>
+                <CompassRingCanvas />
+                <BoatCanvas />
+                <WindArrowCanvas />
+                <MagneticVariationCanvas />
+                <CourseSpeedCanvas />
+                <CurrentArrowCanvas />
+            </children>
+        </StackPane>
+    </children>
+</GridPane>

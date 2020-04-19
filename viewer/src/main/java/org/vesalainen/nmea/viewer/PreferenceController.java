@@ -38,7 +38,7 @@ import org.vesalainen.util.CollectionHelp;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class ViewerController implements Initializable
+public class PreferenceController implements Initializable
 {
     @FXML TextField host;
     @FXML TextField port;

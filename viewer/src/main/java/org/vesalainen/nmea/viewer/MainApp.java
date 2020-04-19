@@ -12,13 +12,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 public class MainApp extends Application
 {
     private DoubleProperty fontSize = new SimpleDoubleProperty(10);
     private ViewerPreferences preferences;
-    private ViewerController controller;
+    private PreferenceController preferencesController;
     private ViewerService service;
     private ResourceBundle bundle;
     private CachedScheduledThreadPool executor;
@@ -34,25 +35,31 @@ public class MainApp extends Application
     {
         Locale locale = Locale.getDefault();
         bundle = I18n.get(locale);
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/viewer.fxml"), bundle);
-        Parent root = loader.load();
-        controller = loader.getController();
+        // preferences
+        FXMLLoader preferencesLoader = new FXMLLoader(getClass().getResource("/fxml/preferences.fxml"), bundle);
+        Parent preferencesPage = preferencesLoader.load();
+        preferencesController = preferencesLoader.getController();
         preferences = new ViewerPreferences();
-        controller.bindPreferences(preferences);
+        preferencesController.bindPreferences(preferences);
+        // pages
+        FXMLLoader sailPage1Loader = new FXMLLoader(getClass().getResource("/fxml/sailPage1.fxml"), bundle);
+        Parent sailPage1 = sailPage1Loader.load();
+        
         service = new ViewerService(executor, preferences, locale);
-        service.register(root.lookupAll("*"));
+        service.register(sailPage1.lookupAll("*"));
         service.start();
         
         StringBinding colorBinding = service.bindBackgroundColors();
-        root.styleProperty().bind(Bindings.concat(
+        preferencesPage.styleProperty().bind(Bindings.concat(
                 "-fx-base: ", colorBinding, ";",
                 "-fx-font-family: ", preferences.getBinding("fontFamily"), ";")
         );
 
-        Scene scene = new Scene(root);
+        Scene scene = new ViewerScene(preferencesPage, sailPage1);
         scene.getStylesheets().add("/styles/Styles.css");
         stage.setTitle("NMEA Viewer");
         stage.setScene(scene);
+        stage.setFullScreen(true);
         stage.show();
     }
 
