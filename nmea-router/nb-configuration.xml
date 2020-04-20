@@ -16,6 +16,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <netbeans.hint.license>gpl30</netbeans.hint.license>
         <netbeans.hint.jdkPlatform>JDK_1.8_77</netbeans.hint.jdkPlatform>
         <org-netbeans-modules-javascript2-requirejs.enabled>true</org-netbeans-modules-javascript2-requirejs.enabled>
-        <netbeans.compile.on.save>none</netbeans.compile.on.save>
+        <netbeans.compile.on.save>all</netbeans.compile.on.save>
     </properties>
 </project-shared-configuration>

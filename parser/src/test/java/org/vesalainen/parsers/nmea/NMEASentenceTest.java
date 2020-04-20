@@ -74,7 +74,7 @@ public class NMEASentenceTest
     {
         SimpleStorage ss = new SimpleStorage();
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-        NMEASentence vhw = NMEASentence.vhw(5.1, UnitType.KNOT);
+        NMEASentence vhw = NMEASentence.vhw(5.1, UnitType.KNOTS);
         parser.parse(vhw.toString(), tc, null);
         assertEquals(5.1, ss.getFloat("waterSpeed"), 1e-1);
     }
@@ -83,7 +83,7 @@ public class NMEASentenceTest
     {
         SimpleStorage ss = new SimpleStorage();
         NMEAObserver tc = ss.getStorage(NMEAObserver.class);
-        NMEASentence mwv = NMEASentence.mwv(15, 17, UnitType.KNOT, true);
+        NMEASentence mwv = NMEASentence.mwv(15, 17, UnitType.KNOTS, true);
         parser.parse(mwv.toString(), tc, null);
         assertEquals(17, ss.getFloat("trueWindSpeed"), 1e-1);
         assertEquals(15, ss.getFloat("trueWindAngle"), 1e-1);

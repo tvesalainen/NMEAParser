@@ -39,14 +39,14 @@ public class Converter
     
     public static float toKnots(float velocity, char unit)
     {
-        return (float) getSpeedType(unit).convertTo(velocity, KNOT);
+        return (float) getSpeedType(unit).convertTo(velocity, KNOTS);
     }
     public static UnitType getSpeedType(char unit)
     {
         switch (unit)
         {
             case KTS:
-                return KNOT;
+                return KNOTS;
             case KMH:
                 return UnitType.KILO_METERS_PER_HOUR;
             default:

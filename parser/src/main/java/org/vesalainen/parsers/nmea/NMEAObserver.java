@@ -84,7 +84,7 @@ public interface NMEAObserver extends Transactional
      * @param knots 
      */
     @NMEACat(SPEED)
-    @Unit(value=KNOT, min=0, max=50)
+    @Unit(value=KNOTS, min=0, max=50)
     void setSpeedOverGround(float knots);
     /**
      * RMA, RMC
@@ -153,7 +153,7 @@ public interface NMEAObserver extends Transactional
      * @param knots 
      */
     @NMEACat(WAYPOINT)
-    @Unit(value=KNOT, min=0, max=50)
+    @Unit(value=KNOTS, min=0, max=50)
     void setDestinationClosingVelocity(float knots);
     /**
      * GGA
@@ -496,7 +496,7 @@ public interface NMEAObserver extends Transactional
      * @param metersInSecond
      */
     @NMEACat(WIND)
-    @Unit(value=KNOT, min=0, max=100)
+    @Unit(value=KNOTS, min=0, max=100)
     void setRelativeWindSpeed(float metersInSecond);
     /**
      * Returns the wind speed.
@@ -504,7 +504,7 @@ public interface NMEAObserver extends Transactional
      * @param metersInSecond
      */
     @NMEACat(WIND)
-    @Unit(value=KNOT, min=0, max=100)
+    @Unit(value=KNOTS, min=0, max=100)
     void setTrueWindSpeed(float metersInSecond);
     /**
      * ROT
@@ -571,7 +571,7 @@ public interface NMEAObserver extends Transactional
      * @param knots
      */
     @NMEACat(SPEED)
-    @Unit(value=KNOT, min=0, max=50)
+    @Unit(value=KNOTS, min=0, max=50)
     void setWaterSpeed(float knots);
     /**
      * @deprecated This method will no longer be called. Use setRelativeWindAngle.
@@ -586,7 +586,7 @@ public interface NMEAObserver extends Transactional
      * @param knots
      */
     @NMEACat(WAYPOINT)
-    @Unit(value=KNOT, min=0, max=50)
+    @Unit(value=KNOTS, min=0, max=50)
     void setVelocityToWaypoint(float knots);
     /**
      * TXT

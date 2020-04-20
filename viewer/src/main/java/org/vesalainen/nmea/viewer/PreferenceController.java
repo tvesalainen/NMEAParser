@@ -78,7 +78,7 @@ public class PreferenceController implements Initializable
         preferences.bindInteger("port", 0, 0, 65535, port);
         EnumTitleConverter converter = new EnumTitleConverter<>(UnitType.class);
         preferences.bindCombo("depthUnit", METER, depthUnit, converter, METER, FOOT, FATHOM);
-        preferences.bindCombo("speedUnit", KNOT, speedUnit, converter, KNOT, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
+        preferences.bindCombo("speedUnit", KNOTS, speedUnit, converter, KNOTS, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
         preferences.bindCombo("temperatureUnit", CELSIUS, temperatureUnit, converter, CELSIUS, FAHRENHEIT);
         preferences.bindFloat("transducerOffset", 0, 0, 5, transducerOffset);
         preferences.bindFloat("keelOffset", 0, 0, 20, keelOffset);

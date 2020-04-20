@@ -90,8 +90,8 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
         this.dbt = NMEASentence.dbt(()->depthOfWater, UnitType.METER);
         this.hdt = NMEASentence.hdt(()->trueHeading);
         this.mtw = NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS);
-        this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.KNOT, false);
-        this.vhw = NMEASentence.vhw(()->waterSpeed, UnitType.KNOT);
+        this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.KNOTS, false);
+        this.vhw = NMEASentence.vhw(()->waterSpeed, UnitType.KNOTS);
     }
 
     public double magneticVariation()

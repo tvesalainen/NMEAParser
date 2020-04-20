@@ -412,7 +412,7 @@ public class PropertyStore extends AnnotatedPropertyStore
                     return DEGREE;
                 case "windSpeedOverGround":
                 case "currentSpeedOverGround":
-                    return KNOT;
+                    return KNOTS;
                 default:
                     throw new UnsupportedOperationException(property+" has no unit");
             }

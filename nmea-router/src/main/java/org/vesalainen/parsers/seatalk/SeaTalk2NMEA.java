@@ -195,7 +195,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         if (!haveBetterVHW)
         {
             float knots = (float)xx/10;
-            NMEASentence vhw = NMEASentence.vhw(knots, UnitType.KNOT);
+            NMEASentence vhw = NMEASentence.vhw(knots, UnitType.KNOTS);
             vhw.writeTo(out);
         }
     }
@@ -232,7 +232,7 @@ public abstract class SeaTalk2NMEA implements AttachedLogger
         debug("m26");
         float knots = (float)xx/100;
         haveBetterVHW = true;
-        NMEASentence vhw = NMEASentence.vhw(knots, UnitType.KNOT);
+        NMEASentence vhw = NMEASentence.vhw(knots, UnitType.KNOTS);
         vhw.writeTo(out);
     }
     @Rule("'\\x27\\x01' integer")
