@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javafx.beans.binding.Binding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
@@ -114,6 +115,10 @@ public class ViewerPreferences
         TextFormatter<Float> formatter = setFormatter(textField, converter);
         bindingPreferences.bindFloatBiDirectional(key, def, formatter.valueProperty());
         bindings.put(key, bindingPreferences.createFloatBinding(key, def));
+    }
+    public void bindInteger(String key, int def, Property<Integer> property)
+    {
+        bindingPreferences.bindIntegerBiDirectional(key, def, property);
     }
     public void bindInteger(String key, int def, TextField textField)
     {

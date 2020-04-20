@@ -6,18 +6,18 @@ import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 public class MainApp extends Application
 {
-    private DoubleProperty fontSize = new SimpleDoubleProperty(10);
     private ViewerPreferences preferences;
     private PreferenceController preferencesController;
     private ViewerService service;
@@ -36,30 +36,30 @@ public class MainApp extends Application
         Locale locale = Locale.getDefault();
         bundle = I18n.get(locale);
         // preferences
-        FXMLLoader preferencesLoader = new FXMLLoader(getClass().getResource("/fxml/preferences.fxml"), bundle);
-        Parent preferencesPage = preferencesLoader.load();
-        preferencesController = preferencesLoader.getController();
         preferences = new ViewerPreferences();
-        preferencesController.bindPreferences(preferences);
-        // pages
-        FXMLLoader sailPage1Loader = new FXMLLoader(getClass().getResource("/fxml/sailPage1.fxml"), bundle);
-        Parent sailPage1 = sailPage1Loader.load();
-        
+
+        ViewerPage preferencesPage = ViewerPage.loadPreferencePage(preferences, "/fxml/preferences.fxml", bundle);
+
         service = new ViewerService(executor, preferences, locale);
-        service.register(sailPage1.lookupAll("*"));
+        StringBinding colorBinding = service.bindBackgroundColors();
+        StringExpression styleExpression = Bindings.concat(
+                "-fx-base: ", colorBinding, ";",
+                "-fx-font-family: ", preferences.getBinding("fontFamily"), ";");
+        preferencesPage.getParent().styleProperty().bind(styleExpression);
+        // pages
+        ViewerPage sailPage1 = ViewerPage.loadPage(service, "/fxml/sailPage1.fxml", bundle, styleExpression);
+
         service.start();
         
-        StringBinding colorBinding = service.bindBackgroundColors();
-        preferencesPage.styleProperty().bind(Bindings.concat(
-                "-fx-base: ", colorBinding, ";",
-                "-fx-font-family: ", preferences.getBinding("fontFamily"), ";")
-        );
 
-        Scene scene = new ViewerScene(preferencesPage, sailPage1);
+        Property<Integer> currentPage = new SimpleObjectProperty<>(0);
+        preferences.bindInteger("currentPage", 0, currentPage);
+        Scene scene = new ViewerScene(stage, currentPage, preferencesPage, sailPage1);
         scene.getStylesheets().add("/styles/Styles.css");
-        stage.setTitle("NMEA Viewer");
         stage.setScene(scene);
         stage.setFullScreen(true);
+        I18n.bind(stage.titleProperty(), "mainTitle");
+        I18n.bind(stage.fullScreenExitHintProperty(), "fullScreenExitHint");
         stage.show();
     }
 

@@ -19,6 +19,7 @@ package org.vesalainen.nmea.viewer;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
 
 /**
  *
@@ -28,6 +29,7 @@ public class FunctionalInvalidationListener implements InvalidationListener, Run
 {
     private Runnable runner;
     private boolean valid = true;
+    private BooleanProperty predicate;
 
     public FunctionalInvalidationListener(Runnable runner)
     {
@@ -41,13 +43,25 @@ public class FunctionalInvalidationListener implements InvalidationListener, Run
             observable.addListener(this);
         }
     }
+    /**
+     * If predicate is set it will prevent action if it is false.
+     * @param predicate 
+     */
+    public void setPredicate(BooleanProperty predicate)
+    {
+        this.predicate = predicate;
+        bind(predicate);
+    }
     @Override
     public void invalidated(Observable observable)
     {
-        if (valid)
+        if (predicate == null || predicate.get())
         {
-            valid = false;
-            Platform.runLater(this);
+            if (valid)
+            {
+                valid = false;
+                Platform.runLater(this);
+            }
         }
     }
 

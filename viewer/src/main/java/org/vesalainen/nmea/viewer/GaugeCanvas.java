@@ -18,6 +18,7 @@ package org.vesalainen.nmea.viewer;
 
 import static java.util.Locale.US;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -144,8 +145,9 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
     }
 
     @Override
-    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {
+        super.bind(preferences, propertyStore, active);
         String prop = getProperty();
         getStyleClass().add(CamelCase.delimitedLower(prop, "-"));
         I18n.bind(titleProperty(), property);

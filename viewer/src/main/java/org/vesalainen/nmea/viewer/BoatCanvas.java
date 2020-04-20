@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -49,8 +50,9 @@ public class BoatCanvas extends RotatingCanvas implements PropertyBindable
     }
 
     @Override
-    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {
+        super.bind(preferences, propertyStore, active);
         angleProperty().bind(propertyStore.getBinding("trueHeading"));
         disableProperty().bind(propertyStore.getDisableBind("trueHeading"));
     }

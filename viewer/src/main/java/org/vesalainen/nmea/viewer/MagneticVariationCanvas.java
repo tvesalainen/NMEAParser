@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -48,8 +49,9 @@ public class MagneticVariationCanvas extends RotatingCanvas implements PropertyB
     }
 
     @Override
-    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {
+        super.bind(preferences, propertyStore, active);
         angleProperty().bind(propertyStore.getBinding("magneticVariation"));
         disableProperty().bind(propertyStore.getDisableBind("magneticVariation"));
     }

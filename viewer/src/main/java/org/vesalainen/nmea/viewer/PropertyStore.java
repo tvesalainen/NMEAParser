@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import org.vesalainen.fx.BasicObservable;
 import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
 import java.time.Clock;
@@ -86,7 +87,7 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final DoubleBinding solarDepressionAngleBinding;
     private final SolarWatch solarWatch;
     private final ObjectBinding<DayPhase> dayPhaseProperty;
-    private final SimpleObservable trendPulse = new SimpleObservable(this, "trendPulse");
+    private final BasicObservable trendPulse = new BasicObservable(this, "trendPulse");
     private final Binding<Number> trendPeriod;
     private final FunctionalDoubleBinding radRelativeAngleOverGround;
     private final FunctionalDoubleBinding radTrackMadeGood;

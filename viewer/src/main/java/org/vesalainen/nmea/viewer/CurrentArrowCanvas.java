@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Paint;
 import org.vesalainen.fx.InterpolatingColor;
@@ -50,8 +51,9 @@ public class CurrentArrowCanvas extends RotatingValueCanvas implements PropertyB
     }
 
     @Override
-    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {
+        super.bind(preferences, propertyStore, active);
         angleProperty().bind(propertyStore.getBinding("currentAngleOverGround"));
         valueProperty().bind(propertyStore.getBinding("currentSpeedOverGround"));
         disableProperty().bind(propertyStore.getDisableBind("currentAngleOverGround", "currentSpeedOverGround"));

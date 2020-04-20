@@ -22,7 +22,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Vector;
+import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyStringPropertyBase;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableStringValue;
 import org.vesalainen.parsers.nmea.NMEAProperties;
@@ -73,7 +75,21 @@ public class I18n extends ResourceBundle
     {
         return new I18nString(key, get().getString(key));
     }
-    public static void bind(StringProperty target, ObservableStringValue key)
+    /**
+     * Binds target to resource with key
+     * @param target
+     * @param key 
+     */
+    public static void bind(Property<String> target, String key)
+    {
+        bind(target, new ReadOnlyStringWrapper(key));
+    }
+    /**
+     * Binds target to resource with key
+     * @param target
+     * @param key 
+     */
+    public static void bind(Property<String> target, ObservableStringValue key)
     {
         target.bind(new ObservableResource(get(), key));
     }

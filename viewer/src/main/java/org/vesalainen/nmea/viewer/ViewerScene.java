@@ -17,6 +17,7 @@
 package org.vesalainen.nmea.viewer;
 
 import javafx.beans.Observable;
+import javafx.beans.property.Property;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
@@ -28,6 +29,8 @@ import javafx.scene.input.MouseEvent;
 import static javafx.scene.input.MouseEvent.*;
 import javafx.scene.input.SwipeEvent;
 import static javafx.scene.input.SwipeEvent.*;
+import javafx.stage.Stage;
+import jdk.nashorn.internal.objects.NativeDate;
 
 /**
  *
@@ -38,12 +41,16 @@ public class ViewerScene extends Scene
     private static double PI_4 = Math.PI/4;
     private static double PI_3_4 = 3*Math.PI/4;
     EventHandler<MouseEvent> eventHandler;
-    private final Parent[] parents;
+    private final Stage stage;
+    private final ViewerPage[] pages;
+    private final Property<Integer> currentPage;
     
-    public ViewerScene(Parent... parents)
+    public ViewerScene(Stage stage, Property<Integer> currentPage, ViewerPage... pages)
     {
-        super(parents[0]);
-        this.parents = parents;
+        super(pages[currentPage.getValue()].getParent());
+        this.stage = stage;
+        this.currentPage = currentPage;
+        this.pages = pages;
         eventHandler = new MouseHandler();
         addEventFilter(MOUSE_PRESSED, eventHandler);
         addEventFilter(MOUSE_RELEASED, eventHandler);
@@ -52,19 +59,41 @@ public class ViewerScene extends Scene
         onSwipeUpProperty().addListener(e->onSwipeUp());
         onSwipeDownProperty().addListener(e->onSwipeDown());
     }
+    private void updateRoot()
+    {
+        int page = currentPage.getValue();
+        for (int ii=0;ii<pages.length;ii++)
+        {
+            if (ii == page)
+            {
+                pages[ii].setActive(true);
+            }
+            else
+            {
+                pages[ii].setActive(false);
+            }
+        }
+        setRoot(pages[page].getParent());
+    }
     private void onSwipeRight()
     {
-        setRoot(parents[1]);
+        int page = currentPage.getValue();
+        currentPage.setValue(Math.floorMod(page+1, pages.length));
+        updateRoot();
     }
     private void onSwipeLeft()
     {
-        setRoot(parents[0]);
+        int page = currentPage.getValue();
+        currentPage.setValue(Math.floorMod(page-1, pages.length));
+        updateRoot();
     }
     private void onSwipeUp()
     {
+        stage.setFullScreen(true);
     }
     private void onSwipeDown()
     {
+        stage.setFullScreen(false);
     }
     private class MouseHandler implements EventHandler<MouseEvent>
     {
@@ -75,11 +104,16 @@ public class ViewerScene extends Scene
         @Override
         public void handle(MouseEvent me)
         {
+            if (me.equals(active))
+            {
+                return;
+            }
             if (me.getEventType() == MOUSE_PRESSED)
             {
                 x = me.getScreenX();
                 y = me.getScreenY();
-                active = me;
+                active = (MouseEvent) me.clone();
+                me.consume();
             }
             else
             {
@@ -94,6 +128,7 @@ public class ViewerScene extends Scene
                         active = null;
                         return;
                     }
+                    System.err.println(hypot);
                     active = null;
                     me.consume();
                     double a = Math.atan2(-dy, dx);

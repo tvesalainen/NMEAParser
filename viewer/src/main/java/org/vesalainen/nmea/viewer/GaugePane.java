@@ -19,6 +19,7 @@ package org.vesalainen.nmea.viewer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
@@ -30,7 +31,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import org.vesalainen.nmea.viewer.I18n.I18nString;
-import static org.vesalainen.parsers.nmea.NMEACategory.*;
 
 /**
  *
@@ -42,6 +42,7 @@ public class GaugePane extends StackPane implements PropertyBindable
     private final StringProperty property = new SimpleStringProperty(this, "property", "");
     private ViewerPreferences preferences;
     private PropertyStore propertyStore;
+    private BooleanProperty active;
 
     public String getProperty()
     {
@@ -59,10 +60,11 @@ public class GaugePane extends StackPane implements PropertyBindable
     }
 
     @Override
-    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {
         this.preferences = preferences;
         this.propertyStore = propertyStore;
+        this.active = active;
         String prop = getProperty();
         Parent parent = getParent();
         if (parent instanceof GridPane)
@@ -97,7 +99,7 @@ public class GaugePane extends StackPane implements PropertyBindable
         
         GaugeCanvas gauge = new GaugeCanvas();
         gauge.setProperty(prop);
-        gauge.bind(preferences, propertyStore);
+        gauge.bind(preferences, propertyStore, active);
         switch (propertyStore.getOriginalUnit(prop).getCategory())
         {
             case COORDINATE:
@@ -106,7 +108,7 @@ public class GaugePane extends StackPane implements PropertyBindable
                 break;
             default:
                 TrendCanvas trend = new TrendCanvas(gauge.valueProperty());
-                trend.bind(preferences, propertyStore);
+                trend.bind(preferences, propertyStore, active);
                 children.add(trend);
                 break;
         }
@@ -115,21 +117,18 @@ public class GaugePane extends StackPane implements PropertyBindable
 
     private void onMousePressed(MouseEvent e)
     {
-        if (e.isSecondaryButtonDown())
+        List<I18nString> list = new ArrayList<>();
+        for (String p : propertyStore.getProperties())
         {
-            List<I18nString> list = new ArrayList<>();
-            for (String p : propertyStore.getProperties())
-            {
-                list.add(I18n.getI18nString(p));
-            }
-            list.sort(null);
-            ChoiceDialog<I18nString> dia = new ChoiceDialog<>(list.get(0), list);
-            ResourceBundle rb = I18n.get();
-            dia.setTitle(rb.getString("addPropertyTitle"));
-            dia.setContentText(rb.getString("addPropertyContent"));
-            dia.setHeaderText(rb.getString("addPropertyHeader"));
-            dia.showAndWait().ifPresent(response -> bind2(response.getKey()));        
+            list.add(I18n.getI18nString(p));
         }
+        list.sort(null);
+        ChoiceDialog<I18nString> dia = new ChoiceDialog<>(list.get(0), list);
+        ResourceBundle rb = I18n.get();
+        dia.setTitle(rb.getString("addPropertyTitle"));
+        dia.setContentText(rb.getString("addPropertyContent"));
+        dia.setHeaderText(rb.getString("addPropertyHeader"));
+        dia.showAndWait().ifPresent(response -> bind2(response.getKey()));        
     }
 
 }

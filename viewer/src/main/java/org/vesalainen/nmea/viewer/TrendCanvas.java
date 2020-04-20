@@ -17,14 +17,12 @@
 package org.vesalainen.nmea.viewer;
 
 import static java.util.concurrent.TimeUnit.*;
-import java.util.function.DoubleUnaryOperator;
-import javafx.application.Platform;
 import javafx.beans.binding.Binding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Paint;
-import javafx.scene.transform.Affine;
 import org.vesalainen.math.sliding.TimeoutSlidingStats;
 import org.vesalainen.ui.Transforms;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
@@ -54,8 +52,9 @@ public class TrendCanvas extends ResizableCanvas implements PropertyBindable
     }
     
     @Override
-    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {
+        super.bind(preferences, propertyStore, active);
         this.executor = propertyStore.getExecutor();
         Binding<Number> trendTimeout = preferences.getNumberBinding("trendTimeout");
         long minutes = trendTimeout.getValue().longValue();
@@ -64,7 +63,7 @@ public class TrendCanvas extends ResizableCanvas implements PropertyBindable
         
         updateListener.bind(value);
         trendPulseListener.bind(propertyStore.getTrendPulse());
-        visibleProperty();
+        trendPulseListener.setPredicate(active);
     }
 
     private void updateValue()

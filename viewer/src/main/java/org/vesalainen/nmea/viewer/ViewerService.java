@@ -27,6 +27,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.binding.When;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Node;
@@ -73,9 +74,9 @@ public class ViewerService implements InvalidationListener
         twilightBackgroundColorBinding = preferences.getBinding("twilightBackgroundColor");
     }
 
-    public void register(Set<Node> nodes)
+    public void register(BooleanProperty active, Set<Node> nodes)
     {
-        nodes.forEach(this::register);
+        nodes.forEach((n)->register(active, n));
     }
 
     public void start()
@@ -87,12 +88,12 @@ public class ViewerService implements InvalidationListener
     {
         propertyStore.stop();
     }
-    private void register(Node node)
+    private void register(BooleanProperty active, Node node)
     {
         if (node instanceof PropertyBindable)
         {
             PropertyBindable bindable = (PropertyBindable) node;
-            bindable.bind(preferences, propertyStore);
+            bindable.bind(preferences, propertyStore, active);
         }
     }
     private void openNMEAService()

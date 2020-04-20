@@ -16,6 +16,8 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.property.BooleanProperty;
+
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
@@ -23,6 +25,6 @@ package org.vesalainen.nmea.viewer;
 public interface PropertyBindable
 {
 
-    void bind(ViewerPreferences preferences, PropertyStore propertyStore);
+    void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active);
     
 }

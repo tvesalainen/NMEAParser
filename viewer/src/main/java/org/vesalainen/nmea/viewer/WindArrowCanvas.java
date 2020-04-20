@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -54,8 +55,9 @@ public class WindArrowCanvas extends RotatingValueCanvas implements PropertyBind
     }
 
     @Override
-    public void bind(ViewerPreferences preferences, PropertyStore propertyStore)
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {
+        super.bind(preferences, propertyStore, active);
         angleProperty().bind(propertyStore.getBinding("windAngleOverGround"));
         valueProperty().bind(propertyStore.getBinding("windSpeedOverGround"));
         disableProperty().bind(propertyStore.getDisableBind("windAngleOverGround", "windSpeedOverGround"));

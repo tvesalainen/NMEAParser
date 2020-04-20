@@ -42,7 +42,7 @@ import javafx.scene.text.Font;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class ResizableCanvas extends Canvas
+public class ResizableCanvas extends Canvas implements PropertyBindable
 {
     private static final StyleablePropertyFactory<ResizableCanvas> FACTORY = 
             new StyleablePropertyFactory<>(Canvas.getClassCssMetaData());
@@ -142,7 +142,13 @@ public class ResizableCanvas extends Canvas
             throw new IllegalArgumentException(ex);
         }
         parentProperty().addListener(this::setParent);
+    }
+
+    @Override
+    public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
+    {
         onReDrawListener.bind(widthProperty(), heightProperty(), fontProperty(), textFillProperty(), backgroundProperty(), disabledProperty());
+        onReDrawListener.setPredicate(visibleProperty());
     }
 
     public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData()
