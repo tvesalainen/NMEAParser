@@ -132,7 +132,7 @@ public class NMEASentence
     {
         return builder(VW, VHW)
                 .add().add().add().add()
-                .bind(from, speed, KNOTS)
+                .bind(from, speed, KNOT)
                 .add(KTS)
                 .add().add()
                 .build();
@@ -153,7 +153,7 @@ public class NMEASentence
         return builder(UP, MWV)
                 .bind(windAngle)
                 .add(trueWind ? 'T' : 'R')
-                .bind(from, windSpeed, KNOTS)
+                .bind(from, windSpeed, KNOT)
                 .add(KTS)
                 .add('A')
                 .build();

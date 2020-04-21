@@ -16,7 +16,9 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import java.util.Locale;
 import static java.util.Locale.US;
+import java.util.function.DoubleFunction;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -31,7 +33,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
+import org.vesalainen.navi.CoordinateFormat;
+import org.vesalainen.navi.Navis;
 import org.vesalainen.text.CamelCase;
+import org.vesalainen.time.YearHelp;
 
 /**
  *
@@ -39,8 +44,8 @@ import org.vesalainen.text.CamelCase;
  */
 public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
 {
-    private UnitType origUnit = UNITLESS;
     private final StringProperty title = new SimpleStringProperty(this, "title");
+    private DoubleFunction<String> formatter;
 
     private String getTitle()
     {
@@ -122,22 +127,6 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         return unitTitle;
     }
     
-    private final StringProperty format = new SimpleStringProperty(this, "format", "% 5.1f");
-
-    public String getFormat()
-    {
-        return format.get();
-    }
-
-    public void setFormat(String value)
-    {
-        format.set(value);
-    }
-
-    public StringProperty formatProperty()
-    {
-        return format;
-    }
     public GaugeCanvas()
     {
         super(false);
@@ -150,10 +139,10 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
         super.bind(preferences, propertyStore, active);
         String prop = getProperty();
         getStyleClass().add(CamelCase.delimitedLower(prop, "-"));
-        I18n.bind(titleProperty(), property);
-        I18n.bind(unitTitleProperty(), Bindings.createStringBinding(()->CamelCase.property(unit.getValue().name())+"Unit", unit));
+        I18n.bind(titleProperty(), propertyProperty());
+        I18n.bind(unitTitleProperty(), Bindings.createStringBinding(()->CamelCase.property(getUnit().name())+"Unit", unitProperty()));
         
-        origUnit = propertyStore.getOriginalUnit(prop);
+        formatter = createFormatter(propertyStore, prop);
         unitProperty().bind(propertyStore.getCategoryBinding(prop));
         valueProperty().bind(propertyStore.getBinding(prop));
 
@@ -178,7 +167,7 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
             gc.setFont(Font.font(fontFamily, height));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(String.format(US, getFormat(), origUnit.convertTo(val, unit.getValue()), val), width/2, height/2, width);
+            gc.fillText(formatter.apply(val), width/2, height/2, width);
             // title
             gc.setFont(Font.font(fontFamily, height/10));
             gc.setTextAlign(TextAlignment.LEFT);
@@ -189,6 +178,41 @@ public class GaugeCanvas extends ResizableCanvas implements PropertyBindable
             gc.setTextAlign(TextAlignment.RIGHT);
             gc.setTextBaseline(VPos.TOP);
             gc.fillText(unitTitle.getValue(), width, 0, 0.2*width);
+        }
+    }
+
+    private DoubleFunction<String> createFormatter(PropertyStore propertyStore, String prop)
+    {
+        switch (prop)
+        {
+            case "latitude":
+                    return (val)->CoordinateFormat.formatLatitude(US, val, unit.getValue());
+            case "longitude":
+                    return (val)->CoordinateFormat.formatLongitude(US, val, unit.getValue());
+            case "utcDate":
+                    return (val)->String.format(US, "%04d.%02d.%02d", YearHelp.year4((int) (val/10000)), ((int)val%10000)/100, ((int)val%100));
+            case "utcTime":
+                    return (val)->String.format(US, "%02d:%02d:%02d", (int)(val/10000), ((int)val%10000)/100, ((int)val%100));
+            default:
+                UnitType origUnit = propertyStore.getOriginalUnit(prop);
+                switch (origUnit.getCategory())
+                {
+                    case PLANE_ANGLE:
+                        return (val)->
+                        {
+                            switch (unit.getValue())
+                            {
+                                case DEGREE:
+                                    return String.format(US, "% 5.1f", Navis.normalizeAngle(val));
+                                case DEGREE_NEG:
+                                    return String.format(US, "% 5.1f", Navis.normalizeToHalfAngle(val));
+                                default:
+                                    throw new UnsupportedOperationException(unit.getValue()+" not supported");
+                            }
+                        };
+                    default:
+                        return (val)->String.format(US, "% 5.1f", origUnit.convertTo(val, unit.getValue()));
+                }
         }
     }
 

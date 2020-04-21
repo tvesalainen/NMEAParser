@@ -31,6 +31,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import org.vesalainen.nmea.viewer.I18n.I18nString;
+import org.vesalainen.util.ArrayHelp;
 
 /**
  *
@@ -38,7 +39,7 @@ import org.vesalainen.nmea.viewer.I18n.I18nString;
  */
 public class GaugePane extends StackPane implements PropertyBindable
 {
-
+    private static final String[] IGNORE = new String[]{"epochMillis", "year", "month", "day", "hour", "minute", "second"};
     private final StringProperty property = new SimpleStringProperty(this, "property", "");
     private ViewerPreferences preferences;
     private PropertyStore propertyStore;
@@ -105,6 +106,7 @@ public class GaugePane extends StackPane implements PropertyBindable
             case COORDINATE:
             case PLANE_ANGLE:
             case TIME:
+            case UNKNOWN:
                 break;
             default:
                 TrendCanvas trend = new TrendCanvas(gauge.valueProperty());
@@ -120,7 +122,10 @@ public class GaugePane extends StackPane implements PropertyBindable
         List<I18nString> list = new ArrayList<>();
         for (String p : propertyStore.getProperties())
         {
-            list.add(I18n.getI18nString(p));
+            if (!ArrayHelp.contains(IGNORE, p))
+            {
+                list.add(I18n.getI18nString(p));
+            }
         }
         list.sort(null);
         ChoiceDialog<I18nString> dia = new ChoiceDialog<>(list.get(0), list);

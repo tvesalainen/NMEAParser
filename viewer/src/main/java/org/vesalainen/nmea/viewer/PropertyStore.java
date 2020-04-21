@@ -34,6 +34,7 @@ import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
+import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.LongBinding;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -75,6 +76,13 @@ public class PropertyStore extends AnnotatedPropertyStore
     private @Property float relativeWindAngle;
     private @Property float relativeWindSpeed;
     
+    private @Property int year;
+    private @Property int month;
+    private @Property int day;
+    private @Property int hour;
+    private @Property int minute;
+    private @Property float second;
+    
     private final CachedScheduledThreadPool executor;
     private final ViewerPreferences preferences;
     private final FloatBinding keelOffsetBinding;
@@ -103,6 +111,8 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final FunctionalDoubleBinding currentOverGroundY;
     private final FunctionalDoubleBinding currentSpeedOverGround;
     private final FunctionalDoubleBinding currentAngleOverGround;
+    private final FunctionalIntegerBinding utcDate;
+    private final FunctionalFloatBinding utcTime;
 
     public PropertyStore(CachedScheduledThreadPool executor, ViewerPreferences preferences)
     {
@@ -212,6 +222,32 @@ public class PropertyStore extends AnnotatedPropertyStore
         ObservableBooleanValue currentDisableBind = bindDisable("currentSpeedOverGround", "trueHeading", "trackMadeGood", "waterSpeed", "speedOverGround");
         disableMap.put("currentAngleOverGround", currentDisableBind);
         
+        //time
+        IntegerBinding yearBinding = (IntegerBinding) boundMap.get("year");
+        IntegerBinding monthBinding = (IntegerBinding) boundMap.get("month");
+        IntegerBinding dayBinding = (IntegerBinding) boundMap.get("day");
+        IntegerBinding hourBinding = (IntegerBinding) boundMap.get("hour");
+        IntegerBinding minuteBinding = (IntegerBinding) boundMap.get("minute");
+        FloatBinding secondBinding = (FloatBinding) boundMap.get("second");
+        utcDate = new FunctionalIntegerBinding("utcDate", 
+                ()->10000*yearBinding.get()+100*monthBinding.get()+dayBinding.get(),
+                yearBinding, 
+                monthBinding, 
+                dayBinding
+        );
+        utcTime = new FunctionalFloatBinding("utcTime", 
+                ()->10000*hourBinding.get()+100*minuteBinding.get()+secondBinding.get(),
+                hourBinding, 
+                minuteBinding, 
+                secondBinding
+        );
+        boundMap.put("utcDate", utcDate);
+        boundMap.put("utcTime", utcTime);
+        ObservableBooleanValue utcDateBind = bindDisable("utcDate", "year", "month", "day");
+        disableMap.put("utcDate", utcDateBind);
+        ObservableBooleanValue utcTimeBind = bindDisable("utcTime", "hour", "minute", "second");
+        disableMap.put("utcTime", utcTimeBind);
+        
         checkDisabled();
         scheduleTrendPulse();
     }
@@ -285,7 +321,22 @@ public class PropertyStore extends AnnotatedPropertyStore
     {
         solarWatch.stop();
     }
-    
+    /**
+     * yyyyhhmm
+     * @return 
+     */
+    @Property public int getUtcDate()
+    {
+        return utcDate.get();
+    }
+    /**
+     * hhmmss.s
+     * @return 
+     */
+    @Property public float getUtcTime()
+    {
+        return utcTime.get();
+    }
     @Property public float getCurrentAngleOverGround()
     {
         return currentAngleOverGround.floatValue();
@@ -387,7 +438,7 @@ public class PropertyStore extends AnnotatedPropertyStore
         {
             String property = iterator.next();
             iterator.remove();
-            NumberBinding binding = boundMap.get(property);
+            Binding binding = boundMap.get(property);
             binding.invalidate();
         }
     }
@@ -412,7 +463,11 @@ public class PropertyStore extends AnnotatedPropertyStore
                     return DEGREE;
                 case "windSpeedOverGround":
                 case "currentSpeedOverGround":
-                    return KNOTS;
+                    return KNOT;
+                case "utcDate":
+                case "utcTime":
+                case "epochMillis":
+                    return UNITLESS;
                 default:
                     throw new UnsupportedOperationException(property+" has no unit");
             }
@@ -435,8 +490,12 @@ public class PropertyStore extends AnnotatedPropertyStore
                 case "windSpeedOverGround":
                 case "currentSpeedOverGround":
                     return SPEED;
+                case "utcDate":
+                case "utcTime":
+                case "epochMillis":
+                    return MISCELLENEOUS;
                 default:
-                    throw new UnsupportedOperationException(property+" has no unit");
+                    throw new UnsupportedOperationException(property+" has no category");
             }
         }
     }
@@ -453,10 +512,22 @@ public class PropertyStore extends AnnotatedPropertyStore
                     return preferences.getBinding("speedUnit");
                 case TEMPERATURE:
                     return preferences.getBinding("temperatureUnit");
+                case COORDINATE:
+                    return preferences.getBinding("coordinateUnit");
+                case WIND:
+                    switch (NMEAProperties.getInstance().getUnit(property).getCategory())
+                    {
+                        case SPEED:
+                            return preferences.getBinding("windSpeedUnit");
+                        case PLANE_ANGLE:
+                            return preferences.getBinding("windAngleUnit");
+                        default:
+                            throw new UnsupportedOperationException(cat+"/"+NMEAProperties.getInstance().getUnit(property).getCategory()+" not supported");
+                    }
                 case BEARING:
-                    return (Binding<UnitType>) ViewerPreferences.DEGREE_BINDING;
+                    return preferences.getBinding("bearingUnit");
                 default:
-                    throw new UnsupportedOperationException(cat+" not supported");
+                    return Bindings.createObjectBinding(()->UNITLESS);
             }
         }
         else

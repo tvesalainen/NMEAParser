@@ -5,8 +5,6 @@
 <?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.Tooltip?>
@@ -14,7 +12,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<Accordion maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.171" fx:controller="org.vesalainen.nmea.viewer.PreferenceController">
+<Accordion maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.vesalainen.nmea.viewer.PreferenceController">
     <panes>
         <TitledPane animated="false" text="%nmeaSource">
             <content>
@@ -77,15 +75,27 @@
                     <rowConstraints>
                         <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                         <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                         <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                     </rowConstraints>
                     <children>
                         <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%depthUnit" />
                         <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%speedUnit" GridPane.rowIndex="1" />
-                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%temperatureUnit" GridPane.rowIndex="2" />
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%temperatureUnit" GridPane.rowIndex="3" />
                         <ComboBox fx:id="depthUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%depthUnit" GridPane.columnIndex="1" />
                         <ComboBox fx:id="speedUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%speedUnit" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <ComboBox fx:id="temperatureUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%temperatureUnit" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <ComboBox fx:id="temperatureUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%temperatureUnit" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                  <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%coordinateUnit" GridPane.rowIndex="4" />
+                  <ComboBox fx:id="coordinateUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%coordinateUnit" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%windSpeedUnit" GridPane.rowIndex="5" />
+                  <ComboBox fx:id="windSpeedUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%windSpeedUnit" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%windAngleUnit" GridPane.rowIndex="6" />
+                  <ComboBox fx:id="windAngleUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%windAngleUnit" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%bearingUnit" GridPane.rowIndex="2" />
+                  <ComboBox fx:id="bearingUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="%bearingUnit" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                     </children>
                 </GridPane>
             </content>

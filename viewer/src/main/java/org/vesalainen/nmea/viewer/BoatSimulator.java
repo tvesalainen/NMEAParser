@@ -22,7 +22,6 @@ import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import static java.util.concurrent.TimeUnit.*;
 import java.util.function.DoubleSupplier;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.Navis;
@@ -35,7 +34,7 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  */
 public class BoatSimulator implements Runnable, Stoppable
 {
-    private static final double HOUR_IN_MILLIS = HOURS.toMillis(1);
+    private static final double HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
     private WritableByteChannel channel;
     private final CachedScheduledThreadPool executor;
     private ScheduledFuture<?> future;

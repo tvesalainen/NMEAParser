@@ -84,7 +84,7 @@ public interface NMEAObserver extends Transactional
      * @param knots 
      */
     @NMEACat(SPEED)
-    @Unit(value=KNOTS, min=0, max=50)
+    @Unit(value=KNOT, min=0, max=50)
     void setSpeedOverGround(float knots);
     /**
      * RMA, RMC
@@ -153,7 +153,7 @@ public interface NMEAObserver extends Transactional
      * @param knots 
      */
     @NMEACat(WAYPOINT)
-    @Unit(value=KNOTS, min=0, max=50)
+    @Unit(value=KNOT, min=0, max=50)
     void setDestinationClosingVelocity(float knots);
     /**
      * GGA
@@ -496,7 +496,7 @@ public interface NMEAObserver extends Transactional
      * @param metersInSecond
      */
     @NMEACat(WIND)
-    @Unit(value=KNOTS, min=0, max=100)
+    @Unit(value=KNOT, min=0, max=100)
     void setRelativeWindSpeed(float metersInSecond);
     /**
      * Returns the wind speed.
@@ -504,7 +504,7 @@ public interface NMEAObserver extends Transactional
      * @param metersInSecond
      */
     @NMEACat(WIND)
-    @Unit(value=KNOTS, min=0, max=100)
+    @Unit(value=KNOT, min=0, max=100)
     void setTrueWindSpeed(float metersInSecond);
     /**
      * ROT
@@ -571,7 +571,7 @@ public interface NMEAObserver extends Transactional
      * @param knots
      */
     @NMEACat(SPEED)
-    @Unit(value=KNOTS, min=0, max=50)
+    @Unit(value=KNOT, min=0, max=50)
     void setWaterSpeed(float knots);
     /**
      * @deprecated This method will no longer be called. Use setRelativeWindAngle.
@@ -586,7 +586,7 @@ public interface NMEAObserver extends Transactional
      * @param knots
      */
     @NMEACat(WAYPOINT)
-    @Unit(value=KNOTS, min=0, max=50)
+    @Unit(value=KNOT, min=0, max=50)
     void setVelocityToWaypoint(float knots);
     /**
      * TXT
@@ -812,5 +812,37 @@ public interface NMEAObserver extends Transactional
     @NMEACat(DISTANCE)
     @Unit(value=NAUTICAL_MILE, min=0)
     public void setWaterDistanceSinceReset(float distance);
+
+    @NMEACat(GPS)
+    @Unit(value=DURATION_HOURS, min=0, max=23)
+    public void setHour(int hour);
+
+    @NMEACat(GPS)
+    @Unit(value=DURATION_MINUTES, min=0, max=59)
+    public void setMinute(int minute);
+
+    @NMEACat(GPS)
+    @Unit(value=DURATION_SECONDS, min=0, max=60)
+    public void setSecond(float second);
+
+    @NMEACat(GPS)
+    @Unit(value=DURATION_DAYS, min=1, max=31)
+    public void setDay(int day);
+
+    @NMEACat(GPS)
+    @Unit(value=UNITLESS, min=1, max=12)
+    public void setMonth(int month);
+
+    @NMEACat(GPS)
+    @Unit(value=UNITLESS)
+    public void setYear(int year);
+
+    @NMEACat(GPS)
+    @Unit(value=UNITLESS, min=-24, max=24)
+    public void setLocalZoneHours(int localZoneHours);
+
+    @NMEACat(GPS)
+    @Unit(value=UNITLESS, min=0, max=59)
+    public void setLocalZoneMinutes(int localZoneMinutes);
 
 }

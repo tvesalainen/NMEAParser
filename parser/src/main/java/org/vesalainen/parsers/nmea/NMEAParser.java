@@ -561,39 +561,49 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Rule("integer")
     protected void day(
             int day,
+            @ParserContext("data") NMEAObserver data,
             @ParserContext("clock") NMEAClock clock)
     {
         clock.setDay(day);
+        data.setDay(day);
     }
 
     @Rule("integer")
     protected void month(
             int month,
+            @ParserContext("data") NMEAObserver data,
             @ParserContext("clock") NMEAClock clock)
     {
         clock.setMonth(month);
+        data.setMonth(month);
     }
 
     @Rule("integer")
     protected void year(
             int year,
+            @ParserContext("data") NMEAObserver data,
             @ParserContext("clock") NMEAClock clock)
     {
         clock.setYear(year);
+        data.setYear(year);
     }
 
     @Rule("integer")
     protected void localZoneHours(
             int localZoneHours,
+            @ParserContext("data") NMEAObserver data,
             @ParserContext("clock") NMEAClock clock)
     {
+        data.setLocalZoneHours(localZoneHours);
     }
 
     @Rule("integer")
     protected void localZoneMinutes(
             int localZoneMinutes,
+            @ParserContext("data") NMEAObserver data,
             @ParserContext("clock") NMEAClock clock)
     {
+        data.setLocalZoneMinutes(localZoneMinutes);
     }
 
     @Rule("decimal c letter")
@@ -1178,6 +1188,9 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         int s = (int) second;
         clock.setTime(hour, minute, s, (int)((second - (float)s)*1000));
         data.setEpochMillis(((Clock)clock).millis());
+        data.setHour(hour);
+        data.setMinute(minute);
+        data.setSecond(second);
     }
 
     @Rule("digit2 digit2 digit2")
@@ -1185,9 +1198,13 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             int day,
             int month,
             int year,
+            @ParserContext("data") NMEAObserver data,
             @ParserContext("clock") NMEAClock clock)
     {
         clock.setDate(year, month, day);
+        data.setDay(day);
+        data.setMonth(month);
+        data.setYear(year);
     }
 
     @Rule("letter")

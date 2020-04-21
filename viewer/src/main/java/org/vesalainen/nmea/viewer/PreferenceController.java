@@ -40,25 +40,37 @@ import org.vesalainen.util.CollectionHelp;
  */
 public class PreferenceController implements Initializable
 {
+    // nmea source
     @FXML TextField host;
     @FXML TextField port;
+    // units
     @FXML ComboBox<UnitType> depthUnit;
     @FXML ComboBox<UnitType> speedUnit;
+    @FXML ComboBox<UnitType> bearingUnit;
     @FXML ComboBox<UnitType> temperatureUnit;
+    @FXML ComboBox<UnitType> coordinateUnit;
+    @FXML ComboBox<UnitType> windSpeedUnit;
+    @FXML ComboBox<UnitType> windAngleUnit;
+    // boat data
     @FXML TextField transducerOffset;
     @FXML TextField keelOffset;
     @FXML TextField waterLineLength;
+    // timeouts
     @FXML TextField timeToLive;
     @FXML TextField trendTimeout;
     @FXML TextField trendPeriod;
-    @FXML TextField solarDepressionAngle;
-    @FXML TextField solarUpdateSeconds;
+    // colors
     @FXML ColorPicker dayBackgroundColor;
     @FXML ColorPicker nightBackgroundColor;
     @FXML ColorPicker twilightBackgroundColor;
+    // fonts
     @FXML ComboBox<String> fontFamily;
+    // day/night
+    @FXML TextField solarDepressionAngle;
+    @FXML TextField solarUpdateSeconds;
     @FXML ComboBox<DayPhase> dayPhase;
     @FXML CheckBox solarAutomation;
+    // simulation
     @FXML CheckBox simulate;
     @FXML TextField simBoatSpeed;
     @FXML TextField simBoatDirection;
@@ -74,24 +86,36 @@ public class PreferenceController implements Initializable
     }
     public void bindPreferences(ViewerPreferences preferences)
     {
+        // nmea source
         preferences.bindString("host", "", host);
         preferences.bindInteger("port", 0, 0, 65535, port);
+        // units
         EnumTitleConverter converter = new EnumTitleConverter<>(UnitType.class);
         preferences.bindCombo("depthUnit", METER, depthUnit, converter, METER, FOOT, FATHOM);
-        preferences.bindCombo("speedUnit", KNOTS, speedUnit, converter, KNOTS, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
+        preferences.bindCombo("speedUnit", KNOT, speedUnit, converter, KNOT, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
+        preferences.bindCombo("bearingUnit", DEGREE, bearingUnit, converter, DEGREE, DEGREE_NEG);
         preferences.bindCombo("temperatureUnit", CELSIUS, temperatureUnit, converter, CELSIUS, FAHRENHEIT);
+        preferences.bindCombo("coordinateUnit", COORDINATE_DEGREES_AND_MINUTES, coordinateUnit, converter, COORDINATE_DEGREES, COORDINATE_DEGREES_AND_MINUTES, COORDINATE_DEGREES_MINUTES_SECONDS);
+        preferences.bindCombo("windSpeedUnit", KNOT, windSpeedUnit, converter, KNOT, METERS_PER_SECOND, KILO_METERS_PER_HOUR, MILES_PER_HOUR);
+        preferences.bindCombo("windAngleUnit", DEGREE, windAngleUnit, converter, DEGREE, DEGREE_NEG);
+        // boat data
         preferences.bindFloat("transducerOffset", 0, 0, 5, transducerOffset);
         preferences.bindFloat("keelOffset", 0, 0, 20, keelOffset);
         preferences.bindFloat("waterLineLength", 10, 0, 1000, waterLineLength);
+        // timeouts
         preferences.bindLong("timeToLive", 5, 1, 60, timeToLive);
         preferences.bindLong("trendTimeout", 30, 1, 60, trendTimeout);
         preferences.bindLong("trendPeriod", 1, 1, 60, trendPeriod);
+        // night and day
         preferences.bindDouble("solarDepressionAngle", 6, 0, 90, solarDepressionAngle);
         preferences.bindLong("solarUpdateSeconds", 60, 1, Long.MAX_VALUE, solarUpdateSeconds);
+        // colors
         preferences.bindColor("dayBackgroundColor", Color.web("#ececec"), dayBackgroundColor);
         preferences.bindColor("nightBackgroundColor", Color.BLACK, nightBackgroundColor);
         preferences.bindColor("twilightBackgroundColor", Color.LIGHTGRAY, twilightBackgroundColor);
+        // fonts
         preferences.bindCombo("fontFamily", "Calibri", fontFamily, DEFAULT_STRING_CONVERTER, CollectionHelp.toArray(Font.getFamilies(), String.class));
+        // day/night
         preferences.bindBoolean("solarAutomation", true, solarAutomation.selectedProperty());
         EnumTitleConverter dayPhaseConverter = new EnumTitleConverter<>(DayPhase.class);
         preferences.bindCombo("dayPhase", DAY, dayPhase, dayPhaseConverter, DAY, TWILIGHT, NIGHT);

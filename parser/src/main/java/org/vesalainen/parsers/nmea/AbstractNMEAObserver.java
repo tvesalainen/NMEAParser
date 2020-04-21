@@ -811,4 +811,44 @@ public class AbstractNMEAObserver implements NMEAObserver
     {
     }
 
+    @Override
+    public void setHour(int hour)
+    {
+    }
+
+    @Override
+    public void setMinute(int minute)
+    {
+    }
+
+    @Override
+    public void setSecond(float second)
+    {
+    }
+
+    @Override
+    public void setDay(int day)
+    {
+    }
+
+    @Override
+    public void setMonth(int month)
+    {
+    }
+
+    @Override
+    public void setYear(int year)
+    {
+    }
+
+    @Override
+    public void setLocalZoneHours(int localZoneHours)
+    {
+    }
+
+    @Override
+    public void setLocalZoneMinutes(int localZoneMinutes)
+    {
+    }
+
 }
