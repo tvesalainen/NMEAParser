@@ -60,6 +60,14 @@ public class GaugePane extends StackPane implements PropertyBindable
         return property;
     }
 
+    public GaugePane()
+    {
+        setMinHeight(0);
+        setMinWidth(0);
+        setMaxHeight(Double.MAX_VALUE);
+        setMaxWidth(Double.MAX_VALUE);
+    }
+
     @Override
     public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {

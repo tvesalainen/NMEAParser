@@ -57,7 +57,7 @@ public class MainApp extends Application
         Scene scene = new ViewerScene(stage, currentPage, preferencesPage, sailPage1);
         scene.getStylesheets().add("/styles/Styles.css");
         stage.setScene(scene);
-        stage.setFullScreen(true);
+        //stage.setFullScreen(true);
         I18n.bind(stage.titleProperty(), "mainTitle");
         I18n.bind(stage.fullScreenExitHintProperty(), "fullScreenExitHint");
         stage.show();

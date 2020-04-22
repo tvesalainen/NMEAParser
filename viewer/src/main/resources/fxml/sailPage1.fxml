@@ -12,6 +12,7 @@
 <?import org.vesalainen.nmea.viewer.WindArrowCanvas?>
 <?import org.vesalainen.nmea.viewer.CurrentArrowCanvas?>
 <?import org.vesalainen.nmea.viewer.GaugePane?>
+<?import org.vesalainen.nmea.viewer.ViewPane?>
 
 <GridPane id="sailingGridPane" >
     <columnConstraints>
@@ -24,18 +25,10 @@
         <RowConstraints percentHeight="33" />
     </rowConstraints>
     <children>
-        <GaugePane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0"  />
-        <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.rowIndex="1">
-            <children>
-                <GaugeCanvas property="waterSpeed" />
-            </children>
-        </StackPane>
-        <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.rowIndex="2">
-            <children>
-                <GaugeCanvas property="waterTemperature" />
-            </children>
-        </StackPane>
-        <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" GridPane.columnIndex="1" GridPane.rowSpan="2147483647">
+        <GaugePane property="depthOfWater" />
+        <GaugePane property="waterSpeed" GridPane.rowIndex="1" />
+        <GaugePane property="waterTemperature" GridPane.rowIndex="2" />
+        <ViewPane GridPane.columnIndex="1" GridPane.rowSpan="3">
             <children>
                 <CompassRingCanvas />
                 <BoatCanvas />
@@ -44,6 +37,6 @@
                 <CourseSpeedCanvas />
                 <CurrentArrowCanvas />
             </children>
-        </StackPane>
+        </ViewPane>
     </children>
 </GridPane>

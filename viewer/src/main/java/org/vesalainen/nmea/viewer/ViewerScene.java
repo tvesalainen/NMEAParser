@@ -16,21 +16,20 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import javafx.beans.Observable;
 import javafx.beans.property.Property;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
-import javafx.fxml.FXML;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import static javafx.scene.input.MouseEvent.*;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.ScrollEvent.HorizontalTextScrollUnits;
+import static javafx.scene.input.ScrollEvent.*;
+import javafx.scene.input.ScrollEvent.VerticalTextScrollUnits;
 import javafx.scene.input.SwipeEvent;
 import static javafx.scene.input.SwipeEvent.*;
 import javafx.stage.Stage;
-import jdk.nashorn.internal.objects.NativeDate;
 
 /**
  *
@@ -38,13 +37,14 @@ import jdk.nashorn.internal.objects.NativeDate;
  */
 public class ViewerScene extends Scene
 {
-    private static double PI_4 = Math.PI/4;
-    private static double PI_3_4 = 3*Math.PI/4;
+
+    private static double PI_4 = Math.PI / 4;
+    private static double PI_3_4 = 3 * Math.PI / 4;
     EventHandler<MouseEvent> eventHandler;
     private final Stage stage;
     private final ViewerPage[] pages;
     private final Property<Integer> currentPage;
-    
+
     public ViewerScene(Stage stage, Property<Integer> currentPage, ViewerPage... pages)
     {
         super(pages[currentPage.getValue()].getParent());
@@ -52,17 +52,19 @@ public class ViewerScene extends Scene
         this.currentPage = currentPage;
         this.pages = pages;
         eventHandler = new MouseHandler();
+        addEventHandler(SWIPE_RIGHT, e -> onSwipeRight(e));
+        addEventHandler(SWIPE_LEFT, e -> onSwipeLeft(e));
+        addEventHandler(SWIPE_UP, e -> onSwipeUp(e));
+        addEventHandler(SWIPE_DOWN, e -> onSwipeDown(e));
         addEventFilter(MOUSE_PRESSED, eventHandler);
+        addEventFilter(MOUSE_DRAGGED, eventHandler);
         addEventFilter(MOUSE_RELEASED, eventHandler);
-        onSwipeRightProperty().addListener(e->onSwipeRight());
-        onSwipeLeftProperty().addListener(e->onSwipeLeft());
-        onSwipeUpProperty().addListener(e->onSwipeUp());
-        onSwipeDownProperty().addListener(e->onSwipeDown());
     }
+
     private void updateRoot()
     {
         int page = currentPage.getValue();
-        for (int ii=0;ii<pages.length;ii++)
+        for (int ii = 0; ii < pages.length; ii++)
         {
             if (ii == page)
             {
@@ -75,31 +77,42 @@ public class ViewerScene extends Scene
         }
         setRoot(pages[page].getParent());
     }
-    private void onSwipeRight()
+
+    private void onSwipeRight(SwipeEvent e)
     {
         int page = currentPage.getValue();
-        currentPage.setValue(Math.floorMod(page+1, pages.length));
+        currentPage.setValue(Math.floorMod(page + 1, pages.length));
         updateRoot();
+        e.consume();
     }
-    private void onSwipeLeft()
+
+    private void onSwipeLeft(SwipeEvent e)
     {
         int page = currentPage.getValue();
-        currentPage.setValue(Math.floorMod(page-1, pages.length));
+        currentPage.setValue(Math.floorMod(page - 1, pages.length));
         updateRoot();
+        e.consume();
     }
-    private void onSwipeUp()
+
+    private void onSwipeUp(SwipeEvent e)
     {
         stage.setFullScreen(true);
+        e.consume();
     }
-    private void onSwipeDown()
+
+    private void onSwipeDown(SwipeEvent e)
     {
         stage.setFullScreen(false);
+        e.consume();
     }
+
     private class MouseHandler implements EventHandler<MouseEvent>
     {
+
         private double x;
         private double y;
         private MouseEvent active;
+        private ScrollHandler scrollHandler = new ScrollHandler();
 
         @Override
         public void handle(MouseEvent me)
@@ -108,6 +121,7 @@ public class ViewerScene extends Scene
             {
                 return;
             }
+            scrollHandler.handle(me);
             if (me.getEventType() == MOUSE_PRESSED)
             {
                 x = me.getScreenX();
@@ -128,36 +142,134 @@ public class ViewerScene extends Scene
                         active = null;
                         return;
                     }
-                    System.err.println(hypot);
                     active = null;
                     me.consume();
                     double a = Math.atan2(-dy, dx);
                     double abs = Math.abs(a);
                     if (abs < PI_4)
                     {
-                        onSwipeRight();
+                        SwipeEvent se = createSwipeEvent(me, SWIPE_RIGHT);
+                        Event.fireEvent(se.getTarget(), se);
                     }
                     else
                     {
                         if (abs > PI_3_4)
                         {
-                            onSwipeLeft();
+                            SwipeEvent se = createSwipeEvent(me, SWIPE_LEFT);
+                            Event.fireEvent(se.getTarget(), se);
                         }
                         else
                         {
                             if (a > 0)
                             {
-                                onSwipeUp();
+                                SwipeEvent se = createSwipeEvent(me, SWIPE_UP);
+                                Event.fireEvent(se.getTarget(), se);
                             }
                             else
                             {
-                                onSwipeDown();
+                                SwipeEvent se = createSwipeEvent(me, SWIPE_DOWN);
+                                Event.fireEvent(se.getTarget(), se);
                             }
                         }
                     }
                 }
             }
         }
+
+        private SwipeEvent createSwipeEvent(MouseEvent me, EventType<SwipeEvent> eventType)
+        {
+            return new SwipeEvent(
+                    me.getSource(),
+                    me.getTarget(),
+                    eventType,
+                    me.getSceneX(),
+                    me.getSceneY(),
+                    me.getScreenX(),
+                    me.getScreenY(),
+                    me.isShiftDown(),
+                    me.isControlDown(),
+                    me.isAltDown(),
+                    me.isMetaDown(),
+                    false,
+                    1,
+                    me.getPickResult()
+            );
+        }
     }
-            
+
+    private class ScrollHandler
+    {
+        double x;
+        double y;
+        double deltaX;
+        double deltaY;
+        double totalDeltaX;
+        double totalDeltaY;                
+
+        public void handle(MouseEvent me)
+        {
+            EventType<? extends MouseEvent> eventType = me.getEventType();
+            if (eventType == MOUSE_PRESSED)
+            {
+                x = me.getScreenX();
+                y = me.getScreenY();
+                deltaX = 0;
+                deltaY = 0;
+                totalDeltaX = 0;
+                totalDeltaY = 0;
+                ScrollEvent se = createScrollEvent(me, SCROLL_STARTED);
+                Event.fireEvent(se.getTarget(), se);
+            }
+            else
+            {
+                double cx = me.getScreenX();
+                double cy = me.getScreenY();
+                deltaX = x-cx;
+                deltaY = y-cy;
+                totalDeltaX += deltaX;
+                totalDeltaY += deltaY;
+                x = cx;
+                y = cy;
+                if (eventType == MOUSE_DRAGGED)
+                {
+                    ScrollEvent se = createScrollEvent(me, SCROLL);
+                    Event.fireEvent(se.getTarget(), se);
+                }
+                else
+                {
+                    ScrollEvent se = createScrollEvent(me, SCROLL_FINISHED);
+                    Event.fireEvent(se.getTarget(), se);
+                }
+            }
+        }
+
+        private ScrollEvent createScrollEvent(MouseEvent me, EventType<ScrollEvent> eventType)
+        {
+            return new ScrollEvent(
+                    me.getSource(),
+                    me.getTarget(),
+                    eventType,
+                    me.getSceneX(),
+                    me.getSceneY(),
+                    me.getScreenX(),
+                    me.getScreenY(),
+                    me.isShiftDown(),
+                    me.isControlDown(),
+                    me.isAltDown(),
+                    me.isMetaDown(),
+                    false,
+                    false, // inertia
+                    deltaX,
+                    deltaY,
+                    totalDeltaX,
+                    totalDeltaY,
+                    HorizontalTextScrollUnits.NONE,
+                    0,
+                    VerticalTextScrollUnits.NONE,
+                    0,
+                    1,
+                    me.getPickResult()
+            );
+        }
+    }
 }

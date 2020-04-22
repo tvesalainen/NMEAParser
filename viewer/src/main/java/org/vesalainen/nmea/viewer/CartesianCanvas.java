@@ -16,6 +16,8 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.transform.Affine;
 import org.vesalainen.ui.Transforms;
@@ -26,20 +28,35 @@ import org.vesalainen.ui.Transforms;
  */
 public class CartesianCanvas extends ResizableCanvas
 {
-
     protected final double max;
     protected final Affine transform = new Affine();
+    private final DoubleProperty scale = new SimpleDoubleProperty();
+
+    double getScale()
+    {
+        return scale.get();
+    }
+
+    void setScale(double value)
+    {
+        scale.set(value);
+    }
+
+    DoubleProperty scaleProperty()
+    {
+        return scale;
+    }
     
     public CartesianCanvas()
     {
-        super(true);
-        this.max = 100;
+        this(100);
     }
 
     protected CartesianCanvas(double maxValue)
     {
         super(true);
         this.max = maxValue;
+        onReDrawListener.bind(scale);
     }
 
     @Override
@@ -50,6 +67,7 @@ public class CartesianCanvas extends ResizableCanvas
         if (width > 0 && height > 0)
         {
             GraphicsContext gc = getGraphicsContext2D();
+            gc.clearRect(-Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
             Transforms.createScreenTransform(
                     width, 
                     height, 
@@ -62,9 +80,11 @@ public class CartesianCanvas extends ResizableCanvas
                     {
                         transform.setToTransform(mxx, mxy, tx, myx, myy, ty);
                     });
+            double sca = getScale();
+            transform.appendScale(sca, sca);
             gc.setTransform(transform);
-            gc.clearRect(-max, -max, 2*max, 2*max);
         }
     }
+
 
 }
