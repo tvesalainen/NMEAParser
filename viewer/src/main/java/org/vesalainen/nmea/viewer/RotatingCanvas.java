@@ -21,6 +21,9 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
+import static javafx.scene.input.MouseEvent.MOUSE_RELEASED;
+import javafx.scene.input.RotateEvent;
+import static javafx.scene.input.RotateEvent.ROTATE;
 import javafx.scene.transform.NonInvertibleTransformException;
 
 /**
@@ -52,8 +55,9 @@ public class RotatingCanvas extends CartesianCanvas
     {
         super(maxValue);
         onReDrawListener.bind(angleProperty());
-        onMousePressedProperty().setValue((e)->{if (isMouseEditable()) onMousePressed(e);});
-        onMouseDraggedProperty().setValue((e)->{if (isMouseEditable()) onMouseDragged(e);});
+        addEventFilter(ROTATE, e->rotate(e));
+        //onMousePressedProperty().setValue((e)->{if (isMouseEditable()) onMousePressed(e);});
+        //onMouseDraggedProperty().setValue((e)->{if (isMouseEditable()) onMouseDragged(e);});
     }
 
     protected void transform()
@@ -62,6 +66,10 @@ public class RotatingCanvas extends CartesianCanvas
         GraphicsContext gc = getGraphicsContext2D();
         gc.setTransform(transform);
         gc.rotate(-getAngle());
+    }
+    private void rotate(RotateEvent re)
+    {
+        setAngle(getAngle()+re.getAngle());
     }
     protected void onMousePressed(MouseEvent e)
     {

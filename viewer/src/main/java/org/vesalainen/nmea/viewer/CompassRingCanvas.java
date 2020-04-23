@@ -24,7 +24,7 @@ import org.vesalainen.ui.SVGHelp;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CompassRingCanvas extends CartesianCanvas
+public class CompassRingCanvas extends RotatingCanvas
 {
     private static final double TEXT_LIMIT = 300;
     private static final double LIMIT10 = 100;

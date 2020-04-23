@@ -33,8 +33,9 @@ import javafx.scene.layout.StackPane;
  */
 public class ViewPane extends StackPane implements PropertyBindable
 {
-
-    private final BooleanProperty zoom = new SimpleBooleanProperty(true);
+    private double exp;
+    
+    private final BooleanProperty zoom = new SimpleBooleanProperty(false);
 
     public boolean isZoom()
     {
@@ -84,18 +85,9 @@ public class ViewPane extends StackPane implements PropertyBindable
             Point2D screenToLocal = screenToLocal(e.getScreenX(), e.getScreenY());
             if (screenToLocal.getX() > 3*width/4)
             {
-                double sca = getScale();
-                double dy = e.getDeltaY();
-                if (dy < 0)
-                {
-                    sca /= 2;
-                    sca = Math.max(sca, 1);
-                }
-                else
-                {
-                    sca *= 2;
-                }
-                setScale(sca);
+                exp += e.getDeltaY();
+                setScale(Math.pow(0.5, exp/40));
+                System.err.println(exp);
             }
         }
     }

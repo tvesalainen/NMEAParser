@@ -30,7 +30,7 @@ public class CartesianCanvas extends ResizableCanvas
 {
     protected final double max;
     protected final Affine transform = new Affine();
-    private final DoubleProperty scale = new SimpleDoubleProperty();
+    private final DoubleProperty scale = new SimpleDoubleProperty(1);
 
     double getScale()
     {
@@ -67,7 +67,6 @@ public class CartesianCanvas extends ResizableCanvas
         if (width > 0 && height > 0)
         {
             GraphicsContext gc = getGraphicsContext2D();
-            gc.clearRect(-Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
             Transforms.createScreenTransform(
                     width, 
                     height, 
@@ -83,6 +82,8 @@ public class CartesianCanvas extends ResizableCanvas
             double sca = getScale();
             transform.appendScale(sca, sca);
             gc.setTransform(transform);
+            double m = max/sca;
+            gc.clearRect(-m, -m, 2*m, 2*m);
         }
     }
 

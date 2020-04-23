@@ -19,10 +19,16 @@ package org.vesalainen.nmea.viewer;
 import javafx.beans.property.Property;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventTarget;
 import javafx.event.EventType;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import static javafx.scene.input.MouseEvent.*;
+import javafx.scene.input.RotateEvent;
+import static javafx.scene.input.RotateEvent.*;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.input.ScrollEvent.HorizontalTextScrollUnits;
 import static javafx.scene.input.ScrollEvent.*;
@@ -44,6 +50,7 @@ public class ViewerScene extends Scene
     private final Stage stage;
     private final ViewerPage[] pages;
     private final Property<Integer> currentPage;
+    private final GestureEmulator gestureEmulator = new GestureEmulator();
 
     public ViewerScene(Stage stage, Property<Integer> currentPage, ViewerPage... pages)
     {
@@ -56,9 +63,9 @@ public class ViewerScene extends Scene
         addEventHandler(SWIPE_LEFT, e -> onSwipeLeft(e));
         addEventHandler(SWIPE_UP, e -> onSwipeUp(e));
         addEventHandler(SWIPE_DOWN, e -> onSwipeDown(e));
-        addEventFilter(MOUSE_PRESSED, eventHandler);
-        addEventFilter(MOUSE_DRAGGED, eventHandler);
-        addEventFilter(MOUSE_RELEASED, eventHandler);
+        addEventFilter(MOUSE_PRESSED, gestureEmulator);
+        addEventFilter(MOUSE_DRAGGED, gestureEmulator);
+        addEventFilter(MOUSE_RELEASED, gestureEmulator);
     }
 
     private void updateRoot()
@@ -113,6 +120,7 @@ public class ViewerScene extends Scene
         private double y;
         private MouseEvent active;
         private ScrollHandler scrollHandler = new ScrollHandler();
+        private RotateHandler rotateHandler = new RotateHandler();
 
         @Override
         public void handle(MouseEvent me)
@@ -122,6 +130,7 @@ public class ViewerScene extends Scene
                 return;
             }
             scrollHandler.handle(me);
+            rotateHandler.handleRotate(me);
             if (me.getEventType() == MOUSE_PRESSED)
             {
                 x = me.getScreenX();
@@ -199,18 +208,20 @@ public class ViewerScene extends Scene
 
     private class ScrollHandler
     {
-        double x;
-        double y;
-        double deltaX;
-        double deltaY;
-        double totalDeltaX;
-        double totalDeltaY;                
+        private EventTarget target;
+        private double x;
+        private double y;
+        private double deltaX;
+        private double deltaY;
+        private double totalDeltaX;
+        private double totalDeltaY;                
 
         public void handle(MouseEvent me)
         {
             EventType<? extends MouseEvent> eventType = me.getEventType();
             if (eventType == MOUSE_PRESSED)
             {
+                target = me.getTarget();
                 x = me.getScreenX();
                 y = me.getScreenY();
                 deltaX = 0;
@@ -218,7 +229,7 @@ public class ViewerScene extends Scene
                 totalDeltaX = 0;
                 totalDeltaY = 0;
                 ScrollEvent se = createScrollEvent(me, SCROLL_STARTED);
-                Event.fireEvent(se.getTarget(), se);
+                Event.fireEvent(target, se);
             }
             else
             {
@@ -233,12 +244,12 @@ public class ViewerScene extends Scene
                 if (eventType == MOUSE_DRAGGED)
                 {
                     ScrollEvent se = createScrollEvent(me, SCROLL);
-                    Event.fireEvent(se.getTarget(), se);
+                    Event.fireEvent(target, se);
                 }
                 else
                 {
                     ScrollEvent se = createScrollEvent(me, SCROLL_FINISHED);
-                    Event.fireEvent(se.getTarget(), se);
+                    Event.fireEvent(target, se);
                 }
             }
         }
@@ -268,6 +279,89 @@ public class ViewerScene extends Scene
                     VerticalTextScrollUnits.NONE,
                     0,
                     1,
+                    me.getPickResult()
+            );
+        }
+    }
+    private class RotateHandler
+    {
+        private Node node;
+        private double a;
+        private double angle;
+        private double totalAngle;                
+        private double cx;
+        private double cy;
+
+        public void handleRotate(MouseEvent me)
+        {
+            EventType<? extends MouseEvent> eventType = me.getEventType();
+            if (eventType == MOUSE_PRESSED)
+            {
+                EventTarget target = me.getTarget();
+                if (target instanceof Node)
+                {
+                    node = (Node) target;
+                }
+                else
+                {
+                    node = null;
+                    return;
+                }
+                Bounds bounds = node.getBoundsInLocal();
+                Point2D local = node.screenToLocal(me.getScreenX(), me.getScreenY());
+                cx = local.getX()-bounds.getWidth()/2;
+                cy = local.getY()-bounds.getHeight()/2;
+                a = Math.toDegrees(Math.atan2(cy, cx));
+                angle = 0;
+                totalAngle = 0;
+                RotateEvent re = createRotateEvent(me, ROTATION_STARTED);
+                Event.fireEvent(node, re);
+            }
+            else
+            {
+                if (node == null)
+                {
+                    return;
+                }
+                Bounds bounds = node.getBoundsInLocal();
+                Point2D local = node.screenToLocal(me.getScreenX(), me.getScreenY());
+                cx = local.getX()-bounds.getWidth()/2;
+                cy = local.getY()-bounds.getHeight()/2;
+                double da = Math.toDegrees(Math.atan2(cy, cx));
+                angle = da - a;
+                a = da;
+                totalAngle += angle;
+                if (eventType == MOUSE_DRAGGED)
+                {
+                    RotateEvent re = createRotateEvent(me, ROTATE);
+                    Event.fireEvent(node, re);
+                }
+                else
+                {
+                    RotateEvent re = createRotateEvent(me, ROTATION_FINISHED);
+                    Event.fireEvent(node, re);
+                }
+            }
+        }
+
+        private RotateEvent createRotateEvent(MouseEvent me, EventType<RotateEvent> eventType)
+        {
+            return new RotateEvent(
+                    me.getSource(),
+                    me.getTarget(),
+                    eventType,
+                    me.getSceneX(),
+                    me.getSceneY(),
+                    me.getScreenX(),
+                    me.getScreenY(),
+                    me.isShiftDown(),
+                    me.isControlDown(),
+                    me.isAltDown(),
+                    me.isMetaDown(),
+                    false,
+                    false, // inertia
+                    angle,
+                    totalAngle,
                     me.getPickResult()
             );
         }
