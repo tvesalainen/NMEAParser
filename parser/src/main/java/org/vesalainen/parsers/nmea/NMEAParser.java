@@ -48,7 +48,8 @@ import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.util.CharSequences;
 
 /**
- * @author Timo Vesalainen@see <a href="http://catb.org/gpsd/NMEA.html">NMEA Revealed</a>
+ * @author Timo Vesalainen
+ * @see <a href="http://catb.org/gpsd/NMEA.html">NMEA Revealed</a>
  * @see <a href="http://catb.org/gpsd/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
  * @see <a href="http://www.eye4software.com/hydromagic/documentation/nmea0183/">Professional hydrographic survey software</a>
  * @see <a href="doc-files/NMEAParser-statements.html#BNF">BNF Syntax for NMEA</a>
