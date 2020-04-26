@@ -40,6 +40,7 @@ import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
+import javafx.beans.value.ObservableNumberValue;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.fx.FunctionalDoubleBinding;
@@ -51,6 +52,8 @@ import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
+import org.vesalainen.nmea.viewer.store.FXPropertySetter;
+import org.vesalainen.nmea.viewer.store.FloatPropertyValue;
 import org.vesalainen.parsers.nmea.NMEACategory;
 import static org.vesalainen.parsers.nmea.NMEACategory.*;
 import org.vesalainen.parsers.nmea.NMEAProperties;
@@ -61,35 +64,13 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class PropertyStore extends AnnotatedPropertyStore
+public final class PropertyStore extends FXPropertySetter
 {
-    private @Property long epochMillis;
-    private @Property double latitude;
-    private @Property double longitude;
-    private @Property float depthOfWater;
-    private @Property float waterSpeed;
-    private @Property float waterTemperature;
-    private @Property float trueHeading;
-    private @Property float speedOverGround;
-    private @Property float trackMadeGood;
-    private @Property float magneticVariation;
-    private @Property float relativeWindAngle;
-    private @Property float relativeWindSpeed;
-    
-    private @Property int year;
-    private @Property int month;
-    private @Property int day;
-    private @Property int hour;
-    private @Property int minute;
-    private @Property float second;
     
     private final CachedScheduledThreadPool executor;
     private final ViewerPreferences preferences;
     private final FloatBinding keelOffsetBinding;
     private final FloatBinding transducerOffsetBinding;
-    private final Map<String,NumberBinding> boundMap = new HashMap<>();
-    private final Map<String,ObservableBooleanValue> disableMap = new HashMap<>();
-    private final NavigableSet<String> modified = new ConcurrentSkipListSet<>();
     private final TimeToLiveSet<String> actives;
     private final LongBinding timeToLiveBinding;
     private final DoubleBinding solarDepressionAngleBinding;
@@ -97,201 +78,81 @@ public class PropertyStore extends AnnotatedPropertyStore
     private final ObjectBinding<DayPhase> dayPhaseProperty;
     private final BasicObservable trendPulse = new BasicObservable(this, "trendPulse");
     private final Binding<Number> trendPeriod;
-    private final FunctionalDoubleBinding radRelativeAngleOverGround;
-    private final FunctionalDoubleBinding radTrackMadeGood;
-    private final FunctionalDoubleBinding windOverGroundX;
-    private final FunctionalDoubleBinding windOverGroundY;
-    private final FunctionalDoubleBinding windSpeedOverGround;
-    private final FunctionalDoubleBinding windAngleOverGround;
-    private final FloatBinding depthOfWaterBinding;
-    private final FloatBinding depthBelowKeelBinding;
-    private final FloatBinding depthBelowTransducerBinding;
-    private final FunctionalDoubleBinding radTrueHeading;
-    private final FunctionalDoubleBinding currentOverGroundX;
-    private final FunctionalDoubleBinding currentOverGroundY;
-    private final FunctionalDoubleBinding currentSpeedOverGround;
-    private final FunctionalDoubleBinding currentAngleOverGround;
-    private final FunctionalIntegerBinding utcDate;
-    private final FunctionalFloatBinding utcTime;
 
     public PropertyStore(CachedScheduledThreadPool executor, ViewerPreferences preferences)
     {
-        super(MethodHandles.lookup());
         this.executor = executor;
         this.preferences = preferences;
         this.keelOffsetBinding = (FloatBinding) preferences.getNumberBinding("keelOffset");
         this.transducerOffsetBinding = (FloatBinding) preferences.getNumberBinding("transducerOffset");
         this.timeToLiveBinding = (LongBinding)preferences.getNumberBinding("timeToLive");
         this.actives = new TimeToLiveSet<>(Clock.systemUTC(), preferences.getLong("timeToLive"), SECONDS, (p)->setDisable(p, true));
+        
+        addNmea(true, true,
+                "epochMillis", 
+                "latitude", 
+                "longitude", 
+                "depthOfWater", 
+                "waterSpeed", 
+                "waterTemperature", 
+                "trueHeading",
+                "speedOverGround",
+                "trackMadeGood",
+                "magneticVariation",
+                "relativeWindAngle",
+                "relativeWindSpeed"
+        );
+        addNmea(true, false,
+                "year",
+                "month",
+                "day",
+                "hour",
+                "minute",
+                "second"
+        );
         this.solarDepressionAngleBinding = (DoubleBinding) preferences.getNumberBinding("solarDepressionAngle");
-        this.solarWatch = new SolarWatch(()->epochMillis, executor, ()->preferences.getLong("solarUpdateSeconds"), ()->latitude, ()->longitude, ()->solarDepressionAngleBinding.doubleValue());
+        this.solarWatch = new SolarWatch(getLongGetter("epochMillis"), executor, ()->preferences.getLong("solarUpdateSeconds"), getDoubleGetter("latitude"), getDoubleGetter("longitude"), ()->solarDepressionAngleBinding.doubleValue());
         this.dayPhaseProperty = Bindings.createObjectBinding(()->solarWatch.getPhase());
         solarWatch.addObserver((p)->Platform.runLater(dayPhaseProperty::invalidate));
-        for (String property : getProperties())
-        {
-            boundMap.put(property, createBinding(property));
-            disableMap.put(property, new SimpleBooleanProperty(this, property, true));
-        }
         this.trendPeriod = preferences.getNumberBinding("trendPeriod");
-        // depth
-        depthOfWaterBinding = (FloatBinding) boundMap.get("depthOfWater");
-        depthBelowKeelBinding = new FunctionalFloatBinding("depthBelowKeelBinding",
-                ()->depthOfWaterBinding.get() - keelOffsetBinding.get(),
-                depthOfWaterBinding,
-                keelOffsetBinding
-        );
-        boundMap.put("depthBelowKeel", depthBelowKeelBinding);
-        depthBelowTransducerBinding = new FunctionalFloatBinding("depthBelowTransducerBinding",
-                ()->depthOfWaterBinding.get() - transducerOffsetBinding.get(),
-                depthOfWaterBinding,
-                transducerOffsetBinding
-        );
-        boundMap.put("depthBelowTransducer", depthBelowTransducerBinding);
-        bindDisable("depthBelowKeel", "depthOfWater");
-        bindDisable("depthBelowTransducer", "depthOfWater");
-        bindDisable("depthBelowSurface", "depthOfWater");
-        // wind
-        FloatBinding trueHeadingBinding = (FloatBinding) boundMap.get("trueHeading");
-        FloatBinding relativeWindAngleBinding = (FloatBinding) boundMap.get("relativeWindAngle");
-        FloatBinding trackMadeGoodBinding = (FloatBinding) boundMap.get("trackMadeGood");
-        FloatBinding relativeWindSpeedBinding = (FloatBinding) boundMap.get("relativeWindSpeed");
-        FloatBinding speedOverGroundBinding = (FloatBinding) boundMap.get("speedOverGround");
         
-        radRelativeAngleOverGround = new FunctionalDoubleBinding("radRelativeAngleOverGround",
-                ()->toRadians(Navis.normalizeAngle(trueHeadingBinding.doubleValue() + relativeWindAngleBinding.doubleValue())), 
-                trueHeadingBinding, 
-                relativeWindAngleBinding);
-        radTrackMadeGood = new FunctionalDoubleBinding("radTrackMadeGood",
-                ()->toRadians(trackMadeGoodBinding.doubleValue()), 
-                trackMadeGoodBinding);
-        windOverGroundX = new FunctionalDoubleBinding("windOverGroundX",
-                ()->
-                cos(radRelativeAngleOverGround.doubleValue())*relativeWindSpeedBinding.doubleValue() - cos(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
-                radRelativeAngleOverGround,
-                radTrackMadeGood,
-                relativeWindSpeedBinding,
-                speedOverGroundBinding);
-        windOverGroundY = new FunctionalDoubleBinding("windOverGroundY",
-                ()->
-                sin(radRelativeAngleOverGround.doubleValue())*relativeWindSpeedBinding.doubleValue() - sin(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
-                radRelativeAngleOverGround,
-                radTrackMadeGood,
-                relativeWindSpeedBinding,
-                speedOverGroundBinding);
-        windSpeedOverGround = new FunctionalDoubleBinding("windSpeedOverGround",
-                ()->
-                Math.hypot(windOverGroundY.doubleValue(), windOverGroundX.doubleValue()), 
-                windOverGroundX, windOverGroundY);
-        windAngleOverGround = new FunctionalDoubleBinding("windAngleOverGround",
-                ()->
-                Navis.normalizeAngle(Math.toDegrees(Math.atan2(windOverGroundY.doubleValue(), windOverGroundX.doubleValue()))), 
-                windOverGroundX, windOverGroundY);
-        boundMap.put("windSpeedOverGround", windSpeedOverGround);
-        boundMap.put("windAngleOverGround", windAngleOverGround);
-        ObservableBooleanValue windDisableBind = bindDisable("windSpeedOverGround", "trueHeading", "relativeWindAngle", "trackMadeGood", "relativeWindSpeed", "speedOverGround");
-        disableMap.put("windAngleOverGround", windDisableBind);
+        // depth
+        ObservableNumberValue keelOffset = (ObservableNumberValue) preferences.getNumberBinding("keelOffset");
+        ObservableNumberValue transducerOffset = (ObservableNumberValue) preferences.getNumberBinding("transducerOffset");
+        addExt(true, "keelOffset", keelOffset);
+        addExt(true, "transducerOffset", transducerOffset);
+        FloatPropertyValue depthOfWater = (FloatPropertyValue) getProperty("depthOfWater");
+        addFloatSetter("depthBelowKeel", (v)->depthOfWater.set(v + keelOffset.floatValue()));
+        addFloatSetter("depthBelowTransducer", (v)->depthOfWater.set(v + transducerOffset.floatValue()));
+        bind(true, "depthBelowKeel", (dow, ko)->dow-ko, "depthOfWater", "keelOffset");
+        bind(true, "depthBelowTransducer", (dow, to)->dow-to, "depthOfWater", "transducerOffset");
+        
+        // wind
+        bind(false, "radRelativeAngleOverGround", (th, rwa)->toRadians(Navis.normalizeAngle(th + rwa)), "trueHeading", "relativeWindAngle");
+        bind(false, "radTrackMadeGood", (tmg)->toRadians(tmg), "trackMadeGood");
+        bind(false, "windOverGroundX", (rraog, rws, rtmg, sog)->cos(rraog)*rws - cos(rtmg)*sog, "radRelativeAngleOverGround", "relativeWindSpeed", "radTrackMadeGood", "speedOverGround");
+        bind(false, "windOverGroundY", (rraog, rws, rtmg, sog)->sin(rraog)*rws - sin(rtmg)*sog, "radRelativeAngleOverGround", "relativeWindSpeed", "radTrackMadeGood", "speedOverGround");
+        bind(true, "windSpeedOverGround", (wogy, wogx)->Math.hypot(wogy, wogx), "windOverGroundY", "windOverGroundX");
+        bind(true, "windAngleOverGround", (wogy, wogx)->Navis.normalizeAngle(Math.toDegrees(Math.atan2(wogy, wogx))), "windOverGroundY", "windOverGroundX");
+
         // current
-        FloatBinding waterSpeedBinding = (FloatBinding) boundMap.get("waterSpeed");
-        radTrueHeading = new FunctionalDoubleBinding("radTrueHeading",
-                ()->toRadians(trueHeadingBinding.doubleValue()), 
-                trueHeadingBinding);
-        currentOverGroundX = new FunctionalDoubleBinding("currentOverGroundX",
-                ()->
-                cos(radTrueHeading.doubleValue())*waterSpeedBinding.doubleValue() - cos(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
-                radTrueHeading,
-                radTrackMadeGood,
-                waterSpeedBinding,
-                speedOverGroundBinding);
-        currentOverGroundY = new FunctionalDoubleBinding("currentOverGroundY",
-                ()->
-                sin(radTrueHeading.doubleValue())*waterSpeedBinding.doubleValue() - sin(radTrackMadeGood.doubleValue())*speedOverGroundBinding.doubleValue(),
-                radTrueHeading,
-                radTrackMadeGood,
-                waterSpeedBinding,
-                speedOverGroundBinding);
-        currentSpeedOverGround = new FunctionalDoubleBinding("currentSpeedOverGround",
-                ()->
-                Math.hypot(currentOverGroundY.doubleValue(), currentOverGroundX.doubleValue()), 
-                currentOverGroundX, currentOverGroundY);
-        currentAngleOverGround = new FunctionalDoubleBinding("currentAngleOverGround",
-                ()->
-                Navis.normalizeAngle(Math.toDegrees(Math.atan2(currentOverGroundY.doubleValue(), currentOverGroundX.doubleValue()))), 
-                currentOverGroundX, currentOverGroundY);
-        boundMap.put("currentSpeedOverGround", currentSpeedOverGround);
-        boundMap.put("currentAngleOverGround", currentAngleOverGround);
-        ObservableBooleanValue currentDisableBind = bindDisable("currentSpeedOverGround", "trueHeading", "trackMadeGood", "waterSpeed", "speedOverGround");
-        disableMap.put("currentAngleOverGround", currentDisableBind);
+        bind(false, "radTrueHeading", (th)->toRadians(th), "trueHeading");
+        bind(false, "currentOverGroundX", (rth, ws, rtmg, sog)->cos(rth)*ws - cos(rtmg)*sog, "radTrueHeading", "waterSpeed", "radTrackMadeGood", "speedOverGround");
+        bind(false, "currentOverGroundY", (rth, ws, rtmg, sog)->sin(rth)*ws - sin(rtmg)*sog, "radTrueHeading", "waterSpeed", "radTrackMadeGood", "speedOverGround");
+        bind(true, "currentSpeedOverGround", (cogy, cogx)->Math.hypot(cogy, cogx), "currentOverGroundY", "currentOverGroundX");
+        bind(true, "currentAngleOverGround", (cogy, cogx)->Navis.normalizeAngle(Math.toDegrees(Math.atan2(cogy, cogx))), "currentOverGroundY", "currentOverGroundX");
         
         //time
-        IntegerBinding yearBinding = (IntegerBinding) boundMap.get("year");
-        IntegerBinding monthBinding = (IntegerBinding) boundMap.get("month");
-        IntegerBinding dayBinding = (IntegerBinding) boundMap.get("day");
-        IntegerBinding hourBinding = (IntegerBinding) boundMap.get("hour");
-        IntegerBinding minuteBinding = (IntegerBinding) boundMap.get("minute");
-        FloatBinding secondBinding = (FloatBinding) boundMap.get("second");
-        utcDate = new FunctionalIntegerBinding("utcDate", 
-                ()->10000*yearBinding.get()+100*monthBinding.get()+dayBinding.get(),
-                yearBinding, 
-                monthBinding, 
-                dayBinding
-        );
-        utcTime = new FunctionalFloatBinding("utcTime", 
-                ()->10000*hourBinding.get()+100*minuteBinding.get()+secondBinding.get(),
-                hourBinding, 
-                minuteBinding, 
-                secondBinding
-        );
-        boundMap.put("utcDate", utcDate);
-        boundMap.put("utcTime", utcTime);
-        ObservableBooleanValue utcDateBind = bindDisable("utcDate", "year", "month", "day");
-        disableMap.put("utcDate", utcDateBind);
-        ObservableBooleanValue utcTimeBind = bindDisable("utcTime", "hour", "minute", "second");
-        disableMap.put("utcTime", utcTimeBind);
+        bind(true, "utcDate", (y, m, d)->10000*y+100*m+d, "year", "month", "day");
+        bind(true, "utcTime", (h, m, s)->10000*h+100*m+s, "hour", "minute", "secons");
         
         checkDisabled();
         scheduleTrendPulse();
     }
-    private ObservableBooleanValue bindDisable(String property, String... dependencies)
-    {
-        ObservableBooleanValue disableBind = getDisableBind(dependencies);
-        disableMap.put(property, disableBind);
-        return disableBind;
-    }
-    public ObservableBooleanValue getDisableBind(String... properties)
-    {
-        ObservableBooleanValue sbp = disableMap.get(properties[0]);
-        for (int ii=1;ii<properties.length;ii++)
-        {
-            ObservableBooleanValue  sbpx = disableMap.get(properties[ii]);
-            sbp = Bindings.or(sbp, sbpx);
-        }
-        return sbp;
-    }
-    private NumberBinding createBinding(String property)
-    {
-        Class<?> type = getType(property);
-        if (type == null)
-        {
-            throw new IllegalArgumentException(type+" not a property");
-        }
-        switch (type.getSimpleName())
-        {
-            case "int":
-                return new FunctionalIntegerBinding(property, getIntSupplier(property));
-            case "long":
-                return new FunctionalLongBinding(property, getLongSupplier(property));
-            case "float":
-                return new FunctionalFloatBinding(property, getDoubleSupplier(property));
-            case "double":
-                return new FunctionalDoubleBinding(property, getDoubleSupplier(property));
-            default:
-                throw new UnsupportedOperationException(type+" not supported");
-        }
-    }
 
     private void scheduleTrendPulse()
     {
-        trendPulse.invalidate();
+        trendPulse.signal();
         executor.schedule(()->scheduleTrendPulse(), trendPeriod.getValue().longValue(), SECONDS);
     }
 
@@ -305,10 +166,6 @@ public class PropertyStore extends AnnotatedPropertyStore
         return executor;
     }
     
-    public NumberBinding getBinding(String property)
-    {
-        return boundMap.get(property);
-    }
     public ObjectBinding<DayPhase> dayPhaseProperty()
     {
         return dayPhaseProperty;
@@ -321,103 +178,18 @@ public class PropertyStore extends AnnotatedPropertyStore
     {
         solarWatch.stop();
     }
-    /**
-     * yyyyhhmm
-     * @return 
-     */
-    @Property public int getUtcDate()
-    {
-        return utcDate.get();
-    }
-    /**
-     * hhmmss.s
-     * @return 
-     */
-    @Property public float getUtcTime()
-    {
-        return utcTime.get();
-    }
-    @Property public float getCurrentAngleOverGround()
-    {
-        return currentAngleOverGround.floatValue();
-    }
-    @Property public float getCurrentSpeedOverGround()
-    {
-        return currentSpeedOverGround.floatValue();
-    }
-    @Property public float getWindAngleOverGround()
-    {
-        return windAngleOverGround.floatValue();
-    }
-    @Property public float getWindSpeedOverGround()
-    {
-        return windSpeedOverGround.floatValue();
-    }
-    @Property public float getDepthBelowKeel()
-    {
-        return depthBelowKeelBinding.get();
-    }
-    @Property public float getDepthBelowSurface()
-    {
-        return depthOfWaterBinding.get();
-    }
-    @Property public float getDepthBelowTransducer()
-    {
-        return depthBelowTransducerBinding.get();
-    }
-    @Property public void setDepthBelowKeel(float meters)
-    {
-        setDepthOfWater(meters + keelOffsetBinding.get());
-    }
-    @Property public void setDepthBelowSurface(float meters)
-    {
-        setDepthOfWater(meters);
-    }
-    @Property public void setDepthBelowTransducer(float meters)
-    {
-        setDepthOfWater(meters + transducerOffsetBinding.get());
-    }
-    private void setDepthOfWater(float dow)
-    {
-        activate("depthOfWater");
-        if (depthOfWater != dow)
-        {
-            modified.add("depthOfWater");
-            depthOfWater = dow;
-        }
-    }
     private void checkDisabled()
     {
         Platform.runLater(()->actives.size());
         executor.schedule(this::checkDisabled, timeToLiveBinding.get(), SECONDS);
     }
-    /**
-     * this is run in platform thread
-     * @param property 
-     */
-    private void setDisable(String property, boolean disabled)
-    {
-        SimpleBooleanProperty sbp = (SimpleBooleanProperty) disableMap.get(property);
-        sbp.set(disabled);
-    }
-
     @Override
-    public void commit(String reason, Collection<String> updatedProperties, Predicate<String> isModified)
+    public void commit(String reason, Collection<String> updatedProperties)
     {
-        boolean newModified = false;
-        for (String property : updatedProperties)
+        updatedProperties.forEach((property) ->
         {
             activate(property);
-            if (isModified.test(property))
-            {
-                modified.add(property);
-                newModified = true;
-            }
-        }
-        if (newModified)
-        {
-            Platform.runLater(this::invalidate);
-        }
+        });
     }
     private void activate(String property)
     {
@@ -426,20 +198,6 @@ public class PropertyStore extends AnnotatedPropertyStore
         if (newEntry)
         {
             Platform.runLater(()->setDisable(property, false));
-        }
-    }
-    /**
-     * this is run in platform thread
-     */
-    private void invalidate()
-    {
-        Iterator<String> iterator = modified.iterator();
-        while (iterator.hasNext())
-        {
-            String property = iterator.next();
-            iterator.remove();
-            Binding binding = boundMap.get(property);
-            binding.invalidate();
         }
     }
     /**
@@ -539,4 +297,5 @@ public class PropertyStore extends AnnotatedPropertyStore
             }
         }
     }
+
 }

@@ -17,7 +17,6 @@
 package org.vesalainen.nmea.viewer.store;
 
 import javafx.beans.value.WritableFloatValue;
-import javafx.beans.value.WritableLongValue;
 
 /**
  *
@@ -36,6 +35,7 @@ public class FloatPropertyValue extends PropertyValue implements WritableFloatVa
     @Override
     public float get()
     {
+        valid = true;
         return value;
     }
 
@@ -65,25 +65,25 @@ public class FloatPropertyValue extends PropertyValue implements WritableFloatVa
     @Override
     public int intValue()
     {
-        return (int) value;
+        return (int) get();
     }
 
     @Override
     public long longValue()
     {
-        return (long) value;
+        return (long) get();
     }
 
     @Override
     public float floatValue()
     {
-        return value;
+        return get();
     }
 
     @Override
     public double doubleValue()
     {
-        return value;
+        return get();
     }
 
     @Override

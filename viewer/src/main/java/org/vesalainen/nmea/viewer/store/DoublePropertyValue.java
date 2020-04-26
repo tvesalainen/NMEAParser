@@ -17,8 +17,6 @@
 package org.vesalainen.nmea.viewer.store;
 
 import javafx.beans.value.WritableDoubleValue;
-import javafx.beans.value.WritableFloatValue;
-import javafx.beans.value.WritableLongValue;
 
 /**
  *
@@ -37,6 +35,7 @@ public class DoublePropertyValue extends PropertyValue implements WritableDouble
     @Override
     public double get()
     {
+        valid = true;
         return value;
     }
 
@@ -66,25 +65,25 @@ public class DoublePropertyValue extends PropertyValue implements WritableDouble
     @Override
     public int intValue()
     {
-        return (int) value;
+        return (int) get();
     }
 
     @Override
     public long longValue()
     {
-        return (long) value;
+        return (long) get();
     }
 
     @Override
     public float floatValue()
     {
-        return (float) value;
+        return (float) get();
     }
 
     @Override
     public double doubleValue()
     {
-        return value;
+        return get();
     }
 
     @Override

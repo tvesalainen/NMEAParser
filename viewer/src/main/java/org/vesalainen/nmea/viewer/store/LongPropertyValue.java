@@ -35,6 +35,7 @@ public class LongPropertyValue extends PropertyValue implements WritableLongValu
     @Override
     public long get()
     {
+        valid = true;
         return value;
     }
 
@@ -64,25 +65,25 @@ public class LongPropertyValue extends PropertyValue implements WritableLongValu
     @Override
     public int intValue()
     {
-        return (int) value;
+        return (int) get();
     }
 
     @Override
     public long longValue()
     {
-        return value;
+        return get();
     }
 
     @Override
     public float floatValue()
     {
-        return value;
+        return get();
     }
 
     @Override
     public double doubleValue()
     {
-        return value;
+        return get();
     }
 
     @Override

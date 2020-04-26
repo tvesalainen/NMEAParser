@@ -35,6 +35,7 @@ public class IntegerPropertyValue extends PropertyValue implements WritableInteg
     @Override
     public int get()
     {
+        valid = true;
         return value;
     }
 
@@ -64,25 +65,25 @@ public class IntegerPropertyValue extends PropertyValue implements WritableInteg
     @Override
     public int intValue()
     {
-        return value;
+        return get();
     }
 
     @Override
     public long longValue()
     {
-        return value;
+        return get();
     }
 
     @Override
     public float floatValue()
     {
-        return value;
+        return get();
     }
 
     @Override
     public double doubleValue()
     {
-        return value;
+        return get();
     }
 
     @Override
