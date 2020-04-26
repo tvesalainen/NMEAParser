@@ -53,6 +53,7 @@ import org.vesalainen.util.CharSequences;
  * @see <a href="http://www.eye4software.com/hydromagic/documentation/nmea0183/">Professional hydrographic survey software</a>
  * @see <a href="doc-files/NMEAParser-statements.html#BNF">BNF Syntax for NMEA</a>
  */
+// TODO grammar size is nearing 64k
 @GenClassname("org.vesalainen.parsers.nmea.NMEAParserImpl")
 @GrammarDef()
 @Rules(
@@ -64,16 +65,18 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "nmeaStatement", value = "aisMessage"),
     @Rule(left = "nmeaSentence", value = "aam c arrivalStatus c waypointStatus c arrivalCircleRadius c waypoint"),
     @Rule(left = "nmeaSentence", value = "alm c totalNumberOfMessages c messageNumber c satellitePRNNumber c gpsWeekNumber c svHealth c eccentricity c almanacReferenceTime c inclinationAngle c rateOfRightAscension c rootOfSemiMajorAxis c argumentOfPerigee c longitudeOfAscensionNode c meanAnomaly c f0ClockParameter c f1ClockParameter"),
-    @Rule(left = "nmeaSentence", value = "apa c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),
-    @Rule(left = "nmeaSentence", value = "apb c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint c bearingPresentPositionToDestination c headingToSteerToDestination"),
+    @Rule(left = "nmeaSentence", value = "apa apaapb"),
+    @Rule(left = "nmeaSentence", value = "apb apaapb c bearingPresentPositionToDestination c headingToSteerToDestination"),
+    @Rule(left = "apaapb", value = "c status c status2 c crossTrackError c arrivalStatus c waypointStatus c bearingOriginToDestination c waypoint"),
     @Rule(left = "nmeaSentence", value = "bod c bearing c bearing c waypointToWaypoint"),
-    @Rule(left = "nmeaSentence", value = "bec c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
-    @Rule(left = "nmeaSentence", value = "bwc c utc c location c bearing c bearing c distanceToWaypoint c waypoint faaModeIndicator"),
-    @Rule(left = "nmeaSentence", value = "bwr c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
+    @Rule(left = "nmeaSentence", value = "bec becbwcbwr"),
+    @Rule(left = "nmeaSentence", value = "bwc becbwcbwr faaModeIndicator"),
+    @Rule(left = "nmeaSentence", value = "bwr becbwcbwr"),
+    @Rule(left = "becbwcbwr", value = "c utc c location c bearing c bearing c distanceToWaypoint c waypoint"),
     @Rule(left = "nmeaSentence", value = "bww c bearing c bearing c waypointToWaypoint"),
-    @Rule(left = "nmeaSentence", value = "dbk c depthBelowKeel c depthBelowKeel c depthBelowKeel"),
-    @Rule(left = "nmeaSentence", value = "dbs c depthBelowSurface c depthBelowSurface c depthBelowSurface"),
-    @Rule(left = "nmeaSentence", value = "dbt c depthBelowTransducer c depthBelowTransducer c depthBelowTransducer"),
+    @Rule(left = "nmeaSentence", value = "dbk c depthBelowKeel"),
+    @Rule(left = "nmeaSentence", value = "dbs c depthBelowSurface"),
+    @Rule(left = "nmeaSentence", value = "dbt c depthBelowTransducer"),
     @Rule(left = "nmeaSentence", value = "dpt c depthOfWater"),
     @Rule(left = "nmeaSentence", value = "gga c utc c location c gpsQualityIndicator c numberOfSatellitesInView c horizontalDilutionOfPrecision c antennaAltitude c geoidalSeparation c ageOfDifferentialGPSData c differentialReferenceStationID"),
     @Rule(left = "nmeaSentence", value = "gll c location c utc c status faaModeIndicator"),
@@ -128,9 +131,6 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "faaModeIndicator"),
     @Rule(left = "messageMode"),
     @Rule(left = "distanceToWaypoint", value="c skip?"),
-    @Rule(left = "depthBelowTransducer", value="c skip?"),
-    @Rule(left = "depthBelowSurface", value="c skip?"),
-    @Rule(left = "depthBelowKeel", value="c skip?"),
     @Rule(left = "f0ClockParameter"),
     @Rule(left = "f1ClockParameter"),
     @Rule(left = "meanAnomaly"),
@@ -877,33 +877,90 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         data.setDistanceToWaypoint(toKnots(distanceToWaypoint, unit));
     }
 
-    @Rule("decimal c letter")
+    @Rule("depthBelowTransducerValue c depthBelowTransducerValue c depthBelowTransducerValue")
     protected void depthBelowTransducer(
+            float d1,
+            float d2,
+            float d3,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setDepthBelowTransducer(firstValid(d1, d2, d3));
+    }
+
+    @Rule("decimal c letter")
+    protected float depthBelowTransducerValue(
             float depth,
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowTransducer(toMeters(depth, unit));
+        return toMeters(depth, unit);
     }
 
-    @Rule("decimal c letter")
+    @Rule("c skip?")
+    protected float depthBelowSurfaceValue()
+    {
+        return Float.NaN;
+    }
+
+    @Rule("c skip?")
+    protected float depthBelowKeelValue()
+    {
+        return Float.NaN;
+    }
+
+    @Rule("c skip?")
+    protected float depthBelowTransducerValue()
+    {
+        return Float.NaN;
+    }
+
+    @Rule("depthBelowSurfaceValue c depthBelowSurfaceValue c depthBelowSurfaceValue")
     protected void depthBelowSurface(
-            float depth,
-            char unit,
+            float d1,
+            float d2,
+            float d3,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowSurface(toMeters(depth, unit));
+        data.setDepthBelowSurface(firstValid(d1, d2, d3));
     }
 
     @Rule("decimal c letter")
-    protected void depthBelowKeel(
+    protected float depthBelowSurfaceValue(
             float depth,
             char unit,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthBelowKeel(toMeters(depth, unit));
+        return toMeters(depth, unit);
     }
 
+    @Rule("depthBelowKeelValue c depthBelowKeelValue c depthBelowKeelValue")
+    protected void depthBelowKeel(
+            float d1,
+            float d2,
+            float d3,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setDepthBelowKeel(firstValid(d1, d2, d3));
+    }
+    @Rule("decimal c letter")
+    protected float depthBelowKeelValue(
+            float depth,
+            char unit,
+            @ParserContext("data") NMEAObserver data)
+    {
+        return toMeters(depth, unit);
+    }
+    private float firstValid(float... values)
+    {
+        for (float v : values)
+        {
+            if (!Float.isNaN(v))
+            {
+                return v;
+            }
+        }
+        return 0;
+    }
     @Rule("hex")
     protected void f1ClockParameter(
             int f1ClockParameter,
