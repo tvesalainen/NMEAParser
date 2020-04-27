@@ -31,11 +31,11 @@
         <ViewPane GridPane.columnIndex="1" GridPane.rowSpan="3">
             <children>
                 <CompassRingCanvas />
-                <!--<BoatCanvas />
+                <BoatCanvas />
                 <WindArrowCanvas />
                 <MagneticVariationCanvas />
                 <CourseSpeedCanvas />
-                <CurrentArrowCanvas />-->
+                <CurrentArrowCanvas />
             </children>
         </ViewPane>
     </children>

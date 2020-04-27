@@ -17,9 +17,11 @@
 package org.vesalainen.nmea.viewer.store;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -97,7 +99,7 @@ public class FXPropertySetter implements PropertySetter, PropertyGetter, Transac
     }
     protected void bind(boolean out, String property, F1 f, String f1)
     {
-        ObservableNumberValue o1 = valueMap.get(f1);
+        ObservableNumberValue o1 = getProperty(f1);
         FunctionalDoubleBinding fdb = new FunctionalDoubleBinding(property, ()->f.f(o1.doubleValue()), o1);
         valueMap.put(property, fdb);
         disabledMap.put(property, getDisableBind(f1));
@@ -105,8 +107,8 @@ public class FXPropertySetter implements PropertySetter, PropertyGetter, Transac
     }
     protected void bind(boolean out, String property, F2 f, String f1, String f2)
     {
-        ObservableNumberValue o1 = valueMap.get(f1);
-        ObservableNumberValue o2 = valueMap.get(f2);
+        ObservableNumberValue o1 = getProperty(f1);
+        ObservableNumberValue o2 = getProperty(f2);
         FunctionalDoubleBinding fdb = new FunctionalDoubleBinding(property, ()->f.f(o1.doubleValue(), o2.doubleValue()), o1, o2);
         valueMap.put(property, fdb);
         disabledMap.put(property, getDisableBind(f1, f2));
@@ -114,9 +116,9 @@ public class FXPropertySetter implements PropertySetter, PropertyGetter, Transac
     }
     protected void bind(boolean out, String property, F3 f, String f1, String f2, String f3)
     {
-        ObservableNumberValue o1 = valueMap.get(f1);
-        ObservableNumberValue o2 = valueMap.get(f2);
-        ObservableNumberValue o3 = valueMap.get(f3);
+        ObservableNumberValue o1 = getProperty(f1);
+        ObservableNumberValue o2 = getProperty(f2);
+        ObservableNumberValue o3 = getProperty(f3);
         FunctionalDoubleBinding fdb = new FunctionalDoubleBinding(property, ()->f.f(o1.doubleValue(), o2.doubleValue(), o3.doubleValue()), o1, o2, o3);
         valueMap.put(property, fdb);
         disabledMap.put(property, getDisableBind(f1, f2, f3));
@@ -124,10 +126,10 @@ public class FXPropertySetter implements PropertySetter, PropertyGetter, Transac
     }
     protected void bind(boolean out, String property, F4 f, String f1, String f2, String f3, String f4)
     {
-        ObservableNumberValue o1 = valueMap.get(f1);
-        ObservableNumberValue o2 = valueMap.get(f2);
-        ObservableNumberValue o3 = valueMap.get(f3);
-        ObservableNumberValue o4 = valueMap.get(f4);
+        ObservableNumberValue o1 = getProperty(f1);
+        ObservableNumberValue o2 = getProperty(f2);
+        ObservableNumberValue o3 = getProperty(f3);
+        ObservableNumberValue o4 = getProperty(f4);
         FunctionalDoubleBinding fdb = new FunctionalDoubleBinding(property, ()->f.f(o1.doubleValue(), o2.doubleValue(), o3.doubleValue(), o4.doubleValue()), o1, o2, o3, o4);
         valueMap.put(property, fdb);
         disabledMap.put(property, getDisableBind(f1, f2, f3, f4));
@@ -140,7 +142,9 @@ public class FXPropertySetter implements PropertySetter, PropertyGetter, Transac
     }
     protected ObservableNumberValue getProperty(String property)
     {
-        return valueMap.get(property);
+        ObservableNumberValue onv = valueMap.get(property);
+        Objects.requireNonNull(onv, property);
+        return onv;
     }
     public ObservableBooleanValue getDisableBind(String... properties)
     {
@@ -169,7 +173,7 @@ public class FXPropertySetter implements PropertySetter, PropertyGetter, Transac
     }
     public ObservableNumberValue getBinding(String property)
     {
-        return valueMap.get(property);
+        return getProperty(property);
     }
     /**
      * this is run in platform thread
@@ -177,14 +181,23 @@ public class FXPropertySetter implements PropertySetter, PropertyGetter, Transac
      */
     protected void setDisable(String property, boolean disabled)
     {
-        SimpleBooleanProperty sbp = (SimpleBooleanProperty) disabledMap.get(property);
-        sbp.set(disabled);
+        ObservableBooleanValue obv = disabledMap.get(property);
+        if (obv instanceof SimpleBooleanProperty)
+        {
+            SimpleBooleanProperty sbp = (SimpleBooleanProperty) obv;
+            sbp.set(disabled);
+        }
     }
 
     @Override
     public String[] getProperties()
     {
         return CollectionHelp.toArray(inProperties, String.class);
+    }
+
+    public Collection<String> getDisplayProperties()
+    {
+        return outProperties;
     }
 
     @Override
@@ -240,7 +253,7 @@ public class FXPropertySetter implements PropertySetter, PropertyGetter, Transac
     }
     private PropertyValue getPropertyValue(String property)
     {
-        ObservableNumberValue onv = valueMap.get(property);
+        ObservableNumberValue onv = getProperty(property);
         if (onv == null)
         {
             throw new IllegalArgumentException(property+" not found");

@@ -39,7 +39,6 @@ import org.vesalainen.util.ArrayHelp;
  */
 public class GaugePane extends StackPane implements PropertyBindable
 {
-    private static final String[] IGNORE = new String[]{"epochMillis", "year", "month", "day", "hour", "minute", "second"};
     private final StringProperty property = new SimpleStringProperty(this, "property", "");
     private ViewerPreferences preferences;
     private PropertyStore propertyStore;
@@ -128,12 +127,9 @@ public class GaugePane extends StackPane implements PropertyBindable
     private void onMousePressed(MouseEvent e)
     {
         List<I18nString> list = new ArrayList<>();
-        for (String p : propertyStore.getProperties())
+        for (String p : propertyStore.getDisplayProperties())
         {
-            if (!ArrayHelp.contains(IGNORE, p))
-            {
-                list.add(I18n.getI18nString(p));
-            }
+            list.add(I18n.getI18nString(p));
         }
         list.sort(null);
         ChoiceDialog<I18nString> dia = new ChoiceDialog<>(list.get(0), list);

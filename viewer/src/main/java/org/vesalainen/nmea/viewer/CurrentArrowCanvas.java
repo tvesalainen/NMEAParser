@@ -16,10 +16,14 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.value.ObservableNumberValue;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Paint;
 import org.vesalainen.fx.InterpolatingColor;
+import org.vesalainen.navi.Navis;
 
 /**
  *
@@ -47,14 +51,20 @@ public class CurrentArrowCanvas extends RotatingValueCanvas implements PropertyB
             double sign = (ii%40==0) ? -1 : 1;
             gc.quadraticCurveTo(sign*4, ii+10, 0, ii+20);
         }
+        gc.moveTo(-10, 10);
+        gc.lineTo(0, 0);
+        gc.lineTo(10, 10);
         gc.stroke();
+        
     }
 
     @Override
     public void bind(ViewerPreferences preferences, PropertyStore propertyStore, BooleanProperty active)
     {
         super.bind(preferences, propertyStore, active);
-        angleProperty().bind(propertyStore.getBinding("currentAngleOverGround"));
+        ObservableNumberValue currentAngleOverGround = propertyStore.getBinding("currentAngleOverGround");
+        DoubleBinding fixed = Bindings.createDoubleBinding(()->Navis.normalizeAngle(currentAngleOverGround.doubleValue()+180), currentAngleOverGround);    // fix current direction
+        angleProperty().bind(fixed);
         valueProperty().bind(propertyStore.getBinding("currentSpeedOverGround"));
         disableProperty().bind(propertyStore.getDisableBind("currentAngleOverGround", "currentSpeedOverGround"));
     }

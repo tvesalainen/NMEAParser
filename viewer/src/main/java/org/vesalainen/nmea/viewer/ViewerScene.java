@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import org.vesalainen.nmea.viewer.gesture.GestureEmulator;
 import javafx.beans.property.Property;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -50,22 +51,20 @@ public class ViewerScene extends Scene
     private final Stage stage;
     private final ViewerPage[] pages;
     private final Property<Integer> currentPage;
-    private final GestureEmulator gestureEmulator = new GestureEmulator();
+    private final GestureEmulator gestureEmulator;
 
     public ViewerScene(Stage stage, Property<Integer> currentPage, ViewerPage... pages)
     {
         super(pages[currentPage.getValue()].getParent());
         this.stage = stage;
         this.currentPage = currentPage;
+        this.gestureEmulator = new GestureEmulator(this);
         this.pages = pages;
         eventHandler = new MouseHandler();
         addEventHandler(SWIPE_RIGHT, e -> onSwipeRight(e));
         addEventHandler(SWIPE_LEFT, e -> onSwipeLeft(e));
         addEventHandler(SWIPE_UP, e -> onSwipeUp(e));
         addEventHandler(SWIPE_DOWN, e -> onSwipeDown(e));
-        addEventFilter(MOUSE_PRESSED, gestureEmulator);
-        addEventFilter(MOUSE_DRAGGED, gestureEmulator);
-        addEventFilter(MOUSE_RELEASED, gestureEmulator);
     }
 
     private void updateRoot()

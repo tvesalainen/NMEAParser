@@ -59,6 +59,7 @@ public interface NMEAObserver extends Transactional
      * Set millis seconds from epoch using NMEA Clock.
      * @param millis 
      */
+    @NMEACat(TIME)
     void setEpochMillis(long millis);
     /**
      * Set talker id of sentence

@@ -16,15 +16,14 @@
  */
 package org.vesalainen.nmea.viewer;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.MouseEvent;
-import static javafx.scene.input.MouseEvent.MOUSE_RELEASED;
 import javafx.scene.input.RotateEvent;
 import static javafx.scene.input.RotateEvent.ROTATE;
-import javafx.scene.transform.NonInvertibleTransformException;
 
 /**
  *
@@ -32,6 +31,23 @@ import javafx.scene.transform.NonInvertibleTransformException;
  */
 public class RotatingCanvas extends CartesianCanvas
 {
+
+    private final BooleanProperty rotating = new SimpleBooleanProperty(false);
+
+    public boolean isRotating()
+    {
+        return rotating.get();
+    }
+
+    public void setRotating(boolean value)
+    {
+        rotating.set(value);
+    }
+
+    public BooleanProperty rotatingProperty()
+    {
+        return rotating;
+    }
     private final DoubleProperty angle = new SimpleDoubleProperty(this, "angle", 0);
 
     public double getAngle()
@@ -56,8 +72,6 @@ public class RotatingCanvas extends CartesianCanvas
         super(maxValue);
         onReDrawListener.bind(angleProperty());
         addEventFilter(ROTATE, e->rotate(e));
-        //onMousePressedProperty().setValue((e)->{if (isMouseEditable()) onMousePressed(e);});
-        //onMouseDraggedProperty().setValue((e)->{if (isMouseEditable()) onMouseDragged(e);});
     }
 
     protected void transform()
@@ -69,33 +83,9 @@ public class RotatingCanvas extends CartesianCanvas
     }
     private void rotate(RotateEvent re)
     {
-        setAngle(getAngle()+re.getAngle());
-    }
-    protected void onMousePressed(MouseEvent e)
-    {
-        try
+        if (isRotating())
         {
-            mousePressed = transform.inverseTransform(e.getX(), e.getY());
-        }
-        catch (NonInvertibleTransformException ex)
-        {
-            throw new RuntimeException(ex);
-        }
-    }
-    protected void onMouseDragged(MouseEvent e)
-    {
-        try
-        {
-            Point2D p = transform.inverseTransform(e.getX(), e.getY());
-            double a1 = Math.toDegrees(Math.atan2(mousePressed.getY(), mousePressed.getX()));
-            double a2 = Math.toDegrees(Math.atan2(p.getY(), p.getX()));
-            setAngle(getAngle()+a1-a2);
-            System.err.println(String.format("%f %f %f", a1-a2, a1, a2));
-            mousePressed = p;
-        }
-        catch (NonInvertibleTransformException ex)
-        {
-            throw new RuntimeException(ex);
+            setAngle(getAngle()+re.getAngle());
         }
     }
 }

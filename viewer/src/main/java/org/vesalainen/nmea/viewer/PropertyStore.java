@@ -18,35 +18,18 @@ package org.vesalainen.nmea.viewer;
 
 import org.vesalainen.fx.BasicObservable;
 import static java.lang.Math.*;
-import java.lang.invoke.MethodHandles;
 import java.time.Clock;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.concurrent.ConcurrentSkipListSet;
 import static java.util.concurrent.TimeUnit.*;
-import java.util.function.Predicate;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.FloatBinding;
-import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.LongBinding;
-import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableNumberValue;
-import org.vesalainen.code.AnnotatedPropertyStore;
-import org.vesalainen.code.Property;
-import org.vesalainen.fx.FunctionalDoubleBinding;
-import org.vesalainen.fx.FunctionalFloatBinding;
-import org.vesalainen.fx.FunctionalIntegerBinding;
-import org.vesalainen.fx.FunctionalLongBinding;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.Navis;
@@ -69,8 +52,6 @@ public final class PropertyStore extends FXPropertySetter
     
     private final CachedScheduledThreadPool executor;
     private final ViewerPreferences preferences;
-    private final FloatBinding keelOffsetBinding;
-    private final FloatBinding transducerOffsetBinding;
     private final TimeToLiveSet<String> actives;
     private final LongBinding timeToLiveBinding;
     private final DoubleBinding solarDepressionAngleBinding;
@@ -83,8 +64,6 @@ public final class PropertyStore extends FXPropertySetter
     {
         this.executor = executor;
         this.preferences = preferences;
-        this.keelOffsetBinding = (FloatBinding) preferences.getNumberBinding("keelOffset");
-        this.transducerOffsetBinding = (FloatBinding) preferences.getNumberBinding("transducerOffset");
         this.timeToLiveBinding = (LongBinding)preferences.getNumberBinding("timeToLive");
         this.actives = new TimeToLiveSet<>(Clock.systemUTC(), preferences.getLong("timeToLive"), SECONDS, (p)->setDisable(p, true));
         
@@ -119,8 +98,8 @@ public final class PropertyStore extends FXPropertySetter
         // depth
         ObservableNumberValue keelOffset = (ObservableNumberValue) preferences.getNumberBinding("keelOffset");
         ObservableNumberValue transducerOffset = (ObservableNumberValue) preferences.getNumberBinding("transducerOffset");
-        addExt(true, "keelOffset", keelOffset);
-        addExt(true, "transducerOffset", transducerOffset);
+        addExt(false, "keelOffset", keelOffset);
+        addExt(false, "transducerOffset", transducerOffset);
         FloatPropertyValue depthOfWater = (FloatPropertyValue) getProperty("depthOfWater");
         addFloatSetter("depthBelowKeel", (v)->depthOfWater.set(v + keelOffset.floatValue()));
         addFloatSetter("depthBelowTransducer", (v)->depthOfWater.set(v + transducerOffset.floatValue()));
@@ -140,11 +119,11 @@ public final class PropertyStore extends FXPropertySetter
         bind(false, "currentOverGroundX", (rth, ws, rtmg, sog)->cos(rth)*ws - cos(rtmg)*sog, "radTrueHeading", "waterSpeed", "radTrackMadeGood", "speedOverGround");
         bind(false, "currentOverGroundY", (rth, ws, rtmg, sog)->sin(rth)*ws - sin(rtmg)*sog, "radTrueHeading", "waterSpeed", "radTrackMadeGood", "speedOverGround");
         bind(true, "currentSpeedOverGround", (cogy, cogx)->Math.hypot(cogy, cogx), "currentOverGroundY", "currentOverGroundX");
-        bind(true, "currentAngleOverGround", (cogy, cogx)->Navis.normalizeAngle(Math.toDegrees(Math.atan2(cogy, cogx))), "currentOverGroundY", "currentOverGroundX");
+        bind(true, "currentAngleOverGround", (cogy, cogx)->Navis.normalizeAngle(Math.toDegrees(Math.atan2(-cogy, -cogx))), "currentOverGroundY", "currentOverGroundX");
         
         //time
         bind(true, "utcDate", (y, m, d)->10000*y+100*m+d, "year", "month", "day");
-        bind(true, "utcTime", (h, m, s)->10000*h+100*m+s, "hour", "minute", "secons");
+        bind(true, "utcTime", (h, m, s)->10000*h+100*m+s, "hour", "minute", "second");
         
         checkDisabled();
         scheduleTrendPulse();

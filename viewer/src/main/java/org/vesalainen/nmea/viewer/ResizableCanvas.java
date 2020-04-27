@@ -207,8 +207,11 @@ public class ResizableCanvas extends Canvas implements PropertyBindable
 
     private void onReDraw()
     {
-        transform();
-        onDraw();
+        if (getFont() != null)  // CSS not ready???
+        {
+            transform();
+            onDraw();
+        }
     }
     protected void transform()
     {

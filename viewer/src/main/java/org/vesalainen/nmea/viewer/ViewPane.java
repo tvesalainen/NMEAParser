@@ -9,6 +9,8 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.input.ScrollEvent;
 import static javafx.scene.input.ScrollEvent.SCROLL;
+import javafx.scene.input.ZoomEvent;
+import static javafx.scene.input.ZoomEvent.*;
 import javafx.scene.layout.StackPane;
 
 /*
@@ -74,20 +76,21 @@ public class ViewPane extends StackPane implements PropertyBindable
         setMinWidth(0);
         setMaxHeight(Double.MAX_VALUE);
         setMaxWidth(Double.MAX_VALUE);
-        addEventHandler(SCROLL, e -> onScroll(e));
+        addEventHandler(ZOOM_STARTED, e -> onZoom(e));
+        addEventHandler(ZOOM, e -> onZoom(e));
+        addEventHandler(ZOOM_FINISHED, e -> onZoom(e));
     }
 
-    private void onScroll(ScrollEvent e)
+    private void onZoom(ZoomEvent e)
     {
         if (isZoom())
         {
-            double width = getWidth();
-            Point2D screenToLocal = screenToLocal(e.getScreenX(), e.getScreenY());
-            if (screenToLocal.getX() > 3*width/4)
+            double zoomFactor = e.getZoomFactor();
+            double sca = getScale();
+            double nsca = zoomFactor*sca;
+            if (Double.isFinite(nsca))
             {
-                exp += e.getDeltaY();
-                setScale(Math.pow(0.5, exp/40));
-                System.err.println(exp);
+                setScale(nsca);
             }
         }
     }

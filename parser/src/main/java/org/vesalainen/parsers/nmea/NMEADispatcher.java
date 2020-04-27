@@ -32,9 +32,4 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
         return newInstance(NMEADispatcher.class);
     }
 
-    public NMEADispatcher(MethodHandles.Lookup lookup)
-    {
-        super(lookup);
-    }
-    
 }

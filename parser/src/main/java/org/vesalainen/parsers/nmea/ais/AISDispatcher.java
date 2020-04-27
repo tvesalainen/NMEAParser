@@ -33,9 +33,4 @@ public abstract class AISDispatcher extends InterfaceDispatcher implements AISOb
         return newInstance(AISDispatcher.class);
     }
 
-    public AISDispatcher(MethodHandles.Lookup lookup)
-    {
-        super(lookup);
-    }
-
 }

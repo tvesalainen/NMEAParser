@@ -35,5 +35,6 @@ public enum NMEACategory
     RPM,
     ATTITUDE,
     ACCELERATION,
+    TIME,
     MISCELLENEOUS
 }
