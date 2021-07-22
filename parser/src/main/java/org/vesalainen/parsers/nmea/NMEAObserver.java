@@ -509,7 +509,7 @@ public interface NMEAObserver extends Transactional
     void setTrueWindSpeed(float metersInSecond);
     /**
      * ROT
- Rate Of TURN, degrees per minute, "-" means bow turns to port
+     * Rate Of TURN, degrees per minute, "-" means bow turns to port
      * @param rateOfTurn 
      */
     @NMEACat(TURN)
