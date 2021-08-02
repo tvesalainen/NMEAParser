@@ -32,6 +32,7 @@ import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
+import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
@@ -79,6 +80,16 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
             }
             for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
             {
+                if (ob instanceof N2KGatewayType)
+                {
+                    info("starting N2K Gateway");
+                    N2KGatewayType type = (N2KGatewayType) ob;
+                    N2KGateway n2kGateway = new N2KGateway(type, channel, executor);
+                    processes.add(n2kGateway);
+                    n2kGateway.start();
+                    
+                    continue;
+                }
                 if (ob instanceof CompassCorrectorType)
                 {
                     info("starting Compass Corrector");

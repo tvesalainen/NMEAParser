@@ -24,7 +24,9 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import static java.util.logging.Level.SEVERE;
@@ -32,19 +34,19 @@ import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.nmea.util.Stoppable;
-import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stoppable
+public class NMEASender extends AnnotatedPropertyStore implements Stoppable
 {
     private @Property Clock clock;
     private @Property double latitude;
     private @Property double longitude;
     private @Property float depthOfWater;
+    private @Property float transducerOffset;
     private @Property float waterTemperature;
     private @Property float waterSpeed;
     private @Property float trueHeading;
@@ -57,9 +59,12 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
     
     private final WritableByteChannel channel;
     private final CachedScheduledThreadPool executor;
-    private ScheduledFuture<?> future;
     private Set<String> updated = new HashSet<>();
     private final TSAGeoMag geoMag = new TSAGeoMag();
+    
+    private final Map<String,Long> scheduleMap = new ConcurrentHashMap<>();
+    private final Map<String,ScheduledFuture> futureMap = new ConcurrentHashMap<>();
+    private boolean started;
     
     private final NMEASentence rmc;
     private final NMEASentence dbt;
@@ -70,9 +75,13 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
     
     public NMEASender(WritableByteChannel channel)
     {
-        this(channel, new CachedScheduledThreadPool());
+        this(Clock.systemUTC(), channel, new CachedScheduledThreadPool());
     }
     public NMEASender(WritableByteChannel channel, CachedScheduledThreadPool executor)
+    {
+        this(Clock.systemUTC(), channel, executor);
+    }
+    public NMEASender(Clock clock, WritableByteChannel channel, CachedScheduledThreadPool executor)
     {
         super(MethodHandles.lookup());
         this.clock = clock;
@@ -87,13 +96,42 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
                 ()->trackMadeGood, 
                 this::magneticVariation)
                 ;
-        this.dbt = NMEASentence.dbt(()->depthOfWater, UnitType.METER);
+        this.dbt = NMEASentence.dbt(()->depthOfWater+transducerOffset, UnitType.METER);
         this.hdt = NMEASentence.hdt(()->trueHeading);
         this.mtw = NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS);
         this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.KNOT, false);
         this.vhw = NMEASentence.vhw(()->waterSpeed, UnitType.KNOT);
     }
 
+    private void run(NMEASentence sentence)
+    {
+        try
+        {
+            sentence.writeTo(channel);
+        }
+        catch (IOException ex)
+        {
+            log(SEVERE, ex, "NMEASender %s", ex.getMessage());
+        }
+    }
+
+    public void schedule(String prefix, long period, TimeUnit unit)
+    {
+        switch (prefix)
+        {
+            case "RMC":
+            case "DBT":
+            case "HDT":
+            case "MTW":
+            case "MWV":
+            case "VHW":
+                scheduleMap.put(prefix, TimeUnit.MILLISECONDS.convert(period, unit));
+                break;
+            default:
+                throw new UnsupportedOperationException(prefix+" not supported");
+
+        }
+    }
     public double magneticVariation()
     {
         ZonedDateTime now = ZonedDateTime.now(clock);
@@ -101,21 +139,58 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
     }
     public void start()
     {
-        if (future != null)
+        if (started)
         {
             throw new IllegalStateException();
         }
-        future = executor.scheduleAtFixedRate(this, 0, 1, TimeUnit.SECONDS);
+        scheduleMap.forEach((prefix, period)->
+        {
+            ScheduledFuture<?> future;
+            ScheduledFuture<?> old = null;
+            switch (prefix)
+            {
+                case "RMC":
+                    future = executor.scheduleAtFixedRate(()->run(rmc), 0, period, TimeUnit.MILLISECONDS);
+                    old = futureMap.put(prefix, future);
+                    break;
+                case "DBT":
+                    future = executor.scheduleAtFixedRate(()->run(dbt), 0, period, TimeUnit.MILLISECONDS);
+                    old = futureMap.put(prefix, future);
+                    break;
+                case "HDT":
+                    future = executor.scheduleAtFixedRate(()->run(hdt), 0, period, TimeUnit.MILLISECONDS);
+                    old = futureMap.put(prefix, future);
+                    break;
+                case "MTW":
+                    future = executor.scheduleAtFixedRate(()->run(mtw), 0, period, TimeUnit.MILLISECONDS);
+                    old = futureMap.put(prefix, future);
+                    break;
+                case "MWV":
+                    future = executor.scheduleAtFixedRate(()->run(mwv), 0, period, TimeUnit.MILLISECONDS);
+                    old = futureMap.put(prefix, future);
+                    break;
+                case "VHW":
+                    future = executor.scheduleAtFixedRate(()->run(vhw), 0, period, TimeUnit.MILLISECONDS);
+                    old = futureMap.put(prefix, future);
+                    break;
+                default:
+                    throw new UnsupportedOperationException(prefix+" not supported");
+
+            }
+            if (old != null)
+            {
+                old.cancel(true);
+            }
+        });
     }
     @Override
     public void stop()
     {
-        if (future == null)
+        if (!started)
         {
             throw new IllegalStateException();
         }
-        future.cancel(true);
-        future = null;
+        futureMap.values().forEach((f)->f.cancel(true));
     }
 
     @Override
@@ -124,24 +199,5 @@ public class NMEASender extends AnnotatedPropertyStore implements Runnable, Stop
         updated.addAll(updatedProperties);
     }
     
-    @Override
-    public void run()
-    {
-        try
-        {
-            rmc.writeTo(channel);
-            dbt.writeTo(channel);
-            hdt.writeTo(channel);
-            mtw.writeTo(channel);
-            mwv.writeTo(channel);
-            vhw.writeTo(channel);
-            updated.clear();
-        }
-        catch (IOException ex)
-        {
-            log(SEVERE, ex, "NMEASender %s", ex.getMessage());
-        }
-    }
-
     
 }

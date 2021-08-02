@@ -54,6 +54,7 @@
                     <xsd:element name="sntp-server" type="sntp-serverType"/>
                     <xsd:element name="compass-corrector" type="compassCorrectorType"/>
                     <xsd:element name="anchor-manager" type="anchorManagerType"/>
+                    <xsd:element name="n2k-gateway" type="n2kGatewayType"/>
                 </xsd:choice>
                 <xsd:attribute name="dataAccessPort" type="portType"/>
             </xsd:extension>
@@ -174,6 +175,13 @@
         <xsd:attribute name="rootDelay" type="millisType"/>
         <xsd:attribute name="server" type="xsd:string"/>
     </xsd:complexType>
+    <xsd:complexType name="n2kGatewayType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="sentence" type="sentenceType"/>
+        </xsd:choice>
+        <xsd:attribute name="address" type="addressType" use="required"/>
+        <xsd:attribute name="port" type="portType" use="required"/>
+    </xsd:complexType>
     <xsd:complexType name="anchorManagerType">
         <xsd:attribute name="directory" type="xsd:string" use="required"/>
         <xsd:attribute name="anchorWeight" type="xsd:unsignedInt" use="required"/>
@@ -183,6 +191,10 @@
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
         <xsd:attribute name="configFile" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    <xsd:complexType name="sentenceType">
+        <xsd:attribute name="prefix" type="prefixType"/>
+        <xsd:attribute name="period" type="millisType"/>
     </xsd:complexType>
     <xsd:complexType name="variation-sourceType">
         <xsd:attribute name="period" type="millisType"/>

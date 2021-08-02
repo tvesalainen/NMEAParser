@@ -16,7 +16,7 @@
         <module>IcomManager</module>
         <module>track-plotter</module>
     <module>viewer</module>
-  </modules>
+    </modules>
     <name>NMEA Utilities</name>
     <description>
         NMEA Utilities

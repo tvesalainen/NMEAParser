@@ -1,14 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110" allDevices="COM4 COM5" dontScan="">
+<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110" allDevices="COM4 COM5 COM6 COM7" dontScan="">
     <tcp-endpoint port="12345" aisFastBoot="true" name="TCP" enable="true">
         <route prefix="$RA" target="Proc"/>
         <route prefix="$EC" target="Proc"/>
     </tcp-endpoint>
     <processor dataAccessPort="10111" name="Proc" enable="true">
-        <route prefix="$UPMWV" target="Net"/>
         <route prefix="!AI" target="TCP"/>
-        <route prefix="$HCHDT" target="Net TCP"/>
         <route prefix="$IITLL" target="TCP"/>
+        <route prefix="$HCHDT" target="Net TCP"/>
+        <route prefix="$SDDBT" target="Net TCP"/>
+        <route prefix="$INRMC" target="Net TCP"/>
+        <route prefix="$YCMTW" target="Net TCP"/>
+        <route prefix="$VWVHW" target="Net TCP"/>
+        <route prefix="$UPMWV" target="Net TCP"/>
+        <n2k-gateway address="224.0.0.3" port="10111">
+            <sentence prefix="HDT" period="100"/>
+            <sentence prefix="DBT" period="1000"/>
+            <sentence prefix="RMC" period="1000"/>
+            <sentence prefix="MTW" period="2000"/>
+            <sentence prefix="VHW" period="1000"/>
+            <sentence prefix="MWV" period="1000"/>
+        </n2k-gateway>
         <true-wind-source/>
         <tracker directory="c:\\temp"/>
         <compressed-log directory="c:\\temp" properties="latitude longitude"/>
