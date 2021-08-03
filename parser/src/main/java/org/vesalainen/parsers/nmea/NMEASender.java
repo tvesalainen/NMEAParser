@@ -99,7 +99,7 @@ public class NMEASender extends AnnotatedPropertyStore implements Stoppable
         this.dbt = NMEASentence.dbt(()->depthOfWater+transducerOffset, UnitType.METER);
         this.hdt = NMEASentence.hdt(()->trueHeading);
         this.mtw = NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS);
-        this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.KNOT, false);
+        this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.METERS_PER_SECOND, false);
         this.vhw = NMEASentence.vhw(()->waterSpeed, UnitType.KNOT);
     }
 

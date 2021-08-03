@@ -23,6 +23,7 @@ import java.util.List;
 import org.vesalainen.math.Unit;
 import static org.vesalainen.math.UnitType.*;
 import static org.vesalainen.parsers.nmea.NMEACategory.*;
+import static org.vesalainen.parsers.nmea.MessageType.*;
 
 /**
  * NMEAObserver is observer class for NMEA data. NMEAParser calls methods of this 
@@ -70,6 +71,7 @@ public interface NMEAObserver extends Transactional
      * Latitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param latitude Latitude. South is negative.
      */
+    @NMEA0183({BWC, BWR, GGA, GLL, RMA, RMC})
     @NMEACat(COORDINATE)
     @Unit(value=COORDINATE_DEGREES_AND_MINUTES, min=-90, max=90)
     void setLatitude(double latitude);
@@ -77,6 +79,7 @@ public interface NMEAObserver extends Transactional
      * Longitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
      * @param longitude Longitude West is negative.
      */
+    @NMEA0183({BWC, BWR, GGA, GLL, RMA, RMC})
     @NMEACat(COORDINATE)
     @Unit(value=COORDINATE_DEGREES_AND_MINUTES, min=-180, max=180)
     void setLongitude(double longitude);
@@ -84,6 +87,7 @@ public interface NMEAObserver extends Transactional
      * RMA, RMC
      * @param knots 
      */
+    @NMEA0183({RMA, RMC})
     @NMEACat(SPEED)
     @Unit(value=KNOT, min=0, max=50)
     void setSpeedOverGround(float knots);
@@ -91,6 +95,7 @@ public interface NMEAObserver extends Transactional
      * RMA, RMC
      * @param degrees
      */
+    @NMEA0183({RMA, RMC})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=0, max=360)
     void setTrackMadeGood(float degrees);
@@ -98,6 +103,7 @@ public interface NMEAObserver extends Transactional
      * HDG, RMA, RMC
      * @param degrees West is minus
      */
+    @NMEA0183({HDG, RMA, RMC})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=0, max=360)
     void setMagneticVariation(float degrees);
@@ -106,6 +112,7 @@ public interface NMEAObserver extends Transactional
      * APA, APB, XTR
      * @param nm
      */
+    @NMEA0183({APA, APB, XTR})
     @NMEACat(BEARING)
     @Unit(value=NAUTICAL_MILE, min=-10, max=10)
     void setCrossTrackError(float nm);
@@ -113,18 +120,21 @@ public interface NMEAObserver extends Transactional
      * BOD, BWW, RMB, WNC
      * @param toWaypoint 
      */
+    @NMEA0183({BOD, BWW, RMB, WNC})
     @NMEACat(WAYPOINT)
     void setToWaypoint(CharSequence toWaypoint);
     /**
      * BOD, BWW, RMB, WNC
      * @param fromWaypoint 
      */
+    @NMEA0183({BOD, BWW, RMB, WNC})
     @NMEACat(WAYPOINT)
     void setFromWaypoint(CharSequence fromWaypoint);
     /**
      * RMB, WPL
      * @param latitude 
      */
+    @NMEA0183({RMB, WPL})
     @NMEACat(WAYPOINT)
     @Unit(value=COORDINATE_DEGREES_AND_MINUTES, min=-90, max=90)
     void setDestinationWaypointLatitude(double latitude);
@@ -132,6 +142,7 @@ public interface NMEAObserver extends Transactional
      * RMB, WPL
      * @param longitude 
      */
+    @NMEA0183({RMB, WPL})
     @NMEACat(WAYPOINT)
     @Unit(value=COORDINATE_DEGREES_AND_MINUTES, min=-180, max=180)
     void setDestinationWaypointLongitude(double longitude);
@@ -139,6 +150,7 @@ public interface NMEAObserver extends Transactional
      * RMB
      * @param nm 
      */
+    @NMEA0183({RMB})
     @NMEACat(WAYPOINT)
     @Unit(value=NAUTICAL_MILE, min=0, max=10000)
     void setRangeToDestination(float nm);
@@ -146,6 +158,7 @@ public interface NMEAObserver extends Transactional
      * RMB
      * @param degrees True
      */
+    @NMEA0183({RMB})
     @NMEACat(WAYPOINT)
     @Unit(value=DEGREE, min=0, max=360)
     void setBearingToDestination(float degrees);
@@ -153,6 +166,7 @@ public interface NMEAObserver extends Transactional
      * RMB
      * @param knots 
      */
+    @NMEA0183({RMB})
     @NMEACat(WAYPOINT)
     @Unit(value=KNOT, min=0, max=50)
     void setDestinationClosingVelocity(float knots);
@@ -160,18 +174,21 @@ public interface NMEAObserver extends Transactional
      * GGA
      * @param gpsQualityIndicator 
      */
+    @NMEA0183({GGA})
     @NMEACat(GPS)
     void setGpsQualityIndicator(GPSQualityIndicator gpsQualityIndicator);
     /**
      * GGA
      * @param numberOfSatellitesInView 
      */
+    @NMEA0183({GGA})
     @NMEACat(GPS)
     void setNumberOfSatellitesInView(int numberOfSatellitesInView);
     /**
      * GGA
      * @param meters 
      */
+    @NMEA0183({GGA})
     @NMEACat(GPS)
     @Unit(value=METER, min=0, max=50)
     void setHorizontalDilutionOfPrecision(float meters);
@@ -179,6 +196,7 @@ public interface NMEAObserver extends Transactional
      * GGA
      * @param meters
      */
+    @NMEA0183({GGA})
     @NMEACat(GPS)
     @Unit(value=METER, min=0, max=10000)
     void setAntennaAltitude(float meters);
@@ -186,6 +204,7 @@ public interface NMEAObserver extends Transactional
      * GGA
      * @param meters
      */
+    @NMEA0183({GGA})
     @NMEACat(GPS)
     @Unit(METER)
     void setGeoidalSeparation(float meters);
@@ -193,48 +212,56 @@ public interface NMEAObserver extends Transactional
      * GGA
      * @param ageOfDifferentialGPSData 
      */
+    @NMEA0183({GGA})
     @NMEACat(GPS)
     void setAgeOfDifferentialGPSData(float ageOfDifferentialGPSData);
     /**
      * GGA
      * @param differentialReferenceStationID 
      */
+    @NMEA0183({GGA})
     @NMEACat(GPS)
     void setDifferentialReferenceStationID(int differentialReferenceStationID);
     /**
      * APA, APB, GLL, MWV, RMA, RMB, RMC, ROT, RSA, XTE
      * @param status 
      */
+    @NMEA0183({APA, APB, GLL, MWV, RMA, RMB, RMC, ROT, RSA, XTE})
     @NMEACat(GPS)
     void setStatus(char status);
     /**
      * AAM, APA, APB
      * @param arrivalStatus 
      */
+    @NMEA0183({AAM, APA, APB})
     @NMEACat(WAYPOINT)
     void setArrivalStatus(char arrivalStatus);
     /**
      * RMA
      * @param timeDifferenceA 
      */
+    @NMEA0183({RMA})
     @NMEACat(GPS)
     void setTimeDifferenceA(float timeDifferenceA);
     /**
      * RMA
      * @param timeDifferenceB 
      */
+    @NMEA0183({RMA})
     @NMEACat(GPS)
     void setTimeDifferenceB(float timeDifferenceB);
     /**
      * AAM, APA, APB
      * @param waypointStatus 
      */
+    @NMEA0183({AAM, APA, APB})
     @NMEACat(WAYPOINT)
     void setWaypointStatus(char waypointStatus);
     /**
      * AAM
      * @param nm
      */
+    @NMEA0183({AAM})
     @NMEACat(WAYPOINT)
     @Unit(NAUTICAL_MILE)
     void setArrivalCircleRadius(float nm);
@@ -242,104 +269,122 @@ public interface NMEAObserver extends Transactional
      * AAM, APA, APB, BWC, BWR, R00, WCV, WPL
      * @param waypoint 
      */
+    @NMEA0183({AAM, APA, APB, BWC, BWR, R00, WCV, WPL})
     void setWaypoint(CharSequence waypoint);
     /**
      * ALM, RTE
      * @param totalNumberOfMessages 
      */
+    @NMEA0183({ALM, RTE})
     void setTotalNumberOfMessages(int totalNumberOfMessages);
     /**
      * ALM, RTE
      * @param messageNumber 
      */
+    @NMEA0183({ALM, RTE})
     void setMessageNumber(int messageNumber);
     /**
      * ALM
      * @param satellitePRNNumber 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setSatellitePRNNumber(int satellitePRNNumber);
     /**
      * ALM
      * @param gpsWeekNumber 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setGpsWeekNumber(int gpsWeekNumber);
     /**
      * ALM
      * @param svHealth 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setSvHealth(int svHealth);
     /**
      * ALM
      * @param eccentricity 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setEccentricity(int eccentricity);
     /**
      * ALM
      * @param almanacReferenceTime 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setAlmanacReferenceTime(int almanacReferenceTime);
     /**
      * ALM
      * @param inclinationAngle 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setInclinationAngle(int inclinationAngle);
     /**
      * ALM
      * @param rateOfRightAscension 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setRateOfRightAscension(int rateOfRightAscension);
     /**
      * ALM
      * @param rootOfSemiMajorAxis 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setRootOfSemiMajorAxis(int rootOfSemiMajorAxis);
     /**
      * ALM
      * @param argumentOfPerigee 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setArgumentOfPerigee(int argumentOfPerigee);
     /**
      * ALM
      * @param longitudeOfAscensionNode 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setLongitudeOfAscensionNode(int longitudeOfAscensionNode);
     /**
      * ALM
      * @param meanAnomaly 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setMeanAnomaly(int meanAnomaly);
     /**
      * ALM
      * @param f0ClockParameter 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setF0ClockParameter(int f0ClockParameter);
     /**
      * ALM
      * @param f1ClockParameter 
      */
+    @NMEA0183({ALM})
     @NMEACat(GPS)
     void setF1ClockParameter(int f1ClockParameter);
     /**
      * APA, APB, RSA, XTE
      * @param status 
      */
+    @NMEA0183({APA, APB, RSA, XTE})
     void setStatus2(char status);
     /**
      * APA, APB
      * @param bearingOriginToDestination 
      */
+    @NMEA0183({APA, APB})
     @NMEACat(WAYPOINT)
     @Unit(value=DEGREE, min=0, max=360)
     void setMagneticBearingOriginToDestination(float bearingOriginToDestination);
@@ -347,6 +392,7 @@ public interface NMEAObserver extends Transactional
      * APA, APB
      * @param bearingOriginToDestination 
      */
+    @NMEA0183({APA, APB})
     @NMEACat(WAYPOINT)
     @Unit(value=DEGREE, min=0, max=360)
     void setTrueBearingOriginToDestination(float bearingOriginToDestination);
@@ -354,6 +400,7 @@ public interface NMEAObserver extends Transactional
      * APB
      * @param bearingPresentPositionToDestination 
      */
+    @NMEA0183({APB})
     @NMEACat(WAYPOINT)
     @Unit(value=DEGREE, min=0, max=360)
     void setMagneticBearingPresentPositionToDestination(float bearingPresentPositionToDestination);
@@ -361,6 +408,7 @@ public interface NMEAObserver extends Transactional
      * APB
      * @param bearingPresentPositionToDestination 
      */
+    @NMEA0183({APB})
     @NMEACat(WAYPOINT)
     @Unit(value=DEGREE, min=0, max=360)
     void setTrueBearingPresentPositionToDestination(float bearingPresentPositionToDestination);
@@ -368,6 +416,7 @@ public interface NMEAObserver extends Transactional
      * APB
      * @param headingToSteerToDestination 
      */
+    @NMEA0183({APB})
     @NMEACat(WAYPOINT)
     @Unit(value=DEGREE, min=0, max=360)
     void setMagneticHeadingToSteerToDestination(float headingToSteerToDestination);
@@ -375,6 +424,7 @@ public interface NMEAObserver extends Transactional
      * APB
      * @param headingToSteerToDestination 
      */
+    @NMEA0183({APB})
     @NMEACat(WAYPOINT)
     @Unit(value=DEGREE, min=0, max=360)
     void setTrueHeadingToSteerToDestination(float headingToSteerToDestination);
@@ -382,21 +432,25 @@ public interface NMEAObserver extends Transactional
      * BWC, GLL, XTE
      * @param faaModeIndicator 
      */
+    @NMEA0183({BWC, GLL, XTE})
     void setFaaModeIndicator(char faaModeIndicator);
     /**
      * RTE
      * @param messageMode 
      */
+    @NMEA0183({RTE})
     void setMessageMode(char messageMode);
     /**
      * R00, RTE
      * @param list 
      */
+    @NMEA0183({R00, RTE})
     void setWaypoints(List<CharSequence> list);
     /**
-     * BWC, BWR WNC
+     * BWC, BWR, WNC
      * @param nm
      */
+    @NMEA0183({BWC, BWR, WNC})
     @NMEACat(WAYPOINT)
     @Unit(value=NAUTICAL_MILE, min=0, max=500)
     void setDistanceToWaypoint(float nm);
@@ -404,6 +458,7 @@ public interface NMEAObserver extends Transactional
      * DBK
      * @param meters
      */
+    @NMEA0183({DBK})
     @NMEACat(DEPTH)
     @Unit(value=METER, min=0, max=100)
     void setDepthBelowKeel(float meters);
@@ -411,6 +466,7 @@ public interface NMEAObserver extends Transactional
      * DBS
      * @param meters
      */
+    @NMEA0183({DBS})
     @NMEACat(DEPTH)
     @Unit(value=METER, min=0, max=100)
     void setDepthBelowSurface(float meters);
@@ -418,6 +474,7 @@ public interface NMEAObserver extends Transactional
      * DBT
      * @param meters
      */
+    @NMEA0183({DBT})
     @NMEACat(DEPTH)
     @Unit(value=METER, min=0, max=100)
     void setDepthBelowTransducer(float meters);
@@ -425,6 +482,7 @@ public interface NMEAObserver extends Transactional
      * BOD, BWC, BWR, BWW
      * @param degrees
      */
+    @NMEA0183({BOD, BWC, BWR, BWW})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=0, max=360)
     void setTrueBearing(float degrees);
@@ -432,6 +490,7 @@ public interface NMEAObserver extends Transactional
      * BOD, BWC, BWR, BWW
      * @param degrees
      */
+    @NMEA0183({BOD, BWC, BWR, BWW})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=0, max=360)
     void setMagneticBearing(float degrees);
@@ -439,6 +498,7 @@ public interface NMEAObserver extends Transactional
      * DBT
      * @param meters
      */
+    @NMEA0183({DBT})
     @NMEACat(DEPTH)
     @Unit(value=METER, min=0, max=100)
     void setDepthOfWater(float meters);
@@ -446,6 +506,7 @@ public interface NMEAObserver extends Transactional
      * DBT
      * @param meters
      */
+    @NMEA0183({DBT})
     @NMEACat(DEPTH)
     @Unit(value=METER, min=0, max=10)
     void setDepthOffsetOfWater(float meters);
@@ -453,6 +514,7 @@ public interface NMEAObserver extends Transactional
      * HDG
      * @param magneticDeviation 
      */
+    @NMEA0183({HDG})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=-30, max=30)
     void setMagneticDeviation(float magneticDeviation);
@@ -460,6 +522,7 @@ public interface NMEAObserver extends Transactional
      * HDT
      * @param degrees
      */
+    @NMEA0183({HDT})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=0, max=360)
     void setTrueHeading(float degrees);
@@ -467,6 +530,7 @@ public interface NMEAObserver extends Transactional
      * HDM, HDG
      * @param degrees
      */
+    @NMEA0183({HDM, HDG})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=0, max=360)
     void setMagneticHeading(float degrees);
@@ -474,6 +538,7 @@ public interface NMEAObserver extends Transactional
      * MTW
      * @param celcius
      */
+    @NMEA0183({MTW})
     @NMEACat(TEMPERATURE)
     @Unit(value=CELSIUS, min=0, max=40)
     void setWaterTemperature(float celcius);
@@ -481,6 +546,7 @@ public interface NMEAObserver extends Transactional
      * MWV
      * @param windAngle WIND Angle, 0 to 360 degrees
      */
+    @NMEA0183({MWV})
     @NMEACat(WIND)
     @Unit(value=DEGREE, min=0, max=360)
     void setRelativeWindAngle(float windAngle);
@@ -488,6 +554,7 @@ public interface NMEAObserver extends Transactional
      * MWV
      * @param windAngle WIND Angle, 0 to 360 degrees
      */
+    @NMEA0183({MWV})
     @NMEACat(WIND)
     @Unit(value=DEGREE, min=0, max=360)
     void setTrueWindAngle(float windAngle);
@@ -496,6 +563,7 @@ public interface NMEAObserver extends Transactional
      * MWV, VWR
      * @param metersInSecond
      */
+    @NMEA0183({MWV, VWR})
     @NMEACat(WIND)
     @Unit(value=KNOT, min=0, max=100)
     void setRelativeWindSpeed(float metersInSecond);
@@ -504,6 +572,7 @@ public interface NMEAObserver extends Transactional
      * MWV, VWR
      * @param metersInSecond
      */
+    @NMEA0183({MWV, VWR})
     @NMEACat(WIND)
     @Unit(value=KNOT, min=0, max=100)
     void setTrueWindSpeed(float metersInSecond);
@@ -512,6 +581,7 @@ public interface NMEAObserver extends Transactional
      * Rate Of TURN, degrees per minute, "-" means bow turns to port
      * @param rateOfTurn 
      */
+    @NMEA0183({ROT})
     @NMEACat(TURN)
     void setRateOfTurn(float rateOfTurn);
     /**
@@ -519,44 +589,51 @@ public interface NMEAObserver extends Transactional
      * Sourse, S = Shaft, E = Engine
      * @param rpmSource 
      */
-    @NMEACat(RPM)
+    @NMEA0183({MessageType.RPM})
+    @NMEACat(NMEACategory.RPM)
     void setRpmSource(char rpmSource);
     /**
      * RPM
      * Engine or shaft number
      * @param rpmSourceNumber 
      */
-    @NMEACat(RPM)
+    @NMEA0183({MessageType.RPM})
+    @NMEACat(NMEACategory.RPM)
     void setRpmSourceNumber(int rpmSourceNumber);
     /**
      * RPM
- SPEED, Revolutions per minute
+     * SPEED, Revolutions per minute
      * @param rpm 
      */
-    @NMEACat(RPM)
+    @NMEA0183({MessageType.RPM})
+    @NMEACat(NMEACategory.RPM)
     void setRpm(float rpm);
     /**
      * RPM
      * Propeller pitch, % of maximum, "-" means astern
      * @param propellerPitch 
      */
+    @NMEA0183({MessageType.RPM})
     void setPropellerPitch(float propellerPitch);
     /**
      * RSA
- Starboard (or single) rudder sensor, "-" means TURN To Port
+     * Starboard (or single) rudder sensor, "-" means TURN To Port
      * @param starboardRudderSensor 
      */
+    @NMEA0183({RSA})
     void setStarboardRudderSensor(float starboardRudderSensor);
     /**
      * RSA
      * Port rudder sensor
      * @param portRudderSensor 
      */
+    @NMEA0183({RSA})
     void setPortRudderSensor(float portRudderSensor);
     /**
      * VHW
      * @param degrees
      */
+    @NMEA0183({VHW})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=0, max=360)
     void setTrueWaterHeading(float degrees);
@@ -564,6 +641,7 @@ public interface NMEAObserver extends Transactional
      * VHW
      * @param degrees
      */
+    @NMEA0183({VHW})
     @NMEACat(BEARING)
     @Unit(value=DEGREE, min=0, max=360)
     void setMagneticWaterHeading(float degrees);
@@ -571,6 +649,7 @@ public interface NMEAObserver extends Transactional
      * VHW
      * @param knots
      */
+    @NMEA0183({VHW})
     @NMEACat(SPEED)
     @Unit(value=KNOT, min=0, max=50)
     void setWaterSpeed(float knots);
@@ -586,6 +665,7 @@ public interface NMEAObserver extends Transactional
      * WCV
      * @param knots
      */
+    @NMEA0183({WCV})
     @NMEACat(WAYPOINT)
     @Unit(value=KNOT, min=0, max=50)
     void setVelocityToWaypoint(float knots);
@@ -593,11 +673,13 @@ public interface NMEAObserver extends Transactional
      * TXT
      * @param name Target name
      */
+    @NMEA0183({TXT})
     void setTargetName(CharSequence name);
     /**
      * TXT
      * @param message 
      */
+    @NMEA0183({TXT})
     void setMessage(CharSequence message);
     /**
      * Proprietary sentences start with $P. Proprietary type is the string
@@ -615,72 +697,93 @@ public interface NMEAObserver extends Transactional
      * Selection mode: M=Manual, forced to operate in 2D or 3D, A=Automatic, 3D/2D
      * @param mode 
      */
+    @NMEA0183({GSA})
+    @NMEACat(GPS)
     public void setSelectionMode(char mode);
     /**
      * GSA
      * Mode (1 = no fix, 2 = 2D fix, 3 = 3D fix)
      * @param mode 
      */
+    @NMEA0183({GSA})
+    @NMEACat(GPS)
     public void setMode(char mode);
     /**
      * GSA
      * ID of 1st satellite used for fix
      * @param id 
      */
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId1(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId2(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId3(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId4(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId5(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId6(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId7(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId8(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId9(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId10(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId11(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setSatelliteId12(int id);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setPdop(float value);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setHdop(float value);
 
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setVdop(float value);
     /**
      * Total number of satellites in view
      * @param count 
      */
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setTotalNumberOfSatellitesInView(int count);
     /**
      * Satellite PRN number
      * @param prn 
      */
+    @NMEA0183({GSA})
     @NMEACat(GPS)
     public void setPrn(int prn);
     /**
