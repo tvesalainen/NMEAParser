@@ -20,17 +20,8 @@ import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
-import java.util.function.DoubleSupplier;
-import java.util.function.IntFunction;
-import java.util.function.IntSupplier;
 import org.vesalainen.can.AbstractCanService;
-import org.vesalainen.can.SignalCompiler;
-import org.vesalainen.can.dbc.MessageClass;
-import org.vesalainen.can.dbc.SignalClass;
-import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
-import org.vesalainen.code.setter.DoubleSetter;
-import org.vesalainen.code.setter.FloatSetter;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAPGN;
@@ -82,16 +73,16 @@ public class N2KGateway implements Stoppable
         public N2KCompiler(AnnotatedPropertyStore store)
         {
             super(store);
-            addPgnSetter(VESSEL_HEADING, "Heading", "trueHeading");
-            addPgnSetter(WATER_DEPTH, "Depth", "depthOfWater");
+            addPgnSetter(VESSEL_HEADING, "True_Heading", "trueHeading");
+            addPgnSetter(WATER_DEPTH, "Water_Depth_Transducer", "depthOfWater");
             addPgnSetter(WATER_DEPTH, "Offset", "transducerOffset");
             addPgnSetter(POSITION_RAPID_UPDATE, "Latitude", "latitude");
             addPgnSetter(POSITION_RAPID_UPDATE, "Longitude", "longitude");
             addPgnSetter(COG_SOG_RAPID_UPDATE, "Sog", "speedOverGround");
             addPgnSetter(COG_SOG_RAPID_UPDATE, "Cog", "trackMadeGood");
-            addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Temperature", "waterTemperature");
-            addPgnSetter(WIND_DATA, "Wind_Speed", "relativeWindSpeed");
-            addPgnSetter(WIND_DATA, "Wind_Angle", "relativeWindAngle");
+            addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Sea_Temperature", "waterTemperature");
+            addPgnSetter(WIND_DATA, "Apparent_Wind_Speed", "relativeWindSpeed");
+            addPgnSetter(WIND_DATA, "Apparent_Wind_Angle", "relativeWindAngle");
         }
 
         public AnnotatedPropertyStoreSignalCompiler addPgnSetter(NMEAPGN nmeaPgn, String source, String target)
