@@ -78,8 +78,8 @@ public class N2KGateway implements Stoppable
             addPgnSetter(WATER_DEPTH, "Offset", "transducerOffset");
             addPgnSetter(POSITION_RAPID_UPDATE, "Latitude", "latitude");
             addPgnSetter(POSITION_RAPID_UPDATE, "Longitude", "longitude");
-            addPgnSetter(COG_SOG_RAPID_UPDATE, "Sog", "speedOverGround");
-            addPgnSetter(COG_SOG_RAPID_UPDATE, "Cog", "trackMadeGood");
+            addPgnSetter(COG_SOG_RAPID_UPDATE, "Speed_Over_Ground", "speedOverGround");
+            addPgnSetter(COG_SOG_RAPID_UPDATE, "True_Course_Over_Ground", "trackMadeGood");
             addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Sea_Temperature", "waterTemperature");
             addPgnSetter(WIND_DATA, "Apparent_Wind_Speed", "relativeWindSpeed");
             addPgnSetter(WIND_DATA, "Apparent_Wind_Angle", "relativeWindAngle");
