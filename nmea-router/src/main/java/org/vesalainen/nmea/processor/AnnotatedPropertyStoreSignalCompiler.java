@@ -37,10 +37,10 @@ import org.vesalainen.code.setter.IntSetter;
  */
 public class AnnotatedPropertyStoreSignalCompiler implements SignalCompiler
 {
-    private final AnnotatedPropertyStore store;
-    private final Map<Integer,Msg> canIdMap = new HashMap<>();
-    private final Map<Integer,Msg> pgnMap = new HashMap<>();
-    private ThreadLocal<Msg> ctx = new ThreadLocal<>();
+    protected final AnnotatedPropertyStore store;
+    protected final Map<Integer,Msg> canIdMap = new HashMap<>();
+    protected final Map<Integer,Msg> pgnMap = new HashMap<>();
+    protected ThreadLocal<Msg> ctx = new ThreadLocal<>();
 
     public AnnotatedPropertyStoreSignalCompiler(AnnotatedPropertyStore store)
     {
@@ -153,10 +153,10 @@ public class AnnotatedPropertyStoreSignalCompiler implements SignalCompiler
         return SignalCompiler.super.compile(mc, sc, supplier, map); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private static class Msg
+    protected static class Msg
     {
-        private final int id;
-        private final Map<String,String> signals = new HashMap<>();
+        protected final int id;
+        protected final Map<String,String> signals = new HashMap<>();
 
         public Msg(int id)
         {

@@ -44,7 +44,7 @@ import org.vesalainen.navi.SimpleWayPoint;
 import org.vesalainen.parsers.nmea.AbstractNMEAObserver;
 import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.parsers.nmea.time.AbstractGPSClock;
+import org.vesalainen.parsers.nmea.time.GPSClock;
 import org.vesalainen.ui.Plotter;
 import org.vesalainen.util.Merger;
 
@@ -268,7 +268,7 @@ public class GPSCompass
         public void setClock(Clock clock)
         {
             super.setClock(clock);
-            ((AbstractGPSClock)clock).setPartialUpdate(true);
+            ((GPSClock)clock).setPartialUpdate(true);
         }
 
         @Override

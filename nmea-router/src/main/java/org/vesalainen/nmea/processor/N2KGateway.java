@@ -67,7 +67,7 @@ public class N2KGateway implements Stoppable
         canService.stop();
     }
 
-    private final class N2KCompiler extends AnnotatedPropertyStoreSignalCompiler
+    private final class N2KCompiler extends TransactionalPropertyStoreSignalCompiler
     {
 
         public N2KCompiler(AnnotatedPropertyStore store)
