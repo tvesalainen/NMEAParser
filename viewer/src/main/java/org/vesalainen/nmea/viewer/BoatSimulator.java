@@ -16,7 +16,7 @@
  */
 package org.vesalainen.nmea.viewer;
 
-import org.vesalainen.parsers.nmea.NMEASender;
+import org.vesalainen.parsers.nmea.NMEASender0;
 import static java.lang.Math.*;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
@@ -38,7 +38,7 @@ public class BoatSimulator implements Runnable, Stoppable
     private WritableByteChannel channel;
     private final CachedScheduledThreadPool executor;
     private ScheduledFuture<?> future;
-    private NMEASender sender;
+    private NMEASender0 sender;
     private Clock clock;
     private long lasttime;
     private double latitude;
@@ -66,7 +66,7 @@ public class BoatSimulator implements Runnable, Stoppable
     {
         this.channel = channel;
         this.executor = executor;
-        this.sender = new NMEASender(channel, executor);
+        this.sender = new NMEASender0(channel, executor);
         this.clock = clock;
         this.lasttime = clock.millis();
         this.latitude = latitude;

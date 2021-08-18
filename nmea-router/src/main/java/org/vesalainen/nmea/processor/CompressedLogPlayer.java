@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.vesalainen.io.CompressedInput;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
-import org.vesalainen.parsers.nmea.NMEASender;
+import org.vesalainen.parsers.nmea.NMEASender0;
 import org.vesalainen.time.SimpleClock;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -35,13 +35,13 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 public class CompressedLogPlayer implements AutoCloseable
 {
     private WritableByteChannel channel;
-    private final NMEASender sender;
+    private final NMEASender0 sender;
     private long millis = -1;
 
     private CompressedLogPlayer(String address, int port, Stream<Path> paths, CachedScheduledThreadPool executor) throws IOException
     {
         this.channel = UnconnectedDatagramChannel.open(address, port, 100, true, false);
-        this.sender = new NMEASender(channel, executor);
+        this.sender = new NMEASender0(channel, executor);
         Clock clock = new SimpleClock(()->millis);
         sender.start("");
         sender.set("clock", clock);
