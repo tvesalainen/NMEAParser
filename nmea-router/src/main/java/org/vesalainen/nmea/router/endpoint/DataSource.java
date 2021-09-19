@@ -88,11 +88,6 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
         emitter.sendNotification(textSupplier, userDataSupplier, timestampSupplier);
     }
 
-    public synchronized void sendNotification(String text, Object userData, long timestamp)
-    {
-        emitter.sendNotification(text, userData, timestamp);
-    }
-
     @Override
     public synchronized void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws ListenerNotFoundException
     {

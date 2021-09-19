@@ -179,8 +179,11 @@
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
             <xsd:element name="sentence" type="sentenceType"/>
         </xsd:choice>
-        <xsd:attribute name="address" type="addressType" use="required"/>
-        <xsd:attribute name="port" type="portType" use="required"/>
+        <xsd:attribute name="bus" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    <xsd:complexType name="sentenceType">
+        <xsd:attribute name="prefix" type="prefixType"/>
+        <xsd:attribute name="pgn" type="xsd:unsignedInt"/>
     </xsd:complexType>
     <xsd:complexType name="anchorManagerType">
         <xsd:attribute name="directory" type="xsd:string" use="required"/>
@@ -191,10 +194,6 @@
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
         <xsd:attribute name="configFile" type="xsd:string" use="required"/>
-    </xsd:complexType>
-    <xsd:complexType name="sentenceType">
-        <xsd:attribute name="prefix" type="prefixType"/>
-        <xsd:attribute name="period" type="millisType"/>
     </xsd:complexType>
     <xsd:complexType name="variation-sourceType">
         <xsd:attribute name="period" type="millisType"/>

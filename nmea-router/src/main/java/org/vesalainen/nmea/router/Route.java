@@ -19,6 +19,7 @@ package org.vesalainen.nmea.router;
 import java.io.IOException;
 import java.util.List;
 import static java.util.logging.Level.FINEST;
+import java.util.stream.Collectors;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.router.endpoint.Endpoint;
@@ -52,7 +53,7 @@ public final class Route extends JavaLogging
     {
         super(Route.class);
         List<String> targets = routeType.getTarget();
-        toString = targets.toString();
+        toString = targets.stream().collect(Collectors.joining(", "));
         if (targets != null)
         {
             targetList = new String[targets.size()];

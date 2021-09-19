@@ -13,13 +13,13 @@
         <route prefix="$YCMTW" target="Net TCP"/>
         <route prefix="$VWVHW" target="Net TCP"/>
         <route prefix="$UPMWV" target="Net TCP"/>
-        <n2k-gateway address="224.0.0.3" port="10111">
-            <sentence prefix="HDT" period="100"/>
-            <sentence prefix="DBT" period="1000"/>
-            <sentence prefix="RMC" period="1000"/>
-            <sentence prefix="MTW" period="2000"/>
-            <sentence prefix="VHW" period="1000"/>
-            <sentence prefix="MWV" period="1000"/>
+        <n2k-gateway bus="can1">
+            <sentence prefix="HDT"/>
+            <sentence prefix="DBT"/>
+            <sentence prefix="RMC"/>
+            <sentence prefix="MTW"/>
+            <sentence prefix="VHW"/>
+            <sentence prefix="MWV"/>
         </n2k-gateway>
         <true-wind-source/>
         <tracker directory="c:\\temp"/>

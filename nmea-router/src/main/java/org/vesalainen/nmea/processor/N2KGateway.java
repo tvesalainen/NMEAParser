@@ -16,12 +16,18 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.can.AnnotatedPropertyStoreSignalCompiler;
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 import org.vesalainen.can.AbstractCanService;
+import org.vesalainen.can.dbc.MessageClass;
+import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
+import org.vesalainen.code.setter.IntSetter;
+import org.vesalainen.code.setter.LongSetter;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAPGN;
@@ -46,11 +52,12 @@ public class N2KGateway implements Stoppable
         this.out = out;
         this.executor = executor;
         this.nmeaSender = new NMEASender(Clock.systemUTC(), out, executor);
-        this.canService = AbstractCanService.openSocketCan2Udp(type.getAddress(), type.getPort(), new N2KCompiler(nmeaSender));
+        this.canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KCompiler(nmeaSender));
         canService.addN2K();
         type.getSentence().forEach((s) ->
         {
-            nmeaSender.schedule(s.getPrefix(), s.getPeriod(), TimeUnit.MILLISECONDS);
+            Long pgn = s.getPgn();
+            nmeaSender.add(s.getPrefix(), pgn != null ? pgn.intValue() : getPgnFor(s.getPrefix()));
         });
     }
 
@@ -67,7 +74,28 @@ public class N2KGateway implements Stoppable
         canService.stop();
     }
 
-    private final class N2KCompiler extends TransactionalPropertyStoreSignalCompiler
+    private int getPgnFor(String prefix)
+    {
+        switch (prefix)
+        {
+            case "RMC":
+                return POSITION_RAPID_UPDATE.getPGN();
+            case "DBT":
+                return WATER_DEPTH.getPGN();
+            case "HDT":
+                return VESSEL_HEADING.getPGN();
+            case "MTW":
+                return ENVIRONMENTAL_PARAMETERS.getPGN();
+            case "MWV":
+                return WIND_DATA.getPGN();
+            case "VHW":
+                return VESSEL_SPEED_COMPONENTS.getPGN();
+            default:
+                throw new UnsupportedOperationException(prefix+" not supported");
+        }
+    }
+
+    private final class N2KCompiler extends AnnotatedPropertyStoreSignalCompiler
     {
 
         public N2KCompiler(AnnotatedPropertyStore store)
@@ -83,11 +111,32 @@ public class N2KGateway implements Stoppable
             addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Sea_Temperature", "waterTemperature");
             addPgnSetter(WIND_DATA, "Apparent_Wind_Speed", "relativeWindSpeed");
             addPgnSetter(WIND_DATA, "Apparent_Wind_Angle", "relativeWindAngle");
+            //addPgnSetter(VESSEL_SPEED_COMPONENTS, "", "waterSpeed"); TODO!!!
         }
 
         public AnnotatedPropertyStoreSignalCompiler addPgnSetter(NMEAPGN nmeaPgn, String source, String target)
         {
             return addPgnSetter(nmeaPgn.getPGN(), source, target);
+        }
+
+        @Override
+        public Runnable compileBegin(MessageClass mc, LongSupplier millisSupplier)
+        {
+            IntSetter pgnSetter = nmeaSender.getIntSetter("pgn");
+            LongSetter millisSetter = nmeaSender.getLongSetter("millis");
+            int pgn = PGN.pgn(mc.getId());
+            return ()->
+            {
+                store.begin(null);
+                pgnSetter.set(pgn);
+                millisSetter.set(millisSupplier.getAsLong());
+            };
+        }
+
+        @Override
+        public Runnable compileEnd(MessageClass mc)
+        {
+            return ()->store.commit(null);
         }
 
         
