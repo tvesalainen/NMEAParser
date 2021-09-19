@@ -22,19 +22,13 @@ import java.lang.invoke.MethodHandles;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.time.ZonedDateTime;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
 import static java.util.logging.Level.SEVERE;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.nmea.util.Stoppable;
-import org.vesalainen.util.TimeToLiveSet;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -44,6 +38,8 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 public class NMEASender extends AnnotatedPropertyStore implements Stoppable
 {
     private @Property Clock clock;
+    private @Property long millis;
+    private @Property int pgn;
     private @Property double latitude;
     private @Property double longitude;
     private @Property float depthOfWater;
@@ -60,19 +56,12 @@ public class NMEASender extends AnnotatedPropertyStore implements Stoppable
     
     private final WritableByteChannel channel;
     private final CachedScheduledThreadPool executor;
-    private final Set<String> updated;
     private final TSAGeoMag geoMag = new TSAGeoMag();
     
-    private final Map<String,Long> scheduleMap = new ConcurrentHashMap<>();
-    private final Map<String,ScheduledFuture> futureMap = new ConcurrentHashMap<>();
-    private boolean started;
+    private final Map<String,NMEASentence> prefixMap = new HashMap<>();
+    private final Map<Integer,NMEASentence> pgnMap = new HashMap<>();
     
-    private final Sentence rmc;
-    private final Sentence dbt;
-    private final Sentence hdt;
-    private final Sentence mtw;
-    private final Sentence mwv;
-    private final Sentence vhw;
+    private boolean started;
     
     public NMEASender(WritableByteChannel channel)
     {
@@ -88,80 +77,34 @@ public class NMEASender extends AnnotatedPropertyStore implements Stoppable
         this.clock = clock;
         this.channel = channel;
         this.executor = executor;
-        this.updated = new TimeToLiveSet<>(clock, 5, TimeUnit.SECONDS, this::stale);        
         
-        this.rmc = new Sentence(
-                NMEASentence.rmc(
+        prefixMap.put("RMC", NMEASentence.rmc(
                 ()->clock, 
                 ()->latitude, 
                 ()->longitude, 
                 ()->speedOverGround, 
                 ()->trackMadeGood, 
-                this::magneticVariation),
-                ()->areFresh("latitude", "longitude", "speedOverGround", "trackMadeGood")
-        );
-        this.dbt = new Sentence(
-                NMEASentence.dbt(()->depthOfWater+transducerOffset, UnitType.METER),
-                ()->areFresh("depthOfWater", "transducerOffset")
-        );
-        this.hdt = new Sentence(
-                NMEASentence.hdt(()->trueHeading),
-                ()->areFresh("trueHeading")
-        );
-        this.mtw = new Sentence(
-                NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS),
-                ()->areFresh("waterTemperature")
-        );
-        this.mwv = new Sentence(
-                NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.METERS_PER_SECOND, false),
-                ()->areFresh("relativeWindAngle", "relativeWindSpeed")
-        );
-        this.vhw = new Sentence(
-                NMEASentence.vhw(()->waterSpeed, UnitType.KNOT),
-                ()->areFresh("waterSpeed")
-        );
+                this::magneticVariation));
+        prefixMap.put("DBT", NMEASentence.dbt(()->depthOfWater+transducerOffset, UnitType.METER));
+        prefixMap.put("HDT", NMEASentence.hdt(()->trueHeading));
+        prefixMap.put("MTW", NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS));
+        prefixMap.put("MWV", NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.METERS_PER_SECOND, false));
+        prefixMap.put("VHW", NMEASentence.vhw(()->waterSpeed, UnitType.KNOT));
     }
 
-    public void schedule(String prefix, long period, TimeUnit unit)
+    public void add(String prefix, int pgn)
     {
-        switch (prefix)
+        NMEASentence sentence = prefixMap.get(prefix);
+        if (sentence == null)
         {
-            case "RMC":
-            case "DBT":
-            case "HDT":
-            case "MTW":
-            case "MWV":
-            case "VHW":
-                scheduleMap.put(prefix, TimeUnit.MILLISECONDS.convert(period, unit));
-                break;
-            default:
-                throw new UnsupportedOperationException(prefix+" not supported");
-
+            throw new UnsupportedOperationException(prefix+" not supported");
         }
+        pgnMap.put(pgn, sentence);
     }
     public double magneticVariation()
     {
         ZonedDateTime now = ZonedDateTime.now(clock);
         return geoMag.getDeclination(latitude, longitude, (double)(now.getYear()+now.getDayOfYear()/365.0), 0);
-    }
-    private boolean areFresh(String... params)
-    {
-        for (String p : params)
-        {
-            if (!isFresh(p))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    private boolean isFresh(String param)
-    {
-        return updated.contains(param);
-    }
-    private void stale(String param)
-    {
-        
     }
     public void start()
     {
@@ -169,45 +112,6 @@ public class NMEASender extends AnnotatedPropertyStore implements Stoppable
         {
             throw new IllegalStateException();
         }
-        scheduleMap.forEach((prefix, period)->
-        {
-            ScheduledFuture<?> future;
-            ScheduledFuture<?> old = null;
-            switch (prefix)
-            {
-                case "RMC":
-                    future = executor.scheduleAtFixedRate(rmc, 0, period, TimeUnit.MILLISECONDS);
-                    old = futureMap.put(prefix, future);
-                    break;
-                case "DBT":
-                    future = executor.scheduleAtFixedRate(dbt, 0, period, TimeUnit.MILLISECONDS);
-                    old = futureMap.put(prefix, future);
-                    break;
-                case "HDT":
-                    future = executor.scheduleAtFixedRate(hdt, 0, period, TimeUnit.MILLISECONDS);
-                    old = futureMap.put(prefix, future);
-                    break;
-                case "MTW":
-                    future = executor.scheduleAtFixedRate(mtw, 0, period, TimeUnit.MILLISECONDS);
-                    old = futureMap.put(prefix, future);
-                    break;
-                case "MWV":
-                    future = executor.scheduleAtFixedRate(mwv, 0, period, TimeUnit.MILLISECONDS);
-                    old = futureMap.put(prefix, future);
-                    break;
-                case "VHW":
-                    future = executor.scheduleAtFixedRate(vhw, 0, period, TimeUnit.MILLISECONDS);
-                    old = futureMap.put(prefix, future);
-                    break;
-                default:
-                    throw new UnsupportedOperationException(prefix+" not supported");
-
-            }
-            if (old != null)
-            {
-                old.cancel(true);
-            }
-        });
     }
     @Override
     public void stop()
@@ -216,41 +120,23 @@ public class NMEASender extends AnnotatedPropertyStore implements Stoppable
         {
             throw new IllegalStateException();
         }
-        futureMap.values().forEach((f)->f.cancel(true));
     }
 
     @Override
-    public void commit(String reason, Collection<String> updatedProperties)
+    public void commit(String reason)
     {
-        updated.addAll(updatedProperties);
-    }
-    
-    private class Sentence implements Runnable
-    {
-        private NMEASentence sentence;
-        private BooleanSupplier predicate;
-
-        public Sentence(NMEASentence sentence, BooleanSupplier predicate)
-        {
-            this.sentence = sentence;
-            this.predicate = predicate;
-        }
-        
-        @Override
-        public void run()
+        NMEASentence sentence = pgnMap.get(pgn);
+        if (sentence != null)
         {
             try
             {
-                if (predicate.getAsBoolean())
-                {
-                    sentence.writeTo(channel);
-                }
+                sentence.writeTo(channel);
             }
             catch (IOException ex)
             {
-                log(SEVERE, ex, "NMEASender %s", ex.getMessage());
+                log(SEVERE, ex, "commit");
             }
         }
-        
     }
+    
 }
