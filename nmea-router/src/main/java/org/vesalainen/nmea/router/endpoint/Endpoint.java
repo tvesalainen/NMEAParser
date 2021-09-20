@@ -286,16 +286,6 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         return fingerPrint;
     }
 
-    @Override
-    public List<String> getDistribution()
-    {
-        if (reader != null)
-        {
-            return reader.getDistribution();
-        }
-        return null;
-    }
-
     public E getEndpointType()
     {
         return endpointType;

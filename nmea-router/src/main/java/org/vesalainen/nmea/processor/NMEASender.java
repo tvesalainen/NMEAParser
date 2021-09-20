@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.parsers.nmea;
+package org.vesalainen.nmea.processor;
 
 import d3.env.TSAGeoMag;
 import java.io.IOException;
@@ -29,6 +29,7 @@ import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.nmea.util.Stoppable;
+import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -89,7 +90,7 @@ public class NMEASender extends AnnotatedPropertyStore implements Stoppable
         prefixMap.put("HDT", NMEASentence.hdt(()->trueHeading));
         prefixMap.put("MTW", NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS));
         prefixMap.put("MWV", NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.METERS_PER_SECOND, false));
-        prefixMap.put("VHW", NMEASentence.vhw(()->waterSpeed, UnitType.KNOT));
+        prefixMap.put("VHW", NMEASentence.vhw(()->waterSpeed, UnitType.METERS_PER_SECOND));
     }
 
     public void add(String prefix, int pgn)

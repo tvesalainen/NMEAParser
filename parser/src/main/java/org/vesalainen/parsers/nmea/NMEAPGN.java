@@ -114,7 +114,7 @@ public enum NMEAPGN
      * The purpose of this PGN is to provide a single transmission that
      * describes the motion of a vessel.
      */
-    SPEED(128259),
+    SPEED_WATER_REFERENCED(128259),
     /**
      * The 'Position Delta, High Precision Rapid Update' Parameter Group is
      * intended for applications where very high precision and very fast update

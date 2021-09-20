@@ -41,7 +41,6 @@ public class NMEAReader extends JavaLogging
     private int bufferSize;
     private OkConsumer onOk;
     private IOConsumer<Supplier<byte[]>> onError;
-    private ReadCountDistribution distribution;
 
     public NMEAReader(String name, NMEAMatcher matcher, ScatteringByteChannel channel, int bufSize, OkConsumer onOk, IOConsumer<Supplier<byte[]>> onError)
     {
@@ -56,7 +55,6 @@ public class NMEAReader extends JavaLogging
         this.bufferSize = bufSize;
         this.onOk = onOk;
         this.onError = onError;
-        this.distribution = new ReadCountDistribution(bufSize);
     }
     
     public void read() throws IOException
@@ -82,7 +80,6 @@ public class NMEAReader extends JavaLogging
             {
                 throw new EOFException(name+" "+channel);
             }
-            distribution.increment(count);
             Matcher.Status match;
             while (ring.hasRemaining())
             {
@@ -120,10 +117,6 @@ public class NMEAReader extends JavaLogging
         }
     }
 
-    public List<String> getDistribution()
-    {
-        return distribution.getDistribution();
-    }
     @FunctionalInterface
     public interface OkConsumer
     {

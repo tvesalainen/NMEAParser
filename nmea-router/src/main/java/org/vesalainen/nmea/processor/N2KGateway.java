@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import org.vesalainen.can.AbstractCanService;
 import org.vesalainen.can.dbc.MessageClass;
@@ -32,7 +33,6 @@ import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAPGN;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
-import org.vesalainen.parsers.nmea.NMEASender;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -89,7 +89,7 @@ public class N2KGateway implements Stoppable
             case "MWV":
                 return WIND_DATA.getPGN();
             case "VHW":
-                return VESSEL_SPEED_COMPONENTS.getPGN();
+                return SPEED_WATER_REFERENCED.getPGN();
             default:
                 throw new UnsupportedOperationException(prefix+" not supported");
         }
@@ -110,8 +110,8 @@ public class N2KGateway implements Stoppable
             addPgnSetter(COG_SOG_RAPID_UPDATE, "True_Course_Over_Ground", "trackMadeGood");
             addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Sea_Temperature", "waterTemperature");
             addPgnSetter(WIND_DATA, "Apparent_Wind_Speed", "relativeWindSpeed");
-            addPgnSetter(WIND_DATA, "Apparent_Wind_Angle", "relativeWindAngle");
-            //addPgnSetter(VESSEL_SPEED_COMPONENTS, "", "waterSpeed"); TODO!!!
+            addPgnSetter(WIND_DATA, "Apparent_Wind_Direction", "relativeWindAngle");
+            addPgnSetter(SPEED_WATER_REFERENCED, "Speed_Water_Referenced", "waterSpeed");
         }
 
         public AnnotatedPropertyStoreSignalCompiler addPgnSetter(NMEAPGN nmeaPgn, String source, String target)
@@ -134,9 +134,19 @@ public class N2KGateway implements Stoppable
         }
 
         @Override
-        public Runnable compileEnd(MessageClass mc)
+        public Consumer<Throwable> compileEnd(MessageClass mc)
         {
-            return ()->store.commit(null);
+            return (ex)->
+            {
+                if (ex == null)
+                {
+                    store.commit(null);
+                }
+                else
+                {
+                    store.rollback(ex.getMessage());
+                }
+            };
         }
 
         

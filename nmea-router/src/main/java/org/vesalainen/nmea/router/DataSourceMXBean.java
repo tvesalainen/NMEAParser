@@ -17,7 +17,6 @@
 package org.vesalainen.nmea.router;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -39,6 +38,5 @@ public interface DataSourceMXBean
     {
         return 100*getErrorBytes()/getReadBytes();
     }
-    List<String> getDistribution();
     String getChannel();
 }
