@@ -20,7 +20,7 @@ import org.vesalainen.can.AnnotatedPropertyStoreSignalCompiler;
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import org.vesalainen.can.AbstractCanService;
@@ -46,6 +46,7 @@ public class N2KGateway implements Stoppable
     private final CachedScheduledThreadPool executor;
     private final AbstractCanService canService;
     private final NMEASender nmeaSender;
+    private final ReentrantLock lock = new ReentrantLock();
 
     public N2KGateway(N2KGatewayType type, WritableByteChannel out, CachedScheduledThreadPool executor) throws IOException
     {
@@ -127,6 +128,7 @@ public class N2KGateway implements Stoppable
             int pgn = PGN.pgn(mc.getId());
             return ()->
             {
+                lock.lock();
                 store.begin(null);
                 pgnSetter.set(pgn);
                 millisSetter.set(millisSupplier.getAsLong());
@@ -138,13 +140,20 @@ public class N2KGateway implements Stoppable
         {
             return (ex)->
             {
-                if (ex == null)
+                try
                 {
-                    store.commit(null);
+                    if (ex == null)
+                    {
+                        store.commit(null);
+                    }
+                    else
+                    {
+                        store.rollback(ex.getMessage());
+                    }
                 }
-                else
+                finally
                 {
-                    store.rollback(ex.getMessage());
+                    lock.unlock();
                 }
             };
         }
