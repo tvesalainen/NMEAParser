@@ -16,22 +16,13 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.can.AnnotatedPropertyStoreSignalCompiler;
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
-import java.util.function.LongSupplier;
 import org.vesalainen.can.AbstractCanService;
-import org.vesalainen.can.dbc.MessageClass;
-import org.vesalainen.can.j1939.PGN;
-import org.vesalainen.code.AnnotatedPropertyStore;
-import org.vesalainen.code.setter.IntSetter;
-import org.vesalainen.code.setter.LongSetter;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.util.Stoppable;
-import org.vesalainen.parsers.nmea.NMEAPGN;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -46,14 +37,15 @@ public class N2KGateway implements Stoppable
     private final CachedScheduledThreadPool executor;
     private final AbstractCanService canService;
     private final NMEASender nmeaSender;
-    private final ReentrantLock lock = new ReentrantLock();
+    private final AISSender aisSender;
 
     public N2KGateway(N2KGatewayType type, WritableByteChannel out, CachedScheduledThreadPool executor) throws IOException
     {
         this.out = out;
         this.executor = executor;
-        this.nmeaSender = new NMEASender(Clock.systemUTC(), out, executor);
-        this.canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KCompiler(nmeaSender));
+        this.nmeaSender = new NMEASender(Clock.systemUTC(), out);
+        this.aisSender = new AISSender(out);
+        this.canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender));
         canService.addN2K();
         type.getSentence().forEach((s) ->
         {
@@ -65,13 +57,11 @@ public class N2KGateway implements Stoppable
     void start()
     {
         canService.start();
-        nmeaSender.start();
     }
     
     @Override
     public void stop()
     {
-        nmeaSender.stop();
         canService.stop();
     }
 
@@ -96,68 +86,4 @@ public class N2KGateway implements Stoppable
         }
     }
 
-    private final class N2KCompiler extends AnnotatedPropertyStoreSignalCompiler
-    {
-
-        public N2KCompiler(AnnotatedPropertyStore store)
-        {
-            super(store);
-            addPgnSetter(VESSEL_HEADING, "True_Heading", "trueHeading");
-            addPgnSetter(WATER_DEPTH, "Water_Depth_Transducer", "depthOfWater");
-            addPgnSetter(WATER_DEPTH, "Offset", "transducerOffset");
-            addPgnSetter(POSITION_RAPID_UPDATE, "Latitude", "latitude");
-            addPgnSetter(POSITION_RAPID_UPDATE, "Longitude", "longitude");
-            addPgnSetter(COG_SOG_RAPID_UPDATE, "Speed_Over_Ground", "speedOverGround");
-            addPgnSetter(COG_SOG_RAPID_UPDATE, "True_Course_Over_Ground", "trackMadeGood");
-            addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Sea_Temperature", "waterTemperature");
-            addPgnSetter(WIND_DATA, "Apparent_Wind_Speed", "relativeWindSpeed");
-            addPgnSetter(WIND_DATA, "Apparent_Wind_Direction", "relativeWindAngle");
-            addPgnSetter(SPEED_WATER_REFERENCED, "Speed_Water_Referenced", "waterSpeed");
-        }
-
-        public AnnotatedPropertyStoreSignalCompiler addPgnSetter(NMEAPGN nmeaPgn, String source, String target)
-        {
-            return addPgnSetter(nmeaPgn.getPGN(), source, target);
-        }
-
-        @Override
-        public Runnable compileBegin(MessageClass mc, LongSupplier millisSupplier)
-        {
-            IntSetter pgnSetter = nmeaSender.getIntSetter("pgn");
-            LongSetter millisSetter = nmeaSender.getLongSetter("millis");
-            int pgn = PGN.pgn(mc.getId());
-            return ()->
-            {
-                lock.lock();
-                store.begin(null);
-                pgnSetter.set(pgn);
-                millisSetter.set(millisSupplier.getAsLong());
-            };
-        }
-
-        @Override
-        public Consumer<Throwable> compileEnd(MessageClass mc)
-        {
-            return (ex)->
-            {
-                try
-                {
-                    if (ex == null)
-                    {
-                        store.commit(null);
-                    }
-                    else
-                    {
-                        store.rollback(ex.getMessage());
-                    }
-                }
-                finally
-                {
-                    lock.unlock();
-                }
-            };
-        }
-
-        
-    }
 }

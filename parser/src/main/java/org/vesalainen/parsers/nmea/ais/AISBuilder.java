@@ -44,8 +44,12 @@ public final class AISBuilder
 
     public AISBuilder(MessageTypes type, int mmsi)
     {
-        integer(6, type.ordinal());
-        integer(2, 0);  // repeat
+        this(type.ordinal(), 0, mmsi);
+    }
+    public AISBuilder(int type, int repeat, int mmsi)
+    {
+        integer(6, type);
+        integer(2, repeat);  // repeat
         integer(30, mmsi);
     }
     

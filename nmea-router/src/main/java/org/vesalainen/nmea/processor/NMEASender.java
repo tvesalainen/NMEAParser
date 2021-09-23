@@ -28,15 +28,13 @@ import static java.util.logging.Level.SEVERE;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.math.UnitType;
-import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class NMEASender extends AnnotatedPropertyStore implements Stoppable
+public class NMEASender extends AnnotatedPropertyStore
 {
     private @Property Clock clock;
     private @Property long millis;
@@ -56,28 +54,20 @@ public class NMEASender extends AnnotatedPropertyStore implements Stoppable
     private @Property float trackMadeGood;
     
     private final WritableByteChannel channel;
-    private final CachedScheduledThreadPool executor;
     private final TSAGeoMag geoMag = new TSAGeoMag();
     
     private final Map<String,NMEASentence> prefixMap = new HashMap<>();
     private final Map<Integer,NMEASentence> pgnMap = new HashMap<>();
     
-    private boolean started;
-    
     public NMEASender(WritableByteChannel channel)
     {
-        this(Clock.systemUTC(), channel, new CachedScheduledThreadPool());
+        this(Clock.systemUTC(), channel);
     }
-    public NMEASender(WritableByteChannel channel, CachedScheduledThreadPool executor)
-    {
-        this(Clock.systemUTC(), channel, executor);
-    }
-    public NMEASender(Clock clock, WritableByteChannel channel, CachedScheduledThreadPool executor)
+    public NMEASender(Clock clock, WritableByteChannel channel)
     {
         super(MethodHandles.lookup());
         this.clock = clock;
         this.channel = channel;
-        this.executor = executor;
         
         prefixMap.put("RMC", NMEASentence.rmc(
                 ()->clock, 
@@ -107,22 +97,6 @@ public class NMEASender extends AnnotatedPropertyStore implements Stoppable
         ZonedDateTime now = ZonedDateTime.now(clock);
         return geoMag.getDeclination(latitude, longitude, (double)(now.getYear()+now.getDayOfYear()/365.0), 0);
     }
-    public void start()
-    {
-        if (started)
-        {
-            throw new IllegalStateException();
-        }
-    }
-    @Override
-    public void stop()
-    {
-        if (!started)
-        {
-            throw new IllegalStateException();
-        }
-    }
-
     @Override
     public void commit(String reason)
     {
