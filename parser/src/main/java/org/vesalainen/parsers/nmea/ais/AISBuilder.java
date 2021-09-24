@@ -20,6 +20,7 @@ import org.vesalainen.math.Circle;
 import org.vesalainen.math.Polygon;
 import org.vesalainen.math.Sector;
 import org.vesalainen.parsers.nmea.MessageType;
+import static org.vesalainen.parsers.nmea.MessageType.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.TalkerId;
 import org.vesalainen.parsers.nmea.ais.areanotice.AssociatedText;
@@ -37,6 +38,7 @@ public final class AISBuilder
     public static final NMEASentence[] EMPTY = new NMEASentence[]{};
     
     private StringBuilder sb = new StringBuilder();
+    private String transceiver = "A"; // 'A', 'B' or ''
 
     AISBuilder()    // for testing
     {
@@ -55,6 +57,7 @@ public final class AISBuilder
     
     public NMEASentence[] build()
     {
+        MessageType messageType = transceiver.isEmpty() ? VDO : VDM;
         int length = sb.length();
         while ((length % 8) != 0)
         {
@@ -69,11 +72,11 @@ public final class AISBuilder
         NMEASentence[] sentences = new NMEASentence[fragmentCount];
         for (int fragment=1;fragment<=fragmentCount;fragment++)
         {
-            NMEASentence.Builder builder = NMEASentence.builder(TalkerId.AI, MessageType.VDM);
+            NMEASentence.Builder builder = NMEASentence.builder(TalkerId.AI, messageType);
             builder.add(fragmentCount);
             builder.add(fragment);
             builder.add('0');
-            builder.add('A');
+            builder.add(transceiver);
             int beg = (fragment-1)*56;
             int end = Math.min(fragment*56, payload.length());
             builder.add(payload.substring(beg, end));
@@ -88,6 +91,18 @@ public final class AISBuilder
             sentences[fragment-1] = builder.build();
         }
         return sentences;
+    }
+    public AISBuilder transceiver(String transceiver)
+    {
+        if ("A".equals(transceiver) || "B".equals(transceiver) || "".equals(transceiver))
+        {
+            this.transceiver = transceiver;
+        }
+        else
+        {
+            throw new IllegalArgumentException(transceiver+" not 'A', 'B' or ''");
+        }
+        return this;
     }
     public AISBuilder string(int bits, CharSequence txt)
     {

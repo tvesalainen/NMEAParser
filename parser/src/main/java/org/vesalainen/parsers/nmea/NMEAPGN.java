@@ -591,7 +591,7 @@ public enum NMEAPGN
      * group is the second of two parts, the first being transmitted in PGN
      * 129809.
      */
-    AIS_CLASS_B(129810),
+    AIS_CLASS_B_CS_STATIC_REPORT_PART_B(129810),
     /**
      * Complex request for this PGN should return the attributes of a Route or
      * the WP-List.

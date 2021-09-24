@@ -19,12 +19,14 @@ package org.vesalainen.nmea.processor;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.channels.WritableByteChannel;
-import java.time.Clock;
 import java.time.LocalDateTime;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.ais.AISBuilder;
+import static org.vesalainen.parsers.nmea.ais.CodesForShipType.NotAvailableDefault;
+import static org.vesalainen.parsers.nmea.ais.MessageTypes.StandardClassBCSPositionReport;
+import static org.vesalainen.parsers.nmea.ais.MessageTypes.StaticDataReport;
 
 /**
  *
@@ -63,6 +65,17 @@ public class AISSender extends AnnotatedPropertyStore
     private @Property double shipBeam;
     private @Property double positionReferencePointFromStarboard;
     private @Property double positionReferencePointAftOfShipSBow;
+    private @Property int csUnit;
+    private @Property int display;
+    private @Property int dsc;
+    private @Property int band;
+    private @Property int msg22;
+    private @Property int assignedMode;
+    private @Property int transceiverInformation;
+    private @Property String vendorId;
+    private @Property int unitModelCode;
+    private @Property int serialNumber;
+    private @Property int mothershipMMSI;
     
     private final WritableByteChannel channel;
     
@@ -71,7 +84,20 @@ public class AISSender extends AnnotatedPropertyStore
         super(MethodHandles.lookup());
         this.channel = channel;
     }
-
+    private String getTransceiver()
+    {
+        switch (transceiverInformation)
+        {
+            case 0:
+            case 2:
+                return "A";
+            case 1:
+            case 3:
+                return "B";
+            default:
+                return "";
+        }
+    }
     private @Property void setEstimatedDateOfArrival(int days)
     {
         eta.setDays(days);
@@ -83,6 +109,7 @@ public class AISSender extends AnnotatedPropertyStore
     private NMEASentence[] getClassAPositionReport()
     {
         return new AISBuilder(message, repeat, mmsi)
+            .transceiver(getTransceiver())
             .integer(4, navigationStatus)
             .rot((float) rateOfTurn)
             .decimal(10, speed, 10)
@@ -98,10 +125,34 @@ public class AISSender extends AnnotatedPropertyStore
             .integer(19, radioStatus)
             .build();
     }
+    private NMEASentence[] getClassBPositionReport()
+    {
+        return new AISBuilder(message, repeat, mmsi)
+            .transceiver(getTransceiver())
+            .spare(8)
+            .decimal(10, speed, 10)
+            .integer(1, positionAccuracy)
+            .decimal(28, longitude, 600000)
+            .decimal(27, latitude, 600000)
+            .decimal(12, course, 10)
+            .integer(9, (int) heading)
+            .integer(6, second)
+            .spare(2)
+            .integer(1, csUnit)
+            .integer(1, display)
+            .integer(1, dsc)
+            .integer(1, band)
+            .integer(1, msg22)
+            .integer(1, assignedMode)
+            .integer(1, raim)
+            .integer(20, radioStatus)
+            .build();
+    }
     private NMEASentence[] getClassAStaticAndVoyageRelatedData()
     {
         LocalDateTime dt = LocalDateTime.now(eta);
         return new AISBuilder(message, repeat, mmsi)
+            .transceiver(getTransceiver())
             .integer(2, aisVersion)
             .integer(30, imoNumber)
             .string(42, callSign)
@@ -122,6 +173,38 @@ public class AISSender extends AnnotatedPropertyStore
             .spare(1)
             .build();
     }
+    private NMEASentence[] getClassBStaticDataReportPartA()
+    {
+        return new AISBuilder(message, repeat, mmsi)
+            .transceiver(getTransceiver())
+            .integer(2, 0)
+            .string(120, vesselName)
+            .spare(8)
+            .build();
+    }
+    private NMEASentence[] getClassBStaticDataReportPartB()
+    {
+        AISBuilder b24 = new AISBuilder(message, repeat, mmsi)
+            .transceiver(getTransceiver())
+            .integer(2, 1)
+            .integer(8, shipType)
+            .string(18, vendorId)
+            .integer(4, unitModelCode)
+            .integer(20, serialNumber)
+            .string(42, callSign);
+        if (mothershipMMSI != 0)
+        {
+            b24.integer(30, mothershipMMSI);
+        }
+        else
+        {
+            b24.integer(9, (int) positionReferencePointAftOfShipSBow)         // dimensionToBow
+            .integer(9, (int) (shipLength-positionReferencePointAftOfShipSBow))       // dimensionToStern
+            .integer(6, (int) (shipBeam-positionReferencePointFromStarboard))        // dimensionToPort
+            .integer(6, (int) positionReferencePointFromStarboard);   // dimensionToStarboard
+        }
+        return b24.build();
+    }
     @Override
     public void commit(String reason)
     {
@@ -133,6 +216,15 @@ public class AISSender extends AnnotatedPropertyStore
                 break;
             case 129794:
                 arr = getClassAStaticAndVoyageRelatedData();
+                break;
+            case 129039:
+                arr = getClassBPositionReport();
+                break;
+            case 129809:
+                arr = getClassBStaticDataReportPartA();
+                break;
+            case 129810:
+                arr = getClassBStaticDataReportPartB();
                 break;
             default:
                 warning("pgn %d not supported", pgn);

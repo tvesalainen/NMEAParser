@@ -20,6 +20,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import static java.time.ZoneOffset.UTC;
+import static java.util.concurrent.TimeUnit.*;
 
 /**
  *
@@ -27,6 +28,7 @@ import static java.time.ZoneOffset.UTC;
  */
 public class N2KClock extends Clock
 {
+    private static final long MILLIS_IN_DAY = MILLISECONDS.convert(1, DAYS);
     private long days;
     private long micros;
 
@@ -61,7 +63,7 @@ public class N2KClock extends Clock
     @Override
     public long millis()
     {
-        return days + micros/1000;
+        return days*MILLIS_IN_DAY + micros/1000;
     }
     
 }
