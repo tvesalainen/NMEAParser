@@ -26,6 +26,7 @@ import java.nio.channels.ScatteringByteChannel;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 import static java.util.logging.Level.*;
+import javax.management.MBeanNotificationInfo;
+import javax.management.Notification;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.FilterType;
@@ -55,6 +58,8 @@ import org.vesalainen.util.HexDump;
 public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteChannel & GatheringByteChannel> extends DataSource
 {
     protected static final Map<String,Endpoint> endpointMap = new ConcurrentHashMap<>();
+    protected static final String NOTIF_TYPE = "org.vesalainen.nmea.router.";
+    protected static final String NOTIF_ERROR_TYPE = NOTIF_TYPE+"ERR";
     protected final Router router;
     protected final E endpointType;
     protected int bufferSize = 128;
@@ -66,6 +71,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     protected Set<String> fingerPrint = new HashSet<>();
     private NMEAReader reader;
     protected CountDownLatch started = new CountDownLatch(1);
+    private MBeanNotificationInfo[] mBeanNotificationInfo;
 
     public Endpoint(E endpointType, Router router)
     {
@@ -128,20 +134,32 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
     {
         NMEAMatcher<Route> wm = new NMEAMatcher<>();
         List<RouteType> route = endpointType.getRoute();
-        if (!endpointType.getRoute().isEmpty())
+        int len = route.size();
+        List<String> notifs = new ArrayList<String>();
+        notifs.add(NOTIF_ERROR_TYPE);
+        Iterator<RouteType> iterator = route.iterator();
+        for (int ii=0;ii<len;ii++)
         {
-            for (RouteType rt : route)
+            RouteType rt = iterator.next();
+            String prefix = rt.getPrefix();
+            if (prefix != null && !prefix.isEmpty())
             {
-                List<String> targetList = rt.getTarget();
-                String prefix = rt.getPrefix();
-                if (prefix != null && !prefix.isEmpty())
-                {
-                    wm.addExpression(prefix, new Route(rt));
-                }
+                wm.addExpression(prefix, new Route(prefix, rt));
+                notifs.add(NOTIF_TYPE+prefix);
             }
         }
+        mBeanNotificationInfo = new MBeanNotificationInfo[] {new MBeanNotificationInfo(
+            notifs.toArray(new String[notifs.size()]),
+            Notification.class.getName(),
+            name+" Notifications")};
         wm.compile();
         return wm;
+    }
+
+    @Override
+    public MBeanNotificationInfo[] getNotificationInfo()
+    {
+        return mBeanNotificationInfo;
     }
 
     @Override
@@ -246,23 +264,27 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         readCount++;
         lastRead = System.currentTimeMillis();
         finer("read: %s", ring);
-        String prefix = null;
-        CharSequence seqPrefix = NMEA.getPrefix(ring);
-        if (seqPrefix != null)
-        {
-            prefix = seqPrefix.toString();
-        }
+        String prefix = getPrefix(ring);
         Route route = matcher.getMatched();
         route.write(this, prefix, ring);
         if (scriptEngine != null)
         {
             scriptEngine.write(ring);
         }
-        sendNotification(()->ring.getString(), ()->route.toString(), ()->timestamp);
-        if (prefix != null)
+        sendNotification(()->NOTIF_TYPE+route.getExpression(), ()->ring.getString(), ()->route.toString(), ()->timestamp);
+        if (prefix != null && !prefix.isEmpty())
         {
             fingerPrint.add(prefix);
         }
+    }
+    private String getPrefix(RingByteBuffer ring)
+    {
+        CharSequence seqPrefix = NMEA.getPrefix(ring);
+        if (seqPrefix != null)
+        {
+            return seqPrefix.toString();
+        }
+        return null;
     }
     protected void onError(Supplier<byte[]> errInput) throws IOException
     {
@@ -271,7 +293,7 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         errorBytes += error.length;
         fine("%s: rejected %s", name, new String(error, US_ASCII));
         finest(()->HexDump.toHex(errInput));
-        sendNotification(()->new String(error, US_ASCII), ()->error, ()->lastRead);
+        sendNotification(()->NOTIF_ERROR_TYPE, ()->new String(error, US_ASCII), ()->error, ()->lastRead);
     }
 
     @Override

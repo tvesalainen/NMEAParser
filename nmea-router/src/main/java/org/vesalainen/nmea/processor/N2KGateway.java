@@ -19,7 +19,6 @@ package org.vesalainen.nmea.processor;
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.time.Clock;
-import java.util.concurrent.locks.ReentrantLock;
 import org.vesalainen.can.AbstractCanService;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.util.Stoppable;

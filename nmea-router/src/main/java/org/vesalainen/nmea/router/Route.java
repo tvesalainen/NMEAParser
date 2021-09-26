@@ -42,6 +42,7 @@ public final class Route extends JavaLogging
     private int count;
     private int backupCount;
     private String toString;
+    private String expression;
 
     Route() // for test
     {
@@ -49,9 +50,10 @@ public final class Route extends JavaLogging
         this.targetList = null;
     }
     
-    public Route(RouteType routeType)
+    public Route(String expression, RouteType routeType)
     {
         super(Route.class);
+        this.expression = expression;
         List<String> targets = routeType.getTarget();
         toString = targets.stream().collect(Collectors.joining(", "));
         if (targets != null)
@@ -77,6 +79,11 @@ public final class Route extends JavaLogging
         {
             expireTime = expire;
         }
+    }
+
+    public String getExpression()
+    {
+        return expression;
     }
 
     public final void write(Endpoint src, String prefix, RingByteBuffer ring) throws IOException

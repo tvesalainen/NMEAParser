@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import javax.management.ListenerNotFoundException;
 import javax.management.MBeanNotificationInfo;
 import javax.management.MalformedObjectNameException;
+import javax.management.Notification;
 import javax.management.NotificationEmitter;
 import javax.management.NotificationFilter;
 import javax.management.NotificationListener;
@@ -69,7 +70,7 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
                 objectName, 
                 new MBeanNotificationInfo(
                         new String[]{"org.vesalainen.nmea.router.endpoint.notification"},
-                        "javax.management.Notification",
+                        Notification.class.getName(),
                         "NMEA router message/error")
                 );
         setLogger(Logger.getLogger(this.getClass().getName().replace('$', '.') + "." + name));
@@ -83,9 +84,9 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
 
     public abstract int write(Endpoint src, RingByteBuffer ring) throws IOException;
 
-    public synchronized void sendNotification(Supplier<String> textSupplier, Supplier<?> userDataSupplier, LongSupplier timestampSupplier)
+    public synchronized void sendNotification(Supplier<String> typeSupplier, Supplier<String> textSupplier, Supplier<?> userDataSupplier, LongSupplier timestampSupplier)
     {
-        emitter.sendNotification(textSupplier, userDataSupplier, timestampSupplier);
+        emitter.sendNotification(typeSupplier, textSupplier, userDataSupplier, timestampSupplier);
     }
 
     @Override
@@ -104,12 +105,6 @@ public abstract class DataSource extends JavaLogging implements Runnable, DataSo
     public synchronized void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException
     {
         emitter.removeNotificationListener(listener);
-    }
-
-    @Override
-    public MBeanNotificationInfo[] getNotificationInfo()
-    {
-        return emitter.getNotificationInfo();
     }
 
     @Override
