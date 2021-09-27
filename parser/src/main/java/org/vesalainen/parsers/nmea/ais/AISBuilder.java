@@ -169,6 +169,14 @@ public final class AISBuilder
     }
     public AISBuilder integer(int bits, int value)
     {
+        return integer(bits, value, -1>>>(32-bits));
+    }
+    public AISBuilder integer(int bits, int value, int max)
+    {
+        if (value > max)
+        {
+            value = max;
+        }
         for (int ii=bits-1;ii>=0;ii--)
         {
             sb.append((value>>ii) & 1);
