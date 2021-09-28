@@ -16,9 +16,12 @@
  */
 package org.vesalainen.nmea.processor;
 
+import java.util.function.Supplier;
+import org.vesalainen.can.dbc.MessageClass;
 import org.vesalainen.code.AnnotatedPropertyStore;
-import org.vesalainen.parsers.nmea.NMEAPGN;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
+import org.vesalainen.util.HexUtil;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
@@ -26,6 +29,9 @@ import static org.vesalainen.parsers.nmea.NMEAPGN.*;
  */
 public class AISCompiler extends AbstractNMEACompiler
 {
+    private JavaLogging logger = JavaLogging.getLogger(AISCompiler.class);
+
+    private boolean needCompilation;
     
     public <T extends AnnotatedPropertyStore> AISCompiler(T store)
     {
@@ -107,6 +113,27 @@ public class AISCompiler extends AbstractNMEACompiler
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_B, "Position_Reference_Point_From_Starboard", "positionReferencePointFromStarboard");
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_B, "Position_Reference_Point_Aft_Of_Ship_S_Bow", "positionReferencePointAftOfShipSBow");
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_B, "Mother_Ship_Mmsi", "mothershipMMSI");
+        addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_B, "Ais_Transceiver_Information", "transceiverInformation");
+    }
+
+    @Override
+    public boolean needCompilation(int canId)
+    {
+        needCompilation = super.needCompilation(canId);
+        return true;
+    }
+
+    @Override
+    public Runnable compileRaw(MessageClass mc, Supplier<byte[]> rawSupplier)
+    {
+        if (!needCompilation)
+        {
+            return ()->
+            {
+                logger.info("New AIS %s %s", mc.getName(), HexUtil.toString(rawSupplier.get()));
+            };
+        }
+        return null;
     }
     
 }

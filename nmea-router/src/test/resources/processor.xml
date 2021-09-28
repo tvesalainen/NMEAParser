@@ -5,7 +5,7 @@
         <route prefix="$EC" target="Proc"/>
     </tcp-endpoint>
     <processor dataAccessPort="10111" name="Proc" enable="true">
-        <route prefix="!AI" target="TCP"/>
+        <route prefix="!AIVDM" target="TCP"/>
         <route prefix="$IITLL" target="TCP"/>
         <route prefix="$HCHDT" target="Net TCP"/>
         <route prefix="$SDDBT" target="Net TCP"/>

@@ -39,6 +39,7 @@ public final class AISBuilder
     
     private StringBuilder sb = new StringBuilder();
     private String transceiver = "A"; // 'A', 'B' or ''
+    private MessageType messageType = VDM;
 
     AISBuilder()    // for testing
     {
@@ -57,7 +58,6 @@ public final class AISBuilder
     
     public NMEASentence[] build()
     {
-        MessageType messageType = transceiver.isEmpty() ? VDO : VDM;
         int length = sb.length();
         while ((length % 8) != 0)
         {
@@ -102,6 +102,11 @@ public final class AISBuilder
         {
             throw new IllegalArgumentException(transceiver+" not 'A', 'B' or ''");
         }
+        return this;
+    }
+    public AISBuilder ownMessage(boolean own)
+    {
+        messageType = own ? VDO : VDM;
         return this;
     }
     public AISBuilder string(int bits, CharSequence txt)
@@ -220,4 +225,5 @@ public final class AISBuilder
     {
         return sb.toString();
     }
+
 }

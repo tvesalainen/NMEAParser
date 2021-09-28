@@ -20,13 +20,11 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.channels.WritableByteChannel;
 import java.time.LocalDateTime;
+import static java.util.logging.Level.*;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.ais.AISBuilder;
-import static org.vesalainen.parsers.nmea.ais.CodesForShipType.NotAvailableDefault;
-import static org.vesalainen.parsers.nmea.ais.MessageTypes.StandardClassBCSPositionReport;
-import static org.vesalainen.parsers.nmea.ais.MessageTypes.StaticDataReport;
 
 /**
  *
@@ -98,6 +96,17 @@ public class AISSender extends AnnotatedPropertyStore
                 return "";
         }
     }
+    private boolean isOwnMessage()
+    {
+        switch (transceiverInformation)
+        {
+            case 0:
+            case 1:
+                return false;
+            default:
+                return true;
+        }
+    }
     private @Property void setEstimatedDateOfArrival(int days)
     {
         eta.setDays(days);
@@ -108,16 +117,19 @@ public class AISSender extends AnnotatedPropertyStore
     }
     private NMEASentence[] getClassAPositionReport()
     {
+        double crs = course < 360.0 ? course : 0;
+        int hdt = (int) (heading < 360 ? heading : 511);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
+            .ownMessage(isOwnMessage())
             .integer(4, navigationStatus)
             .rot((float) rateOfTurn)
             .decimal(10, speed, 10)
             .integer(1, positionAccuracy)
             .decimal(28, longitude, 600000)
             .decimal(27, latitude, 600000)
-            .decimal(12, course, 10)
-            .integer(9, (int) heading)
+            .decimal(12, crs, 10)
+            .integer(9, hdt)
             .integer(6, second)
             .integer(2, maneuver)
             .spare(3)
@@ -127,15 +139,18 @@ public class AISSender extends AnnotatedPropertyStore
     }
     private NMEASentence[] getClassBPositionReport()
     {
+        double crs = course < 360.0 ? course : 0;
+        int hdt = (int) (heading < 360 ? heading : 511);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
+            .ownMessage(isOwnMessage())
             .spare(8)
             .decimal(10, speed, 10)
             .integer(1, positionAccuracy)
             .decimal(28, longitude, 600000)
             .decimal(27, latitude, 600000)
-            .decimal(12, course, 10)
-            .integer(9, (int) heading)
+            .decimal(12, crs, 10)
+            .integer(9, hdt)
             .integer(6, second)
             .spare(2)
             .integer(1, csUnit)
@@ -153,6 +168,7 @@ public class AISSender extends AnnotatedPropertyStore
         LocalDateTime dt = LocalDateTime.now(eta);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
+            .ownMessage(isOwnMessage())
             .integer(2, aisVersion)
             .integer(30, imoNumber)
             .string(42, callSign)
@@ -177,6 +193,7 @@ public class AISSender extends AnnotatedPropertyStore
     {
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
+            .ownMessage(isOwnMessage())
             .integer(2, 0)
             .string(120, vesselName)
             .spare(8)
@@ -186,6 +203,7 @@ public class AISSender extends AnnotatedPropertyStore
     {
         AISBuilder b24 = new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
+            .ownMessage(isOwnMessage())
             .integer(2, 1)
             .integer(8, shipType)
             .string(18, vendorId)
@@ -239,7 +257,7 @@ public class AISSender extends AnnotatedPropertyStore
                 }
                 catch (IOException ex)
                 {
-                    log(DEBUG, ex, "commit(%d)", pgn);
+                    log(SEVERE, ex, "commit(%d)", pgn);
                 }
             }
         }
