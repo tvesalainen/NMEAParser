@@ -34,11 +34,34 @@ public enum TalkerId
      * Autopilot - General
      */
     AG("Autopilot - General"),
+    /**
+     * Mobile Class A or B AIS Station
+     */
     AI("AIS"),
+    /**
+     * AIS Aids to Navigation Station
+     */
+    AN("AIS Aids to Navigation Station"),
     /**
      * Autopilot - Magnetic
      */
     AP("Autopilot - Magnetic"),
+    /**
+     * AIS Receiving Station
+     */
+    AR("AIS Receiving Station"),
+    /**
+     * AIS Station (ITU_R M1371, (“Limited Base Station’)
+     */
+    AS("AIS Station (ITU_R M1371, (“Limited Base Station’)"),
+    /**
+     * AIS Transmitting Station
+     */
+    AT("AIS Transmitting Station"),
+    /**
+     * AIS Simplex Repeater Station
+     */
+    AX("AIS Simplex Repeater Station"),
     /**
      * Bridge navigational watch alarm system
      */
@@ -95,6 +118,10 @@ public enum TalkerId
      * Engine Room Monitoring Systems
      */
     ER("Engine Room Monitoring Systems"),
+    /**
+     * Global Navigation Satellite System (GNSS)
+     */
+    GN("Global Navigation Satellite System (GNSS)"),
     /**
      * Global Positioning System (GPS)
      */
