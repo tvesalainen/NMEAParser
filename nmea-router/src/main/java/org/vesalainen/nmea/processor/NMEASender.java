@@ -83,14 +83,14 @@ public class NMEASender extends AnnotatedPropertyStore
         prefixMap.put("VHW", NMEASentence.vhw(()->waterSpeed, UnitType.METERS_PER_SECOND));
     }
 
-    public void add(String prefix, int pgn)
+    public void add(String prefix)
     {
         NMEASentence sentence = prefixMap.get(prefix);
         if (sentence == null)
         {
             throw new UnsupportedOperationException(prefix+" not supported");
         }
-        pgnMap.put(pgn, sentence);
+        pgnMap.put(N2KGateway.getPgnFor(prefix), sentence);
     }
     public double magneticVariation()
     {

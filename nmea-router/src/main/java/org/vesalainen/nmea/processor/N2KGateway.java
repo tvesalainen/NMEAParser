@@ -17,9 +17,16 @@
 package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import static java.nio.file.StandardOpenOption.*;
 import java.time.Clock;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import org.vesalainen.can.AbstractCanService;
+import org.vesalainen.can.candump.CanDumpService;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.util.Stoppable;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
@@ -31,26 +38,42 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  */
 public class N2KGateway implements Stoppable
 {
-
-    private final WritableByteChannel out;
-    private final CachedScheduledThreadPool executor;
     private final AbstractCanService canService;
     private final NMEASender nmeaSender;
     private final AISSender aisSender;
 
-    public N2KGateway(N2KGatewayType type, WritableByteChannel out, CachedScheduledThreadPool executor) throws IOException
+    private N2KGateway(AbstractCanService canService, NMEASender nmeaSender, AISSender aisSender)
     {
-        this.out = out;
-        this.executor = executor;
-        this.nmeaSender = new NMEASender(Clock.systemUTC(), out);
-        this.aisSender = new AISSender(out);
-        this.canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender));
+        this.canService = canService;
+        this.nmeaSender = nmeaSender;
+        this.aisSender = aisSender;
+    }
+
+    public static N2KGateway getInstance(N2KGatewayType type, WritableByteChannel out, ExecutorService executor) throws IOException
+    {
+        NMEASender nmeaSender = new NMEASender(Clock.systemUTC(), out);
+        AISSender aisSender = new AISSender(out);
+        AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender));
         canService.addN2K();
         type.getSentence().forEach((s) ->
         {
-            Long pgn = s.getPgn();
-            nmeaSender.add(s.getPrefix(), pgn != null ? pgn.intValue() : getPgnFor(s.getPrefix()));
+            nmeaSender.add(s.getPrefix());
         });
+        return new N2KGateway(canService, nmeaSender, aisSender);
+    }
+
+    public static N2KGateway getInstance(String bus, Path in, Path out, ExecutorService executor, String... prefixes) throws IOException
+    {
+        SeekableByteChannel ch = Files.newByteChannel(out, WRITE, CREATE, TRUNCATE_EXISTING);
+        NMEASender nmeaSender = new NMEASender(Clock.systemUTC(), ch);
+        AISSender aisSender = new AISSender(ch);
+        for (String prefix : prefixes)
+        {
+            nmeaSender.add(prefix);
+        }
+        AbstractCanService canService = new CanDumpService(bus, in, executor, new N2KMessageFactory(nmeaSender, aisSender));
+        canService.addN2K();
+        return new N2KGateway(canService, nmeaSender, aisSender);
     }
 
     void start()
@@ -64,7 +87,11 @@ public class N2KGateway implements Stoppable
         canService.stop();
     }
 
-    private int getPgnFor(String prefix)
+    public void startAndWait() throws InterruptedException, ExecutionException
+    {
+        canService.startAndWait();
+    }
+    public static int getPgnFor(String prefix)
     {
         switch (prefix)
         {

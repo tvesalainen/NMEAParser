@@ -84,7 +84,7 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                 {
                     info("starting N2K Gateway");
                     N2KGatewayType type = (N2KGatewayType) ob;
-                    N2KGateway n2kGateway = new N2KGateway(type, channel, executor);
+                    N2KGateway n2kGateway = N2KGateway.getInstance(type, channel, executor);
                     processes.add(n2kGateway);
                     n2kGateway.start();
                     
