@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.processor.n2kgw;
 
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -49,14 +49,13 @@ public class AbstractNMEACompiler extends AnnotatedPropertyStoreSignalCompiler
     @Override
     public Runnable compileBegin(MessageClass mc, LongSupplier millisSupplier)
     {
-        IntSetter pgnSetter = store.getIntSetter("pgn");
+        IntSetter canIdSetter = store.getIntSetter("canId");
         LongSetter millisSetter = store.getLongSetter("millis");
-        int pgn = PGN.pgn(mc.getId());
         return () ->
         {
             lock.lock();
             store.begin(null);
-            pgnSetter.set(pgn);
+            canIdSetter.set(mc.getId());
             millisSetter.set(millisSupplier.getAsLong());
         };
     }

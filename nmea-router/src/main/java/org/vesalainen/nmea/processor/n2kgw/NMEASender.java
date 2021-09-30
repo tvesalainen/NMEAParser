@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.processor.n2kgw;
 
 import d3.env.TSAGeoMag;
 import java.io.IOException;
@@ -29,6 +29,7 @@ import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.parsers.nmea.NMEASentence;
+import org.vesalainen.time.SimpleClock;
 
 /**
  *
@@ -36,9 +37,9 @@ import org.vesalainen.parsers.nmea.NMEASentence;
  */
 public class NMEASender extends AnnotatedPropertyStore
 {
-    private @Property Clock clock;
+    private @Property Clock frameClock;
     private @Property long millis;
-    private @Property int pgn;
+    private @Property int canId;
     private @Property double latitude;
     private @Property double longitude;
     private @Property float depthOfWater;
@@ -61,21 +62,17 @@ public class NMEASender extends AnnotatedPropertyStore
     
     public NMEASender(WritableByteChannel channel)
     {
-        this(Clock.systemUTC(), channel);
-    }
-    public NMEASender(Clock clock, WritableByteChannel channel)
-    {
         super(MethodHandles.lookup());
-        this.clock = clock;
+        this.frameClock = new SimpleClock(()->millis);
         this.channel = channel;
         
         prefixMap.put("RMC", NMEASentence.rmc(
-                ()->clock, 
+                ()->frameClock, 
                 ()->latitude, 
                 ()->longitude, 
                 ()->speedOverGround, 
                 ()->trackMadeGood, 
-                this::magneticVariation));
+                ()->magneticVariation(frameClock)));
         prefixMap.put("DBT", NMEASentence.dbt(()->depthOfWater+transducerOffset, UnitType.METER));
         prefixMap.put("HDT", NMEASentence.hdt(()->trueHeading));
         prefixMap.put("MTW", NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS));
@@ -92,7 +89,7 @@ public class NMEASender extends AnnotatedPropertyStore
         }
         pgnMap.put(N2KGateway.getPgnFor(prefix), sentence);
     }
-    public double magneticVariation()
+    public double magneticVariation(Clock clock)
     {
         ZonedDateTime now = ZonedDateTime.now(clock);
         return geoMag.getDeclination(latitude, longitude, (double)(now.getYear()+now.getDayOfYear()/365.0), 0);
@@ -100,7 +97,7 @@ public class NMEASender extends AnnotatedPropertyStore
     @Override
     public void commit(String reason)
     {
-        NMEASentence sentence = pgnMap.get(pgn);
+        NMEASentence sentence = pgnMap.get(canId);
         if (sentence != null)
         {
             try

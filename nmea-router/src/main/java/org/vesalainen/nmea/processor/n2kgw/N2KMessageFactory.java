@@ -14,8 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.processor.n2kgw;
 
+import org.vesalainen.nmea.processor.n2kgw.AISSender;
+import org.vesalainen.nmea.processor.n2kgw.AISCompiler;
 import org.vesalainen.can.AbstractMessageFactory;
 import org.vesalainen.can.SignalCompiler;
 import org.vesalainen.can.dbc.MessageClass;

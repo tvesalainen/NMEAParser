@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.nmea.processor.n2kgw.N2KGateway;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;

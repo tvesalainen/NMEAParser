@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import org.vesalainen.nmea.processor.n2kgw.N2KGateway;
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.math.BigInteger;

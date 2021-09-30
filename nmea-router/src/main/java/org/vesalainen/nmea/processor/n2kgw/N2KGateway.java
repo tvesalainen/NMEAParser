@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.processor.n2kgw;
 
+import org.vesalainen.nmea.processor.n2kgw.AISSender;
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.channels.WritableByteChannel;
@@ -51,7 +52,7 @@ public class N2KGateway implements Stoppable
 
     public static N2KGateway getInstance(N2KGatewayType type, WritableByteChannel out, ExecutorService executor) throws IOException
     {
-        NMEASender nmeaSender = new NMEASender(Clock.systemUTC(), out);
+        NMEASender nmeaSender = new NMEASender(out);
         AISSender aisSender = new AISSender(out);
         AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender));
         canService.addN2K();
@@ -65,7 +66,7 @@ public class N2KGateway implements Stoppable
     public static N2KGateway getInstance(String bus, Path in, Path out, ExecutorService executor, String... prefixes) throws IOException
     {
         SeekableByteChannel ch = Files.newByteChannel(out, WRITE, CREATE, TRUNCATE_EXISTING);
-        NMEASender nmeaSender = new NMEASender(Clock.systemUTC(), ch);
+        NMEASender nmeaSender = new NMEASender(ch);
         AISSender aisSender = new AISSender(ch);
         for (String prefix : prefixes)
         {
@@ -76,7 +77,7 @@ public class N2KGateway implements Stoppable
         return new N2KGateway(canService, nmeaSender, aisSender);
     }
 
-    void start()
+    public void start()
     {
         canService.start();
     }

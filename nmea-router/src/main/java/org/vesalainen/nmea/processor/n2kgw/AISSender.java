@@ -14,13 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor;
+package org.vesalainen.nmea.processor.n2kgw;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.channels.WritableByteChannel;
 import java.time.LocalDateTime;
 import static java.util.logging.Level.*;
+import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.parsers.nmea.NMEASentence;
@@ -34,7 +35,7 @@ public class AISSender extends AnnotatedPropertyStore
 {
     private @Property N2KClock eta = new N2KClock();
     private @Property long millis;
-    private @Property int pgn;
+    private @Property int canId;
     private @Property int message;
     private @Property int repeat;
     private @Property int mmsi;
@@ -227,6 +228,7 @@ public class AISSender extends AnnotatedPropertyStore
     public void commit(String reason)
     {
         NMEASentence[] arr = null;
+        int pgn = PGN.pgn(canId);
         switch (pgn)
         {
             case 129038:
