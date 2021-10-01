@@ -16,8 +16,8 @@
  */
 package org.vesalainen.nmea.processor.n2kgw;
 
-import org.vesalainen.nmea.processor.n2kgw.AISSender;
-import org.vesalainen.nmea.processor.n2kgw.AISCompiler;
+import java.util.concurrent.Executor;
+import org.vesalainen.can.AbstractMessage;
 import org.vesalainen.can.AbstractMessageFactory;
 import org.vesalainen.can.SignalCompiler;
 import org.vesalainen.can.dbc.MessageClass;
@@ -30,11 +30,13 @@ public class N2KMessageFactory extends AbstractMessageFactory
 {   
     private final PlainNMEACompiler nmeaCompiler;
     private final AISCompiler aisCompiler;
+    private final SourceManager sourceManager;
 
-    public N2KMessageFactory(NMEASender nmeaSender, AISSender aisSender)
+    public N2KMessageFactory(NMEASender nmeaSender, AISSender aisSender, SourceManager sourceManager)
     {
         this.nmeaCompiler = new PlainNMEACompiler(nmeaSender);
         this.aisCompiler = new AISCompiler(aisSender);
+        this.sourceManager = sourceManager;
     }
     
     @Override
@@ -48,5 +50,13 @@ public class N2KMessageFactory extends AbstractMessageFactory
                 return nmeaCompiler;
         }
     }
+
+    @Override
+    public AbstractMessage createPgnMessage(Executor executor, int canId, MessageClass mc)
+    {
+        sourceManager.add(canId, mc);
+        return super.createPgnMessage(executor, canId, mc);
+    }
         
+    
 }

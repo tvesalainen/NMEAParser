@@ -37,7 +37,7 @@ public enum TalkerId
     /**
      * Mobile Class A or B AIS Station
      */
-    AI("AIS"),
+    AI("Mobile Class A or B AIS Station"),
     /**
      * AIS Aids to Navigation Station
      */

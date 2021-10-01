@@ -16,8 +16,7 @@
  */
 package org.vesalainen.nmea.processor.n2kgw;
 
-import org.vesalainen.nmea.processor.n2kgw.AbstractNMEACompiler;
-import org.vesalainen.parsers.nmea.NMEAPGN;
+import static org.vesalainen.parsers.nmea.NMEAPGN.*;
 
 /**
  *
@@ -29,23 +28,28 @@ public final class PlainNMEACompiler extends AbstractNMEACompiler
     public PlainNMEACompiler(NMEASender store)
     {
         super(store);
-        addPgnSetter(NMEAPGN.VESSEL_HEADING, "True_Heading", "trueHeading");
+        addPgnSetter(VESSEL_HEADING, "True_Heading", "trueHeading");
         
-        addPgnSetter(NMEAPGN.WATER_DEPTH, "Water_Depth_Transducer", "depthOfWater");
-        addPgnSetter(NMEAPGN.WATER_DEPTH, "Offset", "transducerOffset");
+        addPgnSetter(WATER_DEPTH, "Water_Depth_Transducer", "depthOfWater");
+        addPgnSetter(WATER_DEPTH, "Offset", "transducerOffset");
         
-        addPgnSetter(NMEAPGN.POSITION_RAPID_UPDATE, "Latitude", "latitude");
-        addPgnSetter(NMEAPGN.POSITION_RAPID_UPDATE, "Longitude", "longitude");
+        addPgnSetter(POSITION_RAPID_UPDATE, "Latitude", "latitude");
+        addPgnSetter(POSITION_RAPID_UPDATE, "Longitude", "longitude");
         
-        addPgnSetter(NMEAPGN.COG_SOG_RAPID_UPDATE, "Speed_Over_Ground", "speedOverGround");
-        addPgnSetter(NMEAPGN.COG_SOG_RAPID_UPDATE, "True_Course_Over_Ground", "trackMadeGood");
+        addPgnSetter(GNSS_POSITION_DATA, "Position_Date", "positionDate");
+        addPgnSetter(GNSS_POSITION_DATA, "Position_Time", "positionTime");
+        addPgnSetter(GNSS_POSITION_DATA, "Latitude", "latitude");
+        addPgnSetter(GNSS_POSITION_DATA, "Longitude", "longitude");
         
-        addPgnSetter(NMEAPGN.ENVIRONMENTAL_PARAMETERS, "Sea_Temperature", "waterTemperature");
+        addPgnSetter(COG_SOG_RAPID_UPDATE, "Speed_Over_Ground", "speedOverGround");
+        addPgnSetter(COG_SOG_RAPID_UPDATE, "True_Course_Over_Ground", "trackMadeGood");
         
-        addPgnSetter(NMEAPGN.WIND_DATA, "Apparent_Wind_Speed", "relativeWindSpeed");
-        addPgnSetter(NMEAPGN.WIND_DATA, "Apparent_Wind_Direction", "relativeWindAngle");
+        addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Sea_Temperature", "waterTemperature");
         
-        addPgnSetter(NMEAPGN.SPEED_WATER_REFERENCED, "Speed_Water_Referenced", "waterSpeed");
+        addPgnSetter(WIND_DATA, "Apparent_Wind_Speed", "relativeWindSpeed");
+        addPgnSetter(WIND_DATA, "Apparent_Wind_Direction", "relativeWindAngle");
+        
+        addPgnSetter(SPEED_WATER_REFERENCED, "Speed_Water_Referenced", "waterSpeed");
     }
 
     

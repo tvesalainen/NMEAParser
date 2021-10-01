@@ -54,17 +54,17 @@ public class Priorizer
     private void fire(int canId)
     {
         long now = millis.getAsLong();
-        if (now > lastTime+timeout)
+        if (lastRun == canId || last == canId)
         {
-            lastAction = pgnMap.apply(PGN.pgn(canId));
             lastAction.run();
             lastRun = canId;
             lastTime = now;
         }
         else
         {
-            if (lastRun == canId || last == canId)
+            if (now > lastTime+timeout)
             {
+                lastAction = pgnMap.apply(PGN.pgn(canId));
                 lastAction.run();
                 lastRun = canId;
                 lastTime = now;

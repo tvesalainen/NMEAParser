@@ -36,7 +36,7 @@ public class N2KGatewayT
     
     public N2KGatewayT()
     {
-        JavaLogging.setConsoleHandler("org.vesalainen", Level.INFO);
+        JavaLogging.setConsoleHandler("org.vesalainen", Level.ALL);
     }
 
     @Test

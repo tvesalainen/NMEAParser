@@ -42,25 +42,28 @@ public class N2KGateway implements Stoppable
     private final AbstractCanService canService;
     private final NMEASender nmeaSender;
     private final AISSender aisSender;
+    private final SourceManager sourceManager;
 
-    private N2KGateway(AbstractCanService canService, NMEASender nmeaSender, AISSender aisSender)
+    public N2KGateway(AbstractCanService canService, NMEASender nmeaSender, AISSender aisSender, SourceManager sourceManager)
     {
         this.canService = canService;
         this.nmeaSender = nmeaSender;
         this.aisSender = aisSender;
+        this.sourceManager = sourceManager;
     }
 
     public static N2KGateway getInstance(N2KGatewayType type, WritableByteChannel out, ExecutorService executor) throws IOException
     {
         NMEASender nmeaSender = new NMEASender(out);
         AISSender aisSender = new AISSender(out);
-        AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender));
+        SourceManager sourceManager = new SourceManager();
+        AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
         canService.addN2K();
         type.getSentence().forEach((s) ->
         {
             nmeaSender.add(s.getPrefix());
         });
-        return new N2KGateway(canService, nmeaSender, aisSender);
+        return new N2KGateway(canService, nmeaSender, aisSender, sourceManager);
     }
 
     public static N2KGateway getInstance(String bus, Path in, Path out, ExecutorService executor, String... prefixes) throws IOException
@@ -68,13 +71,14 @@ public class N2KGateway implements Stoppable
         SeekableByteChannel ch = Files.newByteChannel(out, WRITE, CREATE, TRUNCATE_EXISTING);
         NMEASender nmeaSender = new NMEASender(ch);
         AISSender aisSender = new AISSender(ch);
+        SourceManager sourceManager = new SourceManager();
         for (String prefix : prefixes)
         {
             nmeaSender.add(prefix);
         }
-        AbstractCanService canService = new CanDumpService(bus, in, executor, new N2KMessageFactory(nmeaSender, aisSender));
+        AbstractCanService canService = new CanDumpService(bus, in, executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
         canService.addN2K();
-        return new N2KGateway(canService, nmeaSender, aisSender);
+        return new N2KGateway(canService, nmeaSender, aisSender, sourceManager);
     }
 
     public void start()
