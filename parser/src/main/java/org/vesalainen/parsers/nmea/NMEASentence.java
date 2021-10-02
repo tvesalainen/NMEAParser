@@ -321,8 +321,8 @@ public class NMEASentence
         return getByteBuffer().limit();
     }
     /**
-     * Write sentence to bb
-     * @param bb 
+     * Write sentence to byteBuffer
+     * @param byteBuffer 
      */
     public void writeTo(ByteBuffer byteBuffer)
     {
