@@ -67,7 +67,7 @@ public class NMEACharset extends Charset
 
         public DecoderImpl()
         {
-            super(NMEACharset.this, 1, 1);
+            super(NMEACharset.this, 1.0F/1.1F, 1.0F/3.0F);
         }
 
         @Override
