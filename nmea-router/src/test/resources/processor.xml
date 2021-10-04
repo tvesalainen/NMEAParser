@@ -6,13 +6,13 @@
     </tcp-endpoint>
     <processor dataAccessPort="10111" name="Proc" enable="true">
         <route prefix="!AIVDM" target="TCP"/>
-        <route prefix="$IITLL" target="TCP"/>
+        <route prefix="$??TLL" target="TCP"/>
         <route prefix="$HCHDT" target="Net TCP"/>
         <route prefix="$SDDBT" target="Net TCP"/>
-        <route prefix="$INRMC" target="Net TCP"/>
-        <route prefix="$YCMTW" target="Net TCP"/>
-        <route prefix="$VWVHW" target="Net TCP"/>
-        <route prefix="$UPMWV" target="Net TCP"/>
+        <route prefix="$AIRMC" target="Net TCP"/>
+        <route prefix="$SDMTW" target="Net TCP"/>
+        <route prefix="$SDVHW" target="Net TCP"/>
+        <route prefix="$WIMWV" target="Net TCP"/>
         <n2k-gateway bus="can1">
             <sentence prefix="HDT"/>
             <sentence prefix="DBT"/>

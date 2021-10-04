@@ -30,11 +30,12 @@ import static org.vesalainen.parsers.nmea.TalkerId.*;
  */
 public class SourceManager
 {
-    private Map<Integer,Source> map = new HashMap<>();
+    private Source[] map = new Source[256];
     
     public TalkerId getTalkerId(int canId)
     {
-        Source src = map.get(PGN.sourceAddress(canId));
+        int sa = PGN.sourceAddress(canId);
+        Source src = map[sa];
         if (src != null)
         {
             return src.getTalkerId();
@@ -44,11 +45,11 @@ public class SourceManager
     public void add(int canId, MessageClass mc)
     {
         int sa = PGN.sourceAddress(canId);
-        Source src = map.get(sa);
+        Source src = map[sa];
         if (src == null)
         {
             src = new Source();
-            map.put(sa, src);
+            map[sa] = src;
         }
         src.add(canId, mc);
     }

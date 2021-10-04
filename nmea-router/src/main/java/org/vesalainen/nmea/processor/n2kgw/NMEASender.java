@@ -61,6 +61,7 @@ public class NMEASender extends AnnotatedPropertyStore
     
     private Clock frameClock;
     private N2KClock positionClock;
+    private final SourceManager sourceManager;
     private final WritableByteChannel channel;
     private final TSAGeoMag geoMag = new TSAGeoMag();
     
@@ -73,14 +74,16 @@ public class NMEASender extends AnnotatedPropertyStore
     private final NMEASentence mwv;
     private final NMEASentence vhw;
     
-    public NMEASender(WritableByteChannel channel)
+    public NMEASender(SourceManager sourceManager, WritableByteChannel channel)
     {
         super(MethodHandles.lookup());
         this.frameClock = new SimpleClock(()->millis);
         this.positionClock = new N2KClock();
+        this.sourceManager = sourceManager;
         this.channel = channel;
         
         this.rmc = NMEASentence.rmc(
+                ()->sourceManager.getTalkerId(canId),
                 ()->frameClock, 
                 ()->latitude, 
                 ()->longitude, 
@@ -88,17 +91,34 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->trackMadeGood, 
                 ()->magneticVariation(frameClock));
         this.rmc2 = NMEASentence.rmc(
+                ()->sourceManager.getTalkerId(canId),
                 ()->positionClock, 
                 ()->latitude, 
                 ()->longitude, 
                 ()->speedOverGround, 
                 ()->trackMadeGood, 
                 ()->magneticVariation(positionClock));
-        this.dbt = NMEASentence.dbt(()->depthOfWater+transducerOffset, UnitType.METER);
-        this.hdt = NMEASentence.hdt(()->trueHeading);
-        this.mtw = NMEASentence.mtw(()->waterTemperature, UnitType.CELSIUS);
-        this.mwv = NMEASentence.mwv(()->relativeWindAngle, ()->relativeWindSpeed, UnitType.METERS_PER_SECOND, false);
-        this.vhw = NMEASentence.vhw(()->waterSpeed, UnitType.METERS_PER_SECOND);
+        this.dbt = NMEASentence.dbt(
+                ()->sourceManager.getTalkerId(canId), 
+                ()->depthOfWater+transducerOffset, 
+                UnitType.METER);
+        this.hdt = NMEASentence.hdt(
+                ()->sourceManager.getTalkerId(canId), 
+                ()->trueHeading);
+        this.mtw = NMEASentence.mtw(
+                ()->sourceManager.getTalkerId(canId), 
+                ()->waterTemperature, 
+                UnitType.CELSIUS);
+        this.mwv = NMEASentence.mwv(
+                ()->sourceManager.getTalkerId(canId), 
+                ()->relativeWindAngle, 
+                ()->relativeWindSpeed, 
+                UnitType.METERS_PER_SECOND, 
+                false);
+        this.vhw = NMEASentence.vhw(
+                ()->sourceManager.getTalkerId(canId), 
+                ()->waterSpeed, 
+                UnitType.METERS_PER_SECOND);
     }
 
     public void add(String prefix)

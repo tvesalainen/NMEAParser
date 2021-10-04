@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import org.vesalainen.can.AnnotatedPropertyStoreSignalCompiler;
 import org.vesalainen.can.dbc.MessageClass;
-import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.setter.IntSetter;
 import org.vesalainen.code.setter.LongSetter;
@@ -47,7 +46,7 @@ public class AbstractNMEACompiler extends AnnotatedPropertyStoreSignalCompiler
     }
 
     @Override
-    public Runnable compileBegin(MessageClass mc, LongSupplier millisSupplier)
+    public Runnable compileBegin(MessageClass mc, int canId, LongSupplier millisSupplier)
     {
         IntSetter canIdSetter = store.getIntSetter("canId");
         LongSetter millisSetter = store.getLongSetter("millis");
@@ -55,7 +54,7 @@ public class AbstractNMEACompiler extends AnnotatedPropertyStoreSignalCompiler
         {
             lock.lock();
             store.begin(null);
-            canIdSetter.set(mc.getId());
+            canIdSetter.set(canId);
             millisSetter.set(millisSupplier.getAsLong());
         };
     }

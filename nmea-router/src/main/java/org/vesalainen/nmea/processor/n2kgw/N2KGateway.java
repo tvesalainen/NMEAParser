@@ -54,9 +54,9 @@ public class N2KGateway implements Stoppable
 
     public static N2KGateway getInstance(N2KGatewayType type, WritableByteChannel out, ExecutorService executor) throws IOException
     {
-        NMEASender nmeaSender = new NMEASender(out);
-        AISSender aisSender = new AISSender(out);
         SourceManager sourceManager = new SourceManager();
+        NMEASender nmeaSender = new NMEASender(sourceManager, out);
+        AISSender aisSender = new AISSender(out);
         AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
         canService.addN2K();
         type.getSentence().forEach((s) ->
@@ -69,9 +69,9 @@ public class N2KGateway implements Stoppable
     public static N2KGateway getInstance(String bus, Path in, Path out, ExecutorService executor, String... prefixes) throws IOException
     {
         SeekableByteChannel ch = Files.newByteChannel(out, WRITE, CREATE, TRUNCATE_EXISTING);
-        NMEASender nmeaSender = new NMEASender(ch);
-        AISSender aisSender = new AISSender(ch);
         SourceManager sourceManager = new SourceManager();
+        NMEASender nmeaSender = new NMEASender(sourceManager, ch);
+        AISSender aisSender = new AISSender(ch);
         for (String prefix : prefixes)
         {
             nmeaSender.add(prefix);
