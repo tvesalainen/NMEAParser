@@ -33,7 +33,7 @@ import org.vesalainen.parsers.nmea.NMEAPGN;
 public class AbstractNMEACompiler extends AnnotatedPropertyStoreSignalCompiler
 {
     
-    protected final ReentrantLock lock = new ReentrantLock();
+    protected final ReentrantLock lock = new ReentrantLock(true);
 
     public <T extends AnnotatedPropertyStore> AbstractNMEACompiler(T store)
     {
