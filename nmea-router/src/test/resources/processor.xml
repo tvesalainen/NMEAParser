@@ -29,7 +29,7 @@
         <sntp-server rootDelay="1600" server="pi3media"/>
         <anchor-manager directory="c:\\temp" anchorWeight="20" chainDiameter="10" maxChainLength="80"/>
     </processor>
-    <multicast-nmea-0183 address="224.0.0.3" name="Net" enable="true">
+    <multicast-nmea-0183 address="224.0.0.3" name="Net" enable="false">
         <route prefix="$GPRMC" target="Proc TCP"/>
         <route prefix="$IIMWV" target="Proc"/>
         <route prefix="!AIVDM" target="Proc TCP"/>

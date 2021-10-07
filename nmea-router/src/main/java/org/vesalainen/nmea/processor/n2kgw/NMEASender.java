@@ -25,9 +25,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntConsumer;
-import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
@@ -43,21 +41,21 @@ import org.vesalainen.time.SimpleClock;
  */
 public class NMEASender extends AnnotatedPropertyStore
 {
-    private @Property long millis;
-    private @Property int canId;
-    private @Property double latitude;
-    private @Property double longitude;
-    private @Property float depthOfWater;
-    private @Property float transducerOffset;
-    private @Property float waterTemperature;
-    private @Property float waterSpeed;
-    private @Property float trueHeading;
-    private @Property float relativeWindAngle;
-    private @Property float relativeWindSpeed;
-    private @Property float pitch;
-    private @Property float roll;
-    private @Property float speedOverGround;
-    private @Property float trackMadeGood;
+    private @Property long millis = 0;
+    private @Property int canId = 0;
+    private @Property double latitude = 0;
+    private @Property double longitude = 0;
+    private @Property float depthOfWater = 0;
+    private @Property float transducerOffset = 0;
+    private @Property float waterTemperature = 0;
+    private @Property float waterSpeed = 0;
+    private @Property float trueHeading = 0;
+    private @Property float relativeWindAngle = 0;
+    private @Property float relativeWindSpeed = 0;
+    private @Property float pitch = 0;
+    private @Property float roll = 0;
+    private @Property float speedOverGround = 0;
+    private @Property float trackMadeGood = 0;
     
     private Clock frameClock;
     private N2KClock positionClock;
