@@ -23,14 +23,20 @@ import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.parsers.nmea.NMEAPGN;
 import org.vesalainen.parsers.nmea.TalkerId;
 import static org.vesalainen.parsers.nmea.TalkerId.*;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class SourceManager
+public class SourceManager extends JavaLogging
 {
     private Source[] map = new Source[256];
+
+    public SourceManager()
+    {
+        super(SourceManager.class);
+    }
     
     public TalkerId getTalkerId(int canId)
     {
@@ -68,6 +74,11 @@ public class SourceManager
             {
                 int pgn = PGN.pgn(canId);
                 NMEAPGN nmeaPgn = NMEAPGN.getForPgn(pgn);
+                if (nmeaPgn == null)
+                {
+                    warning("pgn %d unknown", pgn);
+                    return;
+                }
                 switch (talkerId)
                 {
                     case U0:

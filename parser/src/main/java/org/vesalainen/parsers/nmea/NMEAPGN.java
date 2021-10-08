@@ -745,7 +745,9 @@ public enum NMEAPGN
      * the message must match the name information of the node whose network
      * address is to be set.
      */
-    ISO_COMMANDED_ADDRESS(65240);
+    ISO_COMMANDED_ADDRESS(65240),
+    TEMPERATURE_EXTENDED_RANGE(130316),
+    HEARTBEAT(126993);
 
     private int pgn;
     private static final Map<Integer, NMEAPGN> map = new HashMap<>();

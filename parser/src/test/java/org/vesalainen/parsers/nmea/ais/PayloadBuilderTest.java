@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Timo Vesalainen <timo.vesalainen@iki.fi>
+ * Copyright (C) 2021 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,38 +16,26 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
-import java.io.IOException;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.parsers.nmea.NMEASentence;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class AISBuilderTest
+public class PayloadBuilderTest
 {
     
-    public AISBuilderTest()
+    public PayloadBuilderTest()
     {
     }
 
     @Test
-    public void test24A() throws IOException
+    public void test1()
     {
-        NMEASentence[] sentences = new AISBuilder(MessageTypes.StaticDataReport, 230123250)
-                .integer(2, 0)
-                .string(120, "IIRIS")
-                .spare(8)
-                .build();
-        assertEquals(1, sentences.length);
-        NMEASentence sentence = sentences[0];
-        NMEAParser parser = NMEAParser.newInstance();
-        TC tc = new TC();
-        parser.parse(sentence.toString(), null, tc);
-        assertEquals(230123250, tc.mmsi);
-        assertEquals("IIRIS", tc.shipname);
+        PayloadBuilder pb = new PayloadBuilder();
+        pb.add(18, 0b000000100111111111);
+        assertEquals("0Ww", pb.build());
     }
     
 }

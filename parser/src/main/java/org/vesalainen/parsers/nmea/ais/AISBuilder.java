@@ -37,7 +37,7 @@ public final class AISBuilder
 {
     public static final NMEASentence[] EMPTY = new NMEASentence[]{};
     
-    private StringBuilder sb = new StringBuilder();
+    private PayloadBuilder pb = new PayloadBuilder();
     private String transceiver = "A"; // 'A', 'B' or ''
     private MessageType messageType = VDM;
 
@@ -58,16 +58,15 @@ public final class AISBuilder
     
     public NMEASentence[] build()
     {
-        int length = sb.length();
+        int length = pb.length();
         while ((length % 8) != 0)
         {
-            sb.append('0');
-            length = sb.length();
+            integer(1, 0);
+            length = pb.length();
         }
-        int padding = (6 - sb.length() % 6) % 6;
+        int padding = (6 - pb.length() % 6) % 6;
         integer(padding, 0);
-        PayloadParser pp = PayloadParser.getInstance();
-        StringBuilder payload = pp.parse(sb);
+        String payload = pb.build();
         int fragmentCount = payload.length()/56+1;
         NMEASentence[] sentences = new NMEASentence[fragmentCount];
         for (int fragment=1;fragment<=fragmentCount;fragment++)
@@ -138,7 +137,7 @@ public final class AISBuilder
             }
             else
             {
-                sb.append("000000");    //integer(6, 0);  // @
+                integer(6, 0);  // @
             }
         }
         return this;
@@ -150,7 +149,7 @@ public final class AISBuilder
     }
     public AISBuilder bool(boolean b)
     {
-        sb.append(b ? '1' : '0');
+        integer(1, b ? 1 : 0);
         return this;
     }
     public AISBuilder spare(int bits)
@@ -182,10 +181,7 @@ public final class AISBuilder
         {
             value = max;
         }
-        for (int ii=bits-1;ii>=0;ii--)
-        {
-            sb.append((value>>ii) & 1);
-        }
+        pb.add(bits, value);
         return this;
     }
     public AISBuilder polygon(Polygon polygon)
@@ -217,13 +213,4 @@ public final class AISBuilder
         new AssociatedText(text).build(this);
         return this;
     }
-    /**
-     * For testing
-     * @return 
-     */
-    String bits()
-    {
-        return sb.toString();
-    }
-
 }
