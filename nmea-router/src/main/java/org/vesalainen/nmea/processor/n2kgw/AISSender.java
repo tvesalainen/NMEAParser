@@ -77,6 +77,7 @@ public class AISSender extends AnnotatedPropertyStore
     private @Property int mothershipMMSI = 0;
     
     private final WritableByteChannel channel;
+    private int ownMmsi;
     
     public AISSender(WritableByteChannel channel)
     {
@@ -99,12 +100,17 @@ public class AISSender extends AnnotatedPropertyStore
     }
     private boolean isOwnMessage()
     {
+        if (ownMmsi == mmsi)
+        {
+            return true;
+        }
         switch (transceiverInformation)
         {
             case 0:
             case 1:
                 return false;
             default:
+                ownMmsi = mmsi; // NAIS 500 doesn't set transceiver information correctly in every message
                 return true;
         }
     }
