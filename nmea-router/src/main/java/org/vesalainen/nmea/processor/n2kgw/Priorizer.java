@@ -36,7 +36,6 @@ public class Priorizer
 {
     private final IntFunction<Runnable> pgnMap;
     private final IntBinaryOperator comparator;
-    private int last;
     private int lastRun;
     private long lastTime;
     private Runnable lastAction;
@@ -54,10 +53,9 @@ public class Priorizer
     private void fire(int canId)
     {
         long now = millis.getAsLong();
-        if (lastRun == canId || last == canId)
+        if (lastRun == canId)
         {
             lastAction.run();
-            lastRun = canId;
             lastTime = now;
         }
         else
@@ -76,14 +74,13 @@ public class Priorizer
                 {
                     throw new IllegalArgumentException(canId+" not allowed");
                 }
-                if (comparator.applyAsInt(canId, last) < 0)
+                if (comparator.applyAsInt(canId, lastRun) < 0)
                 {
                     act.run();
                     lastRun = canId;
                     lastTime = now;
+                    lastAction = act;
                 }
-                last = canId;
-                lastAction = act;
             }
         }
     }

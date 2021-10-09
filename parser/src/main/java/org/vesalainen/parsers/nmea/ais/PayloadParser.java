@@ -22,10 +22,9 @@ import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Terminal;
-import org.vesalainen.parsers.mmsi.MMSIParser;
 
 /**
- *
+ * @deprecated Use PayloadBuilder
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @GenClassname("org.vesalainen.parsers.nmea.ais.PayloadParserImpl")

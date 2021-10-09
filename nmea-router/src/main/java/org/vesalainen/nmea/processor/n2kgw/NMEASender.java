@@ -41,21 +41,22 @@ import org.vesalainen.time.SimpleClock;
  */
 public class NMEASender extends AnnotatedPropertyStore
 {
-    private @Property long millis = 0;
-    private @Property int canId = 0;
-    private @Property double latitude = 0;
-    private @Property double longitude = 0;
-    private @Property float depthOfWater = 0;
-    private @Property float transducerOffset = 0;
-    private @Property float waterTemperature = 0;
-    private @Property float waterSpeed = 0;
-    private @Property float trueHeading = 0;
-    private @Property float relativeWindAngle = 0;
-    private @Property float relativeWindSpeed = 0;
-    private @Property float pitch = 0;
-    private @Property float roll = 0;
-    private @Property float speedOverGround = 0;
-    private @Property float trackMadeGood = 0;
+    private @Property long millis;
+    private @Property int canId;
+    private @Property double latitude;
+    private @Property double longitude;
+    private @Property float depthOfWater;
+    private @Property float transducerOffset;
+    private @Property float waterTemperature;
+    private @Property float waterSpeed;
+    private @Property float trueHeading;
+    private @Property float relativeWindAngle;
+    private @Property float relativeWindSpeed;
+    private @Property float pitch;
+    private @Property float roll;
+    private @Property float speedOverGround;
+    private @Property float trackMadeGood;
+    private @Property int methodGnss;
     
     private Clock frameClock;
     private N2KClock positionClock;
@@ -82,20 +83,24 @@ public class NMEASender extends AnnotatedPropertyStore
         
         this.rmc = NMEASentence.rmc(
                 ()->sourceManager.getTalkerId(canId),
-                ()->frameClock, 
+                ()->frameClock,
+                ()->'A',
                 ()->latitude, 
                 ()->longitude, 
                 ()->speedOverGround, 
                 ()->trackMadeGood, 
-                ()->magneticVariation(frameClock));
+                ()->magneticVariation(frameClock),
+                ()->'A');
         this.rmc2 = NMEASentence.rmc(
                 ()->sourceManager.getTalkerId(canId),
                 ()->positionClock, 
+                this::status,
                 ()->latitude, 
                 ()->longitude, 
                 ()->speedOverGround, 
                 ()->trackMadeGood, 
-                ()->magneticVariation(positionClock));
+                ()->magneticVariation(positionClock),
+                this::faa);
         this.dbt = NMEASentence.dbt(
                 ()->sourceManager.getTalkerId(canId), 
                 ()->depthOfWater+transducerOffset, 
@@ -191,10 +196,55 @@ public class NMEASender extends AnnotatedPropertyStore
             log(SEVERE, ex, "write(%s)", pgn);
         }
     }
-    public double magneticVariation(Clock clock)
+    private double magneticVariation(Clock clock)
     {
         ZonedDateTime now = ZonedDateTime.now(clock);
         return geoMag.getDeclination(latitude, longitude, (double)(now.getYear()+now.getDayOfYear()/365.0), 0);
+    }
+    private char status()
+    {
+        switch (methodGnss)
+        {
+            case 0: //no GNSS
+            case 6: //Estimated (DR) mode
+            case 7: //Manual Input
+            case 8: //Simulate mode
+                return 'V'; // not valid
+            case 1: //GNSS fix
+            case 3: //Precise GNSS
+            case 2: //DGNSS fix
+            case 4: //RTK Fixed Integer
+            case 5: //RTK float
+                return 'A'; // autonomous
+            default:
+                return 'V';
+        }
+    }
+    private char faa()
+    {
+        switch (methodGnss)
+        {
+            case 0: //no GNSS
+                return 'N'; // not valid
+            case 1: //GNSS fix
+                return 'A'; // autonomous
+            case 3: //Precise GNSS
+                return 'P'; // Precise
+            case 2: //DGNSS fix
+                return 'D'; // differential
+            case 4: //RTK Fixed Integer
+                return 'R'; // RTK Integer mode
+            case 5: //RTK float
+                return 'F'; // RTK Float mode
+            case 6: //Estimated (DR) mode
+                return 'E'; // Estimated
+            case 7: //Manual Input
+                return 'M'; // Manual input mode
+            case 8: //Simulate mode
+                return 'S'; // Simulator
+            default:
+                return 'N';
+        }
     }
     @Override
     public void commit(String reason)

@@ -40,6 +40,7 @@ public final class PlainNMEACompiler extends AbstractNMEACompiler
         addPgnSetter(GNSS_POSITION_DATA, "Position_Time", "positionTime");
         addPgnSetter(GNSS_POSITION_DATA, "Latitude", "latitude");
         addPgnSetter(GNSS_POSITION_DATA, "Longitude", "longitude");
+        addPgnSetter(GNSS_POSITION_DATA, "Method_Gnss", "methodGnss");
         
         addPgnSetter(COG_SOG_RAPID_UPDATE, "Speed_Over_Ground", "speedOverGround");
         addPgnSetter(COG_SOG_RAPID_UPDATE, "True_Course_Over_Ground", "trackMadeGood");

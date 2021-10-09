@@ -73,19 +73,19 @@ public class NMEASentence
     }
     public static NMEASentence rmc(Supplier<Clock> clock, DoubleSupplier latitude, DoubleSupplier longitude, DoubleSupplier speedOverGround, DoubleSupplier trackMadeGood, DoubleSupplier magneticVariation)
     {
-        return rmc(()->IN, clock, latitude, longitude, speedOverGround, trackMadeGood, magneticVariation);
+        return rmc(()->IN, clock, ()->'A', latitude, longitude, speedOverGround, trackMadeGood, magneticVariation, ()->'A');
     }
-    public static NMEASentence rmc(Supplier<TalkerId> talkerId, Supplier<Clock> clock, DoubleSupplier latitude, DoubleSupplier longitude, DoubleSupplier speedOverGround, DoubleSupplier trackMadeGood, DoubleSupplier magneticVariation)
+    public static NMEASentence rmc(Supplier<TalkerId> talkerId, Supplier<Clock> clock, IntSupplier status, DoubleSupplier latitude, DoubleSupplier longitude, DoubleSupplier speedOverGround, DoubleSupplier trackMadeGood, DoubleSupplier magneticVariation, IntSupplier faa)
     {
         return builder(talkerId, RMC)
                 .bindLocalTime(clock)      // utc
-                .add('A')   // status
+                .bindChar(status)   // status
                 .bindCoordinates(latitude, longitude)
                 .bindDouble(speedOverGround)      // sog
                 .bindDouble(trackMadeGood)      // tmg
                 .bindLocalDate(clock)      // ddmmyy
                 .bindDegrees(magneticVariation)    // Magnetic variation degrees
-                .add('A')   // FAA
+                .bindChar(faa)   // FAA
                 .build();
     }
     /**
@@ -652,7 +652,7 @@ public class NMEASentence
             buffer.add((p)->p.print(seq));
             return this;
         }
-        private Builder bindString(Supplier<CharSequence> seq)
+        private Builder bindString(Supplier<? extends CharSequence> seq)
         {
             if (seq != null)
             {
@@ -685,6 +685,23 @@ public class NMEASentence
                 {
                     int value = supplier.getAsInt();
                     p.format(Locale.US, ",%d", value);
+                });
+            }
+            else
+            {
+                bind((p)->p.print(','));
+            }
+            return this;
+        }
+
+        private Builder bindChar(IntSupplier supplier)
+        {
+            if (supplier != null)
+            {
+                bind((p)->
+                {
+                    int value = supplier.getAsInt();
+                    p.format(Locale.US, ",%c", value);
                 });
             }
             else

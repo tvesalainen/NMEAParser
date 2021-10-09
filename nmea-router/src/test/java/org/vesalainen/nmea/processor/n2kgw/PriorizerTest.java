@@ -49,7 +49,7 @@ public class PriorizerTest
         ic.accept(234359056);
         assertEquals(129029, ref.getValue());
         ic.accept(234359056);
-        assertEquals(129033, ref.getValue());
+        assertEquals(129029, ref.getValue());
     }
     @Test
     public void test2()

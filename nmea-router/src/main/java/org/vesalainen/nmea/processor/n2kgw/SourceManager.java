@@ -16,8 +16,6 @@
  */
 package org.vesalainen.nmea.processor.n2kgw;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.vesalainen.can.dbc.MessageClass;
 import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.parsers.nmea.NMEAPGN;
@@ -57,17 +55,18 @@ public class SourceManager extends JavaLogging
             src = new Source();
             map[sa] = src;
         }
-        src.add(canId, mc);
+        src.add(canId, sa, mc);
     }
     private class Source
     {
         private TalkerId talkerId = U0;
 
-        public void add(int canId, MessageClass mc)
+        public void add(int canId, int src, MessageClass mc)
         {
             String category = mc.getTransmitter();
             if ("Ais".equals(category))
             {
+                finest("source(%d) %s -> %s", src, talkerId, AI);
                 talkerId = AI;
             }
             else
@@ -86,16 +85,20 @@ public class SourceManager extends JavaLogging
                         {
                             case GNSS_POSITION_DATA:
                             case POSITION_RAPID_UPDATE:
+                                finest("source(%d) %s -> %s", src, talkerId, GN);
                                 talkerId = GN;
                                 break;
                             case WATER_DEPTH:
                             case SPEED_WATER_REFERENCED:
+                                finest("source(%d) %s -> %s", src, talkerId, SD);
                                 talkerId = SD;
                                 break;
                             case VESSEL_HEADING:
+                                finest("source(%d) %s -> %s", src, talkerId, HC);
                                 talkerId = HC;
                                 break;
                             case WIND_DATA:
+                                finest("source(%d) %s -> %s", src, talkerId, WI);
                                 talkerId = WI;
                                 break;
                         }
@@ -104,6 +107,7 @@ public class SourceManager extends JavaLogging
                         switch (nmeaPgn)
                         {
                             case VESSEL_HEADING:
+                                finest("source(%d) %s -> %s", src, talkerId, HC);
                                 talkerId = HC;
                                 break;
                         }
