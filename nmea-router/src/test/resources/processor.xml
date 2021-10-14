@@ -9,7 +9,7 @@
         <route prefix="$??TLL" target="TCP"/>
         <route prefix="$HCHDT" target="Net TCP"/>
         <route prefix="$SDDBT" target="Net TCP"/>
-        <route prefix="$AIRMC" target="Net TCP"/>
+        <route prefix="$HCRMC" target="Net TCP"/>
         <route prefix="$SDMTW" target="Net TCP"/>
         <route prefix="$SDVHW" target="Net TCP"/>
         <route prefix="$WIMWV" target="Net TCP"/>
