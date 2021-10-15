@@ -302,7 +302,8 @@ public abstract class AISGrammarGenerator
                                     expression, 
                                     description, 
                                     0, 
-                                    radix);
+                                    radix,
+                                    true);
                         }
                     }
                     else
@@ -386,7 +387,8 @@ public abstract class AISGrammarGenerator
                                     expression, 
                                     description, 
                                     0, 
-                                    radix);
+                                    radix,
+                                    true);
                             rhs.append(" "+nt);
                         }
                     }

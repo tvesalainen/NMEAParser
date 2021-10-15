@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.vesalainen.nmea</groupId>
         <artifactId>parent</artifactId>
-        <version>1.8.2</version>
+        <version>1.8.3</version>
     </parent>    
 
     <groupId>org.vesalainen.nmea</groupId>
