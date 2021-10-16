@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import static java.util.logging.Level.*;
 import static java.util.logging.Level.SEVERE;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.ByteBufferPipe;
@@ -184,7 +185,8 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             catch (Throwable ex)
             {
-                log(SEVERE, ex, "Stopping proxy %s %s", name, ex.getMessage());
+                warning("Stopping proxy %s %s", name, ex.getMessage());
+                log(FINEST, ex, "Stopping proxy %s %s", name, ex.getMessage());
             }
         }
         @Override
@@ -199,7 +201,8 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             catch (Throwable ex)
             {
-                log(SEVERE, ex, "Stopping %s %s", name, ex.getMessage());
+                warning("Stopping %s %s", name, ex.getMessage());
+                log(FINEST, ex, "Stopping %s %s", name, ex.getMessage());
             }
             finally
             {

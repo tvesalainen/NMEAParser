@@ -254,7 +254,8 @@ public abstract class Endpoint<E extends EndpointType, T extends ScatteringByteC
         }
         catch (Throwable ex)
         {
-            log(SEVERE, ex, "%s stopped because of %s", name, ex);
+            warning("%s stopped because of %s", name, ex);
+            log(FINEST, ex, "%s stopped because of %s", name, ex);
         }
     }
 
