@@ -17,6 +17,7 @@
 package org.vesalainen.nmea.router;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import static java.util.logging.Level.FINEST;
 import java.util.stream.Collectors;
@@ -34,7 +35,7 @@ import org.vesalainen.util.logging.JavaLogging;
 public final class Route extends JavaLogging
 {
     private static final LongMap<String> PREFIX_MAP = new LongMap<>();
-    private final String[] targetList;
+    private final List<String> targetList;
     private boolean backup;
     private long lastWrote;
     private List<Route> backupSources;
@@ -50,25 +51,14 @@ public final class Route extends JavaLogging
         this.targetList = null;
     }
     
+    @SuppressWarnings("empty-statement")
     public Route(String expression, RouteType routeType)
     {
         super(Route.class);
         this.expression = expression;
-        List<String> targets = routeType.getTarget();
-        toString = targets.stream().collect(Collectors.joining(", "));
-        if (targets != null)
-        {
-            targetList = new String[targets.size()];
-            int index = 0;
-            for (String target : targets)
-            {
-                this.targetList[index++] = target;
-            }
-        }
-        else
-        {
-            this.targetList = new String[0];
-        }
+        List<String> target = routeType.getTarget();
+        targetList = target != null ? target : Collections.EMPTY_LIST;
+        toString = targetList.stream().collect(Collectors.joining(", "));
         Boolean b = routeType.isBackup();
         if (b != null)
         {

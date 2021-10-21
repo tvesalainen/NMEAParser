@@ -43,6 +43,7 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
     private final ObjectName objectName;
     private CommandLine cmdArgs;
     private RouterConfig config;
+    private JmxRouterConfig jmx;
 
     public RouterManager()
     {
@@ -61,6 +62,7 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
     {
         this.cmdArgs = cmdArgs;
         this.config = config;
+        this.jmx = new JmxRouterConfig(config);
         cmdArgs.attachInstant(this);
         config("initial start");
         POOL.schedule(()->start(), 0, TimeUnit.SECONDS);
@@ -80,6 +82,7 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
     {
         try
         {
+            jmx.start();
             Router router = new Router(config);
             cmdArgs.attachInstant(router);
             if (router.start())
@@ -100,6 +103,7 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
         ScheduledExecutorService oldPool = POOL;
         POOL = new CachedScheduledThreadPool();
         config("created new thread pool");
+        jmx.stop();
         POOL.schedule(()->start(), 10, TimeUnit.SECONDS);
         config("scheduled router start");
         try

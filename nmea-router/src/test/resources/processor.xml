@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110" allDevices="COM4 COM5" dontScan="">
+<nmea proprietaryPrefix="IRS" ctrlTcpPort="10110" allDevices="COM4 COM5" dontScan="" nativeDebug="false">
     <tcp-endpoint port="12345" aisFastBoot="true" name="TCP" enable="true">
         <route prefix="$RA" target="Proc"/>
         <route prefix="$EC" target="Proc"/>
@@ -42,7 +42,7 @@
         <route prefix="$GPDTM" target=""/>
         <route prefix="$HC" target="Proc"/>
         <route prefix="$TIROT" target="Proc"/>
-        <route prefix="$AG" target=""/>
+        <route prefix="$AG" target="TCP Proc"/>
         <route prefix="$VH" target=""/>
         <route prefix="$YC" target=""/>
         <route prefix="$VW" target=""/>

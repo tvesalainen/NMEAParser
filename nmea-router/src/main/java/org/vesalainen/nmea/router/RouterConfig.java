@@ -248,6 +248,7 @@ public class RouterConfig extends JavaLogging
             Marshaller marshaller = jaxbCtx.createMarshaller();
             marshaller.setProperty(JAXB_FORMATTED_OUTPUT, true);
             marshaller.marshal(nmea, writer);
+            lastModified = Files.getLastModifiedTime(path);
         }
         catch (JAXBException ex)
         {
