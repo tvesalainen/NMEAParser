@@ -104,7 +104,7 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
         POOL = new CachedScheduledThreadPool();
         config("created new thread pool");
         jmx.stop();
-        POOL.schedule(()->start(), 10, TimeUnit.SECONDS);
+        POOL.schedule(()->start(), 2, TimeUnit.MINUTES);
         config("scheduled router start");
         try
         {

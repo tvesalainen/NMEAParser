@@ -7,7 +7,7 @@
     <processor dataAccessPort="10111" name="Proc" enable="true">
         <route prefix="!AIVDM" target="TCP"/>
         <route prefix="$??TLL" target="TCP"/>
-        <route prefix="$HCHDT" target="Net TCP"/>
+        <route prefix="$HCHDT" target="TCP"/>
         <route prefix="$SDDBT" target="Net TCP"/>
         <route prefix="$HCRMC" target="Net TCP"/>
         <route prefix="$SDMTW" target="Net TCP"/>

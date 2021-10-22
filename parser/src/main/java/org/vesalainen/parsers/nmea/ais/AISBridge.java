@@ -159,7 +159,7 @@ public class AISBridge extends JavaLogging implements Transactional
         executor.shutdown();
         try
         {
-            executor.awaitTermination(10, TimeUnit.MINUTES);
+            executor.awaitTermination(10, TimeUnit.SECONDS);
             executor.shutdownNow();
         }
         catch (InterruptedException ex)

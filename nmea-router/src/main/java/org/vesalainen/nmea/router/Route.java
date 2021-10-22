@@ -42,7 +42,6 @@ public final class Route extends JavaLogging
     private long expireTime = 1500;
     private int count;
     private int backupCount;
-    private String toString;
     private String expression;
 
     Route() // for test
@@ -58,7 +57,6 @@ public final class Route extends JavaLogging
         this.expression = expression;
         List<String> target = routeType.getTarget();
         targetList = target != null ? target : Collections.EMPTY_LIST;
-        toString = targetList.stream().collect(Collectors.joining(", "));
         Boolean b = routeType.isBackup();
         if (b != null)
         {
@@ -117,7 +115,7 @@ public final class Route extends JavaLogging
     @Override
     public String toString()
     {
-        return toString;
+        return targetList.toString();
     }
     
 }

@@ -130,23 +130,26 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
     @Override
     public void stop()
     {
-        nmeaService.removeAISObserver(dynamic);
-        nmeaService.removeAISObserver(data);
-        nmeaService.removeAISObserver(this);
-        SINGLETON = null;
-        if (ownTarget != null)
+        try
         {
-            try
+            nmeaService.removeAISObserver(dynamic);
+            nmeaService.removeAISObserver(data);
+            nmeaService.removeAISObserver(this);
+            if (ownTarget != null)
             {
                 ownTarget.close();
                 ownTarget = null;
             }
-            catch (IOException ex)
-            {
-                throw new IllegalArgumentException(ex);
-            }
+            map.clear();    // stores data
         }
-        map.clear();    // stores data
+        catch (IOException ex)
+        {
+            throw new IllegalArgumentException(ex);
+        }
+        finally
+        {
+            SINGLETON = null;
+        }
     }
 
     public Collection<AISTarget> getLiveSet()
