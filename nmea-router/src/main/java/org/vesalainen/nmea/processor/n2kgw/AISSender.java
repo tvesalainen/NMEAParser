@@ -24,6 +24,7 @@ import static java.util.logging.Level.*;
 import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import static org.vesalainen.math.UnitType.METERS_PER_SECOND;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.ais.AISBuilder;
 
@@ -110,7 +111,7 @@ public class AISSender extends AnnotatedPropertyStore
             case 1:
                 return false;
             default:
-                ownMmsi = mmsi; // NAIS 500 doesn't set transceiver information correctly in every message
+                ownMmsi = mmsi; // NAIS 400 doesn't set transceiver information correctly in every message
                 return true;
         }
     }
@@ -124,14 +125,18 @@ public class AISSender extends AnnotatedPropertyStore
     }
     private NMEASentence[] getClassAPositionReport()
     {
+        if (message > 3)
+        {
+            throw new IllegalArgumentException(message+" not ok");
+        }
         double crs = course < 360.0 ? course : 0;
-        int hdt = (int) (heading < 360 ? heading : 511);
+        int hdt = (int) (heading < 360 ? Math.round(heading) : 511);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
             .ownMessage(isOwnMessage())
             .integer(4, navigationStatus)
             .rot((float) rateOfTurn)
-            .decimal(10, speed, 10)
+            .decimal(10, speed, 10, METERS_PER_SECOND)
             .integer(1, positionAccuracy)
             .decimal(28, longitude, 600000)
             .decimal(27, latitude, 600000)
@@ -146,13 +151,17 @@ public class AISSender extends AnnotatedPropertyStore
     }
     private NMEASentence[] getClassBPositionReport()
     {
+        if (message != 18)
+        {
+            throw new IllegalArgumentException(message+" not ok");
+        }
         double crs = course < 360.0 ? course : 0;
         int hdt = (int) (heading < 360 ? heading : 511);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
             .ownMessage(isOwnMessage())
             .spare(8)
-            .decimal(10, speed, 10)
+            .decimal(10, speed, 10, METERS_PER_SECOND)
             .integer(1, positionAccuracy)
             .decimal(28, longitude, 600000)
             .decimal(27, latitude, 600000)
@@ -172,6 +181,10 @@ public class AISSender extends AnnotatedPropertyStore
     }
     private NMEASentence[] getClassAStaticAndVoyageRelatedData()
     {
+        if (message != 5)
+        {
+            throw new IllegalArgumentException(message+" not ok");
+        }
         LocalDateTime dt = LocalDateTime.now(eta);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
@@ -198,6 +211,10 @@ public class AISSender extends AnnotatedPropertyStore
     }
     private NMEASentence[] getClassBStaticDataReportPartA()
     {
+        if (message != 24)
+        {
+            throw new IllegalArgumentException(message+" not ok");
+        }
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
             .ownMessage(isOwnMessage())
@@ -208,6 +225,10 @@ public class AISSender extends AnnotatedPropertyStore
     }
     private NMEASentence[] getClassBStaticDataReportPartB()
     {
+        if (message != 24)
+        {
+            throw new IllegalArgumentException(message+" not ok");
+        }
         AISBuilder b24 = new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
             .ownMessage(isOwnMessage())

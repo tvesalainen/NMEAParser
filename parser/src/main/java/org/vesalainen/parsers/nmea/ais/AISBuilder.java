@@ -19,6 +19,8 @@ package org.vesalainen.parsers.nmea.ais;
 import org.vesalainen.math.Circle;
 import org.vesalainen.math.Polygon;
 import org.vesalainen.math.Sector;
+import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.KNOT;
 import org.vesalainen.parsers.nmea.MessageType;
 import static org.vesalainen.parsers.nmea.MessageType.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
@@ -159,6 +161,10 @@ public final class AISBuilder
     public AISBuilder decimal(int bits, double value, double coef)
     {
         return integer(bits, (int) Math.round(value*coef));
+    }
+    public AISBuilder decimal(int bits, double value, double coef, UnitType unit)
+    {
+        return integer(bits, (int) Math.round(unit.convertTo(value*coef, KNOT)));
     }
     public AISBuilder integer(int bits, Enum value, Enum def)
     {
