@@ -23,6 +23,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A simple class for storing observed values.
@@ -34,7 +37,7 @@ import java.util.Map;
  */
 public class SimpleStorage implements InvocationHandler
 {
-    private final Map<String,Object> map = new HashMap<>();
+    private final Map<String,Object> map = new TreeMap<>();
     private final Map<String,Object> trmap = new HashMap<>();
     private String commitReason;
     private String rollbackReason;
@@ -120,4 +123,20 @@ public class SimpleStorage implements InvocationHandler
         return null;
     }
 
+    public String verify(SimpleStorage other)
+    {
+        StringBuilder sb = new StringBuilder();
+        map.forEach((n1,v1)->
+        {
+            if (!"clock".equals(n1))
+            {
+                Object v2 = other.map.get(n1);
+                if (!Objects.equals(v1, v2))
+                {
+                    sb.append(n1+": "+v1+" <> "+v2);
+                }
+            }
+        });
+        return sb.toString();
+    }
 }

@@ -76,7 +76,7 @@ public final class AISBuilder
             NMEASentence.Builder builder = NMEASentence.builder(TalkerId.AI, messageType);
             builder.add(fragmentCount);
             builder.add(fragment);
-            builder.add('0');
+            builder.add();
             builder.add(transceiver);
             int beg = (fragment-1)*56;
             int end = Math.min(fragment*56, payload.length());

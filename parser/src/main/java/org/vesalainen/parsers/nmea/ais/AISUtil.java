@@ -17,6 +17,8 @@
 
 package org.vesalainen.parsers.nmea.ais;
 
+import static java.lang.Math.abs;
+
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
@@ -60,7 +62,7 @@ public final class AISUtil
     }
     public static int rot(float turn)
     {
-        if (Float.isNaN(turn))
+        if (Float.isNaN(turn) || abs(turn) > 708.7092F)
         {
             return -128;
         }

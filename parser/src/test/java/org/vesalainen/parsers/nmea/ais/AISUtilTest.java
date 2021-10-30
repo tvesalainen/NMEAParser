@@ -40,5 +40,12 @@ public class AISUtilTest
             assertEquals(r, rot1);
         }
     }
-    
+    @Test
+    public void test1()
+    {
+        int rot = AISUtil.rot(0.04464029F);
+        rot = AISUtil.rot(3538.836F);
+        rot = AISUtil.rot(708F);
+        rot = AISUtil.rot(1F);
+    }    
 }
