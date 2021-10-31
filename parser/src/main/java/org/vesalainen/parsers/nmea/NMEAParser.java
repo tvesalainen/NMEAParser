@@ -1733,6 +1733,10 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         {
             log(Level.SEVERE, thr, "recover exp=%s", expected);
         }
+        else
+        {
+            log(Level.SEVERE, "recover exp=%s", expected);
+        }
         StringBuilder sb = new StringBuilder();
         sb.append(reader.getInput());
         sb.append('^');

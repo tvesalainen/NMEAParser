@@ -37,8 +37,10 @@ import org.vesalainen.parsers.mmsi.MMSIParser;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import static org.vesalainen.parsers.mmsi.MMSIType.CraftAssociatedWithParentShip;
 import org.vesalainen.parsers.nmea.ListStorage;
+import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.SimpleStorage;
+import static org.vesalainen.parsers.nmea.ais.MessageTypes.StaticDataReport;
 import org.vesalainen.parsers.nmea.ais.areanotice.AssociatedText;
 import org.vesalainen.parsers.nmea.ais.areanotice.CircleArea;
 import org.vesalainen.parsers.nmea.ais.areanotice.PolygonArea;
@@ -78,6 +80,10 @@ public class CompareMessageTest
 
     @After
     public void tearDown()
+    {
+    }
+    @Test
+    public void test1() throws IOException
     {
     }
     @Test
@@ -122,7 +128,22 @@ public class CompareMessageTest
     {
         SimpleStorage net = test(n1);
         SimpleStorage prc = test(n2);
-        String msg = net.getProperty("messageType").toString();
+        MessageTypes messageType = (MessageTypes) net.getProperty("messageType");
+        assertNotNull(messageType);
+        if (StaticDataReport.equals(messageType))
+        {
+            int part = net.getInt("partNumber");
+            if (part == 1)
+            {
+                String vendorIdNet = (String) net.getProperty("vendorId");
+                Integer serialNumberNet = (Integer) net.getProperty("serialNumber");
+                Integer unitModelCodeNet = (Integer) net.getProperty("unitModelCode");
+                String vendorIdPrc = (String) prc.getProperty("vendorId");
+                System.err.println(vendorIdNet+" "+serialNumberNet+" "+unitModelCodeNet);
+                System.err.println(vendorIdPrc);
+            }
+        }
+        String msg = messageType.toString();
         System.err.println(msg);
         String verify = net.verify(prc);
         if (!verify.isEmpty())
@@ -135,6 +156,7 @@ public class CompareMessageTest
     {
         SimpleStorage ss = new SimpleStorage();
         AISObserver observer = ss.getStorage(AISObserver.class);
+        System.err.print(nmea);
         parser.parse(nmea, null, observer);
         return ss;
     }
