@@ -16,9 +16,13 @@
  */
 package org.vesalainen.nmea.processor.n2kgw;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.function.Supplier;
 import org.vesalainen.can.dbc.MessageClass;
+import org.vesalainen.can.dbc.SignalClass;
+import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
+import org.vesalainen.code.setter.IntSetter;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
 import org.vesalainen.util.HexUtil;
 import org.vesalainen.util.logging.JavaLogging;
@@ -117,6 +121,52 @@ public class AISCompiler extends AbstractNMEACompiler
     }
 
     @Override
+    public Runnable compileBinary(MessageClass mc, SignalClass sc, byte[] buf, int offset, int length)
+    {
+        if (PGN.pgn(mc.getId()) == AIS_CLASS_B_CS_STATIC_REPORT_PART_B.getPGN())
+        {
+            if ("Serial_Number".equals(sc.getName()))
+            {
+                if (length != 32)
+                {
+                    throw new IllegalArgumentException("illegal length "+length);
+                }
+                int off = offset/8;
+                int len = length/8;
+                IntSetter unitSetter = store.getIntSetter("unitModelCode");
+                IntSetter serialSetter = store.getIntSetter("serialNumber");
+                return ()->
+                {
+                    try
+                    {
+                    /*
+                    4 characters are coded to 6-bit ais 0183 characters. Resulting 24 bit
+                    are decoded as 4 bits for unit model code and rest 20 bits for serial number.
+                    */
+                        int ser = get6Bit(buf[off]);
+                        unitSetter.set(ser>>>2);
+                        ser &= 3;
+                        ser <<= 6;
+                        ser |= get6Bit(buf[off+1]);
+                        ser <<= 6;
+                        ser |= get6Bit(buf[off+2]);
+                        ser <<= 6;
+                        ser |= get6Bit(buf[off+3]);
+                        serialSetter.set(ser);
+                    }
+                    catch (IllegalArgumentException ex)
+                    {
+                        unitSetter.set(0);
+                        serialSetter.set(0);
+                        warning("%s unitModel/serial cannot be decoded", new String(buf, off, len, US_ASCII));
+                    }
+                };
+            }
+        }
+        return null;
+    }
+
+    @Override
     public boolean needCompilation(int canId)
     {
         needCompilation = super.needCompilation(canId);
@@ -134,6 +184,25 @@ public class AISCompiler extends AbstractNMEACompiler
             };
         }
         return null;
+    }
+
+    private int get6Bit(byte cc)
+    {
+        if (cc >= 64 && cc <= 95)
+        {
+            return cc - 64;
+        }
+        else
+        {
+            if (cc >= 32 && cc <= 63)
+            {
+                return cc;
+            }
+            else
+            {
+                throw new IllegalArgumentException(cc+" cannot be encoded");
+            }
+        }
     }
     
 }
