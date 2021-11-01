@@ -21,9 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import static java.nio.charset.StandardCharsets.US_ASCII;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.logging.Level;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -31,22 +28,9 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.vesalainen.code.MapListPropertySetter;
-import org.vesalainen.parsers.mmsi.MMSIEntry;
-import org.vesalainen.parsers.mmsi.MMSIParser;
-import org.vesalainen.parsers.mmsi.MMSIType;
-import static org.vesalainen.parsers.mmsi.MMSIType.CraftAssociatedWithParentShip;
-import org.vesalainen.parsers.nmea.ListStorage;
-import org.vesalainen.parsers.nmea.MessageType;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.SimpleStorage;
 import static org.vesalainen.parsers.nmea.ais.MessageTypes.StaticDataReport;
-import org.vesalainen.parsers.nmea.ais.areanotice.AssociatedText;
-import org.vesalainen.parsers.nmea.ais.areanotice.CircleArea;
-import org.vesalainen.parsers.nmea.ais.areanotice.PolygonArea;
-import org.vesalainen.parsers.nmea.ais.areanotice.PolylineArea;
-import org.vesalainen.parsers.nmea.ais.areanotice.RectangleArea;
-import org.vesalainen.parsers.nmea.ais.areanotice.SectorArea;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -86,7 +70,7 @@ public class CompareMessageTest
     public void test1() throws IOException
     {
     }
-    @Test
+    //@Test
     public void testLog() throws IOException
     {
         StringBuilder sbNet = new StringBuilder();
@@ -130,24 +114,13 @@ public class CompareMessageTest
         SimpleStorage prc = test(n2);
         MessageTypes messageType = (MessageTypes) net.getProperty("messageType");
         assertNotNull(messageType);
-        if (StaticDataReport.equals(messageType))
-        {
-            int part = net.getInt("partNumber");
-            if (part == 1)
-            {
-                String vendorIdNet = (String) net.getProperty("vendorId");
-                Integer serialNumberNet = (Integer) net.getProperty("serialNumber");
-                Integer unitModelCodeNet = (Integer) net.getProperty("unitModelCode");
-                String vendorIdPrc = (String) prc.getProperty("vendorId");
-                System.err.println(vendorIdNet+" "+serialNumberNet+" "+unitModelCodeNet);
-                System.err.println(vendorIdPrc);
-            }
-        }
-        String msg = messageType.toString();
-        System.err.println(msg);
         String verify = net.verify(prc);
         if (!verify.isEmpty())
         {
+            String msg = messageType.toString();
+            System.err.println(msg);
+            System.err.print(n1);
+            System.err.print(n2);
             System.err.println(verify);
         }
         //assertEquals(msg+" "+n1+" "+n2, "", verify);
@@ -156,7 +129,6 @@ public class CompareMessageTest
     {
         SimpleStorage ss = new SimpleStorage();
         AISObserver observer = ss.getStorage(AISObserver.class);
-        System.err.print(nmea);
         parser.parse(nmea, null, observer);
         return ss;
     }

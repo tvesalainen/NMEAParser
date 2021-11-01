@@ -115,4 +115,57 @@ public final class AISUtil
         }
         return sb.toString().trim();
     }
+    public static byte[] makeArray(byte[] txt)
+    {
+        int length = txt.length;
+        int l = 6*length;
+        int mod6 = l%8;
+        if (mod6 != 0)
+        {
+            throw new IllegalArgumentException();
+        }
+        byte[] array = new byte[l/8];
+        int index = 0;
+        int res = 0;
+        int bits = 0;
+        int b6 = 0;
+        for (int ii=0;ii<length;ii++)
+        {
+            byte cc = txt[ii];
+            if (cc > 64 && cc <= 95)
+            {
+                b6 = cc - 64;
+            }
+            else
+            {
+                if (cc >= 32 && cc <= 63)
+                {
+                    b6 = cc;
+                }
+                else
+                {
+                    throw new IllegalArgumentException(cc+" cannot be encoded in "+txt);
+                }
+            }
+            res <<= 6;
+            res |= b6;
+            bits += 6;
+            if (bits >= 8)
+            {
+                int sht = bits-8;
+                if (sht > 0)
+                {
+                    array[index++] = (byte) (res>>>(sht));
+                    res &= (-1>>>(32-sht));
+                }
+                else
+                {
+                    array[index++] = (byte) res;
+                    res = 0;
+                }
+                bits -= 8;
+            }
+        }
+        return array;
+    }
 }

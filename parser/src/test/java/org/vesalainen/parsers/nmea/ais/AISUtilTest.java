@@ -18,6 +18,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.vesalainen.util.HexUtil;
 
 /**
  *
@@ -41,11 +42,10 @@ public class AISUtilTest
         }
     }
     @Test
-    public void test1()
+    public void test6Bit()
     {
-        int rot = AISUtil.rot(0.04464029F);
-        rot = AISUtil.rot(3538.836F);
-        rot = AISUtil.rot(708F);
-        rot = AISUtil.rot(1F);
+        byte[] arr = HexUtil.fromString("44482452");
+        byte[] arr6 = AISUtil.makeArray(arr);
+        System.err.println(HexUtil.toString(arr6));
     }    
 }
