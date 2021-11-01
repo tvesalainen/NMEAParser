@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor.n2kgw;
+package org.vesalainen.nmea.router.endpoint.n2kgw;
 
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
 

@@ -16,7 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.nmea.processor.n2kgw.N2KGateway;
+import org.vesalainen.nmea.router.endpoint.n2kgw.N2KGateway;
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -81,16 +81,6 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
             }
             for (Object ob : processorType.getVariationSourceOrTrueWindSourceOrTracker())
             {
-                if (ob instanceof N2KGatewayType)
-                {
-                    info("starting N2K Gateway");
-                    N2KGatewayType type = (N2KGatewayType) ob;
-                    N2KGateway n2kGateway = N2KGateway.getInstance(type, channel, executor);
-                    processes.add(n2kGateway);
-                    n2kGateway.start();
-                    
-                    continue;
-                }
                 if (ob instanceof CompassCorrectorType)
                 {
                     info("starting Compass Corrector");

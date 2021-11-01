@@ -104,7 +104,7 @@ public class RouterConfig extends JavaLogging
     {
         return nmea
                 .getValue()
-                .getLogEndpointOrTcpEndpointOrProcessor()
+                .getN2KGatewayOrLogEndpointOrTcpEndpoint()
                 .stream()
                 .filter(this::checkEnabled);
     }
@@ -122,7 +122,7 @@ public class RouterConfig extends JavaLogging
     }
     public void add(EndpointType endpointType)
     {
-        nmea.getValue().getLogEndpointOrTcpEndpointOrProcessor().add(endpointType);
+        nmea.getValue().getN2KGatewayOrLogEndpointOrTcpEndpoint().add(endpointType);
     }
     public NmeaType getNmeaType()
     {

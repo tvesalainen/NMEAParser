@@ -16,7 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.nmea.processor.n2kgw.N2KGateway;
+import org.vesalainen.nmea.router.endpoint.n2kgw.N2KGateway;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,7 +44,7 @@ public class N2KGatewayT
     {
         Path in = Paths.get("C:\\Users\\tkv\\share", "candump.txt");
         Path out = Paths.get("C:\\Temp", "can2nmea.txt");
-        N2KGateway gw = N2KGateway.getInstance("can1", in, out, Executors.newCachedThreadPool(), "RMC", "DBT", "HDT", "MTW", "MWV", "VHW");
+        N2KGateway gw = N2KGateway.getInstance("can1", in, out, Executors.newCachedThreadPool());
         gw.startAndWait();
     }
     

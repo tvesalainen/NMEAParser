@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor.n2kgw;
 
+import org.vesalainen.nmea.router.endpoint.n2kgw.Priorizer;
 import java.util.concurrent.TimeUnit;
 import java.util.function.IntConsumer;
 import org.junit.Test;

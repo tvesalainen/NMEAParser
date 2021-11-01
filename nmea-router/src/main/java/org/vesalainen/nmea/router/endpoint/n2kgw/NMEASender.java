@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor.n2kgw;
+package org.vesalainen.nmea.router.endpoint.n2kgw;
 
 import d3.env.TSAGeoMag;
 import java.io.IOException;
@@ -122,33 +122,15 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->sourceManager.getTalkerId(canId), 
                 ()->waterSpeed, 
                 UnitType.METERS_PER_SECOND);
-    }
-
-    public void add(String prefix)
-    {
-        switch (prefix)
-        {
-            case "RMC":
-                IntConsumer ic = createPgnConsumer(GNSS_POSITION_DATA, POSITION_RAPID_UPDATE);
-                pgnMap.put(GNSS_POSITION_DATA.getPGN(), ic);
-                pgnMap.put(POSITION_RAPID_UPDATE.getPGN(), ic);
-                break;
-            case "DBT":
-                pgnMap.put(WATER_DEPTH.getPGN(), createPgnConsumer(WATER_DEPTH));
-                break;
-            case "HDT":
-                pgnMap.put(VESSEL_HEADING.getPGN(), createPgnConsumer(VESSEL_HEADING));
-                break;
-            case "MTW":
-                pgnMap.put(ENVIRONMENTAL_PARAMETERS.getPGN(), createPgnConsumer(ENVIRONMENTAL_PARAMETERS));
-                break;
-            case "MWV":
-                pgnMap.put(WIND_DATA.getPGN(), createPgnConsumer(WIND_DATA));
-                break;
-            case "VHW":
-                pgnMap.put(SPEED_WATER_REFERENCED.getPGN(), createPgnConsumer(SPEED_WATER_REFERENCED));
-                break;
-        }
+        
+        IntConsumer ic = createPgnConsumer(GNSS_POSITION_DATA, POSITION_RAPID_UPDATE);
+        pgnMap.put(GNSS_POSITION_DATA.getPGN(), ic);
+        pgnMap.put(POSITION_RAPID_UPDATE.getPGN(), ic);
+        pgnMap.put(WATER_DEPTH.getPGN(), createPgnConsumer(WATER_DEPTH));
+        pgnMap.put(VESSEL_HEADING.getPGN(), createPgnConsumer(VESSEL_HEADING));
+        pgnMap.put(ENVIRONMENTAL_PARAMETERS.getPGN(), createPgnConsumer(ENVIRONMENTAL_PARAMETERS));
+        pgnMap.put(WIND_DATA.getPGN(), createPgnConsumer(WIND_DATA));
+        pgnMap.put(SPEED_WATER_REFERENCED.getPGN(), createPgnConsumer(SPEED_WATER_REFERENCED));
     }
     private IntConsumer createPgnConsumer(NMEAPGN... pgns)
     {

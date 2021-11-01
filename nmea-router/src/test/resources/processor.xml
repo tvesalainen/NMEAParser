@@ -4,24 +4,18 @@
         <route prefix="$RA" target="Prc"/>
         <route prefix="$EC" target="Prc"/>
     </tcp-endpoint>
-    <processor dataAccessPort="10111" name="Prc" enable="true">
+    <n2k-gateway bus="can1" name="N2K" enable="true">
         <route prefix="!AIVDM" target="TCP Prc Log"/>
         <route prefix="!AIVDO" target="TCP"/>
-        <route prefix="$??TLL" target="TCP"/>
         <route prefix="$HCHDT" target="TCP"/>
         <route prefix="$SDDBT" target="TCP"/>
         <route prefix="$HCRMC" target="TCP"/>
         <route prefix="$SDMTW" target="TCP"/>
         <route prefix="$SDVHW" target="TCP"/>
+    </n2k-gateway>
+    <processor dataAccessPort="10111" name="Prc" enable="true">
+        <route prefix="$??TLL" target="TCP"/>
         <route prefix="$WIMWV" target="TCP Prc"/>
-        <n2k-gateway bus="can1">
-            <sentence prefix="HDT"/>
-            <sentence prefix="DBT"/>
-            <sentence prefix="RMC"/>
-            <sentence prefix="MTW"/>
-            <sentence prefix="VHW"/>
-            <sentence prefix="MWV"/>
-        </n2k-gateway>
         <true-wind-source/>
         <tracker directory="c:\\temp"/>
         <compressed-log directory="c:\\temp" properties="latitude longitude"/>

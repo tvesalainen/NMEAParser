@@ -41,11 +41,11 @@ public class JmxRouterConfig
         this.routerConfig = config;
         NmeaType nmeaType = config.getNmeaType();
         this.config = new RouterConfigMBean("Router Config Management", nmeaType);
-        for (EndpointType endPoint : nmeaType.getLogEndpointOrTcpEndpointOrProcessor())
+        for (EndpointType endPoint : nmeaType.getN2KGatewayOrLogEndpointOrTcpEndpoint())
         {
             targets.add(endPoint.getName());
         }
-        for (EndpointType endPoint : nmeaType.getLogEndpointOrTcpEndpointOrProcessor())
+        for (EndpointType endPoint : nmeaType.getN2KGatewayOrLogEndpointOrTcpEndpoint())
         {
             endPoints.add(new EndPointMBean(endPoint));
         }

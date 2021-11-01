@@ -23,6 +23,7 @@ import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.LogEndpointType;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
 import org.vesalainen.nmea.jaxb.router.MulticastType;
+import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183AnyType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183HsType;
 import org.vesalainen.nmea.jaxb.router.Nmea0183Type;
@@ -40,6 +41,10 @@ public final class EndpointFactory
 {
     public static Endpoint getInstance(EndpointType endpointType, Router router)
     {
+        if (endpointType instanceof N2KGatewayType)
+        {
+            return new N2KGatewayEndpoint((N2KGatewayType) endpointType, router);
+        }
         if (endpointType instanceof LogEndpointType)
         {
             return new LogEndpoint((LogEndpointType) endpointType, router);

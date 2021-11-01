@@ -14,16 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.processor.n2kgw;
+package org.vesalainen.nmea.router.endpoint.n2kgw;
 
-import org.vesalainen.nmea.processor.n2kgw.AISSender;
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import static java.nio.file.StandardOpenOption.*;
-import java.time.Clock;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import org.vesalainen.can.AbstractCanService;
@@ -31,7 +29,6 @@ import org.vesalainen.can.candump.CanDumpService;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.util.Stoppable;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
-import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
@@ -59,23 +56,15 @@ public class N2KGateway implements Stoppable
         AISSender aisSender = new AISSender(out);
         AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
         canService.addN2K();
-        type.getSentence().forEach((s) ->
-        {
-            nmeaSender.add(s.getPrefix());
-        });
         return new N2KGateway(canService, nmeaSender, aisSender, sourceManager);
     }
 
-    public static N2KGateway getInstance(String bus, Path in, Path out, ExecutorService executor, String... prefixes) throws IOException
+    public static N2KGateway getInstance(String bus, Path in, Path out, ExecutorService executor) throws IOException
     {
         SeekableByteChannel ch = Files.newByteChannel(out, WRITE, CREATE, TRUNCATE_EXISTING);
         SourceManager sourceManager = new SourceManager();
         NMEASender nmeaSender = new NMEASender(sourceManager, ch);
         AISSender aisSender = new AISSender(ch);
-        for (String prefix : prefixes)
-        {
-            nmeaSender.add(prefix);
-        }
         AbstractCanService canService = new CanDumpService(bus, in, executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
         canService.addN2K();
         return new N2KGateway(canService, nmeaSender, aisSender, sourceManager);
