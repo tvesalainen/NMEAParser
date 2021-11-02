@@ -20,6 +20,7 @@ import java.util.function.UnaryOperator;
 import org.vesalainen.navi.Navis;
 
 /**
+ * @deprecated 
  * NMEAMappers contains stream mappings from NMEASample to NMEASample. Same 
  * sample is mapped but added some pseudo fields
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>

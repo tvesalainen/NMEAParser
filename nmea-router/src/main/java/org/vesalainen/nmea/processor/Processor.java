@@ -125,17 +125,21 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                     info("starting VariationSource");
                     process = new VariationSource(channel, vst, (ScheduledExecutorService) executor);
                 }
-                if (ob instanceof TrueWindSourceType)
-                {
-                    TrueWindSourceType vst = (TrueWindSourceType) ob;
-                    info("starting TrueWindSource");
-                    process = new TrueWindSource(channel, vst, (ScheduledExecutorService) executor);
-                }
                 if (ob instanceof TrackerType)
                 {
                     TrackerType tt = (TrackerType) ob;
                     info("starting Tracker");
                     process = new Tracker(tt, (ScheduledExecutorService) executor);
+                }
+                if (ob instanceof TrueWindSourceType)
+                {
+                    TrueWindSourceType vst = (TrueWindSourceType) ob;
+                    info("starting TrueWindSource");
+                    TrueWindSource server = new TrueWindSource(channel, vst, (ScheduledExecutorService) executor);
+                    processes.add(server);
+                    addNMEAObserver(server);
+                    server.start("");
+                    continue;
                 }
                 if (ob instanceof SntpServerType)
                 {

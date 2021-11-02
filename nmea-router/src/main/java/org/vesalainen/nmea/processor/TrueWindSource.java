@@ -18,17 +18,25 @@ package org.vesalainen.nmea.processor;
 
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.lang.invoke.MethodHandles;
 import java.nio.channels.GatheringByteChannel;
+import java.util.Collection;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
+import org.vesalainen.code.AnnotatedPropertyStore;
+import org.vesalainen.code.Property;
 import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.*;
+import org.vesalainen.navi.Navis;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.navi.TrueWind;
 import org.vesalainen.nmea.util.NMEAFilters;
 import org.vesalainen.nmea.util.NMEAMappers;
 import org.vesalainen.nmea.util.NMEASample;
+import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.navi.Velocity;
 
@@ -36,60 +44,53 @@ import org.vesalainen.util.navi.Velocity;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class TrueWindSource extends AbstractSampleConsumer
+public class TrueWindSource extends AnnotatedPropertyStore implements Stoppable
 {
-    private static final String[] Prefixes = new String[]{
-        "trueHeading",
-        "trackMadeGood",
-        "relativeWindAngle",
-        "windSpeed",
-        "speedOverGround"
-            };
+    @Property private float trueHeading;
+    @Property private float trackMadeGood;
+    @Property private float relativeWindAngle;
+    @Property private float relativeWindSpeed;
+    @Property private float speedOverGround;
+
     private final GatheringByteChannel channel;
-    private final TrueWind trueWind = new TrueWind();
+    private final TrueWind trueWind;
+    private final NMEASentence mwv;
 
     public TrueWindSource(GatheringByteChannel channel, TrueWindSourceType trueWindSourceType, ScheduledExecutorService executor)
     {
-        super(TrueWindSource.class, executor);
+        super(MethodHandles.lookup());
         this.channel = channel;
+        this.trueWind = new TrueWind();
+        this.mwv = NMEASentence.mwv(trueWind::getTrueAngle, trueWind::getTrueSpeed, KNOT, true);
+    }
+
+    @Override
+    public void commit(String reason, Collection<String> updatedProperties)
+    {
+        if (updatedProperties.contains("relativeWindSpeed"))
+        {
+            try
+            {
+                trueWind.setBoatSpeed(speedOverGround);
+                double driftAngle = Navis.angleDiff(trueHeading, trackMadeGood);
+                trueWind.setDriftAngle(driftAngle);
+                trueWind.setRelativeAngle(relativeWindAngle);
+                trueWind.setRelativeSpeed(relativeWindSpeed);
+                trueWind.calc();
+                finest("%s", trueWind);
+                mwv.writeTo(channel);
+                finest(trueWind::toString);
+            }
+            catch (IOException ex)
+            {
+                log(SEVERE, ex, "TrueWindSource %s", ex.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void stop()
+    {
     }
     
-    @Override
-    public String[] getProperties()
-    {
-        return Prefixes;
-    }
-
-    @Override
-    public void init(Stream<NMEASample> stream)
-    {
-        this.stream = stream
-                .map(NMEAFilters.accumulatorMap())
-                .filter(NMEAFilters.containsAllFilter("relativeWindAngle", "windSpeed", "speedOverGround"))
-                .map(NMEAMappers.driftAngleMap());
-    }
-
-    @Override
-    protected void process(NMEASample sample)
-    {
-        try
-        {
-            trueWind.setBoatSpeed(sample.getProperty("speedOverGround"));
-            trueWind.setDriftAngle(sample.getProperty("driftAngle"));
-            trueWind.setRelativeAngle(sample.getProperty("relativeWindAngle"));
-            trueWind.setRelativeSpeed(Velocity.toKnots(sample.getProperty("windSpeed")));
-            trueWind.calc();
-            finest("%s", trueWind);
-            int trueAngle = (int) trueWind.getTrueAngle();
-            double trueSpeed = trueWind.getTrueSpeed();
-            NMEASentence mwv = NMEASentence.mwv(trueAngle, trueSpeed, UnitType.KNOT, true);
-            channel.write(mwv.getByteBuffer());
-            finest("send MWV trueAngle=%d trueSpeed=%f", trueAngle, trueSpeed);
-        }
-        catch (IOException ex)
-        {
-            log(Level.SEVERE, ex.getMessage(), ex);
-        }
-    }
-
 }

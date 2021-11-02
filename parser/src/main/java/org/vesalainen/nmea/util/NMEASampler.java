@@ -33,6 +33,7 @@ import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.stream.ObserverSpliterator;
 
 /**
+ * @deprecated Bad idea
  * NMEASampler acts as bridge from observer to stream.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */

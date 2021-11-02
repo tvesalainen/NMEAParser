@@ -12,10 +12,11 @@
         <route prefix="$HCRMC" target="TCP"/>
         <route prefix="$SDMTW" target="TCP"/>
         <route prefix="$SDVHW" target="TCP"/>
+        <route prefix="$WIMWV" target="TCP Prc"/>
     </n2k-gateway>
     <processor dataAccessPort="10111" name="Prc" enable="true">
         <route prefix="$??TLL" target="TCP"/>
-        <route prefix="$WIMWV" target="TCP Prc"/>
+        <route prefix="$??MWV" target="Log"/>
         <true-wind-source/>
         <tracker directory="c:\\temp"/>
         <compressed-log directory="c:\\temp" properties="latitude longitude"/>

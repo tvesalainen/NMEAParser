@@ -559,23 +559,21 @@ public interface NMEAObserver extends Transactional
     @Unit(value=DEGREE, min=0, max=360)
     void setTrueWindAngle(float windAngle);
     /**
-     * Returns the wind speed.
-     * MWV, VWR
-     * @param metersInSecond
+     * Returns the wind speed.MWV, VWR
+     * @param knots
      */
     @NMEA0183({MWV, VWR})
     @NMEACat(WIND)
     @Unit(value=KNOT, min=0, max=100)
-    void setRelativeWindSpeed(float metersInSecond);
+    void setRelativeWindSpeed(float knots);
     /**
-     * Returns the wind speed.
-     * MWV, VWR
-     * @param metersInSecond
+     * Returns the wind speed.MWV, VWR
+     * @param knots
      */
     @NMEA0183({MWV, VWR})
     @NMEACat(WIND)
     @Unit(value=KNOT, min=0, max=100)
-    void setTrueWindSpeed(float metersInSecond);
+    void setTrueWindSpeed(float knots);
     /**
      * ROT
      * Rate Of TURN, degrees per minute, "-" means bow turns to port
@@ -583,6 +581,7 @@ public interface NMEAObserver extends Transactional
      */
     @NMEA0183({ROT})
     @NMEACat(TURN)
+    @Unit(value=DEGREES_PER_MINUTE, min=-780, max=780)
     void setRateOfTurn(float rateOfTurn);
     /**
      * RPM

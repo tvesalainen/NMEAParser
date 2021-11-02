@@ -23,6 +23,7 @@ import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
+ * @deprecated Bad idea
  * Consumer for NMEASample's. Samples are processed in own thread in process
  * method.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>

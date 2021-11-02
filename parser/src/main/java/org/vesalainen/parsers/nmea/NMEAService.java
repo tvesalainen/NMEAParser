@@ -91,7 +91,7 @@ public class NMEAService<T extends ByteChannel & ScatteringByteChannel & Gatheri
         return sampler(properties).stream();
     }
 
-    public NMEASampler sampler(String... properties)
+    @Deprecated public NMEASampler sampler(String... properties)
     {
         return new NMEASampler(nmeaDispatcher, properties);
     }
