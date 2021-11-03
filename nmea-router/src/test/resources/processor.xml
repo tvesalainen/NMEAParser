@@ -7,17 +7,17 @@
     <n2k-gateway bus="can1" name="N2K" enable="true">
         <route prefix="!AIVDM" target="TCP Prc Log"/>
         <route prefix="!AIVDO" target="TCP"/>
-        <route prefix="$HCHDT" target="TCP"/>
+        <route prefix="$HCHDT" target="TCP Prc"/>
         <route prefix="$SDDBT" target="TCP"/>
-        <route prefix="$HCRMC" target="TCP"/>
+        <route prefix="$HCRMC" target="TCP Prc"/>
         <route prefix="$SDMTW" target="TCP"/>
-        <route prefix="$SDVHW" target="TCP"/>
+        <route prefix="$SDVHW" target="TCP Prc"/>
         <route prefix="$WIMWV" target="TCP Prc"/>
     </n2k-gateway>
     <processor dataAccessPort="10111" name="Prc" enable="true">
         <route prefix="$??TLL" target="TCP"/>
         <route prefix="$??MWV" target="Log"/>
-        <true-wind-source/>
+        <true-wind-source overGround="true"/>
         <tracker directory="c:\\temp"/>
         <compressed-log directory="c:\\temp" properties="latitude longitude"/>
         <ais-log directory="c:\\temp" maxLogSize="4096"/>

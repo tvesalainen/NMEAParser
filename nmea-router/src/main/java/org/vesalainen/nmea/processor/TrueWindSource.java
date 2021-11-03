@@ -16,70 +16,67 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.channels.GatheringByteChannel;
 import java.util.Collection;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
-import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
-import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
-import org.vesalainen.navi.Navis;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
-import org.vesalainen.navi.TrueWind;
-import org.vesalainen.nmea.util.NMEAFilters;
-import org.vesalainen.nmea.util.NMEAMappers;
-import org.vesalainen.nmea.util.NMEASample;
-import org.vesalainen.nmea.util.Stoppable;
+import org.vesalainen.navi.TrueWindCalculator;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import org.vesalainen.util.navi.Velocity;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class TrueWindSource extends AnnotatedPropertyStore implements Stoppable
+public class TrueWindSource extends AbstractProcessorTask
 {
-    @Property private float trueHeading;
-    @Property private float trackMadeGood;
-    @Property private float relativeWindAngle;
-    @Property private float relativeWindSpeed;
-    @Property private float speedOverGround;
+    private @Property float trueHeading;
+    private @Property float trackMadeGood;
+    private @Property float relativeWindAngle;
+    private @Property float relativeWindSpeed;
+    private @Property float speedOverGround;
+    private @Property float waterSpeed;
 
     private final GatheringByteChannel channel;
-    private final TrueWind trueWind;
+    private final TrueWindCalculator trueWindCalculator;
+    private boolean overGround;
     private final NMEASentence mwv;
 
     public TrueWindSource(GatheringByteChannel channel, TrueWindSourceType trueWindSourceType, ScheduledExecutorService executor)
     {
         super(MethodHandles.lookup());
         this.channel = channel;
-        this.trueWind = new TrueWind();
-        this.mwv = NMEASentence.mwv(trueWind::getTrueAngle, trueWind::getTrueSpeed, KNOT, true);
+        this.trueWindCalculator = new TrueWindCalculator();
+        this.mwv = NMEASentence.mwv(trueWindCalculator::getTrueWindAngle, trueWindCalculator::getTrueWindSpeed, KNOT, true);
+        this.overGround = trueWindSourceType.isOverGround()!=null?trueWindSourceType.isOverGround():false;
     }
 
     @Override
-    public void commit(String reason, Collection<String> updatedProperties)
+    protected void commitTask(String reason, Collection<String> updatedProperties)
     {
         if (updatedProperties.contains("relativeWindSpeed"))
         {
             try
             {
-                trueWind.setBoatSpeed(speedOverGround);
-                double driftAngle = Navis.angleDiff(trueHeading, trackMadeGood);
-                trueWind.setDriftAngle(driftAngle);
-                trueWind.setRelativeAngle(relativeWindAngle);
-                trueWind.setRelativeSpeed(relativeWindSpeed);
-                trueWind.calc();
-                finest("%s", trueWind);
+                if (overGround)
+                {
+                    trueWindCalculator.setTrueHeading(trueHeading);
+                    trueWindCalculator.setSpeed(speedOverGround);
+                    trueWindCalculator.setSpeedAngle(trackMadeGood);
+                }
+                else
+                {
+                    trueWindCalculator.setTrueHeading(0);
+                    trueWindCalculator.setSpeed(waterSpeed);
+                    trueWindCalculator.setSpeedAngle(0);
+                }
+                trueWindCalculator.setRelativeWindAngle(relativeWindAngle);
+                trueWindCalculator.setRelativeWindSpeed(relativeWindSpeed);
                 mwv.writeTo(channel);
-                finest(trueWind::toString);
             }
             catch (IOException ex)
             {

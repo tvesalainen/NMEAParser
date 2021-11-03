@@ -200,6 +200,7 @@
         <xsd:attribute name="period" type="millisType"/>
     </xsd:complexType>
     <xsd:complexType name="true-wind-sourceType">
+        <xsd:attribute name="overGround" type="xsd:boolean"/>
     </xsd:complexType>
     <xsd:simpleType name="priorityType">
         <xsd:restriction base="xsd:integer">
