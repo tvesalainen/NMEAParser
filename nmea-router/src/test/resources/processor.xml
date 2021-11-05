@@ -8,11 +8,12 @@
         <route prefix="!AIVDM" target="TCP Prc Log"/>
         <route prefix="!AIVDO" target="TCP"/>
         <route prefix="$HCHDT" target="TCP Prc"/>
-        <route prefix="$SDDBT" target="TCP"/>
+        <route prefix="$SDDPT" target="TCP"/>
         <route prefix="$HCRMC" target="TCP Prc"/>
         <route prefix="$SDMTW" target="TCP"/>
         <route prefix="$SDVHW" target="TCP Prc"/>
         <route prefix="$WIMWV" target="TCP Prc"/>
+        <route prefix="$??XDR" target="TCP Prc"/>
     </n2k-gateway>
     <processor dataAccessPort="10111" name="Prc" enable="true">
         <route prefix="$??TLL" target="TCP"/>

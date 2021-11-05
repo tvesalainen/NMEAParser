@@ -45,13 +45,15 @@ public class NMEASender extends AnnotatedPropertyStore
     private @Property int canId;
     private @Property double latitude;
     private @Property double longitude;
-    private @Property float depthOfWater;
+    private @Property float depthOfWaterRelativeToTransducer;
     private @Property float transducerOffset;
+    private @Property float maximumRangeScale;
     private @Property float waterTemperature;
     private @Property float waterSpeed;
     private @Property float trueHeading;
     private @Property float relativeWindAngle;
     private @Property float relativeWindSpeed;
+    private @Property float yaw;
     private @Property float pitch;
     private @Property float roll;
     private @Property float speedOverGround;
@@ -67,11 +69,12 @@ public class NMEASender extends AnnotatedPropertyStore
     private final Map<Integer,IntConsumer> pgnMap = new HashMap<>();
     private final NMEASentence rmc;
     private final NMEASentence rmc2;
-    private final NMEASentence dbt;
+    private final NMEASentence dpt;
     private final NMEASentence hdt;
     private final NMEASentence mtw;
     private final NMEASentence mwv;
     private final NMEASentence vhw;
+    private final NMEASentence xdr;
     
     public NMEASender(SourceManager sourceManager, WritableByteChannel channel)
     {
@@ -101,9 +104,11 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->trackMadeGood, 
                 ()->magneticVariation(positionClock),
                 this::faa);
-        this.dbt = NMEASentence.dbt(
+        this.dpt = NMEASentence.dpt(
                 ()->sourceManager.getTalkerId(canId), 
-                ()->depthOfWater+transducerOffset, 
+                ()->depthOfWaterRelativeToTransducer,
+                ()->transducerOffset,
+                ()->maximumRangeScale,
                 UnitType.METER);
         this.hdt = NMEASentence.hdt(
                 ()->sourceManager.getTalkerId(canId), 
@@ -122,6 +127,11 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->sourceManager.getTalkerId(canId), 
                 ()->waterSpeed, 
                 UnitType.METERS_PER_SECOND);
+        this.xdr = NMEASentence.attitude(
+                ()->sourceManager.getTalkerId(canId),
+                ()->yaw,
+                ()->pitch,
+                ()->roll);
         
         IntConsumer ic = createPgnConsumer(GNSS_POSITION_DATA, POSITION_RAPID_UPDATE);
         pgnMap.put(GNSS_POSITION_DATA.getPGN(), ic);
@@ -131,6 +141,7 @@ public class NMEASender extends AnnotatedPropertyStore
         pgnMap.put(ENVIRONMENTAL_PARAMETERS.getPGN(), createPgnConsumer(ENVIRONMENTAL_PARAMETERS));
         pgnMap.put(WIND_DATA.getPGN(), createPgnConsumer(WIND_DATA));
         pgnMap.put(SPEED_WATER_REFERENCED.getPGN(), createPgnConsumer(SPEED_WATER_REFERENCED));
+        pgnMap.put(ATTITUDE.getPGN(), createPgnConsumer(ATTITUDE));
     }
     private IntConsumer createPgnConsumer(NMEAPGN... pgns)
     {
@@ -155,7 +166,7 @@ public class NMEASender extends AnnotatedPropertyStore
                     rmc.writeTo(channel);
                     break;
                 case WATER_DEPTH:
-                    dbt.writeTo(channel);
+                    dpt.writeTo(channel);
                     break;
                 case VESSEL_HEADING:
                     hdt.writeTo(channel);
@@ -168,6 +179,9 @@ public class NMEASender extends AnnotatedPropertyStore
                     break;
                 case SPEED_WATER_REFERENCED:
                     vhw.writeTo(channel);
+                    break;
+                case ATTITUDE:
+                    xdr.writeTo(channel);
                     break;
                 default:
                     throw new UnsupportedOperationException(pgn+" not supported");

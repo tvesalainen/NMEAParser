@@ -87,6 +87,12 @@ public class CompressedLog extends AbstractPropertySetter implements AttachedLog
     }
 
     @Override
+    public String[] getProperties()
+    {
+        return properties;
+    }
+
+    @Override
     public void stop()
     {
         future.cancel(false);

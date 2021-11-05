@@ -30,8 +30,9 @@ public final class PlainNMEACompiler extends AbstractNMEACompiler
         super(store);
         addPgnSetter(VESSEL_HEADING, "True_Heading", "trueHeading");
         
-        addPgnSetter(WATER_DEPTH, "Water_Depth_Transducer", "depthOfWater");
+        addPgnSetter(WATER_DEPTH, "Water_Depth_Transducer", "depthOfWaterRelativeToTransducer");
         addPgnSetter(WATER_DEPTH, "Offset", "transducerOffset");
+        addPgnSetter(WATER_DEPTH, "Maximum_Range_Scale", "maximumRangeScale");
         
         addPgnSetter(POSITION_RAPID_UPDATE, "Latitude", "latitude");
         addPgnSetter(POSITION_RAPID_UPDATE, "Longitude", "longitude");
@@ -51,6 +52,10 @@ public final class PlainNMEACompiler extends AbstractNMEACompiler
         addPgnSetter(WIND_DATA, "Apparent_Wind_Direction", "relativeWindAngle");
         
         addPgnSetter(SPEED_WATER_REFERENCED, "Speed_Water_Referenced", "waterSpeed");
+        
+        addPgnSetter(ATTITUDE, "Yaw", "yaw");
+        addPgnSetter(ATTITUDE, "Pitch", "pitch");
+        addPgnSetter(ATTITUDE, "Roll", "roll");
     }
 
     

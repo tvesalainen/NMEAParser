@@ -301,6 +301,14 @@ public class NMEASentence
                 .bindDegrees(variation)
                 .build();
     }
+    public static NMEASentence attitude(Supplier<TalkerId> talkerId, DoubleSupplier yaw, DoubleSupplier pitch, DoubleSupplier roll)
+    {
+        return builder(talkerId, XDR)
+                .bindXdrGroup('A', yaw, 'D', "YAW")
+                .bindXdrGroup('A', pitch, 'D', "PITCH")
+                .bindXdrGroup('A', roll, 'D', "ROLL")
+                .build();
+    }
     /**
      * Returns byte buffer containing the sentence. Changes to returned buffer
      * will not affect this sentence.
@@ -762,6 +770,18 @@ public class NMEASentence
             }
             return this;
         }
-
+        private Builder bindXdrGroup(char type, DoubleSupplier supplier, char unit, String name)
+        {
+                bind((p)->
+                {
+                    p.print(',');
+                    p.print(type);
+                    p.format(Locale.US, ",%.1f,", supplier.getAsDouble());
+                    p.print(unit);
+                    p.print(',');
+                    p.print(name);
+                });
+                return this;
+        }
     }
 }

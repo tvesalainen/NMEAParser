@@ -191,6 +191,7 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
     {
         processes.stream().forEach((process) ->
         {
+            config("stop %s", process);
             process.stop();
         });
         if (dataServer != null)

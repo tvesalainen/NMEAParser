@@ -64,16 +64,16 @@ public class TrueWindSource extends AbstractProcessorTask
             {
                 if (overGround)
                 {
-                    trueWindCalculator.setTrueHeading(trueHeading);
                     trueWindCalculator.setSpeed(speedOverGround);
                     trueWindCalculator.setSpeedAngle(trackMadeGood);
                 }
                 else
                 {
-                    trueWindCalculator.setTrueHeading(0);
                     trueWindCalculator.setSpeed(waterSpeed);
-                    trueWindCalculator.setSpeedAngle(0);
+                    trueWindCalculator.setSpeedAngle(trueHeading);
                 }
+                trueWindCalculator.setZeroAngle(trueHeading);
+                trueWindCalculator.setTrueHeading(trueHeading);
                 trueWindCalculator.setRelativeWindAngle(relativeWindAngle);
                 trueWindCalculator.setRelativeWindSpeed(relativeWindSpeed);
                 mwv.writeTo(channel);
