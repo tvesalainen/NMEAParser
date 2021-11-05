@@ -667,61 +667,6 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setPitch(float value)
-    {
-    }
-
-    @Override
-    public void setRoll(float value)
-    {
-    }
-
-    @Override
-    public void setXAcceleration(float value)
-    {
-    }
-
-    @Override
-    public void setYAcceleration(float value)
-    {
-    }
-
-    @Override
-    public void setZAcceleration(float value)
-    {
-    }
-
-    @Override
-    public void setRRat(float value)
-    {
-    }
-
-    @Override
-    public void setPRat(float value)
-    {
-    }
-
-    @Override
-    public void setYRat(float value)
-    {
-    }
-
-    @Override
-    public void setRRtr(float value)
-    {
-    }
-
-    @Override
-    public void setPRtr(float value)
-    {
-    }
-
-    @Override
-    public void setYRtr(float value)
-    {
-    }
-
-    @Override
     public void setOrigin(Object origin)
     {
     }
@@ -853,6 +798,11 @@ public class AbstractNMEAObserver implements NMEAObserver
 
     @Override
     public void setMaximumRangeScale(float meters)
+    {
+    }
+
+    @Override
+    public void XdrGroup(char type, float value, char unit, String name)
     {
     }
 

@@ -837,62 +837,6 @@ public interface NMEAObserver extends Transactional
     public void setReferenceTarget(CharSequence referenceTarget);
 
     public void setMessageType(MessageType messageType);
-    /**
-     * Pitch: oscillation of vessel about its latitudinal axis. Bow moving up is
-     * positive. Value reported to the nearest 0.1 degree.
-     * @param value 
-     */
-    @NMEACat(ATTITUDE)
-    @Unit(value=DEGREE_NEG, min=-60, max=60)
-    public void setPitch(float value);
-    /**
-     * Roll: oscillation of vessel about its longitudinal axis. Roll to the
-     * starboard is positive. Value reported to the nearest 0.1 degree.
-     * @param value 
-     */
-    @NMEACat(ATTITUDE)
-    @Unit(value=DEGREE_NEG, min=-100, max=100)
-    public void setRoll(float value);
-    /**
-     * X-Acceleration. Unit is gravity.
-     * @param value 
-     */
-    @NMEACat(ACCELERATION)
-    @Unit(value=GFORCE_EARTH, min=-1.1, max=1.1)
-    public void setXAcceleration(float value);
-    /**
-     * Y-Acceleration. Unit is gravity.
-     * @param value 
-     */
-    @NMEACat(ACCELERATION)
-    @Unit(value=GFORCE_EARTH, min=-1.1, max=1.1)
-    public void setYAcceleration(float value);
-    /**
-     * Z-Acceleration. Unit is gravity.
-     * @param value 
-     */
-    @NMEACat(ACCELERATION)
-    @Unit(value=GFORCE_EARTH, min=-1.1, max=1.1)
-    public void setZAcceleration(float value);
-
-    @NMEACat(ACCELERATION)
-    public void setRRat(float value);
-
-    @NMEACat(ACCELERATION)
-    public void setPRat(float value);
-
-    @NMEACat(ACCELERATION)
-    public void setYRat(float value);
-
-    @NMEACat(ACCELERATION)
-    public void setRRtr(float value);
-
-    @NMEACat(ACCELERATION)
-    public void setPRtr(float value);
-
-    @NMEACat(ACCELERATION)
-    public void setYRtr(float value);
-
     @NMEACat(DISTANCE)
     public void setTargetDistance(float distance);
 
@@ -955,5 +899,7 @@ public interface NMEAObserver extends Transactional
     @NMEACat(GPS)
     @Unit(value=UNITLESS, min=0, max=59)
     public void setLocalZoneMinutes(int localZoneMinutes);
+
+    public void XdrGroup(char type, float value, char unit, String name);
 
 }

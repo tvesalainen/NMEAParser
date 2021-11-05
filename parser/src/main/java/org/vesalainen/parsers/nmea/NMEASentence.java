@@ -101,13 +101,14 @@ public class NMEASentence
     }
     public static NMEASentence dpt(DoubleSupplier meters, DoubleSupplier offset, UnitType from)
     {
-        return dpt(()->SD, meters, offset, from);
+        return dpt(()->SD, meters, offset, ()->0, from);
     }
-    public static NMEASentence dpt(Supplier<TalkerId> talkerId, DoubleSupplier meters, DoubleSupplier offset, UnitType from)
+    public static NMEASentence dpt(Supplier<TalkerId> talkerId, DoubleSupplier meters, DoubleSupplier offset, DoubleSupplier range, UnitType from)
     {
         return builder(talkerId, DPT)
                 .bind(from, meters, METER)
                 .bind(from, offset, METER)
+                .bind(from, range, METER)
                 .build();
     }
     /**
