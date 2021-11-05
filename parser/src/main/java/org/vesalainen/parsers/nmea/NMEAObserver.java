@@ -900,6 +900,6 @@ public interface NMEAObserver extends Transactional
     @Unit(value=UNITLESS, min=0, max=59)
     public void setLocalZoneMinutes(int localZoneMinutes);
 
-    public void XdrGroup(char type, float value, char unit, String name);
+    public void xdrGroup(char type, float value, char unit, String name);
 
 }

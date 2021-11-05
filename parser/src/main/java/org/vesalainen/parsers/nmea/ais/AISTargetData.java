@@ -87,9 +87,8 @@ public class AISTargetData extends AnnotatedPropertyStore
      */
     public boolean hasAllData()
     {
-        return vesselName != null && callSign != null;
+        return vesselName != null && !vesselName.isEmpty() && callSign != null && !callSign.isEmpty();
     }
-    
     public NMEASentence[] getMsg5()
     {
         return AISSentence.getMsg5(mmsi, aisVersion, imoNumber, callSign, vesselName, shipType, dimensionToBow, dimensionToStern, dimensionToPort, dimensionToStarboard, epfd, etaMonth, etaDay, etaHour, etaMinute, draught, destination, dte);

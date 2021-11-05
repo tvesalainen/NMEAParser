@@ -203,7 +203,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             @ParserContext("data") NMEAObserver data
     )
     {
-        data.XdrGroup(type, value, unit, name);
+        data.xdrGroup(type, value, unit, name);
     }
     @Rule("aivdm")
     @Rule("aivdo")

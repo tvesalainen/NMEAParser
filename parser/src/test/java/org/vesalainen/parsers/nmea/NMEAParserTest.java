@@ -493,7 +493,7 @@ public class NMEAParserTest
                 assertEquals(MessageType.DPT, ss.getProperty("messageType"));
                 NMEAContentHelper nch = new NMEAContentHelper(nmea);
                 assertEquals(TalkerId.II, ss.getProperty("talkerId"));
-                assertEquals(nch.getFloat(1), ss.getFloat("depthOfWater"), Epsilon);
+                assertEquals(nch.getFloat(1), ss.getFloat("depthBelowTransducer"), Epsilon);
                 assertEquals(nch.getFloat(2), ss.getFloat("depthOffsetOfWater"), Epsilon);
             }
         }

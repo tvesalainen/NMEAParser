@@ -25,11 +25,30 @@ import org.vesalainen.code.InterfaceDispatcherAnnotation;
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @InterfaceDispatcherAnnotation
-public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEAObserver
+public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEAObserver, XdrObserver
 {
     public static NMEADispatcher newInstance()
     {
         return newInstance(NMEADispatcher.class);
+    }
+
+    @Override
+    public void xdrGroup(char type, float value, char unit, String name)
+    {
+        switch (name)
+        {
+            case "YAW":
+                setYaw(value);
+                break;
+            case "PITCH":
+                setPitch(value);
+                break;
+            case "ROLL":
+                setRoll(value);
+                break;
+            default: 
+                warning("xdr %s not supported", name);
+        }
     }
 
 }

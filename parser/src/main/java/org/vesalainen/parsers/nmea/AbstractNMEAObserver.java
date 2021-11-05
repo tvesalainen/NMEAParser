@@ -802,7 +802,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void XdrGroup(char type, float value, char unit, String name)
+    public void xdrGroup(char type, float value, char unit, String name)
     {
     }
 
