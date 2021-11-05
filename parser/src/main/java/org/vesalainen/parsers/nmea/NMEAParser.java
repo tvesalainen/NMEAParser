@@ -830,6 +830,18 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
         data.setDepthOffsetOfWater(offset);
     }
 
+    @Rule("decimal c decimal c decimal")
+    protected void depthOfWater(
+            float depth,
+            float offset,
+            float scale,
+            @ParserContext("data") NMEAObserver data)
+    {
+        data.setDepthOfWater(depth);
+        data.setDepthOffsetOfWater(offset);
+        data.setMaximumRangeScale(scale);
+    }
+
     @Rule("stringList")
     protected void waypoints(
             List<CharSequence> list,

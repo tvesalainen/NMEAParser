@@ -495,7 +495,7 @@ public interface NMEAObserver extends Transactional
     @Unit(value=DEGREE, min=0, max=360)
     void setMagneticBearing(float degrees);
     /**
-     * DBT
+     * DPT
      * @param meters
      */
     @NMEA0183({DBT})
@@ -503,13 +503,21 @@ public interface NMEAObserver extends Transactional
     @Unit(value=METER, min=0, max=100)
     void setDepthOfWater(float meters);
     /**
-     * DBT
+     * DPT
      * @param meters
      */
     @NMEA0183({DBT})
     @NMEACat(DEPTH)
     @Unit(value=METER, min=0, max=10)
     void setDepthOffsetOfWater(float meters);
+    /**
+     * DPT
+     * @param meters 
+     */
+    @NMEA0183({DBT})
+    @Unit(value=METER, min=0, max=10)
+    void setMaximumRangeScale(float meters);
+
     /**
      * HDG
      * @param magneticDeviation 

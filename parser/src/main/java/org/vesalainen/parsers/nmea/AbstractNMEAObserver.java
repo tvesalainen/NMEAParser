@@ -851,4 +851,9 @@ public class AbstractNMEAObserver implements NMEAObserver
     {
     }
 
+    @Override
+    public void setMaximumRangeScale(float meters)
+    {
+    }
+
 }
