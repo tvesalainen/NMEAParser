@@ -826,8 +826,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             float offset,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthOfWater(depth);
-        data.setDepthOffsetOfWater(offset);
+        depthOfWater(depth, offset, 0, data);
     }
 
     @Rule("decimal c decimal c decimal")
@@ -837,7 +836,15 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             float scale,
             @ParserContext("data") NMEAObserver data)
     {
-        data.setDepthOfWater(depth);
+        if (offset >= 0)
+        {
+            data.setDepthOfWater(depth+offset);
+        }
+        else
+        {
+            data.setDepthBelowKeel(depth+offset);
+        }
+        data.setDepthBelowTransducer(depth);
         data.setDepthOffsetOfWater(offset);
         data.setMaximumRangeScale(scale);
     }
