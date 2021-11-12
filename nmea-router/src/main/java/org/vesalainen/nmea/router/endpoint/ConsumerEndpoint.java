@@ -17,9 +17,14 @@
 package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.NullChannel;
+import org.vesalainen.nmea.jaxb.router.ConsumerEndpointType;
+import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.LogEndpointType;
 import org.vesalainen.nmea.router.Router;
 import org.vesalainen.util.logging.JavaLogging;
@@ -28,15 +33,24 @@ import org.vesalainen.util.logging.JavaLogging;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-class LogEndpoint extends Endpoint<LogEndpointType,NullChannel>
+public class ConsumerEndpoint extends Endpoint<ConsumerEndpointType,NullChannel>
 {
-    private JavaLogging log;
-    private Level level;
-    public LogEndpoint(LogEndpointType logEndpointType, Router router)
+    private AbstractConsumer consumer;
+    
+    public ConsumerEndpoint(ConsumerEndpointType endpointType, Router router)
     {
-        super(logEndpointType, router);
-        this.log = JavaLogging.getLogger(logEndpointType.getLogName());
-        this.level = JavaLogging.parseLevel(logEndpointType.getLogLevel());
+        super(endpointType, router);
+        String classname = endpointType.getClassname();
+        try
+        {
+            Class<AbstractConsumer> cls = (Class<AbstractConsumer>) Class.forName(classname);
+            Constructor<AbstractConsumer> constructor = cls.getConstructor(ConsumerEndpointType.class);
+            consumer = constructor.newInstance(endpointType);
+        }
+        catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
+        {
+            log(Level.SEVERE, null, ex);
+        }
     }
     
     @Override
@@ -50,14 +64,8 @@ class LogEndpoint extends Endpoint<LogEndpointType,NullChannel>
     {
         StringBuilder sb = new StringBuilder();
         sb.append(ring);
-        log.log(level, "%s: '%s'", src.getName(), sb.substring(0, sb.length()-2));
+        consumer.accept(src.getName(), sb.substring(0, sb.length()-2));
         return ring.length();
-    }
-
-    @Override
-    protected void onOk(RingByteBuffer ring, long timestamp) throws IOException
-    {
-        log.log(level, "%s", ring);
     }
 
 }

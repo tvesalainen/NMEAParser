@@ -5,6 +5,7 @@
     <xsd:complexType name="nmeaType">
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
             <xsd:element name="n2k-gateway" type="n2kGatewayType"/>
+            <xsd:element name="consumer-endpoint" type="consumerEndpointType"/>
             <xsd:element name="log-endpoint" type="logEndpointType"/>
             <xsd:element name="tcp-endpoint" type="tcpEndpointType"/>
             <xsd:element name="processor" type="processorType"/>
@@ -31,6 +32,13 @@
         <xsd:complexContent>
             <xsd:extension base="endpointType">
                 <xsd:attribute name="bus" type="xsd:string" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="consumerEndpointType">
+        <xsd:complexContent>
+            <xsd:extension base="endpointType">
+                <xsd:attribute name="classname" type="xsd:string" use="required"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>

@@ -18,6 +18,7 @@ package org.vesalainen.nmea.router.endpoint;
 
 import org.vesalainen.nmea.jaxb.router.BroadcastNMEAType;
 import org.vesalainen.nmea.jaxb.router.BroadcastType;
+import org.vesalainen.nmea.jaxb.router.ConsumerEndpointType;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.LogEndpointType;
@@ -44,6 +45,10 @@ public final class EndpointFactory
         if (endpointType instanceof N2KGatewayType)
         {
             return new N2KGatewayEndpoint((N2KGatewayType) endpointType, router);
+        }
+        if (endpointType instanceof ConsumerEndpointType)
+        {
+            return new ConsumerEndpoint((ConsumerEndpointType) endpointType, router);
         }
         if (endpointType instanceof LogEndpointType)
         {

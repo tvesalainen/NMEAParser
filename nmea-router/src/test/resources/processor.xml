@@ -8,6 +8,7 @@
         <route prefix="!AIVDM" target="TCP Prc Log"/>
         <route prefix="!AIVDO" target="TCP"/>
         <route prefix="$HCHDT" target="TCP Prc"/>
+        <route prefix="$HCHDG" target="TCP"/>
         <route prefix="$SDDPT" target="TCP"/>
         <route prefix="$HCRMC" target="TCP Prc"/>
         <route prefix="$SDMTW" target="TCP"/>
