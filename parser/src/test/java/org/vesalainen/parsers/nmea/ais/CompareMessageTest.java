@@ -29,7 +29,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.vesalainen.parsers.nmea.NMEAParser;
-import org.vesalainen.parsers.nmea.SimpleStorage;
+import org.vesalainen.nmea.util.SimpleStorage;
 import static org.vesalainen.parsers.nmea.ais.MessageTypes.StaticDataReport;
 import org.vesalainen.util.logging.JavaLogging;
 

@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parsers.nmea;
 
+import org.vesalainen.nmea.util.SimpleStorage;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;

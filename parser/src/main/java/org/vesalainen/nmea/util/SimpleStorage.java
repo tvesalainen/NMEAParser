@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.vesalainen.parsers.nmea;
+package org.vesalainen.nmea.util;
 
 import org.vesalainen.util.Transactional;
 import java.lang.reflect.InvocationHandler;
@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A simple class for storing observed values.
