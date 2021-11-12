@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 import org.vesalainen.io.Printer;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
+import org.vesalainen.navi.Navis;
 import org.vesalainen.nio.PrintBuffer;
 import static org.vesalainen.parsers.nmea.Converter.*;
 import static org.vesalainen.parsers.nmea.MessageType.*;
@@ -73,15 +74,15 @@ public class NMEASentence
     }
     public static NMEASentence rmc(Supplier<Clock> clock, DoubleSupplier latitude, DoubleSupplier longitude, DoubleSupplier speedOverGround, DoubleSupplier trackMadeGood, DoubleSupplier magneticVariation)
     {
-        return rmc(()->IN, clock, ()->'A', latitude, longitude, speedOverGround, trackMadeGood, magneticVariation, ()->'A');
+        return rmc(()->IN, clock, ()->'A', latitude, longitude, speedOverGround, KNOT, trackMadeGood, magneticVariation, ()->'A');
     }
-    public static NMEASentence rmc(Supplier<TalkerId> talkerId, Supplier<Clock> clock, IntSupplier status, DoubleSupplier latitude, DoubleSupplier longitude, DoubleSupplier speedOverGround, DoubleSupplier trackMadeGood, DoubleSupplier magneticVariation, IntSupplier faa)
+    public static NMEASentence rmc(Supplier<TalkerId> talkerId, Supplier<Clock> clock, IntSupplier status, DoubleSupplier latitude, DoubleSupplier longitude, DoubleSupplier speedOverGround, UnitType speedUnit, DoubleSupplier trackMadeGood, DoubleSupplier magneticVariation, IntSupplier faa)
     {
         return builder(talkerId, RMC)
                 .bindLocalTime(clock)      // utc
                 .bindChar(status)   // status
                 .bindCoordinates(latitude, longitude)
-                .bindDouble(speedOverGround)      // sog
+                .bind(speedUnit, speedOverGround, KNOT)      // sog
                 .bindDouble(trackMadeGood)      // tmg
                 .bindLocalDate(clock)      // ddmmyy
                 .bindDegrees(magneticVariation)    // Magnetic variation degrees
@@ -298,6 +299,14 @@ public class NMEASentence
         return builder(talkerId, HDG)
                 .bindDouble(magneticHeading)
                 .bindDegrees(deviation)
+                .bindDegrees(variation)
+                .build();
+    }
+    public static NMEASentence hdg(Supplier<TalkerId> talkerId, DoubleSupplier trueHeading, DoubleSupplier variation)
+    {
+        return builder(talkerId, HDG)
+                .bindDouble(()->Navis.normalizeAngle(trueHeading.getAsDouble()-variation.getAsDouble()))
+                .bindDegrees(()->0)
                 .bindDegrees(variation)
                 .build();
     }
