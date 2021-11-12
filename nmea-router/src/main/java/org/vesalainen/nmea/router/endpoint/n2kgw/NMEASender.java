@@ -30,6 +30,7 @@ import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.parsers.nmea.NMEAPGN;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
@@ -71,6 +72,7 @@ public class NMEASender extends AnnotatedPropertyStore
     private final NMEASentence rmc2;
     private final NMEASentence dpt;
     private final NMEASentence hdt;
+    private final NMEASentence hdg;
     private final NMEASentence mtw;
     private final NMEASentence mwv;
     private final NMEASentence vhw;
@@ -91,6 +93,7 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->latitude, 
                 ()->longitude, 
                 ()->speedOverGround, 
+                METERS_PER_SECOND,
                 ()->trackMadeGood, 
                 ()->magneticVariation(frameClock),
                 ()->'A');
@@ -101,6 +104,7 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->latitude, 
                 ()->longitude, 
                 ()->speedOverGround, 
+                METERS_PER_SECOND,
                 ()->trackMadeGood, 
                 ()->magneticVariation(positionClock),
                 this::faa);
@@ -113,6 +117,10 @@ public class NMEASender extends AnnotatedPropertyStore
         this.hdt = NMEASentence.hdt(
                 ()->sourceManager.getTalkerId(canId), 
                 ()->trueHeading);
+        this.hdg = NMEASentence.hdg(
+                ()->sourceManager.getTalkerId(canId), 
+                ()->trueHeading,
+                ()->magneticVariation(positionClock));
         this.mtw = NMEASentence.mtw(
                 ()->sourceManager.getTalkerId(canId), 
                 ()->waterTemperature, 
@@ -121,12 +129,12 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->sourceManager.getTalkerId(canId), 
                 ()->relativeWindAngle, 
                 ()->relativeWindSpeed, 
-                UnitType.METERS_PER_SECOND, 
+                METERS_PER_SECOND, 
                 false);
         this.vhw = NMEASentence.vhw(
                 ()->sourceManager.getTalkerId(canId), 
                 ()->waterSpeed, 
-                UnitType.METERS_PER_SECOND);
+                METERS_PER_SECOND);
         this.xdr = NMEASentence.attitude(
                 ()->sourceManager.getTalkerId(canId),
                 ()->yaw,
@@ -170,6 +178,7 @@ public class NMEASender extends AnnotatedPropertyStore
                     break;
                 case VESSEL_HEADING:
                     hdt.writeTo(channel);
+                    hdg.writeTo(channel);
                     break;
                 case ENVIRONMENTAL_PARAMETERS:
                     mtw.writeTo(channel);
