@@ -5,7 +5,7 @@
         <route prefix="$EC" target="Prc"/>
     </tcp-endpoint>
     <n2k-gateway bus="can1" name="N2K" enable="true">
-        <route prefix="!AIVDM" target="TCP Prc Log"/>
+        <route prefix="!AIVDM" target="TCP Prc Cmp"/>
         <route prefix="!AIVDO" target="TCP"/>
         <route prefix="$HCHDT" target="TCP Prc"/>
         <route prefix="$HCHDG" target="TCP"/>
@@ -18,7 +18,7 @@
     </n2k-gateway>
     <processor dataAccessPort="10111" name="Prc" enable="true">
         <route prefix="$??TLL" target="TCP"/>
-        <route prefix="$??MWV" target="Log"/>
+        <route prefix="$??MWV" target=""/>
         <true-wind-source overGround="true"/>
         <tracker directory="c:\\temp"/>
         <compressed-log directory="c:\\temp" properties="latitude longitude"/>
@@ -30,7 +30,7 @@
     <multicast-nmea-0183 address="224.0.0.3" name="Net" enable="true">
         <route prefix="$GPRMC" target="TCP"/>
         <route prefix="$IIMWV" target=""/>
-        <route prefix="!AIVDM" target="Prc Log"/>
+        <route prefix="!AIVDM" target="Prc Cmp"/>
         <route prefix="$YXXDR" target=""/>
         <route prefix="$GPGLL" target=""/>
         <route prefix="$GPRMB" target=""/>
@@ -46,5 +46,6 @@
         <route prefix="$VW" target=""/>
         <route prefix="$SD" target=""/>
     </multicast-nmea-0183>
+    <consumer-endpoint classname="org.vesalainen.nmea.router.endpoint.n2kgw.AisComparator" name="Cmp" enable="true"/>
     <log-endpoint logName="org.vesalainen.router.log" logLevel="INFO" name="Log" enable="true"/>
 </nmea>

@@ -27,19 +27,20 @@ public final class AISUtil
 {
     /**
     /**
-     * <p> Turn rate is encoded as follows: <p> 0 = not turning <p> 1…126 =
-     * turning right at up to 708 degrees per minute or higher <p> 1…-126 =
-     * turning left at up to 708 degrees per minute or higher <p> 127 = turning
-     * right at more than 5deg/30s (No TI available) <p> -127 = turning left at
-     * more than 5deg/30s (No TI available) <p> 128 (80 hex) indicates no turn
-     * information available (default) <p>Values between 0 and 708 degrees/min
-     * coded by ROTAIS=4.733 * SQRT(ROTsensor) degrees/min where ROTsensor is
+     * <p> Turn rate is encoded as follows: <p> 0 = not turning 
+     * <p> 1…126 = turning right at up to 708 degrees per minute or higher 
+     * <p> 1…-126 = turning left at up to 708 degrees per minute or higher 
+     * <p> 127 = turning right at more than 5deg/30s (No TI available) 
+     * <p> -127 = turning left at more than 5deg/30s (No TI available) 
+     * <p> 128 (80 hex) indicates no turn information available (default) 
+     * <p>Values between 0 and 708 degrees/min coded by 
+     * ROTAIS=4.733 * SQRT(ROTsensor) degrees/min where ROTsensor is
      * the Rate of Turn as input by an external Rate of Turn Indicator. ROTAIS
      * is rounded to the nearest integer value. Thus, to decode the field value,
      * divide by 4.733 and then square it. Sign of the field value should be
      * preserved when squaring it, otherwise the left/right indication will be
      * lost.
-     * @param rot
+     * @param turn
      * @return 
      */
     public static float rot(int turn)

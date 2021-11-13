@@ -49,6 +49,11 @@ public class SimpleStorage implements InvocationHandler
                 this);
     }
 
+    public Map<String, Object> getMap()
+    {
+        return map;
+    }
+
     public Object getProperty(String property)
     {
         return map.get(property);

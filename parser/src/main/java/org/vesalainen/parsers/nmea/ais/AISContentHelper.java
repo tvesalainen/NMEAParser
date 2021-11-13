@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Objects;
 import org.vesalainen.parsers.nmea.ais.AISUtil;
+import org.vesalainen.parsers.nmea.ais.AISUtil;
+import org.vesalainen.parsers.nmea.ais.AISUtil;
 
 /**
  *

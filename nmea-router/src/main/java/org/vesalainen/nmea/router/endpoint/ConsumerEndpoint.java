@@ -49,7 +49,7 @@ public class ConsumerEndpoint extends Endpoint<ConsumerEndpointType,NullChannel>
         }
         catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
         {
-            log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
     }
     

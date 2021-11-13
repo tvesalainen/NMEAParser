@@ -131,6 +131,7 @@ public class AISSender extends AnnotatedPropertyStore
         }
         double crs = course < 360.0 ? course : 0;
         int hdt = (int) (heading < 360 ? Math.round(heading) : 511);
+        info("mmsi %d rateOfTurn %f", mmsi, rateOfTurn);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
             .ownMessage(isOwnMessage())
@@ -156,7 +157,7 @@ public class AISSender extends AnnotatedPropertyStore
             throw new IllegalArgumentException(message+" not ok");
         }
         double crs = course < 360.0 ? course : 0;
-        int hdt = (int) (heading < 360 ? heading : 511);
+        int hdt = (int) (heading < 360 ? Math.round(heading) : 511);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
             .ownMessage(isOwnMessage())
@@ -194,10 +195,10 @@ public class AISSender extends AnnotatedPropertyStore
             .string(42, callSign)
             .string(120, vesselName)
             .integer(8, shipType)
-            .integer(9, (int) positionReferencePointAftOfShipSBow)         // dimensionToBow
-            .integer(9, (int) (shipLength-positionReferencePointAftOfShipSBow))       // dimensionToStern
-            .integer(6, (int) (shipBeam-positionReferencePointFromStarboard))        // dimensionToPort
-            .integer(6, (int) positionReferencePointFromStarboard)   // dimensionToStarboard
+            .integer(9, dimensionToBow())
+            .integer(9, dimensionToStern())
+            .integer(6, dimensionToPort())
+            .integer(6, dimensionToStarboard())
             .integer(4, epfd)
             .integer(4, dt.getMonthValue())
             .integer(5, dt.getDayOfMonth())
@@ -244,12 +245,45 @@ public class AISSender extends AnnotatedPropertyStore
         }
         else
         {
-            b24.integer(9, (int) positionReferencePointAftOfShipSBow)         // dimensionToBow
-            .integer(9, (int) (shipLength-positionReferencePointAftOfShipSBow))       // dimensionToStern
-            .integer(6, (int) (shipBeam-positionReferencePointFromStarboard))        // dimensionToPort
-            .integer(6, (int) positionReferencePointFromStarboard);   // dimensionToStarboard
+            b24
+            .integer(9, dimensionToBow())
+            .integer(9, dimensionToStern())
+            .integer(6, dimensionToPort())
+            .integer(6, dimensionToStarboard());
         }
         return b24.build();
+    }
+    private int dimensionToBow()
+    {
+        if (shipLength > 511)
+        {
+            return 0;
+        }
+        return (int) positionReferencePointAftOfShipSBow;
+    }
+    private int dimensionToStern()
+    {
+        if (shipLength > 511)
+        {
+            return 0;
+        }
+        return (int) (shipLength-positionReferencePointAftOfShipSBow);
+    }
+    private int dimensionToPort()
+    {
+        if (shipBeam > 63)
+        {
+            return 0;
+        }
+        return (int) (shipBeam-positionReferencePointFromStarboard);
+    }
+    private int dimensionToStarboard()
+    {
+        if (shipBeam > 63)
+        {
+            return 0;
+        }
+        return (int) positionReferencePointFromStarboard;
     }
     @Override
     public void commit(String reason)

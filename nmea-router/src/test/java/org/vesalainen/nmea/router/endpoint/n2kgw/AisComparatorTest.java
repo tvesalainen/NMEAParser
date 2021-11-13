@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Timo Vesalainen <timo.vesalainen@iki.fi>
+ * Copyright (C) 2021 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,44 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.parsers.nmea.ais;
+package org.vesalainen.nmea.router.endpoint.n2kgw;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.vesalainen.util.HexUtil;
+import org.vesalainen.parsers.nmea.ais.AISContentHelper;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class AISUtilTest
+public class AisComparatorTest
 {
     
-    public AISUtilTest()
+    public AisComparatorTest()
     {
     }
 
     @Test
-    public void test0()
+    public void test()
     {
-        int rot = AISUtil.rot(-0.04464029F);
-        float rot1 = AISUtil.rot(rot);
+        AISContentHelper h1 = new AISContentHelper("!AIVDM,1,1,,A,18I>TH1000dV>aMbRgE1hbF62d0`,0*3A");
+        AISContentHelper h2 = new AISContentHelper("!AIVDM,1,1,,A,18I>TH1wh0dV>aMbRgE1hbF62d0`,0*25");
+        int i1 = h1.getInt(42, 49);
+        int i2 = h2.getInt(42, 49);
     }
-    @Test
-    public void testRot()
-    {
-        for (int r=-128;r<128;r++)
-        {
-            float rot = AISUtil.rot(r);
-            int rot1 = AISUtil.rot(rot);
-            assertEquals(r, rot1);
-        }
-    }
-    @Test
-    public void test6Bit()
-    {
-        byte[] arr = HexUtil.fromString("44482452");
-        byte[] arr6 = AISUtil.makeArray(arr);
-        System.err.println(HexUtil.toString(arr6));
-    }    
+    
 }

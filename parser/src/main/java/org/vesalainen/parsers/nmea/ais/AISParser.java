@@ -2054,17 +2054,14 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
      */
     protected void course_U1_12(int course, @ParserContext("aisData") AISObserver aisData)
     {
-        if (course < 3600)
+        if (course >= 0 && course < 3600)
         {
-            if (course >= 0 && course < 3600)
-            {
-                float f = course;
-                aisData.setCourse(f / 10F);
-            }
-            else
-            {
-                aisData.setError("course U1 = " + course);
-            }
+            float f = course;
+            aisData.setCourse(f / 10F);
+        }
+        else
+        {
+            aisData.setCourse(0);
         }
     }
     /**
@@ -2078,12 +2075,20 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         {
             aisData.setCourse(arg);
         }
+        else
+        {
+            aisData.setCourse(0);
+        }
     }
     protected void course_9(int arg, @ParserContext("aisData") AISObserver aisData)
     {
         if (arg < 359)
         {
             aisData.setCourse(arg);
+        }
+        else
+        {
+            aisData.setCourse(0);
         }
     }
 
