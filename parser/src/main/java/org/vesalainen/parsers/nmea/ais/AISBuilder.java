@@ -112,6 +112,17 @@ public final class AISBuilder
     }
     public AISBuilder string(int bits, CharSequence txt)
     {
+        return string(bits, txt, true);
+    }
+    /**
+     * Adds 6-bit characters
+     * @param bits Maximum bits
+     * @param txt
+     * @param fillTrail If true fills rest of the field with @
+     * @return 
+     */
+    public AISBuilder string(int bits, CharSequence txt, boolean fillTrail)
+    {
         if ((bits % 6) != 0)
         {
             throw new IllegalArgumentException(bits+" not / 6");
@@ -139,7 +150,10 @@ public final class AISBuilder
             }
             else
             {
-                integer(6, 0);  // @
+                if (fillTrail)
+                {
+                    integer(6, 0);  // @
+                }
             }
         }
         return this;

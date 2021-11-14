@@ -492,6 +492,7 @@ public enum NMEAPGN
      * display or instrumentation devices.
      */
     FLUID_LEVEL(127505),
+    AIS_AIDS_TO_NAVIGATION_REPORT(129041),
     /**
      * This parameter group is used by Class B 'CS' shipborne mobile equipment
      * each time Part A of ITU-R M.1372 Message 24 is received. This parameter

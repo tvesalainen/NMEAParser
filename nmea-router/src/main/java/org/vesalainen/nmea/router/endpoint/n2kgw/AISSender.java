@@ -76,6 +76,10 @@ public class AISSender extends AnnotatedPropertyStore
     private @Property int unitModelCode;
     private @Property int serialNumber;
     private @Property int mothershipMMSI;
+    private @Property int aidType;
+    private @Property int offPosition;
+    private @Property int regional;
+    private @Property int virtualAid;
     
     private final WritableByteChannel channel;
     private int ownMmsi;
@@ -210,6 +214,31 @@ public class AISSender extends AnnotatedPropertyStore
             .spare(1)
             .build();
     }
+    private NMEASentence[] getAidsToNavigationReport()
+    {
+        return new AISBuilder(message, repeat, mmsi)
+            .transceiver(getTransceiver())
+            .ownMessage(isOwnMessage())
+            .integer(5, aidType)
+            .string(120, substring(vesselName, 0, 20))
+            .integer(1, positionAccuracy)
+            .decimal(28, longitude, 600000)
+            .decimal(27, latitude, 600000)
+            .integer(9, dimensionToBow())
+            .integer(9, dimensionToStern())
+            .integer(6, dimensionToPort())
+            .integer(6, dimensionToStarboard())
+            .integer(4, epfd)
+            .integer(6, second)
+            .integer(1, offPosition)
+            .integer(8, regional)
+            .integer(1, raim)
+            .integer(1, virtualAid)
+            .integer(1, assignedMode)
+            .spare(1)
+            .string(84, substring(vesselName, 20), false)
+            .build();
+    }
     private NMEASentence[] getClassBStaticDataReportPartA()
     {
         if (message != 24)
@@ -307,6 +336,9 @@ public class AISSender extends AnnotatedPropertyStore
             case 129810:
                 arr = getClassBStaticDataReportPartB();
                 break;
+            case 129041:
+                arr = getAidsToNavigationReport();
+                break;
             default:
                 warning("pgn %d not supported", pgn);
         }
@@ -323,6 +355,30 @@ public class AISSender extends AnnotatedPropertyStore
                     log(SEVERE, ex, "commit(%d)", pgn);
                 }
             }
+        }
+    }
+
+    private String substring(String text, int begin, int end)
+    {
+        if (end <= text.length())
+        {
+            return text.substring(begin, end);
+        }
+        else
+        {
+            return text;
+        }
+    }
+
+    private String substring(String text, int begin)
+    {
+        if (begin < text.length())
+        {
+            return text.substring(begin);
+        }
+        else
+        {
+            return "";
         }
     }
     

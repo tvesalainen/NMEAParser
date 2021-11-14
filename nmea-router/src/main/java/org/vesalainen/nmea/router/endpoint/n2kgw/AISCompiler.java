@@ -100,6 +100,21 @@ public class AISCompiler extends AbstractNMEACompiler
         addPgnSetter(AIS_CLASS_A_STATIC_AND_VOYAGE_RELATED_DATA, "Data_Terminal_Equipment_Dte", "dte");
         addPgnSetter(AIS_CLASS_A_STATIC_AND_VOYAGE_RELATED_DATA, "Ais_Transceiver_Information", "transceiverInformation");
         
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Message_Id", "message");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Repeat_Indicator", "repeat");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "User_Id", "mmsi");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Longitude", "longitude");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Latitude", "latitude");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Position_Accuracy", "positionAccuracy");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Raim_Flag", "raim");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Time_Stamp", "second");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Ship_Length", "shipLength");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Ship_Beam", "shipBeam");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Position_Reference_Point_From_Starboard", "positionReferencePointFromStarboard");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Position_Reference_Point_Aft_Of_Ship_S_Bow", "positionReferencePointAftOfShipSBow");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Aid_Type", "aidType");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Name", "vesselName");
+
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_A, "Message_Id", "message");
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_A, "Repeat_Indicator", "repeat");
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_A, "User_Id", "mmsi");
