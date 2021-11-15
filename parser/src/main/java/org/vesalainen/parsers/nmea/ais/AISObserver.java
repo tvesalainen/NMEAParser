@@ -1098,5 +1098,10 @@ public interface AISObserver extends Transactional
     public void setEtaMinute(int minute);
 
     public void setSubarea(CharSequence seq);
+    /**
+     * The Regional Reserved field is intended for use by local maritime authorities. 
+     * @param arg 
+     */
+    public void setRegional(int arg);
 
 }

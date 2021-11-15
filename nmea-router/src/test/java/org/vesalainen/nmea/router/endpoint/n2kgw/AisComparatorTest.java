@@ -50,9 +50,10 @@ public class AisComparatorTest
         String fromHex = HexDump.toHex(fromString);
         System.err.println(fromHex);
         int canId = PGN.canId(129041);
-        AISContentHelper h1 = new AISContentHelper("!AIVDM,1,1,,A,18I>TH1000dV>aMbRgE1hbF62d0`,0*3A");
+        AISContentHelper h1 = new AISContentHelper("!AIVDM,1,1,,A,E>m1c@@WUP`0a:h92RS@HoJW6h2nCb9pm?neP00000QP060k5DjCkP,4*4B");
         AISContentHelper h2 = new AISContentHelper("!AIVDM,1,1,,A,18I>TH1wh0dV>aMbRgE1hbF62d0`,0*25");
-        int i1 = h1.getInt(42, 49);
+        int type = h1.getInt(0, 6);
+        int i1 = h1.getInt(249, 253);
         int i2 = h2.getInt(42, 49);
     }
     

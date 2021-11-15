@@ -154,6 +154,10 @@ public final class AISBuilder
                 {
                     integer(6, 0);  // @
                 }
+                else
+                {
+                    break;
+                }
             }
         }
         return this;

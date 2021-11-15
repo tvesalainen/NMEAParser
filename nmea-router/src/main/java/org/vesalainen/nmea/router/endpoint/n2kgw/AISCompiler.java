@@ -113,6 +113,11 @@ public class AISCompiler extends AbstractNMEACompiler
         addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Position_Reference_Point_From_Starboard", "positionReferencePointFromStarboard");
         addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Position_Reference_Point_Aft_Of_Ship_S_Bow", "positionReferencePointAftOfShipSBow");
         addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Aid_Type", "aidType");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Off_Position", "offPosition");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Virtual_Aid", "virtualAid");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Mode_Flag", "assignedMode");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Type_Of_Electronic_Positioning_Device", "epfd");
+        addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Regional", "regional");
         addPgnSetter(AIS_AIDS_TO_NAVIGATION_REPORT, "Name", "vesselName");
 
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_A, "Message_Id", "message");

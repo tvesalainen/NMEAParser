@@ -1242,7 +1242,11 @@ public class AbstractAISObserver implements AISObserver
     @Override
     public void setSubarea(CharSequence seq)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setRegional(int arg)
+    {
     }
 
 }

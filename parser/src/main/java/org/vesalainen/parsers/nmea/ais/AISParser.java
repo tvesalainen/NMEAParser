@@ -2663,11 +2663,21 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
     protected void precipitation(int arg, @ParserContext("aisData") AISObserver aisData)
     {
     }
-    protected void regional_2(int arg, @ParserContext("aisData") AISObserver aisData){}
-    protected void regional_4(int arg, @ParserContext("aisData") AISObserver aisData){}
-    protected void regional_8(int arg, @ParserContext("aisData") AISObserver aisData){}
+    protected void regional_2(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        regional(arg, aisData);
+    }
+    protected void regional_4(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        regional(arg, aisData);
+    }
+    protected void regional_8(int arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        regional(arg, aisData);
+    }
     protected void regional(int arg, @ParserContext("aisData") AISObserver aisData)
     {
+        aisData.setRegional(arg);
     }
 
     protected void assigned(boolean assigned, @ParserContext("aisData") AISObserver aisData)
