@@ -18,13 +18,13 @@ package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
 import java.io.Serializable;
+import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
-import java.time.LocalTime;
 import java.util.Collection;
 import static java.util.logging.Level.SEVERE;
 import org.vesalainen.code.AnnotatedPropertyStore;
@@ -36,8 +36,10 @@ import org.vesalainen.math.Point;
 import org.vesalainen.math.Polygon;
 import org.vesalainen.navi.AnchorWatch;
 import org.vesalainen.navi.AnchorWatch.Watcher;
+import org.vesalainen.navi.AngleRange;
 import org.vesalainen.navi.Chain;
 import org.vesalainen.navi.Navis;
+import static org.vesalainen.navi.Navis.*;
 import org.vesalainen.navi.SafeSector;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import org.vesalainen.nmea.util.Stoppable;
@@ -48,20 +50,25 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
+public class AnchorManager extends AbstractProcessorTask
 {
     private static final String ANCHOR_WATCH_NAME = "anchorWatch";
     private static final String ANCHOR_WATCH_FILENAME = ANCHOR_WATCH_NAME+".ser";
     private static final double DEFAULT_MAX_FAIRLEAD_TENSION = 2000;    // N
     private static final long DEPTH_EXPIRES = 100000;    // milli seconds
-    private static final float MAX_SPEED = 2F;
+    private static final float MAX_SPEED = 0.2F;
+    private static final float MIN_WIND = 2F;
+    private static final float MIN_WIND_DIFF = 3F;
     private static final long REFRESH_PERIOD = 60000;
-    @Property private Clock clock;
-    @Property private double latitude;
-    @Property private double longitude;
-    @Property private float speedOverGround;
-    @Property private float horizontalDilutionOfPrecision = 3;
-    @Property private float depthOfWater;
+    private @Property Clock clock;
+    private @Property double latitude;
+    private @Property double longitude;
+    private @Property float speedOverGround;
+    private @Property float trueHeading;
+    private @Property float trackMadeGood;
+    private @Property float relativeWindAngle;
+    private @Property float relativeWindSpeed;
+    private @Property float depthOfWater;
 
     private final Processor processor;
     private final GatheringByteChannel channel;
@@ -83,6 +90,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
     private AnchorWatch anchorWatch;
     private Path path;
     private NMEAManager nmeaManager = new NMEAManager();
+    private WindManager windManager = new WindManager();
     
     public AnchorManager(Processor processor, GatheringByteChannel channel, AnchorManagerType type, CachedScheduledThreadPool executor) throws IOException
     {
@@ -123,7 +131,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
     }
 
     @Override
-    public void commit(String reason, Collection<String> updatedProperties)
+    public void commitTask(String reason, Collection<String> updatedProperties)
     {
         timestamp = clock.millis();
         if (updatedProperties.contains("depthOfWater"))
@@ -135,8 +143,10 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
         }
         else
         {
-            if (depthOk && updatedProperties.contains("speedOverGround"))
+            if (depthOk && updatedProperties.contains("relativeWindAngle"))
             {
+                windManager.update();
+                /*
                 speedOk = speedOverGround < MAX_SPEED;
                 if (speedOk)
                 {
@@ -146,10 +156,10 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
                     }
                     areaOk = area.update();
                     update();
-                }
+                }*/
             }
         }
-        updateStatus();
+        //updateStatus();
     }
 
     @Override
@@ -178,7 +188,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
         {
             synchronized(anchorWatch)
             {
-                anchorWatch.update(longitude, latitude, timestamp, horizontalDilutionOfPrecision, speedOverGround);
+                anchorWatch.update(longitude, latitude, timestamp, 3, speedOverGround);
             }
         }
     }
@@ -216,7 +226,10 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
         anchorWatch = null;
         try
         {
-            Files.deleteIfExists(path);
+            if (path != null)
+            {
+                Files.deleteIfExists(path);
+            }
         }
         catch (IOException ex)
         {
@@ -225,6 +238,29 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
         config("stop anchoring");
     }
 
+    private class WindManager
+    {
+        private float previous = 180;
+        private float hdg;
+        private AngleRange range = new AngleRange();
+        
+        private void update()
+        {
+            boolean newHdg = range.add(trueHeading);
+            if (
+                    (relativeWindAngle < 30 && previous > 330 ||
+                    relativeWindAngle > 330 && previous < 30) &&
+                    relativeWindSpeed > MIN_WIND &&
+                    speedOverGround < MAX_SPEED &&
+                    (abs(angleDiff(trueHeading, hdg)) > MIN_WIND_DIFF || newHdg)
+                    )
+            {
+                info("TURN %f %f", trueHeading, relativeWindSpeed);
+                hdg = trueHeading;
+            }
+            previous = relativeWindAngle;
+        }
+    }
     private class NMEAManager implements Watcher, Serializable
     {
         private NMEASentence tll;
@@ -260,8 +296,11 @@ public class AnchorManager extends AnnotatedPropertyStore implements Stoppable
         public void stop()
         {
             config("stop TLL");
-            tll = NMEASentence.tll(0, estimated.getY(), estimated.getX(), "Anchor", clock, 'L', "");
-            transmit();
+            if (estimated != null)
+            {
+                tll = NMEASentence.tll(0, estimated.getY(), estimated.getX(), "Anchor", clock, 'L', "");
+                transmit();
+            }
             tll = null;
         }
 
