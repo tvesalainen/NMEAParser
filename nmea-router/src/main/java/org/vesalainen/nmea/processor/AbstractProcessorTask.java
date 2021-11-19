@@ -20,6 +20,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.nmea.util.Stoppable;
@@ -33,11 +34,16 @@ import org.vesalainen.util.TimeToLiveSet;
 public abstract class AbstractProcessorTask extends AnnotatedPropertyStore implements Stoppable
 {
     private Set<String> neededProperties = new HashSet<>();
-    private Set<String> currentProperties = new TimeToLiveSet<>(2, SECONDS);
+    private Set<String> currentProperties;
     
     protected AbstractProcessorTask(MethodHandles.Lookup lookup, String... neededProperties)
     {
+        this(lookup, 2, SECONDS, neededProperties);
+    }
+    protected AbstractProcessorTask(MethodHandles.Lookup lookup, long timeout, TimeUnit unit, String... neededProperties)
+    {
         super(lookup);
+        this.currentProperties = new TimeToLiveSet<>(timeout, unit);
         if (neededProperties.length > 0)
         {
             CollectionHelp.addAll(this.neededProperties, neededProperties);

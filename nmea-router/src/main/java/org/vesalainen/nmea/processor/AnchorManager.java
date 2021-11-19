@@ -23,17 +23,16 @@ import java.lang.invoke.MethodHandles;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.Collection;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import java.util.function.Supplier;
 import static java.util.logging.Level.SEVERE;
-import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.io.IO;
-import org.vesalainen.math.AngleAverage;
 import org.vesalainen.math.Circle;
-import org.vesalainen.math.Point;
 import org.vesalainen.math.Polygon;
+import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.AnchorWatch;
 import org.vesalainen.navi.AnchorWatch.Watcher;
 import org.vesalainen.navi.AngleRange;
@@ -42,7 +41,7 @@ import org.vesalainen.navi.Navis;
 import static org.vesalainen.navi.Navis.*;
 import org.vesalainen.navi.SafeSector;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
-import org.vesalainen.nmea.util.Stoppable;
+import static org.vesalainen.nmea.processor.AbstractChainedState.Action.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -55,10 +54,10 @@ public class AnchorManager extends AbstractProcessorTask
     private static final String ANCHOR_WATCH_NAME = "anchorWatch";
     private static final String ANCHOR_WATCH_FILENAME = ANCHOR_WATCH_NAME+".ser";
     private static final double DEFAULT_MAX_FAIRLEAD_TENSION = 2000;    // N
-    private static final long DEPTH_EXPIRES = 100000;    // milli seconds
     private static final float MAX_SPEED = 0.2F;
     private static final float MIN_WIND = 2F;
     private static final float MIN_WIND_DIFF = 3F;
+    private static final float MIN_RANGE = 15F;
     private static final long REFRESH_PERIOD = 60000;
     private @Property Clock clock;
     private @Property double latitude;
@@ -77,24 +76,19 @@ public class AnchorManager extends AbstractProcessorTask
     private final long anchorWeight;
     private final long chainDiameter;
     private final long maxChainLength;
-    private final DepthManager depthManager = new DepthManager();
     
     private long timestamp;
     private double chainLength;
     private double horizontalScope;
-    private boolean anchoring;
-    private AnchoringArea area;
-    private boolean depthOk;
-    private boolean speedOk;
-    private boolean areaOk;
     private AnchorWatch anchorWatch;
     private Path path;
     private NMEAManager nmeaManager = new NMEAManager();
-    private WindManager windManager = new WindManager();
+    private final double maxDepth;
+    private final DepthFilter depthFilter;
     
     public AnchorManager(Processor processor, GatheringByteChannel channel, AnchorManagerType type, CachedScheduledThreadPool executor) throws IOException
     {
-        super(MethodHandles.lookup());
+        super(MethodHandles.lookup(), 2, MINUTES);
         this.processor = processor;
         this.channel = channel;
         this.anchorWeight = type.getAnchorWeight();
@@ -109,57 +103,8 @@ public class AnchorManager extends AbstractProcessorTask
         {
             maxFairleadTension = DEFAULT_MAX_FAIRLEAD_TENSION;
         }
-        String directory = type.getDirectory();
-        if (directory != null)
-        {
-            Path dir = Paths.get(directory);
-            this.path = dir.resolve(ANCHOR_WATCH_FILENAME);
-            if (Files.exists(path))
-            {
-                try
-                {
-                    anchorWatch = IO.deserialize(path);
-                    anchorWatch.addWatcher(nmeaManager);
-                    area = new AnchoringArea(anchorWatch.getCenter());
-                }
-                catch (ClassNotFoundException ex)
-                {
-                    throw new IOException(ex);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void commitTask(String reason, Collection<String> updatedProperties)
-    {
-        timestamp = clock.millis();
-        if (updatedProperties.contains("depthOfWater"))
-        {
-            depthManager.update();
-            chainLength = chain.chainLength(maxFairleadTension, depthOfWater);
-            horizontalScope = chain.horizontalScope(maxFairleadTension, depthOfWater, chainLength);
-            depthOk = chainLength < maxChainLength;
-        }
-        else
-        {
-            if (depthOk && updatedProperties.contains("relativeWindAngle"))
-            {
-                windManager.update();
-                /*
-                speedOk = speedOverGround < MAX_SPEED;
-                if (speedOk)
-                {
-                    if (area == null)
-                    {
-                        area = new AnchoringArea();
-                    }
-                    areaOk = area.update();
-                    update();
-                }*/
-            }
-        }
-        //updateStatus();
+        this.maxDepth = chain.maximalDepth(maxFairleadTension, maxChainLength);
+        this.depthFilter = new DepthFilter();
     }
 
     @Override
@@ -176,37 +121,6 @@ public class AnchorManager extends AbstractProcessorTask
                 log(SEVERE, ex, "storing %s", path);
             }
         }
-        depthOk = false;
-        speedOk = false;
-        areaOk = false;
-        updateStatus();
-    }
-
-    private void update()
-    {
-        if (anchorWatch != null)
-        {
-            synchronized(anchorWatch)
-            {
-                anchorWatch.update(longitude, latitude, timestamp, 3, speedOverGround);
-            }
-        }
-    }
-    private void updateStatus()
-    {
-        boolean can = depthOk && speedOk && areaOk && depthManager.depthNotExpired();
-        if (can != anchoring)
-        {
-            if (can)
-            {
-                startAnchoring();
-            }
-            else
-            {
-                stopAnchoring();
-            }
-            anchoring = can;
-        }
     }
 
     private void startAnchoring()
@@ -222,7 +136,6 @@ public class AnchorManager extends AbstractProcessorTask
     {
         nmeaManager.stop();
         processor.setData(ANCHOR_WATCH_NAME, null);
-        area = null;
         anchorWatch = null;
         try
         {
@@ -238,12 +151,137 @@ public class AnchorManager extends AbstractProcessorTask
         config("stop anchoring");
     }
 
-    private class WindManager
+    @Override
+    public void commitTask(String reason, Collection<String> updatedProperties)
+    {
+        depthFilter.input(updatedProperties);
+    }
+
+    private class DepthFilter extends AbstractChainedState<Collection<String>>
+    {
+
+        @Override
+        protected Action test(Collection<String> updatedProperties)
+        {
+            if (updatedProperties.contains("depthOfWater"))
+            {
+                if (depthOfWater < maxDepth)
+                {
+                    chainLength = chain.chainLength(maxFairleadTension, depthOfWater);
+                    horizontalScope = chain.horizontalScope(maxFairleadTension, depthOfWater, chainLength);
+                    return FORWARD;
+                }
+                else
+                {
+                    return FAIL;
+                }
+            }
+            return NEUTRAL;
+        }
+
+        @Override
+        protected boolean hasNext()
+        {
+            return true;
+        }
+
+        @Override
+        protected AbstractChainedState<Collection<String>> createNext()
+        {
+            return new SpeedFilter();
+        }
+        
+    }
+    private class SpeedFilter extends AbstractChainedState<Collection<String>>
+    {
+
+        @Override
+        protected Action test(Collection<String> updatedProperties)
+        {
+            if (updatedProperties.contains("speedOverGround"))
+            {
+                if (speedOverGround < MAX_SPEED)
+                {
+                    return FORWARD;
+                }
+                else
+                {
+                    return FAIL;
+                }
+            }
+            return NEUTRAL;
+        }
+
+        @Override
+        protected boolean hasNext()
+        {
+            return true;
+        }
+
+        @Override
+        protected AbstractChainedState<Collection<String>> createNext()
+        {
+            return new MoveFilter();
+        }
+        
+    }
+    private class MoveFilter extends AbstractChainedState<Collection<String>>
+    {
+
+        private final double lat;
+        private final double lon;
+
+        public MoveFilter()
+        {
+            this.lat = latitude;
+            this.lon = longitude;
+        }
+
+        @Override
+        protected Action test(Collection<String> updatedProperties)
+        {
+            if (updatedProperties.contains("latitude"))
+            {
+                if (Navis.distance(latitude, longitude, lat, lon) < METER.convertTo(2*horizontalScope, NAUTICAL_MILE) )
+                {
+                    return FORWARD;
+                }
+                else
+                {
+                    return FAIL;
+                }
+            }
+            return NEUTRAL;
+        }
+
+        @Override
+        protected boolean hasNext()
+        {
+            return true;
+        }
+
+        @Override
+        protected AbstractChainedState<Collection<String>> createNext()
+        {
+            return new WindManager();
+        }
+        
+    }
+    private class WindManager extends AbstractChainedState<Collection<String>>
     {
         private float previous = 180;
         private float hdg;
         private AngleRange range = new AngleRange();
         
+        @Override
+        protected Action test(Collection<String> updatedProperties)
+        {
+            if (updatedProperties.contains("relativeWindAngle"))
+            {
+                update();
+            }
+            return NEUTRAL;
+        }
         private void update()
         {
             boolean newHdg = range.add(trueHeading);
@@ -251,7 +289,6 @@ public class AnchorManager extends AbstractProcessorTask
                     (relativeWindAngle < 30 && previous > 330 ||
                     relativeWindAngle > 330 && previous < 30) &&
                     relativeWindSpeed > MIN_WIND &&
-                    speedOverGround < MAX_SPEED &&
                     (abs(angleDiff(trueHeading, hdg)) > MIN_WIND_DIFF || newHdg)
                     )
             {
@@ -260,6 +297,19 @@ public class AnchorManager extends AbstractProcessorTask
             }
             previous = relativeWindAngle;
         }
+
+        @Override
+        protected boolean hasNext()
+        {
+            return false;
+        }
+
+        @Override
+        protected AbstractChainedState<Collection<String>> createNext()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+        
     }
     private class NMEAManager implements Watcher, Serializable
     {
@@ -343,62 +393,6 @@ public class AnchorManager extends AbstractProcessorTask
         @Override
         public void suggestNextUpdateIn(double seconds, double meters)
         {
-        }
-    }
-    private class AnchoringArea
-    {
-        private int count;
-        private AngleAverage latAve = new AngleAverage();
-        private AngleAverage lonAve = new AngleAverage();
-
-        public AnchoringArea()
-        {
-        }
-        
-        public AnchoringArea(Point point)
-        {
-            latAve.addDeg(point.getY());
-            lonAve.addDeg(point.getX());
-            count++;
-        }
-        
-        public boolean update()
-        {
-            if (count > 0)
-            {
-                double distance = Navis.distance(latitude, longitude, centerLatitude(), centerLongitude())*1852;
-                if (horizontalScope < distance)
-                {
-                    return false;
-                }
-            }
-            latAve.addDeg(latitude);
-            lonAve.addDeg(longitude);
-            count++;
-            return true;
-        }
-        public double centerLatitude()
-        {
-            return Navis.normalizeToHalfAngle(latAve.averageDeg());
-        }
-        public double centerLongitude()
-        {
-            return Navis.normalizeToHalfAngle(lonAve.averageDeg());
-        }
-    }
-    private class DepthManager
-    {
-        private long time;
-        private float depth;
-        
-        public void update()
-        {
-            time = timestamp;
-            depth = depthOfWater;
-        }
-        public boolean depthNotExpired()
-        {
-            return timestamp - time < DEPTH_EXPIRES;
         }
     }
 }
