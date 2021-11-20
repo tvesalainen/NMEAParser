@@ -31,12 +31,17 @@ import static java.util.logging.Level.SEVERE;
 import org.vesalainen.code.Property;
 import org.vesalainen.io.IO;
 import org.vesalainen.math.Circle;
+import org.vesalainen.math.Point;
 import org.vesalainen.math.Polygon;
+import org.vesalainen.math.SimpleLine;
+import org.vesalainen.math.SimplePoint;
 import static org.vesalainen.math.UnitType.*;
+import org.vesalainen.math.matrix.DoubleMatrix;
 import org.vesalainen.navi.AnchorWatch;
 import org.vesalainen.navi.AnchorWatch.Watcher;
 import org.vesalainen.navi.AngleRange;
 import org.vesalainen.navi.Chain;
+import org.vesalainen.navi.LocalLongitude;
 import org.vesalainen.navi.Navis;
 import static org.vesalainen.navi.Navis.*;
 import org.vesalainen.navi.SafeSector;
@@ -58,6 +63,7 @@ public class AnchorManager extends AbstractProcessorTask
     private static final float MIN_WIND = 2F;
     private static final float MIN_WIND_DIFF = 3F;
     private static final float MIN_RANGE = 15F;
+    private static final int POINTS_SIZE = 64;
     private static final long REFRESH_PERIOD = 60000;
     private @Property Clock clock;
     private @Property double latitude;
@@ -88,7 +94,7 @@ public class AnchorManager extends AbstractProcessorTask
     
     public AnchorManager(Processor processor, GatheringByteChannel channel, AnchorManagerType type, CachedScheduledThreadPool executor) throws IOException
     {
-        super(MethodHandles.lookup(), 2, MINUTES);
+        super(MethodHandles.lookup(), 20, MINUTES);
         this.processor = processor;
         this.channel = channel;
         this.anchorWeight = type.getAnchorWeight();
@@ -272,7 +278,11 @@ public class AnchorManager extends AbstractProcessorTask
         private float previous = 180;
         private float hdg;
         private AngleRange range = new AngleRange();
-        
+        private DoubleMatrix points;
+        private LocalLongitude localLongitude;
+        private int count;
+        private AnchorEstimator estimator;
+
         @Override
         protected Action test(Collection<String> updatedProperties)
         {
@@ -284,30 +294,101 @@ public class AnchorManager extends AbstractProcessorTask
         }
         private void update()
         {
-            boolean newHdg = range.add(trueHeading);
             if (
                     (relativeWindAngle < 30 && previous > 330 ||
                     relativeWindAngle > 330 && previous < 30) &&
-                    relativeWindSpeed > MIN_WIND &&
-                    (abs(angleDiff(trueHeading, hdg)) > MIN_WIND_DIFF || newHdg)
-                    )
+                    relativeWindSpeed > MIN_WIND)
             {
-                info("TURN %f %f", trueHeading, relativeWindSpeed);
-                hdg = trueHeading;
+                boolean newHdg = range.add(trueHeading);
+                if (abs(angleDiff(trueHeading, hdg)) > MIN_WIND_DIFF || newHdg)
+                {
+                    info("TURN %f %f", trueHeading, relativeWindSpeed);
+                    add();
+                    if (range.getRange() > MIN_RANGE)
+                    {
+                        if (estimator == null)
+                        {
+                            estimator = new AnchorEstimator(points, localLongitude);
+                        }
+                        estimator.update();
+                    }
+                    hdg = trueHeading;
+                }
             }
             previous = relativeWindAngle;
         }
 
-        @Override
-        protected boolean hasNext()
+        private void add()
         {
-            return false;
+            if (points == null)
+            {
+                points = new DoubleMatrix(POINTS_SIZE, 4);
+                points.reshape(0, 4);
+                localLongitude = LocalLongitude.getInstance(longitude, latitude);
+            }
+            if (count < POINTS_SIZE)
+            {
+                points.addRow(
+                        localLongitude.getInternal(longitude),
+                        latitude,
+                        relativeWindSpeed,
+                        toRadians(Navis.degreesToCartesian(trueHeading))
+                );
+            }
+            else
+            {
+                points.setRow(count % POINTS_SIZE,
+                        localLongitude.getInternal(longitude),
+                        latitude,
+                        relativeWindSpeed,
+                        toRadians(Navis.degreesToCartesian(trueHeading))
+                );
+            }
+            count++;
+        }
+    }
+    private class AnchorEstimator
+    {
+        private DoubleMatrix points;
+        private LocalLongitude localLongitude;
+
+        public AnchorEstimator(DoubleMatrix points, LocalLongitude localLongitude)
+        {
+            this.points = points;
+            this.localLongitude = localLongitude;
+            SimpleLine l1 = new SimpleLine();
+            SimpleLine l2 = new SimpleLine();
+            SimplePoint p0 = new SimplePoint();
+            SimplePoint ps = new SimplePoint();
+            int count = 0;
+            int len1 = points.rows();
+            int len2 = len1-1;
+            for (int i=0;i<len1;i++)
+            {
+                for (int j=i+1;j<len2;j++)
+                {
+                    double x1 = points.get(i, 0);
+                    double y1 = points.get(i, 1);
+                    double r1 = points.get(i, 3);
+                    l1.setFromAngle(r1, x1, y1);
+                    double x2 = points.get(j, 0);
+                    double y2 = points.get(j, 1);
+                    double r2 = points.get(j, 3);
+                    l2.setFromAngle(r2, x2, y2);
+                    Point pc = SimpleLine.crossPoint(l1, l2, p0);
+                    if (pc != null)
+                    {
+                        ps.add(pc);
+                        count++;
+                    }
+                }
+            }
+            ps.mul(1.0/count);
         }
 
-        @Override
-        protected AbstractChainedState<Collection<String>> createNext()
+        private void update()
         {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
         
     }

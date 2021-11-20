@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import java.util.Collection;
 import java.util.function.Supplier;
 
 /**
@@ -49,8 +50,11 @@ public abstract class AbstractChainedState<T>
         }
     }
 
-    protected abstract boolean hasNext();
-    protected abstract AbstractChainedState<T> createNext();
+    protected boolean hasNext() {return false;};
+    protected AbstractChainedState<Collection<String>> createNext()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     protected abstract Action test(T input);
     protected void failed(T input)
     {
