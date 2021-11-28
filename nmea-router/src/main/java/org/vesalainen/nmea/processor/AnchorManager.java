@@ -180,7 +180,7 @@ public class AnchorManager extends AbstractProcessorTask
                 if (depthOfWater < maxDepth)
                 {
                     chainLength = chain.chainLength(maxFairleadTension, depthOfWater);
-                    horizontalScope = chain.horizontalScope(maxFairleadTension, depthOfWater, chainLength);
+                    horizontalScope = chain.horizontalScopeForChain(maxFairleadTension, depthOfWater, chainLength);
                     return FORWARD;
                 }
                 else
@@ -308,7 +308,6 @@ public class AnchorManager extends AbstractProcessorTask
                 boolean newHdg = range.add(trueHeading);
                 if (abs(angleDiff(trueHeading, hdg)) > MIN_WIND_DIFF || newHdg)
                 {
-                    info("TURN %f %f", trueHeading, relativeWindSpeed);
                     add();
                     if (range.getRange() > MIN_RANGE)
                     {
@@ -360,8 +359,8 @@ public class AnchorManager extends AbstractProcessorTask
         {
             // scope estimate
             double estimatedChainLength = chain.chainLength(maxFairleadTension, depthOfWater);
-            double maxScope = chain.horizontalScope(maxFairleadTension, depthOfWater, estimatedChainLength);
-            double minScope = estimatedChainLength - depthOfWater;
+            double maxScope = Chain.maximalScope(depthOfWater, estimatedChainLength);
+            double minScope = Chain.minimalScope(depthOfWater, estimatedChainLength);
             // estimated anchor position
             SimpleLine l1 = new SimpleLine();
             SimpleLine l2 = new SimpleLine();
@@ -410,7 +409,7 @@ public class AnchorManager extends AbstractProcessorTask
         @Override
         protected void failed(Collection<String> input)
         {
-            info("STOP");
+            //info("STOP");
         }
         
         private boolean near(double angle, double r1)
@@ -423,7 +422,6 @@ public class AnchorManager extends AbstractProcessorTask
     {
         private DoubleMatrix points;
         private LocalLongitude localLongitude;
-        private Plotter plotter;
         private final DoubleMatrix params;
         private final DoubleMatrix zero = new DoubleMatrix(1, 1);
         private final LevenbergMarquardt levenbergMarquardt = new LevenbergMarquardt(this, null);
@@ -445,7 +443,18 @@ public class AnchorManager extends AbstractProcessorTask
             if (levenbergMarquardt.optimize(params, points, zero))
             {
                 params.set(levenbergMarquardt.getParameters());
-                info("AnchorEstimate(%f, %f, %f, %f)", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0));
+                info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), levenbergMarquardt.getFinalCost());
+                Plot p = new Plot("c:\\temp\\"+levenbergMarquardt.getFinalCost()+".png");
+                p.drawPoints(points);
+                p.drawCross(params.get(0, 0), params.get(1, 0));
+                try
+                {
+                    p.plot();
+                }
+                catch (IOException ex)
+                {
+                    Logger.getLogger(AnchorManager.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
             else
             {

@@ -26,12 +26,9 @@ import static java.time.ZoneOffset.UTC;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.vesalainen.io.CompressedInput;
 import org.vesalainen.nio.channels.NullChannel;
-import org.vesalainen.nio.channels.SystemChannel;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
-import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
