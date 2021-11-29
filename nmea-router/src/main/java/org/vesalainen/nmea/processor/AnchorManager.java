@@ -16,7 +16,6 @@
  */
 package org.vesalainen.nmea.processor;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
 import static java.lang.Math.*;
@@ -27,7 +26,6 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Collection;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
@@ -35,7 +33,6 @@ import org.vesalainen.code.Property;
 import org.vesalainen.io.IO;
 import org.vesalainen.math.Circle;
 import org.vesalainen.math.LevenbergMarquardt;
-import org.vesalainen.math.LevenbergMarquardt.Function;
 import org.vesalainen.math.Point;
 import org.vesalainen.math.Polygon;
 import org.vesalainen.math.SimpleLine;
@@ -53,7 +50,6 @@ import org.vesalainen.navi.SafeSector;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import static org.vesalainen.nmea.processor.AbstractChainedState.Action.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import org.vesalainen.ui.Plotter;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -284,7 +280,7 @@ public class AnchorManager extends AbstractProcessorTask
         private float previous = 180;
         private float hdg;
         private AngleRange range = new AngleRange();
-        private DoubleMatrix points;
+        private DoubleMatrix data;
         private LocalLongitude localLongitude;
         private int count;
         private AnchorEstimator estimator;
@@ -313,7 +309,7 @@ public class AnchorManager extends AbstractProcessorTask
                     {
                         if (estimator == null)
                         {
-                            estimator = tryInstance(points, localLongitude);
+                            estimator = tryInstance();
                         }
                         if (estimator != null)
                         {
@@ -328,26 +324,28 @@ public class AnchorManager extends AbstractProcessorTask
 
         private void add()
         {
-            if (points == null)
+            if (data == null)
             {
-                points = new DoubleMatrix(POINTS_SIZE, 4);
-                points.reshape(0, 4);
+                data = new DoubleMatrix(POINTS_SIZE, 5);
+                data.reshape(0, 5);
                 localLongitude = LocalLongitude.getInstance(longitude, latitude);
             }
             if (count < POINTS_SIZE)
             {
-                points.addRow(
-                        localLongitude.getInternal(longitude),
+                data.addRow(
+                        longitude,
                         latitude,
+                        localLongitude.getInternal(longitude),
                         relativeWindSpeed,
                         Navis.degreesToCartesian(trueHeading)
                 );
             }
             else
             {
-                points.setRow(count % POINTS_SIZE,
-                        localLongitude.getInternal(longitude),
+                data.setRow(count % POINTS_SIZE,
+                        longitude,
                         latitude,
+                        localLongitude.getInternal(longitude),
                         relativeWindSpeed,
                         Navis.degreesToCartesian(trueHeading)
                 );
@@ -355,7 +353,7 @@ public class AnchorManager extends AbstractProcessorTask
             count++;
         }
 
-        private AnchorEstimator tryInstance(DoubleMatrix points, LocalLongitude localLongitude)
+        private AnchorEstimator tryInstance()
         {
             // scope estimate
             double estimatedChainLength = chain.chainLength(maxFairleadTension, depthOfWater);
@@ -365,18 +363,18 @@ public class AnchorManager extends AbstractProcessorTask
             SimpleLine l1 = new SimpleLine();
             SimpleLine l2 = new SimpleLine();
             SimplePoint p0 = new SimplePoint();
-            int len = points.rows()-1;
+            int len = data.rows()-1;
             for (int i=0;i<len;i++)
             {
-                double x1 = points.get(i, 0);
-                double y1 = points.get(i, 1);
-                double r1 = points.get(i, 3);
+                double x1 = data.get(i, 2);
+                double y1 = data.get(i, 1);
+                double r1 = data.get(i, 4);
                 l1.setFromAngle(r1, x1, y1);
                 //plotter.drawLine(x1, y1, r1, METER.convertTo(5, NAUTICAL_DEGREE));
-                int j=points.rows()-1;
-                double x2 = points.get(j, 0);
-                double y2 = points.get(j, 1);
-                double r2 = points.get(j, 3);
+                int j=data.rows()-1;
+                double x2 = data.get(j, 2);
+                double y2 = data.get(j, 1);
+                double r2 = data.get(j, 4);
                 l2.setFromAngle(r2, x2, y2);
                 Point pc = SimpleLine.crossPoint(l1, l2, p0);
                 if (pc != null)
@@ -392,14 +390,14 @@ public class AnchorManager extends AbstractProcessorTask
                     {
                         DoubleMatrix params = new DoubleMatrix(4, 1);
                         double force = chain.forceForScope(meters, depthOfWater, estimatedChainLength);
-                        double w = points.get(j, 2);
+                        double w = data.get(j, 3);
                         double coef = force/(w*w);
                         params.set(0, 0, pc.getX());
                         params.set(1, 0, pc.getY());
                         params.set(2, 0, coef);
                         params.set(3, 0, estimatedChainLength);
                         info("AnchorEstimate(%f, %f, %f, %f)", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0));
-                        return new AnchorEstimator(localLongitude, depthOfWater, points, params);
+                        return new AnchorEstimator(localLongitude, depthOfWater, data, params);
                     }
                 }
             }
@@ -418,67 +416,89 @@ public class AnchorManager extends AbstractProcessorTask
         }
         
     }
-    public class AnchorEstimator implements Function
+    public class AnchorEstimator
     {
-        private DoubleMatrix points;
+        private DoubleMatrix data;
+        private DoubleMatrix coordinates;
+        private DoubleMatrix internPoints;
+        private DoubleMatrix centerParam;
+        private DoubleMatrix chainParam;
+        private DoubleMatrix wind;
         private LocalLongitude localLongitude;
         private final DoubleMatrix params;
-        private final DoubleMatrix zero = new DoubleMatrix(1, 1);
-        private final LevenbergMarquardt levenbergMarquardt = new LevenbergMarquardt(this, null);
+        private final DoubleMatrix radius = new DoubleMatrix(1, 1);
+        private final DoubleMatrix scope = new DoubleMatrix(1, 1);
+        private final LevenbergMarquardt scopeSolver = new LevenbergMarquardt(this::computeScope, null);
+        private final LevenbergMarquardt circleSolver = new LevenbergMarquardt(this::computeRadius, null);
         private final double depth;
 
-        public AnchorEstimator(LocalLongitude localLongitude, double depth, DoubleMatrix points, DoubleMatrix params)
+        public AnchorEstimator(LocalLongitude localLongitude, double depth, DoubleMatrix data, DoubleMatrix params)
         {
             this.localLongitude = localLongitude;
             this.depth = depth;
-            this.points = points;
+            this.data = data;
             this.params = params;
+            this.internPoints = data.getSparse(-1, 2, 2, 1);
+            this.coordinates = data.getSub(0, 0, -1, 2);
+            this.wind = data.getSub(0, 3, -1, 1);
+            this.centerParam = params.getSub(0, 0, 2, 1);
+            this.chainParam = params.getSub(2, 0, 2, 1);
         }
         private void update()
         {
-            if (zero.rows() != points.rows())
+            if (radius.rows() != data.rows())
             {
-                zero.reshape(points.rows(), 1);
+                radius.reshape(data.rows(), 1);
+                scope.reshape(data.rows(), 1);
             }
-            if (levenbergMarquardt.optimize(params, points, zero))
+            computeRadius(centerParam, internPoints, radius);
+            if (scopeSolver.optimize(chainParam, wind, radius))
             {
-                params.set(levenbergMarquardt.getParameters());
-                info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), levenbergMarquardt.getFinalCost());
-                Plot p = new Plot("c:\\temp\\"+levenbergMarquardt.getFinalCost()+".png");
-                p.drawPoints(points);
-                p.drawCross(params.get(0, 0), params.get(1, 0));
-                try
-                {
-                    p.plot();
-                }
-                catch (IOException ex)
-                {
-                    Logger.getLogger(AnchorManager.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                chainParam.set(scopeSolver.getParameters());
             }
-            else
+            computeScope(chainParam, wind, scope);
+            if (circleSolver.optimize(centerParam, internPoints, scope))
             {
-                throw new IllegalArgumentException("Fit failed");
+                centerParam.set(circleSolver.getParameters());
+            }
+            info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
+            Plot p = new Plot("c:\\temp\\"+circleSolver.getFinalCost()+".png");
+            p.drawPoints(coordinates);
+            p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
+            try
+            {
+                p.plot();
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(AnchorManager.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
-        @Override
-        public void compute(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        public void computeRadius(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
         {
             double xx = param.get(0, 0);
             double yy = param.get(1, 0);
-            double co = param.get(2, 0);
-            double s = param.get(3, 0);
-            int len = points.rows();
+            int len = x.rows();
             for (int row=0;row<len;row++)
             {
                 double px = x.get(row, 0);
                 double py = x.get(row, 1);
-                double wi = x.get(row, 2);
                 double di = NAUTICAL_DEGREE.convertTo(hypot(xx-px, yy-py), METER);
+                y.set(row, 0, di);
+            }
+        }
+        public void computeScope(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        {
+            double co = param.get(0, 0);
+            double s = param.get(1, 0);
+            int len = data.rows();
+            for (int row=0;row<len;row++)
+            {
+                double wi = x.get(row, 0);
                 double f = co*wi*wi;
                 double scope = chain.horizontalScopeForChain(f, depth, s);
-                y.set(row, 0, scope-di);
+                y.set(row, 0, scope);
             }
         }
 
