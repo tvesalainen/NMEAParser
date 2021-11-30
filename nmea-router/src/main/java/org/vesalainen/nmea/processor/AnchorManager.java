@@ -24,6 +24,8 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import java.util.logging.Level;
@@ -61,11 +63,11 @@ public class AnchorManager extends AbstractProcessorTask
     private static final String ANCHOR_WATCH_NAME = "anchorWatch";
     private static final String ANCHOR_WATCH_FILENAME = ANCHOR_WATCH_NAME+".ser";
     private static final double DEFAULT_MAX_FAIRLEAD_TENSION = 2000;    // N
-    private static final float MAX_SPEED = 0.2F;
+    private static final float MAX_SPEED = 1.0F;
     private static final float MIN_WIND = 3F;
     private static final float MIN_WIND_DIFF = 3F;
     private static final float MIN_RANGE = 15F;
-    private static final int POINTS_SIZE = 64;
+    private static final int POINTS_SIZE = 1024;
     private static final long REFRESH_PERIOD = 60000;
     private @Property Clock clock;
     private @Property double latitude;
@@ -165,7 +167,7 @@ public class AnchorManager extends AbstractProcessorTask
         depthFilter.input(updatedProperties);
     }
 
-    private class DepthFilter extends AbstractChainedState<Collection<String>>
+    private class DepthFilter extends AbstractChainedState<Collection<String>,String>
     {
 
         @Override
@@ -181,6 +183,7 @@ public class AnchorManager extends AbstractProcessorTask
                 }
                 else
                 {
+                    reason = String.format("depthOfWater(%f) > %f", depthOfWater, maxDepth);
                     return FAIL;
                 }
             }
@@ -194,13 +197,13 @@ public class AnchorManager extends AbstractProcessorTask
         }
 
         @Override
-        protected AbstractChainedState<Collection<String>> createNext()
+        protected AbstractChainedState<Collection<String>,String> createNext()
         {
             return new SpeedFilter();
         }
         
     }
-    private class SpeedFilter extends AbstractChainedState<Collection<String>>
+    private class SpeedFilter extends AbstractChainedState<Collection<String>,String>
     {
 
         @Override
@@ -214,6 +217,7 @@ public class AnchorManager extends AbstractProcessorTask
                 }
                 else
                 {
+                    reason = String.format("speedOverGround(%f) > %f", speedOverGround, MAX_SPEED);
                     return FAIL;
                 }
             }
@@ -227,13 +231,13 @@ public class AnchorManager extends AbstractProcessorTask
         }
 
         @Override
-        protected AbstractChainedState<Collection<String>> createNext()
+        protected AbstractChainedState<Collection<String>,String> createNext()
         {
             return new MoveFilter();
         }
         
     }
-    private class MoveFilter extends AbstractChainedState<Collection<String>>
+    private class MoveFilter extends AbstractChainedState<Collection<String>,String>
     {
 
         private final double lat;
@@ -256,6 +260,7 @@ public class AnchorManager extends AbstractProcessorTask
                 }
                 else
                 {
+                    reason = String.format("distance > %f", METER.convertTo(2*horizontalScope, NAUTICAL_MILE));
                     return FAIL;
                 }
             }
@@ -269,13 +274,13 @@ public class AnchorManager extends AbstractProcessorTask
         }
 
         @Override
-        protected AbstractChainedState<Collection<String>> createNext()
+        protected AbstractChainedState<Collection<String>,String> createNext()
         {
             return new WindManager();
         }
         
     }
-    private class WindManager extends AbstractChainedState<Collection<String>>
+    private class WindManager extends AbstractChainedState<Collection<String>,String>
     {
         private float previous = 180;
         private float hdg;
@@ -405,9 +410,13 @@ public class AnchorManager extends AbstractProcessorTask
         }
 
         @Override
-        protected void failed(Collection<String> input)
+        protected void failed(String reason)
         {
-            //info("STOP");
+            info("anchoring stopped because %s", reason);
+            if (estimator != null)
+            {
+                estimator.plot();
+            }
         }
         
         private boolean near(double angle, double r1)
@@ -423,12 +432,14 @@ public class AnchorManager extends AbstractProcessorTask
         private DoubleMatrix internPoints;
         private DoubleMatrix centerParam;
         private DoubleMatrix chainParam;
+        private DoubleMatrix coefParam;
         private DoubleMatrix wind;
         private LocalLongitude localLongitude;
         private final DoubleMatrix params;
         private final DoubleMatrix radius = new DoubleMatrix(1, 1);
         private final DoubleMatrix scope = new DoubleMatrix(1, 1);
-        private final LevenbergMarquardt scopeSolver = new LevenbergMarquardt(this::computeScope, null);
+        private final LevenbergMarquardt scopeCoefSolver = new LevenbergMarquardt(this::computeScopeCoef, null);
+        private final LevenbergMarquardt scopeLengthSolver = new LevenbergMarquardt(this::computeScopeLength, null);
         private final LevenbergMarquardt circleSolver = new LevenbergMarquardt(this::computeRadius, null);
         private final double depth;
 
@@ -442,7 +453,8 @@ public class AnchorManager extends AbstractProcessorTask
             this.coordinates = data.getSub(0, 0, -1, 2);
             this.wind = data.getSub(0, 3, -1, 1);
             this.centerParam = params.getSub(0, 0, 2, 1);
-            this.chainParam = params.getSub(2, 0, 2, 1);
+            this.chainParam = params.getSub(3, 0, 1, 1);
+            this.coefParam = params.getSub(2, 0, 1, 1);
         }
         private void update()
         {
@@ -452,26 +464,18 @@ public class AnchorManager extends AbstractProcessorTask
                 scope.reshape(data.rows(), 1);
             }
             computeRadius(centerParam, internPoints, radius);
-            if (scopeSolver.optimize(chainParam, wind, radius))
+            if (scopeLengthSolver.optimize(chainParam, wind, radius))
             {
-                chainParam.set(scopeSolver.getParameters());
+                chainParam.set(scopeLengthSolver.getParameters());
             }
-            computeScope(chainParam, wind, scope);
+            if (scopeCoefSolver.optimize(coefParam, wind, radius))
+            {
+                coefParam.set(scopeCoefSolver.getParameters());
+            }
+            computeScopeCoef(coefParam, wind, scope);
             if (circleSolver.optimize(centerParam, internPoints, scope))
             {
                 centerParam.set(circleSolver.getParameters());
-            }
-            info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
-            Plot p = new Plot("c:\\temp\\"+circleSolver.getFinalCost()+".png");
-            p.drawPoints(coordinates);
-            p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
-            try
-            {
-                p.plot();
-            }
-            catch (IOException ex)
-            {
-                Logger.getLogger(AnchorManager.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
@@ -488,10 +492,10 @@ public class AnchorManager extends AbstractProcessorTask
                 y.set(row, 0, di);
             }
         }
-        public void computeScope(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        public void computeScopeCoef(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
         {
             double co = param.get(0, 0);
-            double s = param.get(1, 0);
+            double s = chainParam.get(0, 0);
             int len = data.rows();
             for (int row=0;row<len;row++)
             {
@@ -500,6 +504,42 @@ public class AnchorManager extends AbstractProcessorTask
                 double scope = chain.horizontalScopeForChain(f, depth, s);
                 y.set(row, 0, scope);
             }
+        }
+        public void computeScopeLength(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        {
+            double co = coefParam.get(0, 0);
+            double s = param.get(0, 0);
+            int len = data.rows();
+            for (int row=0;row<len;row++)
+            {
+                double wi = x.get(row, 0);
+                double f = co*wi*wi;
+                double scope = chain.horizontalScopeForChain(f, depth, s);
+                y.set(row, 0, scope);
+            }
+        }
+
+        private void plot()
+        {
+            info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
+            ZonedDateTime zdt = ZonedDateTime.now(clock);
+            Plot p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
+            drawPoints();
+            p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
+            p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
+            try
+            {
+                p.plot();
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(AnchorManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        private void drawPoints()
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
     }

@@ -23,11 +23,12 @@ import java.util.function.Supplier;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class AbstractChainedState<T>
+public abstract class AbstractChainedState<T,U>
 {
 
     protected enum Action {NEUTRAL, FORWARD, FAIL};
     private AbstractChainedState nextState;
+    protected U reason;
 
     public void input(T input)
     {
@@ -45,28 +46,28 @@ public abstract class AbstractChainedState<T>
             }
             break;
             case FAIL:
-                fail(input);
+                fail(reason);
             break;
         }
     }
 
     protected boolean hasNext() {return false;};
-    protected AbstractChainedState<Collection<String>> createNext()
+    protected AbstractChainedState<T,U> createNext()
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     protected abstract Action test(T input);
-    protected void failed(T input)
+    protected void failed(U reason)
     {
         
     }
-    private void fail(T input)
+    private void fail(U reason)
     {
         if (nextState != null)
         {
-            nextState.fail(input);
+            nextState.fail(reason);
             nextState = null;
         }
-        failed(input);
+        failed(reason);
     }
 }
