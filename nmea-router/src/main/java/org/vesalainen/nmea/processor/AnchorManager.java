@@ -16,6 +16,8 @@
  */
 package org.vesalainen.nmea.processor;
 
+import java.awt.Color;
+import static java.awt.Color.*;
 import java.io.IOException;
 import java.io.Serializable;
 import static java.lang.Math.*;
@@ -28,6 +30,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import java.util.function.IntPredicate;
 import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
@@ -52,6 +55,7 @@ import org.vesalainen.navi.SafeSector;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import static org.vesalainen.nmea.processor.AbstractChainedState.Action.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
+import org.vesalainen.ui.Direction;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -399,7 +403,7 @@ public class AnchorManager extends AbstractProcessorTask
                         double coef = force/(w*w);
                         params.set(0, 0, pc.getX());
                         params.set(1, 0, pc.getY());
-                        params.set(2, 0, coef);
+                        params.set(2, 0, 0.06);//coef);
                         params.set(3, 0, estimatedChainLength);
                         info("AnchorEstimate(%f, %f, %f, %f)", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0));
                         return new AnchorEstimator(localLongitude, depthOfWater, data, params);
@@ -438,10 +442,12 @@ public class AnchorManager extends AbstractProcessorTask
         private final DoubleMatrix params;
         private final DoubleMatrix radius = new DoubleMatrix(1, 1);
         private final DoubleMatrix scope = new DoubleMatrix(1, 1);
+        private final DoubleMatrix centers = new DoubleMatrix(0, 2);
         private final LevenbergMarquardt scopeCoefSolver = new LevenbergMarquardt(this::computeScopeCoef, null);
         private final LevenbergMarquardt scopeLengthSolver = new LevenbergMarquardt(this::computeScopeLength, null);
         private final LevenbergMarquardt circleSolver = new LevenbergMarquardt(this::computeRadius, null);
         private final double depth;
+        private int goodWindRows = 1;
 
         public AnchorEstimator(LocalLongitude localLongitude, double depth, DoubleMatrix data, DoubleMatrix params)
         {
@@ -458,24 +464,42 @@ public class AnchorManager extends AbstractProcessorTask
         }
         private void update()
         {
-            if (radius.rows() != data.rows())
+            if (scope.rows() != data.rows())
             {
                 radius.reshape(data.rows(), 1);
                 scope.reshape(data.rows(), 1);
             }
-            computeRadius(centerParam, internPoints, radius);
-            if (scopeLengthSolver.optimize(chainParam, wind, radius))
+            IntPredicate pred = (r)->wind.get(r, 0)>10;
+            /*
+            DoubleMatrix goodWind = wind.getConditionalRows(pred);
+            if (goodWind.rows() > goodWindRows)
             {
-                chainParam.set(scopeLengthSolver.getParameters());
+                goodWindRows = goodWind.rows();
+                DoubleMatrix windPoints = internPoints.getConditionalRows(pred);
+                if (radius.rows() != goodWind.rows())
+                {
+                    radius.reshape(goodWind.rows(), 1);
+                }
+                computeRadius(centerParam, windPoints, radius);
+                if (scopeLengthSolver.optimize(chainParam, goodWind, radius))
+                {
+                    chainParam.set(scopeLengthSolver.getParameters());
+                    if (chainParam.get(0, 0) > 80)
+                    {
+                        System.err.println();
+                    }
+                }
+                if (scopeCoefSolver.optimize(coefParam, goodWind, radius))
+                {
+                    coefParam.set(scopeCoefSolver.getParameters());
+                }
             }
-            if (scopeCoefSolver.optimize(coefParam, wind, radius))
-            {
-                coefParam.set(scopeCoefSolver.getParameters());
-            }
+            */
             computeScopeCoef(coefParam, wind, scope);
             if (circleSolver.optimize(centerParam, internPoints, scope))
             {
                 centerParam.set(circleSolver.getParameters());
+                centers.addRow(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             }
         }
 
@@ -496,7 +520,7 @@ public class AnchorManager extends AbstractProcessorTask
         {
             double co = param.get(0, 0);
             double s = chainParam.get(0, 0);
-            int len = data.rows();
+            int len = x.rows();
             for (int row=0;row<len;row++)
             {
                 double wi = x.get(row, 0);
@@ -509,7 +533,7 @@ public class AnchorManager extends AbstractProcessorTask
         {
             double co = coefParam.get(0, 0);
             double s = param.get(0, 0);
-            int len = data.rows();
+            int len = x.rows();
             for (int row=0;row<len;row++)
             {
                 double wi = x.get(row, 0);
@@ -524,9 +548,12 @@ public class AnchorManager extends AbstractProcessorTask
             info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
             ZonedDateTime zdt = ZonedDateTime.now(clock);
             Plot p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
-            drawPoints();
+            drawPoints(p);
+            p.setColor(BLACK);
+            p.drawLines(centers);
             p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
+            p.drawTitle(Direction.TOP, String.format("coef=%f, s=%f, cost=%f", params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost()));
             try
             {
                 p.plot();
@@ -537,9 +564,16 @@ public class AnchorManager extends AbstractProcessorTask
             }
         }
 
-        private void drawPoints()
+        private void drawPoints(Plot p)
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            int rows = coordinates.rows();
+            for (int ii=0;ii<rows;ii++)
+            {
+                double wi = wind.get(ii, 0);
+                Color hsb = Color.getHSBColor((float) (wi/30), 1, 1);
+                p.setColor(hsb);
+                p.drawPoint(coordinates.get(ii, 0), coordinates.get(ii, 1));
+            }
         }
 
     }
