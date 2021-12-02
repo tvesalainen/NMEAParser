@@ -578,7 +578,7 @@ public class NMEASentence
                     double alon = Math.abs(longitude);
                     int lat = (int) alat;
                     int lon = (int) alon;
-                    p.format(",%02d%07.4f,%c,%03d%07.4f,%c", 
+                    p.format(",%02d%08.5f,%c,%03d%08.5f,%c", 
                             lat, 
                             (alat-lat)*60,
                             latitude>0?'N':'S',
