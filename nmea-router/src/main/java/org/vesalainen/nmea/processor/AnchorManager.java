@@ -68,7 +68,7 @@ public class AnchorManager extends AbstractProcessorTask
     private static final String ANCHOR_WATCH_FILENAME = ANCHOR_WATCH_NAME+".ser";
     private static final double DEFAULT_MAX_FAIRLEAD_TENSION = 2000;    // N
     private static final float MAX_SPEED = 1.0F;
-    private static final float MIN_WIND = 3F;
+    private static final float MIN_WIND = 10F;
     private static final float MIN_WIND_DIFF = 3F;
     private static final float MIN_RANGE = 15F;
     private static final int POINTS_SIZE = 1024;
@@ -335,8 +335,8 @@ public class AnchorManager extends AbstractProcessorTask
         {
             if (data == null)
             {
-                data = new DoubleMatrix(POINTS_SIZE, 5);
-                data.reshape(0, 5);
+                data = new DoubleMatrix(POINTS_SIZE, 6);
+                data.reshape(0, 6);
                 localLongitude = LocalLongitude.getInstance(longitude, latitude);
             }
             if (count < POINTS_SIZE)
@@ -346,7 +346,8 @@ public class AnchorManager extends AbstractProcessorTask
                         latitude,
                         localLongitude.getInternal(longitude),
                         relativeWindSpeed,
-                        Navis.degreesToCartesian(trueHeading)
+                        Navis.degreesToCartesian(trueHeading),
+                        depthOfWater
                 );
             }
             else
@@ -356,7 +357,8 @@ public class AnchorManager extends AbstractProcessorTask
                         latitude,
                         localLongitude.getInternal(longitude),
                         relativeWindSpeed,
-                        Navis.degreesToCartesian(trueHeading)
+                        Navis.degreesToCartesian(trueHeading),
+                        depthOfWater
                 );
             }
             count++;
@@ -448,6 +450,7 @@ public class AnchorManager extends AbstractProcessorTask
         private final LevenbergMarquardt circleSolver = new LevenbergMarquardt(this::computeRadius, null);
         private final double depth;
         private int goodWindRows = 1;
+        private final DoubleMatrix heading;
 
         public AnchorEstimator(LocalLongitude localLongitude, double depth, DoubleMatrix data, DoubleMatrix params)
         {
@@ -458,9 +461,11 @@ public class AnchorManager extends AbstractProcessorTask
             this.internPoints = data.getSparse(-1, 2, 2, 1);
             this.coordinates = data.getSub(0, 0, -1, 2);
             this.wind = data.getSub(0, 3, -1, 1);
+            this.heading = data.getSub(0, 4, -1, 1);
             this.centerParam = params.getSub(0, 0, 2, 1);
             this.chainParam = params.getSub(3, 0, 1, 1);
             this.coefParam = params.getSub(2, 0, 1, 1);
+            centers.addRow(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
         }
         private void update()
         {
@@ -553,7 +558,7 @@ public class AnchorManager extends AbstractProcessorTask
             p.drawLines(centers);
             p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
-            p.drawTitle(Direction.TOP, String.format("coef=%f, s=%f, cost=%f", params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost()));
+            p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), depth, circleSolver.getFinalCost()));
             try
             {
                 p.plot();
@@ -566,13 +571,15 @@ public class AnchorManager extends AbstractProcessorTask
 
         private void drawPoints(Plot p)
         {
+            double r = METER.convertTo(horizontalScope, NAUTICAL_DEGREE);
             int rows = coordinates.rows();
             for (int ii=0;ii<rows;ii++)
             {
                 double wi = wind.get(ii, 0);
                 Color hsb = Color.getHSBColor((float) (wi/30), 1, 1);
                 p.setColor(hsb);
-                p.drawPoint(coordinates.get(ii, 0), coordinates.get(ii, 1));
+                p.drawPlus(coordinates.get(ii, 0), coordinates.get(ii, 1));
+                p.drawLineTo(coordinates.get(ii, 0), coordinates.get(ii, 1), heading.get(ii, 0), METER.convertTo(scope.get(ii, 0), NAUTICAL_DEGREE));
             }
         }
 
