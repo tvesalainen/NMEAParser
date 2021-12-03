@@ -3,6 +3,19 @@
            elementFormDefault="qualified" attributeFormDefault="unqualified">
     <xsd:element name="nmea" type="nmeaType"/>
     <xsd:complexType name="nmeaType">
+        <xsd:sequence>
+            <xsd:element name="boat" type="boatDataType"/>
+            <xsd:element name="endPoints" type="endPointGroupType"/>
+        </xsd:sequence>
+        <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
+        <xsd:attribute name="ctrlTcpPort" type="portType"/>
+        <xsd:attribute name="allDevices" type="deviceListType"/>
+        <xsd:attribute name="dontScan" type="deviceListType"/>
+        <xsd:attribute name="closeDelay" type="delayType"/>
+        <xsd:attribute name="monitorDelay" type="delayType"/>
+        <xsd:attribute name="nativeDebug" type="xsd:boolean"/>
+    </xsd:complexType>
+    <xsd:complexType name="endPointGroupType">
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
             <xsd:element name="n2k-gateway" type="n2kGatewayType"/>
             <xsd:element name="consumer-endpoint" type="consumerEndpointType"/>
@@ -20,13 +33,18 @@
             <xsd:element name="nmea-0183" type="nmea-0183Type"/>
             <xsd:element name="serial" type="serialType"/>
         </xsd:choice>
-        <xsd:attribute name="proprietaryPrefix" type="proprietaryPrefixType"></xsd:attribute>
-        <xsd:attribute name="ctrlTcpPort" type="portType"/>
-        <xsd:attribute name="allDevices" type="deviceListType"/>
-        <xsd:attribute name="dontScan" type="deviceListType"/>
-        <xsd:attribute name="closeDelay" type="delayType"/>
-        <xsd:attribute name="monitorDelay" type="delayType"/>
-        <xsd:attribute name="nativeDebug" type="xsd:boolean"/>
+    </xsd:complexType>
+    <xsd:complexType name="boatDataType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="gps-position" type="gpsPositionType"/>
+            <xsd:element name="depthSounder-position" type="depthSounderPositionType"/>
+        </xsd:choice>
+        <xsd:attribute name="length" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="beam" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="draft" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="anchorWeight" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="chainDiameter" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="maxChainLength" type="xsd:decimal" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="n2kGatewayType">
         <xsd:complexContent>
@@ -194,12 +212,24 @@
         <xsd:attribute name="prefix" type="prefixType"/>
         <xsd:attribute name="pgn" type="xsd:unsignedInt"/>
     </xsd:complexType>
+    <xsd:complexType name="gpsPositionType">
+        <xsd:complexContent>
+            <xsd:extension base="boatPositionType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="depthSounderPositionType">
+        <xsd:complexContent>
+            <xsd:extension base="boatPositionType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="boatPositionType">
+        <xsd:attribute name="toSb" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="toPort" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="toBow" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="toStern" type="xsd:decimal" use="required"/>
+    </xsd:complexType>
     <xsd:complexType name="anchorManagerType">
         <xsd:attribute name="directory" type="xsd:string" use="required"/>
-        <xsd:attribute name="anchorWeight" type="xsd:unsignedInt" use="required"/>
-        <xsd:attribute name="chainDiameter" type="xsd:unsignedInt" use="required"/>
-        <xsd:attribute name="maxChainLength" type="xsd:unsignedInt" use="required"/>
-        <xsd:attribute name="maxFairleadTension" type="xsd:decimal"/>
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
         <xsd:attribute name="configFile" type="xsd:string" use="required"/>

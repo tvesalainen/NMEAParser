@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import static java.util.logging.Level.*;
 import org.vesalainen.comm.channel.SerialChannel;
 import org.vesalainen.math.SymmetricDifferenceMatcher;
+import org.vesalainen.nmea.jaxb.router.BoatDataType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.RouteType;
 import org.vesalainen.nmea.jaxb.router.SerialType;
@@ -99,6 +100,7 @@ public class Router extends JavaLogging implements RouterEngine
         {
             try
             {
+                BoatDataType boatData = config.getBoatData();
                 Future future = starter.take();
                 if (portsNow.equals(SerialChannel.getAllPorts()))
                 {
@@ -109,7 +111,7 @@ public class Router extends JavaLogging implements RouterEngine
                         endpointMap.remove(endpointType);
                         long elapsed = System.currentTimeMillis() - startTimeMap.getLong(endpointType);
                         long delay = elapsed > 0 ? MAX_RESTART_DELAY / elapsed : MAX_RESTART_DELAY;
-                        POOL.schedule(()->startEndpoint(endpointType), delay, TimeUnit.MILLISECONDS);
+                        POOL.schedule(()->startEndpoint(boatData, endpointType), delay, TimeUnit.MILLISECONDS);
                         config("restart %s after %d millis", endpoint, delay);
                     }
                     else
@@ -137,7 +139,7 @@ public class Router extends JavaLogging implements RouterEngine
         {
             config.changeDevice(scanResult.getSerialType(), scanResult.getPort());
             SerialType serialType = scanResult.getSerialType();
-            startEndpoint(serialType);
+            startEndpoint(config.getBoatData(), serialType);
             config("started resolved port %s", scanResult.getPort());
         }
         catch (IOException ex)
@@ -186,14 +188,14 @@ public class Router extends JavaLogging implements RouterEngine
         {
             if (!(endpointType instanceof SerialType))
             {
-                startEndpoint(endpointType);
+                startEndpoint(config.getBoatData(), endpointType);
             }
         });
     }
 
-    private void startEndpoint(EndpointType endpointType)
+    private void startEndpoint(BoatDataType boatType, EndpointType endpointType)
     {
-        Endpoint endpoint = EndpointFactory.getInstance(endpointType, this);
+        Endpoint endpoint = EndpointFactory.getInstance(boatType, endpointType, this);
         endpointMap.put(endpointType, endpoint);
         Future<?> future = starter.submit(endpoint, null);
         startTimeMap.put(endpointType, System.currentTimeMillis());

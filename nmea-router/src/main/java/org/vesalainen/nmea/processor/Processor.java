@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import org.vesalainen.net.ObjectServer;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
+import org.vesalainen.nmea.jaxb.router.BoatDataType;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
@@ -53,10 +54,12 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
     private ProcessorType processorType;
     private List<Stoppable> processes = new ArrayList<>();
     private ObjectServer dataServer;
+    private final BoatDataType boatType;
 
-    public Processor(ProcessorType processorType, T channel, CachedScheduledThreadPool executor) throws IOException
+    public Processor(BoatDataType boatType, ProcessorType processorType, T channel, CachedScheduledThreadPool executor) throws IOException
     {
         super(channel, executor);
+        this.boatType = boatType;
         this.processorType = processorType;
     }
 
@@ -155,7 +158,7 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                 {
                     info("starting AnchorManager");
                     AnchorManagerType anchorManagerType = (AnchorManagerType) ob;
-                    AnchorManager anchorManager = new AnchorManager(this, channel, anchorManagerType, executor);
+                    AnchorManager anchorManager = new AnchorManager(this, channel, boatType, anchorManagerType, executor);
                     processes.add(anchorManager);
                     addNMEAObserver(anchorManager);
                     anchorManager.start("");

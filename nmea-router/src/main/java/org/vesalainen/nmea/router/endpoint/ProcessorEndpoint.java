@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import static java.util.logging.Level.SEVERE;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.ByteBufferChannel;
+import org.vesalainen.nmea.jaxb.router.BoatDataType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.processor.Processor;
 import org.vesalainen.nmea.router.Router;
@@ -34,10 +35,12 @@ import static org.vesalainen.nmea.router.RouterManager.POOL;
 class ProcessorEndpoint extends Endpoint<ProcessorType,ByteBufferChannel>
 {
     private Processor processor;
+    private final BoatDataType boatType;
 
-    public ProcessorEndpoint(ProcessorType processorType, Router router)
+    public ProcessorEndpoint(BoatDataType boatType, ProcessorType processorType, Router router)
     {
         super(processorType, router);
+        this.boatType = boatType;
     }
 
     @Override
@@ -46,7 +49,7 @@ class ProcessorEndpoint extends Endpoint<ProcessorType,ByteBufferChannel>
         ByteBufferChannel[] peers = ByteBufferChannel.open(4096, true);
         ByteBufferChannel pc1 = peers[0];
         ByteBufferChannel pc2 = peers[1];
-        processor = new Processor(endpointType, pc2, POOL);
+        processor = new Processor(boatType, endpointType, pc2, POOL);
         processor.start();
         pc1.setWriteTimeout(0, TimeUnit.MILLISECONDS);
         return pc1;

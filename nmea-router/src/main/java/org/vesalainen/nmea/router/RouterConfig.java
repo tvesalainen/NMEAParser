@@ -36,6 +36,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.Unmarshaller.Listener;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
+import org.vesalainen.nmea.jaxb.router.BoatDataType;
 import org.vesalainen.nmea.jaxb.router.DatagramType;
 import org.vesalainen.nmea.jaxb.router.EndpointType;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
@@ -100,11 +101,15 @@ public class RouterConfig extends JavaLogging
         return digest;
     }
 
+    public BoatDataType getBoatData()
+    {
+        return nmea.getValue().getBoat();
+    }
     public Stream<EndpointType> getRouterEndpoints()
     {
         return nmea
                 .getValue()
-                .getN2KGatewayOrConsumerEndpointOrLogEndpoint()
+                .getEndPoints().getN2KGatewayOrConsumerEndpointOrLogEndpoint()
                 .stream()
                 .filter(this::checkEnabled);
     }
@@ -122,7 +127,7 @@ public class RouterConfig extends JavaLogging
     }
     public void add(EndpointType endpointType)
     {
-        nmea.getValue().getN2KGatewayOrConsumerEndpointOrLogEndpoint().add(endpointType);
+        nmea.getValue().getEndPoints().getN2KGatewayOrConsumerEndpointOrLogEndpoint().add(endpointType);
     }
     public NmeaType getNmeaType()
     {

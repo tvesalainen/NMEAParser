@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.router.endpoint;
 
+import org.vesalainen.nmea.jaxb.router.BoatDataType;
 import org.vesalainen.nmea.jaxb.router.BroadcastNMEAType;
 import org.vesalainen.nmea.jaxb.router.BroadcastType;
 import org.vesalainen.nmea.jaxb.router.ConsumerEndpointType;
@@ -40,7 +41,7 @@ import org.vesalainen.nmea.router.Router;
  */
 public final class EndpointFactory
 {
-    public static Endpoint getInstance(EndpointType endpointType, Router router)
+    public static Endpoint getInstance(BoatDataType boatType, EndpointType endpointType, Router router)
     {
         if (endpointType instanceof N2KGatewayType)
         {
@@ -60,7 +61,7 @@ public final class EndpointFactory
         }
         if (endpointType instanceof ProcessorType)
         {
-            return new ProcessorEndpoint((ProcessorType) endpointType, router);
+            return new ProcessorEndpoint(boatType, (ProcessorType) endpointType, router);
         }
         if (endpointType instanceof MulticastNMEAType)
         {

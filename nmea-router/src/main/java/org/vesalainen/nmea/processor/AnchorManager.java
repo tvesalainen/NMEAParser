@@ -34,6 +34,7 @@ import java.util.function.IntPredicate;
 import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
+import javax.xml.bind.JAXBElement;
 import org.vesalainen.code.Property;
 import org.vesalainen.io.IO;
 import org.vesalainen.math.Circle;
@@ -47,12 +48,18 @@ import org.vesalainen.math.matrix.DoubleMatrix;
 import org.vesalainen.navi.AnchorWatch;
 import org.vesalainen.navi.AnchorWatch.Watcher;
 import org.vesalainen.navi.AngleRange;
+import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.Chain;
 import org.vesalainen.navi.LocalLongitude;
 import org.vesalainen.navi.Navis;
 import static org.vesalainen.navi.Navis.*;
 import org.vesalainen.navi.SafeSector;
+import org.vesalainen.navi.SimpleBoatPosition;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
+import org.vesalainen.nmea.jaxb.router.BoatDataType;
+import org.vesalainen.nmea.jaxb.router.BoatPositionType;
+import org.vesalainen.nmea.jaxb.router.DepthSounderPositionType;
+import org.vesalainen.nmea.jaxb.router.GpsPositionType;
 import static org.vesalainen.nmea.processor.AbstractChainedState.Action.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.ui.Direction;
@@ -90,6 +97,8 @@ public class AnchorManager extends AbstractProcessorTask
     private final long anchorWeight;
     private final long chainDiameter;
     private final long maxChainLength;
+    private BoatPosition gpsPosition;
+    private BoatPosition depthSounderPosition;
     
     private long timestamp;
     private double chainLength;
@@ -99,25 +108,31 @@ public class AnchorManager extends AbstractProcessorTask
     private NMEAManager nmeaManager = new NMEAManager();
     private final double maxDepth;
     private final DepthFilter depthFilter;
+    private final double boatLength;
     
-    public AnchorManager(Processor processor, GatheringByteChannel channel, AnchorManagerType type, CachedScheduledThreadPool executor) throws IOException
+    public AnchorManager(Processor processor, GatheringByteChannel channel, BoatDataType boat, AnchorManagerType type, CachedScheduledThreadPool executor) throws IOException
     {
         super(MethodHandles.lookup(), 20, MINUTES);
         this.processor = processor;
         this.channel = channel;
-        this.anchorWeight = type.getAnchorWeight();
-        this.chainDiameter = type.getChainDiameter();
-        this.maxChainLength = type.getMaxChainLength();
+        this.anchorWeight = boat.getAnchorWeight().longValue();
+        this.chainDiameter = boat.getChainDiameter().longValue();
+        this.maxChainLength = boat.getMaxChainLength().longValue();
+        this.boatLength = boat.getLength().doubleValue();
         this.chain = new Chain(chainDiameter, maxChainLength);
-        if (type.getMaxFairleadTension() != null)
-        {
-            maxFairleadTension = type.getMaxFairleadTension().doubleValue();
-        }
-        else
-        {
-            maxFairleadTension = DEFAULT_MAX_FAIRLEAD_TENSION;
-        }
+        this.maxFairleadTension = 0.0089*Math.pow(boatLength, 1.66)*60*60/10;  // http://alain.fraysse.free.fr/sail/rode/forces/forces.htm
         this.maxDepth = chain.maximalDepth(maxFairleadTension, maxChainLength);
+        for (BoatPositionType pos : boat.getGpsPositionOrDepthSounderPosition())
+        {
+            if (pos instanceof GpsPositionType)
+            {
+                gpsPosition = new SimpleBoatPosition(pos.getToSb().doubleValue(), pos.getToPort().doubleValue(), pos.getToBow().doubleValue(), pos.getToStern().doubleValue());
+            }
+            if (pos instanceof DepthSounderPositionType)
+            {
+                depthSounderPosition = new SimpleBoatPosition(pos.getToSb().doubleValue(), pos.getToPort().doubleValue(), pos.getToBow().doubleValue(), pos.getToStern().doubleValue());
+            }
+        }
         this.depthFilter = new DepthFilter();
     }
 

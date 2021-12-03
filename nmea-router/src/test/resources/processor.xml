@@ -1,51 +1,57 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110" allDevices="COM4 COM5" dontScan="" nativeDebug="false">
-    <tcp-endpoint port="12345" aisFastBoot="true" name="TCP" enable="true">
-        <route prefix="$RA" target="Prc"/>
-        <route prefix="$EC" target="Prc"/>
-    </tcp-endpoint>
-    <n2k-gateway bus="can1" name="N2K" enable="true">
-        <route prefix="!AIVDM" target="TCP Prc Cmp"/>
-        <route prefix="!AIVDO" target="TCP"/>
-        <route prefix="$HCHDT" target="TCP Prc"/>
-        <route prefix="$HCHDG" target="TCP"/>
-        <route prefix="$SDDPT" target="TCP"/>
-        <route prefix="$HCRMC" target="TCP Prc"/>
-        <route prefix="$SDMTW" target="TCP"/>
-        <route prefix="$SDVHW" target="TCP Prc"/>
-        <route prefix="$WIMWV" target="TCP Prc"/>
-        <route prefix="$??XDR" target="TCP Prc"/>
-    </n2k-gateway>
-    <processor dataAccessPort="10111" name="Prc" enable="true">
-        <route prefix="$??TLL" target="TCP"/>
-        <route prefix="$??MWV" target=""/>
-        <true-wind-source overGround="true"/>
-        <tracker directory="c:\\temp"/>
-        <compressed-log directory="c:\\temp" properties="latitude longitude"/>
-        <ais-log directory="c:\\temp" maxLogSize="4096"/>
-        <compass-corrector configFile="c:\\temp\\deviation.txt"/>
-        <sntp-server rootDelay="1600" server="pi3media"/>
-        <anchor-manager directory="c:\\temp" anchorWeight="20" chainDiameter="10" maxChainLength="80"/>
-    </processor>
-    <multicast-nmea-0183 address="224.0.0.3" name="Net" enable="true">
-        <route prefix="$GPRMC" target="TCP"/>
-        <route prefix="$IIMWV" target=""/>
-        <route prefix="!AIVDM" target="Prc Cmp"/>
-        <route prefix="$YXXDR" target=""/>
-        <route prefix="$GPGLL" target=""/>
-        <route prefix="$GPRMB" target=""/>
-        <route prefix="$GPGGA" target=""/>
-        <route prefix="$GPZDA" target=""/>
-        <route prefix="$GPVTG" target=""/>
-        <route prefix="$GPDTM" target=""/>
-        <route prefix="$HC" target=""/>
-        <route prefix="$TIROT" target=""/>
-        <route prefix="$AG" target=""/>
-        <route prefix="$VH" target=""/>
-        <route prefix="$YC" target=""/>
-        <route prefix="$VW" target=""/>
-        <route prefix="$SD" target=""/>
-    </multicast-nmea-0183>
-    <consumer-endpoint classname="org.vesalainen.nmea.router.endpoint.n2kgw.AisComparator" name="Cmp" enable="true"/>
-    <log-endpoint logName="org.vesalainen.router.log" logLevel="INFO" name="Log" enable="true"/>
+    <boat length="11.9" beam="3.55" draft="1.7" anchorWeight="20" chainDiameter="10" maxChainLength="80">
+        <gps-position toBow="12" toStern="0"/>
+        <depthSounder-position toBow="5" toStern="7"/>
+    </boat>
+    <endPoints>
+        <tcp-endpoint port="12345" aisFastBoot="true" name="TCP" enable="true">
+            <route prefix="$RA" target="Prc"/>
+            <route prefix="$EC" target="Prc"/>
+        </tcp-endpoint>
+        <n2k-gateway bus="can1" name="N2K" enable="true">
+            <route prefix="!AIVDM" target="TCP Prc Cmp"/>
+            <route prefix="!AIVDO" target="TCP"/>
+            <route prefix="$HCHDT" target="TCP Prc"/>
+            <route prefix="$HCHDG" target="TCP"/>
+            <route prefix="$SDDPT" target="TCP"/>
+            <route prefix="$HCRMC" target="TCP Prc"/>
+            <route prefix="$SDMTW" target="TCP"/>
+            <route prefix="$SDVHW" target="TCP Prc"/>
+            <route prefix="$WIMWV" target="TCP Prc"/>
+            <route prefix="$??XDR" target="TCP Prc"/>
+        </n2k-gateway>
+        <processor dataAccessPort="10111" name="Prc" enable="true">
+            <route prefix="$??TLL" target="TCP"/>
+            <route prefix="$??MWV" target=""/>
+            <true-wind-source overGround="true"/>
+            <tracker directory="c:\\temp"/>
+            <compressed-log directory="c:\\temp" properties="latitude longitude"/>
+            <ais-log directory="c:\\temp" maxLogSize="4096"/>
+            <compass-corrector configFile="c:\\temp\\deviation.txt"/>
+            <sntp-server rootDelay="1600" server="pi3media"/>
+            <anchor-manager directory="c:\\temp"/>
+        </processor>
+        <multicast-nmea-0183 address="224.0.0.3" name="Net" enable="true">
+            <route prefix="$GPRMC" target="TCP"/>
+            <route prefix="$IIMWV" target=""/>
+            <route prefix="!AIVDM" target="Prc Cmp"/>
+            <route prefix="$YXXDR" target=""/>
+            <route prefix="$GPGLL" target=""/>
+            <route prefix="$GPRMB" target=""/>
+            <route prefix="$GPGGA" target=""/>
+            <route prefix="$GPZDA" target=""/>
+            <route prefix="$GPVTG" target=""/>
+            <route prefix="$GPDTM" target=""/>
+            <route prefix="$HC" target=""/>
+            <route prefix="$TIROT" target=""/>
+            <route prefix="$AG" target=""/>
+            <route prefix="$VH" target=""/>
+            <route prefix="$YC" target=""/>
+            <route prefix="$VW" target=""/>
+            <route prefix="$SD" target=""/>
+        </multicast-nmea-0183>
+        <consumer-endpoint classname="org.vesalainen.nmea.router.endpoint.n2kgw.AisComparator" name="Cmp" enable="true"/>
+        <log-endpoint logName="org.vesalainen.router.log" logLevel="INFO" name="Log" enable="true"/>
+    </endPoints>
 </nmea>

@@ -17,6 +17,7 @@
 package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
@@ -29,6 +30,10 @@ import org.junit.Test;
 import org.vesalainen.io.CompressedInput;
 import org.vesalainen.nio.channels.NullChannel;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
+import org.vesalainen.nmea.jaxb.router.BoatDataType;
+import org.vesalainen.nmea.jaxb.router.BoatPositionType;
+import org.vesalainen.nmea.jaxb.router.DepthSounderPositionType;
+import org.vesalainen.nmea.jaxb.router.GpsPositionType;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -45,12 +50,31 @@ public class AnchorManagerT
     @Test
     public void test() throws IOException
     {
-        Processor proc = new Processor(null, null, null);
+        BoatDataType boat = new BoatDataType();
+        boat.setLength(BigDecimal.valueOf(11.9));
+        boat.setBeam(BigDecimal.valueOf(3.55));
+        boat.setDraft(BigDecimal.valueOf(1.7));
+        boat.setAnchorWeight(BigDecimal.valueOf(20));
+        boat.setChainDiameter(BigDecimal.valueOf(10));
+        boat.setMaxChainLength(BigDecimal.valueOf(80));
+        
+        GpsPositionType gps = new GpsPositionType();
+        gps.setToSb(BigDecimal.valueOf(1));
+        gps.setToPort(BigDecimal.valueOf(3));
+        gps.setToBow(BigDecimal.valueOf(12));
+        gps.setToStern(BigDecimal.valueOf(0));
+        boat.getGpsPositionOrDepthSounderPosition().add(gps);
+        
+        DepthSounderPositionType dpt = new DepthSounderPositionType();
+        dpt.setToSb(BigDecimal.valueOf(2));
+        dpt.setToPort(BigDecimal.valueOf(2));
+        dpt.setToBow(BigDecimal.valueOf(7));
+        dpt.setToStern(BigDecimal.valueOf(5));
+        boat.getGpsPositionOrDepthSounderPosition().add(dpt);
+
         AnchorManagerType type = new AnchorManagerType();
-        type.setAnchorWeight(20);
-        type.setChainDiameter(10);
-        type.setMaxChainLength(80);
-        AnchorManager man = new AnchorManager(proc, new NullChannel(), type, null);
+        Processor proc = new Processor(boat, null, null, null);
+        AnchorManager man = new AnchorManager(proc, new NullChannel(), boat, type, null);
         Clk clock = new Clk();
         JavaLogging.setClockSupplier(()->clock);
         JavaLogging.setConsoleHandler("org.vesalainen", Level.ALL);
