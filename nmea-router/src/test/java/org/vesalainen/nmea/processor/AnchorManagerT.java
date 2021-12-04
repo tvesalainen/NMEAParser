@@ -51,8 +51,8 @@ public class AnchorManagerT
     public void test() throws IOException
     {
         BoatDataType boat = new BoatDataType();
-        boat.setLength(BigDecimal.valueOf(11.9));
-        boat.setBeam(BigDecimal.valueOf(3.55));
+        boat.setLength(BigDecimal.valueOf(12));
+        boat.setBeam(BigDecimal.valueOf(4));
         boat.setDraft(BigDecimal.valueOf(1.7));
         boat.setAnchorWeight(BigDecimal.valueOf(20));
         boat.setChainDiameter(BigDecimal.valueOf(10));

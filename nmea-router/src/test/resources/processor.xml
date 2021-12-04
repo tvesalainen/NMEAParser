@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110" allDevices="COM4 COM5" dontScan="" nativeDebug="false">
-    <boat length="11.9" beam="3.55" draft="1.7" anchorWeight="20" chainDiameter="10" maxChainLength="80">
-        <gps-position toBow="12" toStern="0"/>
-        <depthSounder-position toBow="5" toStern="7"/>
+    <boat length="12" beam="4" draft="1.7" anchorWeight="20" chainDiameter="10" maxChainLength="80">
+        <gps-position toSb="1" toPort="3" toBow="12" toStern="0"/>
+        <depthSounder-position toSb="2" toPort="2" toBow="5" toStern="7"/>
     </boat>
     <endPoints>
         <tcp-endpoint port="12345" aisFastBoot="true" name="TCP" enable="true">
