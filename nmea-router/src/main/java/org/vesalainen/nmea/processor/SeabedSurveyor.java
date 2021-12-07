@@ -16,10 +16,15 @@
  */
 package org.vesalainen.nmea.processor;
 
-import java.util.concurrent.TimeUnit;
+import static java.lang.Math.*;
+import java.time.Clock;
 import java.util.function.DoubleBinaryOperator;
+import java.util.function.LongToDoubleFunction;
+import org.vesalainen.math.CosineFitter;
+import org.vesalainen.math.MathFunction;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.math.matrix.DoubleMatrix;
+import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.CoordinateMap;
 import org.vesalainen.navi.Tide;
@@ -30,13 +35,18 @@ import org.vesalainen.navi.Tide;
  */
 public class SeabedSurveyor
 {
+    private static final LongToDoubleFunction TIME_TO_RAD = (t)->PI*2*t/Tide.PERIOD;
     private final CoordinateMap<Square> map;
     private final DoubleBinaryOperator lonPos;
     private final DoubleBinaryOperator latPos;
     private final DoubleMatrix data;
+    private final CosineFitter cosineFitter = new CosineFitter();
+    private final Clock clock;
+    private LongToDoubleFunction tideFunc;
 
-    public SeabedSurveyor(double latitude, double boxSize, UnitType unit, BoatPosition gpsPosition, BoatPosition depthSounderPosition)
+    public SeabedSurveyor(Clock clock, double latitude, double boxSize, UnitType unit, BoatPosition gpsPosition, BoatPosition depthSounderPosition)
     {
+        this.clock = clock;
         this.map = new CoordinateMap(latitude, boxSize, unit, Square::new);
         this.lonPos = gpsPosition.longitudeAtOperator(depthSounderPosition, latitude);
         this.latPos = gpsPosition.latitudeAtOperator(depthSounderPosition);
@@ -44,34 +54,59 @@ public class SeabedSurveyor
         data.reshape(0, 2);
     }
     
-    public void update(long time, double longitude, double latitude, double depth, double heading)
+    public void update(double longitude, double latitude, double depth, double heading)
     {
         Square square = map.getOrCreate(lonPos.applyAsDouble(longitude, heading), latPos.applyAsDouble(latitude, heading));
-        square.setAndDerivate(time, depth);
+        square.setAndDerivate(depth);
     }
-    private static final long MIN_DELTA = Tide.PERIOD/360;
 
-    double getDepthAt(double external, double get)
+    public LongToDoubleFunction getDepthAt(double longitude, double latitude)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Square square = map.get(longitude, latitude);
+        if (square != null)
+        {
+            long sqTime = square.getTime();
+            double sqTide = tide(sqTime);
+            double depth = square.getDepth();
+            double stdDepth = depth-sqTide;
+            if (tideFunc != null)
+            {
+                return (t)->stdDepth - tideFunc.applyAsDouble(t);
+            }
+            else
+            {
+                return (t)->stdDepth;
+            }
+        }
+        return null;
+    }
+    private double tide(long time)
+    {
+        if (tideFunc != null)
+        {
+            return tideFunc.applyAsDouble(time);
+        }
+        return 0;
     }
     private class Square
     {
         private long time;
         private double depth;
+        private DoubleTimeoutSlidingSlope sloper = new DoubleTimeoutSlidingSlope(clock::millis, 1000, Tide.PERIOD/18, TIME_TO_RAD);
 
-        public void setAndDerivate(long time, double depth)
+        public void setAndDerivate(double depth)
         {
-            long deltaTime = time - this.time;
-            double deltaDepth = depth - this.depth;
-            if (deltaTime < MIN_DELTA && deltaDepth != 0)
+            sloper.accept(depth);
+            if (sloper.fullness() > 99)
             {
-                double toDegrees = Tide.toDegrees(deltaTime, TimeUnit.MILLISECONDS);
-                double toRadians = Tide.toRadians(deltaTime, TimeUnit.MILLISECONDS);
-                double derivate = deltaDepth/toRadians;
-                data.addRow(this.time+deltaTime/2, derivate);
+                double slope = sloper.slope();
+                cosineFitter.addPoints(TIME_TO_RAD.applyAsDouble(sloper.meanTime()), slope);
+                cosineFitter.fit();
+                MathFunction ader = cosineFitter.getAntiderivative();
+                tideFunc = (t)->ader.applyAsDouble(TIME_TO_RAD.applyAsDouble((long) t));
+                sloper.clear();
             }
-            this.time = time;
+            this.time = clock.millis();
             this.depth = depth;
         }
         public long getTime()

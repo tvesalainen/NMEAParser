@@ -31,6 +31,7 @@ import java.util.Collection;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntPredicate;
+import java.util.function.LongToDoubleFunction;
 import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
@@ -123,7 +124,7 @@ public class AnchorManager extends AbstractProcessorTask
         this.boatLength = Primitives.getDouble(boat.getLength());
         this.boatBeam = Primitives.getDouble(boat.getBeam());
         this.chain = new Chain(chainDiameter, maxChainLength);
-        this.maxFairleadTension = 0.0089*Math.pow(boatLength, 1.66)*60*60/9.8;  // http://alain.fraysse.free.fr/sail/rode/forces/forces.htm
+        this.maxFairleadTension = 0.0089*Math.pow(boatLength, 1.66)*60*60;  // http://alain.fraysse.free.fr/sail/rode/forces/forces.htm
         this.maxDepth = chain.maximalDepth(maxFairleadTension, maxChainLength);
         for (BoatPositionType pos : boat.getGpsPositionOrDepthSounderPosition())
         {
@@ -330,7 +331,7 @@ public class AnchorManager extends AbstractProcessorTask
         {
             this.bowLatitude = gpsPosition.latitudeAtOperator(bowPosition);
             this.bowLongitude = gpsPosition.longitudeAtOperator(bowPosition, latitude);
-            this.seabedSurveyor = new SeabedSurveyor(latitude, 3, METER, gpsPosition, depthSounderPosition);
+            this.seabedSurveyor = new SeabedSurveyor(clock, latitude, 3, METER, gpsPosition, depthSounderPosition);
         }
 
         @Override
@@ -342,7 +343,7 @@ public class AnchorManager extends AbstractProcessorTask
             }
             if (updatedProperties.contains("latitude"))
             {
-                seabedSurveyor.update(clock.millis(), longitude, latitude, depthOfWater, trueHeading);
+                seabedSurveyor.update(longitude, latitude, depthOfWater, trueHeading);
             }
             return NEUTRAL;
         }
@@ -378,8 +379,8 @@ public class AnchorManager extends AbstractProcessorTask
         {
             if (data == null)
             {
-                data = new DoubleMatrix(POINTS_SIZE, 6);
-                data.reshape(0, 6);
+                data = new DoubleMatrix(POINTS_SIZE, 7);
+                data.reshape(0, 7);
                 localLongitude = LocalLongitude.getInstance(longitude, latitude);
             }
             double lat = bowLatitude.applyAsDouble(latitude, trueHeading);
@@ -392,7 +393,8 @@ public class AnchorManager extends AbstractProcessorTask
                         localLongitude.getInternal(lon),
                         relativeWindSpeed,
                         Navis.degreesToCartesian(trueHeading),
-                        depthOfWater
+                        depthOfWater,
+                        clock.millis()
                 );
             }
             else
@@ -403,7 +405,8 @@ public class AnchorManager extends AbstractProcessorTask
                         localLongitude.getInternal(lon),
                         relativeWindSpeed,
                         Navis.degreesToCartesian(trueHeading),
-                        depthOfWater
+                        depthOfWater,
+                        clock.millis()
                 );
             }
             count++;
@@ -496,6 +499,7 @@ public class AnchorManager extends AbstractProcessorTask
         private final SeabedSurveyor seabedSurveyor;
         private int goodWindRows = 1;
         private final DoubleMatrix heading;
+        private final DoubleMatrix time;
 
         public AnchorEstimator(LocalLongitude localLongitude, SeabedSurveyor seabedSurveyor, DoubleMatrix data, DoubleMatrix params)
         {
@@ -507,6 +511,7 @@ public class AnchorManager extends AbstractProcessorTask
             this.coordinates = data.getSub(0, 0, -1, 2);
             this.wind = data.getSub(0, 3, -1, 1);
             this.heading = data.getSub(0, 4, -1, 1);
+            this.time = data.getSub(0, 5, -1, 1);
             this.centerParam = params.getSub(0, 0, 2, 1);
             this.chainParam = params.getSub(3, 0, 1, 1);
             this.coefParam = params.getSub(2, 0, 1, 1);
@@ -568,12 +573,14 @@ public class AnchorManager extends AbstractProcessorTask
         }
         public void computeScopeCoef(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
         {
-            double depth = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
+            LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             double co = param.get(0, 0);
             double s = chainParam.get(0, 0);
             int len = x.rows();
             for (int row=0;row<len;row++)
             {
+                long t = (long) time.get(row, 0);
+                double depth = depthFunc.applyAsDouble(t);
                 double wi = x.get(row, 0);
                 double f = co*wi*wi;
                 double scope = chain.horizontalScopeForChain(f, depth, s);
@@ -582,12 +589,14 @@ public class AnchorManager extends AbstractProcessorTask
         }
         public void computeScopeLength(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
         {
-            double depth = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
+            LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             double co = coefParam.get(0, 0);
             double s = param.get(0, 0);
             int len = x.rows();
             for (int row=0;row<len;row++)
             {
+                long t = (long) time.get(row, 0);
+                double depth = depthFunc.applyAsDouble(t);
                 double wi = x.get(row, 0);
                 double f = co*wi*wi;
                 double scope = chain.horizontalScopeForChain(f, depth, s);
@@ -598,7 +607,7 @@ public class AnchorManager extends AbstractProcessorTask
         private void plot()
         {
             info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
-            double depth = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
+            LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             ZonedDateTime zdt = ZonedDateTime.now(clock);
             Plot p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
             drawPoints(p);
@@ -606,7 +615,7 @@ public class AnchorManager extends AbstractProcessorTask
             p.drawLines(centers);
             p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
-            p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), depth, circleSolver.getFinalCost()));
+            p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), 0, circleSolver.getFinalCost()));
             try
             {
                 p.plot();
