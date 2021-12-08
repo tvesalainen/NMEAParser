@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.processor;
 
+import java.awt.Color;
 import static java.lang.Math.*;
 import java.time.Clock;
 import java.util.function.DoubleBinaryOperator;
@@ -23,17 +24,20 @@ import java.util.function.LongToDoubleFunction;
 import org.vesalainen.math.CosineFitter;
 import org.vesalainen.math.MathFunction;
 import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.matrix.DoubleMatrix;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.CoordinateMap;
 import org.vesalainen.navi.Tide;
+import org.vesalainen.ui.ChartPlotter;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class SeabedSurveyor
+public class SeabedSurveyor extends JavaLogging
 {
     private static final LongToDoubleFunction TIME_TO_RAD = (t)->PI*2*t/Tide.PERIOD;
     private final CoordinateMap<Square> map;
@@ -43,10 +47,13 @@ public class SeabedSurveyor
     private final CosineFitter cosineFitter = new CosineFitter();
     private final Clock clock;
     private LongToDoubleFunction tideFunc;
+    private final double boxSize;
 
     public SeabedSurveyor(Clock clock, double latitude, double boxSize, UnitType unit, BoatPosition gpsPosition, BoatPosition depthSounderPosition)
     {
+        super(SeabedSurveyor.class);
         this.clock = clock;
+        this.boxSize = unit.convertTo(boxSize, NAUTICAL_DEGREE);
         this.map = new CoordinateMap(latitude, boxSize, unit, Square::new);
         this.lonPos = gpsPosition.longitudeAtOperator(depthSounderPosition, latitude);
         this.latPos = gpsPosition.latitudeAtOperator(depthSounderPosition);
@@ -62,13 +69,10 @@ public class SeabedSurveyor
 
     public LongToDoubleFunction getDepthAt(double longitude, double latitude)
     {
-        Square square = map.get(longitude, latitude);
+        Square square = map.nearest(longitude, latitude);
         if (square != null)
         {
-            long sqTime = square.getTime();
-            double sqTide = tide(sqTime);
-            double depth = square.getDepth();
-            double stdDepth = depth-sqTide;
+            double stdDepth = square.getStandardDepth();
             if (tideFunc != null)
             {
                 return (t)->stdDepth - tideFunc.applyAsDouble(t);
@@ -87,6 +91,16 @@ public class SeabedSurveyor
             return tideFunc.applyAsDouble(time);
         }
         return 0;
+    }
+    public void draw(ChartPlotter p)
+    {
+        info("tide a=%f b=%f", cosineFitter.getParamA(), cosineFitter.getParamB());
+        map.forEachCoordinate((double lon, double lat, Square square)->
+        {
+            double dpt = square.getStandardDepth();
+            p.setColor(Color.getHSBColor((float) (dpt/25), 1F, 1F));
+            p.drawRectangle(lon, lat, boxSize, boxSize, false);
+        });
     }
     private class Square
     {
@@ -119,5 +133,9 @@ public class SeabedSurveyor
             return depth;
         }
 
+        public double getStandardDepth()
+        {
+            return depth-tide(time);
+        }
     }
 }

@@ -511,7 +511,7 @@ public class AnchorManager extends AbstractProcessorTask
             this.coordinates = data.getSub(0, 0, -1, 2);
             this.wind = data.getSub(0, 3, -1, 1);
             this.heading = data.getSub(0, 4, -1, 1);
-            this.time = data.getSub(0, 5, -1, 1);
+            this.time = data.getSub(0, 6, -1, 1);
             this.centerParam = params.getSub(0, 0, 2, 1);
             this.chainParam = params.getSub(3, 0, 1, 1);
             this.coefParam = params.getSub(2, 0, 1, 1);
@@ -610,12 +610,13 @@ public class AnchorManager extends AbstractProcessorTask
             LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             ZonedDateTime zdt = ZonedDateTime.now(clock);
             Plot p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
+            seabedSurveyor.draw(p);
             drawPoints(p);
             p.setColor(BLACK);
             p.drawLines(centers);
             p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
-            p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), 0, circleSolver.getFinalCost()));
+            p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), 0.0, circleSolver.getFinalCost()));
             try
             {
                 p.plot();
