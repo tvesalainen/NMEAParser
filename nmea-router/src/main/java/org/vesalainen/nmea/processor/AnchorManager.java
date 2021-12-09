@@ -63,6 +63,7 @@ import org.vesalainen.nmea.jaxb.router.DepthSounderPositionType;
 import org.vesalainen.nmea.jaxb.router.GpsPositionType;
 import static org.vesalainen.nmea.processor.AbstractChainedState.Action.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
+import org.vesalainen.ui.AbstractPlotter;
 import org.vesalainen.ui.Direction;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -326,17 +327,24 @@ public class AnchorManager extends AbstractProcessorTask
         private final DoubleBinaryOperator bowLatitude;
         private final DoubleBinaryOperator bowLongitude;
         private SeabedSurveyor seabedSurveyor;
+        private final Plot p;
+        private final AbstractPlotter.Polyline polyline;
 
         public WindManager()
         {
             this.bowLatitude = gpsPosition.latitudeAtOperator(bowPosition);
             this.bowLongitude = gpsPosition.longitudeAtOperator(bowPosition, latitude);
             this.seabedSurveyor = new SeabedSurveyor(clock, latitude, 3, METER, gpsPosition, depthSounderPosition);
+            ZonedDateTime zdt = ZonedDateTime.now(clock);
+            this.p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
+            this.polyline = p.polyline(Color.LIGHT_GRAY);
+            p.drawPolyline(polyline);
         }
 
         @Override
         protected Action test(Collection<String> updatedProperties)
         {
+            polyline.lineTo(longitude, latitude);
             if (updatedProperties.contains("relativeWindAngle"))
             {
                 update();
@@ -392,7 +400,7 @@ public class AnchorManager extends AbstractProcessorTask
                         lat,
                         localLongitude.getInternal(lon),
                         relativeWindSpeed,
-                        Navis.degreesToCartesian(trueHeading),
+                        trueHeading,
                         depthOfWater,
                         clock.millis()
                 );
@@ -404,7 +412,7 @@ public class AnchorManager extends AbstractProcessorTask
                         lat,
                         localLongitude.getInternal(lon),
                         relativeWindSpeed,
-                        Navis.degreesToCartesian(trueHeading),
+                        trueHeading,
                         depthOfWater,
                         clock.millis()
                 );
@@ -469,7 +477,7 @@ public class AnchorManager extends AbstractProcessorTask
             info("anchoring stopped because %s", reason);
             if (estimator != null)
             {
-                estimator.plot();
+                estimator.plot(p);
             }
         }
         
@@ -515,7 +523,39 @@ public class AnchorManager extends AbstractProcessorTask
             this.centerParam = params.getSub(0, 0, 2, 1);
             this.chainParam = params.getSub(3, 0, 1, 1);
             this.coefParam = params.getSub(2, 0, 1, 1);
+            computeInitialCenter();
             centers.addRow(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
+        }
+        private void computeInitialCenter()
+        {
+            double meanDepth = seabedSurveyor.getMeanDepth();
+            double co = coefParam.get(0, 0);
+            double s = chainParam.get(0, 0);
+            int len = coordinates.rows();
+            double latSum = 0;
+            double sin = 0;
+            double cos = 0;
+            for (int row=0;row<len;row++)
+            {
+                double px = coordinates.get(row, 0);
+                double py = coordinates.get(row, 1);
+                double wi = wind.get(row, 0);
+                double hdg = heading.get(row, 0);
+                double f = co*wi*wi;
+                double scope = chain.horizontalScopeForChain(f, meanDepth, s);
+                double nm = METER.convertTo(scope, NAUTICAL_MILE);
+                double dLat = Navis.deltaLatitude(nm, hdg);
+                double dLon = Navis.deltaLongitude(py, nm, hdg);
+                latSum += py + dLat;
+                double rad = Math.toRadians(px + dLon);
+                sin += Math.sin(rad);
+                cos += Math.cos(rad);
+            }
+            double atan2 = Math.atan2(sin, cos);
+            double lon = Navis.normalizeToHalfAngle(Math.toDegrees(atan2));
+            double lat = latSum/len;
+            centerParam.set(0, 0, localLongitude.getInternal(lon));
+            centerParam.set(1, 0, lat);
         }
         private void update()
         {
@@ -558,7 +598,7 @@ public class AnchorManager extends AbstractProcessorTask
             }
         }
 
-        public void computeRadius(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        private void computeRadius(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
         {
             double xx = param.get(0, 0);
             double yy = param.get(1, 0);
@@ -571,7 +611,7 @@ public class AnchorManager extends AbstractProcessorTask
                 y.set(row, 0, di);
             }
         }
-        public void computeScopeCoef(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        private void computeScopeCoef(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
         {
             LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             double co = param.get(0, 0);
@@ -587,7 +627,7 @@ public class AnchorManager extends AbstractProcessorTask
                 y.set(row, 0, scope);
             }
         }
-        public void computeScopeLength(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        private void computeScopeLength(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
         {
             LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             double co = coefParam.get(0, 0);
@@ -604,19 +644,17 @@ public class AnchorManager extends AbstractProcessorTask
             }
         }
 
-        private void plot()
+        private void plot(Plot p)
         {
             info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
-            LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
-            ZonedDateTime zdt = ZonedDateTime.now(clock);
-            Plot p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
+            double meanDepth = seabedSurveyor.getMeanDepth();
             seabedSurveyor.draw(p);
             drawPoints(p);
             p.setColor(BLACK);
             p.drawLines(centers);
             p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
-            p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), 0.0, circleSolver.getFinalCost()));
+            p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), meanDepth, circleSolver.getFinalCost()));
             try
             {
                 p.plot();
@@ -629,7 +667,6 @@ public class AnchorManager extends AbstractProcessorTask
 
         private void drawPoints(Plot p)
         {
-            double r = METER.convertTo(horizontalScope, NAUTICAL_DEGREE);
             int rows = coordinates.rows();
             for (int ii=0;ii<rows;ii++)
             {

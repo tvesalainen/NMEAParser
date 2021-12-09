@@ -48,6 +48,8 @@ public class SeabedSurveyor extends JavaLogging
     private final Clock clock;
     private LongToDoubleFunction tideFunc;
     private final double boxSize;
+    private double depthSum;
+    private long depthCount;
 
     public SeabedSurveyor(Clock clock, double latitude, double boxSize, UnitType unit, BoatPosition gpsPosition, BoatPosition depthSounderPosition)
     {
@@ -65,8 +67,14 @@ public class SeabedSurveyor extends JavaLogging
     {
         Square square = map.getOrCreate(lonPos.applyAsDouble(longitude, heading), latPos.applyAsDouble(latitude, heading));
         square.setAndDerivate(depth);
+        depthSum += depth;
+        depthCount++;
     }
 
+    public double getMeanDepth()
+    {
+        return depthSum/depthCount;
+    }
     public LongToDoubleFunction getDepthAt(double longitude, double latitude)
     {
         Square square = map.nearest(longitude, latitude);
