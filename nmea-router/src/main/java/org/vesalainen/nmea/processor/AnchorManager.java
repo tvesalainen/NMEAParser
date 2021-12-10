@@ -40,10 +40,7 @@ import org.vesalainen.io.IO;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.math.Circle;
 import org.vesalainen.math.LevenbergMarquardt;
-import org.vesalainen.math.Point;
 import org.vesalainen.math.Polygon;
-import org.vesalainen.math.SimpleLine;
-import org.vesalainen.math.SimplePoint;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.matrix.DoubleMatrix;
 import org.vesalainen.navi.AnchorWatch;
@@ -52,8 +49,8 @@ import org.vesalainen.navi.AngleRange;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.Chain;
 import org.vesalainen.navi.LocalLongitude;
+import org.vesalainen.navi.LocationCenter;
 import org.vesalainen.navi.Navis;
-import static org.vesalainen.navi.Navis.*;
 import org.vesalainen.navi.SafeSector;
 import org.vesalainen.navi.SimpleBoatPosition;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
@@ -113,6 +110,7 @@ public class AnchorManager extends AbstractProcessorTask
     private final DepthFilter depthFilter;
     private final double boatLength;
     private final double boatBeam;
+    private final double coef;
     
     public AnchorManager(Processor processor, GatheringByteChannel channel, BoatDataType boat, AnchorManagerType type, CachedScheduledThreadPool executor) throws IOException
     {
@@ -125,7 +123,8 @@ public class AnchorManager extends AbstractProcessorTask
         this.boatLength = Primitives.getDouble(boat.getLength());
         this.boatBeam = Primitives.getDouble(boat.getBeam());
         this.chain = new Chain(chainDiameter, maxChainLength);
-        this.maxFairleadTension = 0.0089*Math.pow(boatLength, 1.66)*60*60;  // http://alain.fraysse.free.fr/sail/rode/forces/forces.htm
+        this.coef = 0.0089*Math.pow(boatLength, 1.66);
+        this.maxFairleadTension = coef*60*60;  // http://alain.fraysse.free.fr/sail/rode/forces/forces.htm
         this.maxDepth = chain.maximalDepth(maxFairleadTension, maxChainLength);
         for (BoatPositionType pos : boat.getGpsPositionOrDepthSounderPosition())
         {
@@ -320,8 +319,9 @@ public class AnchorManager extends AbstractProcessorTask
         private float previous = 180;
         private float hdg;
         private AngleRange range = new AngleRange();
-        private DoubleMatrix data;
-        private LocalLongitude localLongitude;
+        private DoubleMatrix data = new DoubleMatrix(0, 7);
+        private DoubleMatrix params = new DoubleMatrix(4, 1);
+        private LocalLongitude localLongitude = LocalLongitude.getInstance(longitude, latitude);
         private int count;
         private AnchorEstimator estimator;
         private final DoubleBinaryOperator bowLatitude;
@@ -329,6 +329,9 @@ public class AnchorManager extends AbstractProcessorTask
         private SeabedSurveyor seabedSurveyor;
         private final Plot p;
         private final AbstractPlotter.Polyline polyline;
+        private final LocationCenter center = new LocationCenter();
+        private double bowLat;
+        private double bowLon;
 
         public WindManager()
         {
@@ -339,6 +342,7 @@ public class AnchorManager extends AbstractProcessorTask
             this.p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
             this.polyline = p.polyline(Color.LIGHT_GRAY);
             p.drawPolyline(polyline);
+            params.set(2, 0, coef);
         }
 
         @Override
@@ -357,28 +361,26 @@ public class AnchorManager extends AbstractProcessorTask
         }
         private void update()
         {
+            bowLat = bowLatitude.applyAsDouble(latitude, trueHeading);
+            bowLon = bowLongitude.applyAsDouble(longitude, trueHeading);
             if (
                     (relativeWindAngle < 30 && previous > 330 ||
                     relativeWindAngle > 330 && previous < 30) &&
                     relativeWindSpeed > MIN_WIND)
             {
-                boolean newHdg = range.add(trueHeading);
-                if (abs(angleDiff(trueHeading, hdg)) > MIN_WIND_DIFF || newHdg)
+                if (estimator == null)
                 {
-                    add();
-                    if (range.getRange() > MIN_RANGE)
-                    {
-                        if (estimator == null)
-                        {
-                            estimator = tryInstance();
-                        }
-                        if (estimator != null)
-                        {
-                            estimator.update();
-                        }
-                    }
-                    hdg = trueHeading;
+                    estimator = new AnchorEstimator(localLongitude, seabedSurveyor, data, params);
                 }
+                add();
+                params.set(0, 0, localLongitude.getInternal(center.longitude()));
+                params.set(1, 0, center.latitude());
+                params.set(3, 0, chain.chainLength(maxFairleadTension, depthOfWater));
+                estimator.update();
+            }
+            else
+            {
+                addUpwindCenter(bowLon, bowLat, relativeWindSpeed, trueHeading, depthOfWater, 0.06);
             }
             previous = relativeWindAngle;
         }
@@ -391,14 +393,12 @@ public class AnchorManager extends AbstractProcessorTask
                 data.reshape(0, 7);
                 localLongitude = LocalLongitude.getInstance(longitude, latitude);
             }
-            double lat = bowLatitude.applyAsDouble(latitude, trueHeading);
-            double lon = bowLongitude.applyAsDouble(longitude, trueHeading);
             if (count < POINTS_SIZE)
             {
                 data.addRow(
-                        lon,
-                        lat,
-                        localLongitude.getInternal(lon),
+                        bowLon,
+                        bowLat,
+                        localLongitude.getInternal(bowLon),
                         relativeWindSpeed,
                         trueHeading,
                         depthOfWater,
@@ -408,9 +408,9 @@ public class AnchorManager extends AbstractProcessorTask
             else
             {
                 data.setRow(count % POINTS_SIZE,
-                        lon,
-                        lat,
-                        localLongitude.getInternal(lon),
+                        bowLon,
+                        bowLat,
+                        localLongitude.getInternal(bowLon),
                         relativeWindSpeed,
                         trueHeading,
                         depthOfWater,
@@ -420,57 +420,16 @@ public class AnchorManager extends AbstractProcessorTask
             count++;
         }
 
-        private AnchorEstimator tryInstance()
+        private void addUpwindCenter(double lon, double lat, double wind, double heading, double depth, double coef)
         {
-            // scope estimate
-            double estimatedChainLength = chain.chainLength(maxFairleadTension, depthOfWater);
-            double maxScope = Chain.maximalScope(depthOfWater, estimatedChainLength);
-            double minScope = Chain.minimalScope(depthOfWater, estimatedChainLength);
-            // estimated anchor position
-            SimpleLine l1 = new SimpleLine();
-            SimpleLine l2 = new SimpleLine();
-            SimplePoint p0 = new SimplePoint();
-            int len = data.rows()-1;
-            for (int i=0;i<len;i++)
-            {
-                double x1 = data.get(i, 2);
-                double y1 = data.get(i, 1);
-                double r1 = data.get(i, 4);
-                l1.setFromAngle(r1, x1, y1);
-                //plotter.drawLine(x1, y1, r1, METER.convertTo(5, NAUTICAL_DEGREE));
-                int j=data.rows()-1;
-                double x2 = data.get(j, 2);
-                double y2 = data.get(j, 1);
-                double r2 = data.get(j, 4);
-                l2.setFromAngle(r2, x2, y2);
-                Point pc = SimpleLine.crossPoint(l1, l2, p0);
-                if (pc != null)
-                {
-                    double distance = SimplePoint.distance(x1, y1, pc.getX(), pc.getY());
-                    double meters = NAUTICAL_DEGREE.convertTo(distance, METER);
-                    double angle = SimplePoint.angle(x1, y1, pc.getX(), pc.getY());
-                    if (
-                            meters > minScope && 
-                            meters < maxScope &&
-                            (near(angle, r1) || near(angle, r2))
-                            )
-                    {
-                        DoubleMatrix params = new DoubleMatrix(4, 1);
-                        double force = chain.forceForScope(meters, depthOfWater, estimatedChainLength);
-                        double w = data.get(j, 3);
-                        double coef = force/(w*w);
-                        params.set(0, 0, pc.getX());
-                        params.set(1, 0, pc.getY());
-                        params.set(2, 0, 0.06);//coef);
-                        params.set(3, 0, estimatedChainLength);
-                        info("AnchorEstimate(%f, %f, %f, %f)", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0));
-                        return new AnchorEstimator(localLongitude, seabedSurveyor, data, params);
-                    }
-                }
-            }
-            return null;
+            double estimatedChainLength = chain.chainLength(maxFairleadTension, depth);
+            double f = coef*wind*wind;
+            double scope = chain.horizontalScopeForChain(f, depth, estimatedChainLength);
+            double nm = METER.convertTo(scope, NAUTICAL_MILE);
+            double dLat = Navis.deltaLatitude(nm, heading);
+            double dLon = Navis.deltaLongitude(lat, nm, heading);
+            center.add(lon + dLon, lat + dLat);
         }
-
         @Override
         protected void failed(String reason)
         {
@@ -523,39 +482,6 @@ public class AnchorManager extends AbstractProcessorTask
             this.centerParam = params.getSub(0, 0, 2, 1);
             this.chainParam = params.getSub(3, 0, 1, 1);
             this.coefParam = params.getSub(2, 0, 1, 1);
-            computeInitialCenter();
-            centers.addRow(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
-        }
-        private void computeInitialCenter()
-        {
-            double meanDepth = seabedSurveyor.getMeanDepth();
-            double co = coefParam.get(0, 0);
-            double s = chainParam.get(0, 0);
-            int len = coordinates.rows();
-            double latSum = 0;
-            double sin = 0;
-            double cos = 0;
-            for (int row=0;row<len;row++)
-            {
-                double px = coordinates.get(row, 0);
-                double py = coordinates.get(row, 1);
-                double wi = wind.get(row, 0);
-                double hdg = heading.get(row, 0);
-                double f = co*wi*wi;
-                double scope = chain.horizontalScopeForChain(f, meanDepth, s);
-                double nm = METER.convertTo(scope, NAUTICAL_MILE);
-                double dLat = Navis.deltaLatitude(nm, hdg);
-                double dLon = Navis.deltaLongitude(py, nm, hdg);
-                latSum += py + dLat;
-                double rad = Math.toRadians(px + dLon);
-                sin += Math.sin(rad);
-                cos += Math.cos(rad);
-            }
-            double atan2 = Math.atan2(sin, cos);
-            double lon = Navis.normalizeToHalfAngle(Math.toDegrees(atan2));
-            double lat = latSum/len;
-            centerParam.set(0, 0, localLongitude.getInternal(lon));
-            centerParam.set(1, 0, lat);
         }
         private void update()
         {

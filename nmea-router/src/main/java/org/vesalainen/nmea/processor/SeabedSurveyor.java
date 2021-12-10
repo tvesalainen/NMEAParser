@@ -30,6 +30,7 @@ import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.CoordinateMap;
 import org.vesalainen.navi.Tide;
+import org.vesalainen.navi.TideFitter;
 import org.vesalainen.ui.ChartPlotter;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -39,12 +40,10 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class SeabedSurveyor extends JavaLogging
 {
-    private static final LongToDoubleFunction TIME_TO_RAD = (t)->PI*2*t/Tide.PERIOD;
     private final CoordinateMap<Square> map;
     private final DoubleBinaryOperator lonPos;
     private final DoubleBinaryOperator latPos;
-    private final DoubleMatrix data;
-    private final CosineFitter cosineFitter = new CosineFitter();
+    private final TideFitter tideFitter;
     private final Clock clock;
     private LongToDoubleFunction tideFunc;
     private final double boxSize;
@@ -59,8 +58,7 @@ public class SeabedSurveyor extends JavaLogging
         this.map = new CoordinateMap(latitude, boxSize, unit, Square::new);
         this.lonPos = gpsPosition.longitudeAtOperator(depthSounderPosition, latitude);
         this.latPos = gpsPosition.latitudeAtOperator(depthSounderPosition);
-        this.data = new DoubleMatrix(1024,2);
-        data.reshape(0, 2);
+        this.tideFitter = new TideFitter(clock::millis);
     }
     
     public void update(double longitude, double latitude, double depth, double heading)
@@ -102,7 +100,7 @@ public class SeabedSurveyor extends JavaLogging
     }
     public void draw(ChartPlotter p)
     {
-        info("tide a=%f b=%f", cosineFitter.getParamA(), cosineFitter.getParamB());
+        info("tide a=%f b=%f", tideFitter.getParamA(), tideFitter.getParamB());
         map.forEachCoordinate((double lon, double lat, Square square)->
         {
             double dpt = square.getStandardDepth();
@@ -114,7 +112,7 @@ public class SeabedSurveyor extends JavaLogging
     {
         private long time;
         private double depth;
-        private DoubleTimeoutSlidingSlope sloper = new DoubleTimeoutSlidingSlope(clock::millis, 1000, Tide.PERIOD/18, TIME_TO_RAD);
+        private DoubleTimeoutSlidingSlope sloper = new DoubleTimeoutSlidingSlope(clock::millis, 1000, Tide.PERIOD/18, Tide.TIME_TO_RAD);
 
         public void setAndDerivate(double depth)
         {
@@ -122,10 +120,10 @@ public class SeabedSurveyor extends JavaLogging
             if (sloper.fullness() > 99)
             {
                 double slope = sloper.slope();
-                cosineFitter.addPoints(TIME_TO_RAD.applyAsDouble(sloper.meanTime()), slope);
-                cosineFitter.fit();
-                MathFunction ader = cosineFitter.getAntiderivative();
-                tideFunc = (t)->ader.applyAsDouble(TIME_TO_RAD.applyAsDouble((long) t));
+                tideFitter.add(sloper.meanTime(), slope);
+                tideFitter.fit();
+                MathFunction ader = tideFitter.getAntiderivative();
+                tideFunc = (t)->ader.applyAsDouble(Tide.TIME_TO_RAD.applyAsDouble((long) t));
                 sloper.clear();
             }
             this.time = clock.millis();
