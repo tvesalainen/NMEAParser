@@ -45,6 +45,7 @@
         <xsd:attribute name="anchorWeight" type="xsd:decimal" use="required"/>
         <xsd:attribute name="chainDiameter" type="xsd:decimal" use="required"/>
         <xsd:attribute name="maxChainLength" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="crossSectionCoefficient" type="xsd:decimal"/>
     </xsd:complexType>
     <xsd:complexType name="n2kGatewayType">
         <xsd:complexContent>

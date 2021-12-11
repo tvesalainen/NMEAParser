@@ -60,16 +60,12 @@ public class AnchorManagerT
         
         GpsPositionType gps = new GpsPositionType();
         gps.setToSb(BigDecimal.valueOf(1));
-        gps.setToPort(BigDecimal.valueOf(3));
         gps.setToBow(BigDecimal.valueOf(12));
-        gps.setToStern(BigDecimal.valueOf(0));
         boat.getGpsPositionOrDepthSounderPosition().add(gps);
         
         DepthSounderPositionType dpt = new DepthSounderPositionType();
         dpt.setToSb(BigDecimal.valueOf(2));
-        dpt.setToPort(BigDecimal.valueOf(2));
         dpt.setToBow(BigDecimal.valueOf(7));
-        dpt.setToStern(BigDecimal.valueOf(5));
         boat.getGpsPositionOrDepthSounderPosition().add(dpt);
 
         AnchorManagerType type = new AnchorManagerType();

@@ -19,11 +19,9 @@ package org.vesalainen.nmea.processor;
 import java.awt.Color;
 import static java.awt.Color.*;
 import java.io.IOException;
-import java.io.Serializable;
 import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
 import java.nio.channels.GatheringByteChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -38,21 +36,16 @@ import java.util.logging.Logger;
 import org.vesalainen.code.Property;
 import org.vesalainen.io.IO;
 import org.vesalainen.lang.Primitives;
-import org.vesalainen.math.Circle;
 import org.vesalainen.math.LevenbergMarquardt;
-import org.vesalainen.math.Polygon;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.matrix.DoubleMatrix;
 import org.vesalainen.math.matrix.ReadableDoubleMatrix;
 import org.vesalainen.navi.AnchorWatch;
-import org.vesalainen.navi.AnchorWatch.Watcher;
-import org.vesalainen.navi.AngleRange;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.Chain;
 import org.vesalainen.navi.LocalLongitude;
 import org.vesalainen.navi.LocationCenter;
 import org.vesalainen.navi.Navis;
-import org.vesalainen.navi.SafeSector;
 import org.vesalainen.navi.SimpleBoatPosition;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import org.vesalainen.nmea.jaxb.router.BoatDataType;
@@ -61,7 +54,7 @@ import org.vesalainen.nmea.jaxb.router.DepthSounderPositionType;
 import org.vesalainen.nmea.jaxb.router.GpsPositionType;
 import static org.vesalainen.nmea.processor.AbstractChainedState.Action.*;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import org.vesalainen.ui.AbstractPlotter;
+import org.vesalainen.ui.AbstractPlotter.Polyline;
 import org.vesalainen.ui.Direction;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -76,6 +69,7 @@ public class AnchorManager extends AbstractProcessorTask
     private static final double DEFAULT_MAX_FAIRLEAD_TENSION = 2000;    // N
     private static final float MAX_SPEED = 1.0F;
     private static final float MIN_WIND = 10F;
+    private static final float GOOD_WIND = 15F;
     private static final float MIN_WIND_DIFF = 3F;
     private static final float MIN_RANGE = 15F;
     private static final int POINTS_SIZE = 1024;
@@ -124,28 +118,18 @@ public class AnchorManager extends AbstractProcessorTask
         this.boatLength = Primitives.getDouble(boat.getLength());
         this.boatBeam = Primitives.getDouble(boat.getBeam());
         this.chain = new Chain(chainDiameter, maxChainLength);
-        this.coef = 0.0089*Math.pow(boatLength, 1.66);
+        this.coef = Primitives.getDouble(boat.getCrossSectionCoefficient(), 0.0089*Math.pow(boatLength, 1.66));
         this.maxFairleadTension = coef*60*60;  // http://alain.fraysse.free.fr/sail/rode/forces/forces.htm
         this.maxDepth = chain.maximalDepth(maxFairleadTension, maxChainLength);
         for (BoatPositionType pos : boat.getGpsPositionOrDepthSounderPosition())
         {
             if (pos instanceof GpsPositionType)
             {
-                gpsPosition = new SimpleBoatPosition(
-                        Primitives.getDouble(pos.getToSb()), 
-                        Primitives.getDouble(pos.getToPort()), 
-                        Primitives.getDouble(pos.getToBow()), 
-                        Primitives.getDouble(pos.getToStern())
-                );
+                gpsPosition = createBoatPosition(pos);
             }
             if (pos instanceof DepthSounderPositionType)
             {
-                depthSounderPosition = new SimpleBoatPosition(
-                        Primitives.getDouble(pos.getToSb()), 
-                        Primitives.getDouble(pos.getToPort()), 
-                        Primitives.getDouble(pos.getToBow()), 
-                        Primitives.getDouble(pos.getToStern())
-                );
+                depthSounderPosition = createBoatPosition(pos);
             }
         }
         this.bowPosition = new SimpleBoatPosition(boatBeam/2, boatBeam/2, 0, boatLength);
@@ -166,6 +150,15 @@ public class AnchorManager extends AbstractProcessorTask
                 log(SEVERE, ex, "storing %s", path);
             }
         }
+    }
+
+    private BoatPosition createBoatPosition(BoatPositionType pos)
+    {
+        return new SimpleBoatPosition(
+            Primitives.getDouble(pos.getToSb(), ()->boatBeam-Primitives.getDouble(pos.getToPort())), 
+            Primitives.getDouble(pos.getToPort(), ()->boatBeam-Primitives.getDouble(pos.getToSb())), 
+            Primitives.getDouble(pos.getToBow(), ()->boatLength-Primitives.getDouble(pos.getToStern())), 
+            Primitives.getDouble(pos.getToStern(), ()->boatLength-Primitives.getDouble(pos.getToBow())));
     }
 
     @Override
@@ -298,33 +291,36 @@ public class AnchorManager extends AbstractProcessorTask
         private final DoubleBinaryOperator bowLatitude;
         private final DoubleBinaryOperator bowLongitude;
         private SeabedSurveyor seabedSurveyor;
-        private final Plot p;
-        private final AbstractPlotter.Polyline path;
         private final LocationCenter center = new LocationCenter();
         private final NMEAManager nmeaManager = new NMEAManager();
         private double bowLat;
         private double bowLon;
-        private final AbstractPlotter.Polyline centers;
+        private Plot p;
+        private Polyline path;
+        private Polyline centers;
 
         public WindManager()
         {
             this.bowLatitude = gpsPosition.latitudeAtOperator(bowPosition);
             this.bowLongitude = gpsPosition.longitudeAtOperator(bowPosition, latitude);
             this.seabedSurveyor = new SeabedSurveyor(clock, latitude, 3, METER, gpsPosition, depthSounderPosition);
-            ZonedDateTime zdt = ZonedDateTime.now(clock);
-            this.p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
-            this.path = p.polyline(Color.LIGHT_GRAY);
-            p.drawPolyline(path);
-            this.centers = p.polyline(Color.RED);
-            p.drawPolyline(path);
+            if (false)
+            {
+                ZonedDateTime zdt = ZonedDateTime.now(clock);
+                this.p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
+                this.path = p.polyline(Color.LIGHT_GRAY);
+                p.drawPolyline(path);
+                this.centers = p.polyline(Color.RED);
+                p.drawPolyline(path);
+            }
             params.set(2, 0, coef);
-            info("anchoring started");
+            fine("anchoring started");
         }
 
         @Override
         protected Action test(Collection<String> updatedProperties)
         {
-            path.lineTo(longitude, latitude);
+            if (path != null) path.lineTo(longitude, latitude);
             if (updatedProperties.contains("relativeWindAngle"))
             {
                 update();
@@ -379,14 +375,14 @@ public class AnchorManager extends AbstractProcessorTask
                 double lon = localLongitude.getExternal(params.get(0, 0));
                 double lat = params.get(1, 0);
                 nmeaManager.estimated(lon, lat);
-                centers.lineTo(lon, lat);
+                if (centers != null) centers.lineTo(lon, lat);
             }
             else
             {
                 double lon = center.longitude();
                 double lat = center.latitude();
                 nmeaManager.estimated(lon, lat);
-                centers.lineTo(lon, lat);
+                if (centers != null) centers.lineTo(lon, lat);
             }
         }
 
@@ -438,16 +434,19 @@ public class AnchorManager extends AbstractProcessorTask
         @Override
         protected void failed(String reason)
         {
-            info("anchoring stopped because %s", reason);
+            fine("anchoring stopped because %s", reason);
             nmeaManager.stop();
             if (estimator != null)
             {
-                estimator.plot(p);
+                estimator.finalizeEstimate(p);
             }
-            seabedSurveyor.draw(p);
             try
             {
-                p.plot();
+                if (p != null)
+                {
+                    seabedSurveyor.draw(p);
+                    p.plot();
+                }
             }
             catch (IOException ex)
             {
@@ -473,7 +472,6 @@ public class AnchorManager extends AbstractProcessorTask
         private final LevenbergMarquardt scopeLengthSolver = new LevenbergMarquardt(this::computeScopeLength, null);
         private final LevenbergMarquardt circleSolver = new LevenbergMarquardt(this::computeRadius, null);
         private final SeabedSurveyor seabedSurveyor;
-        private int goodWindRows = 1;
         private final DoubleMatrix heading;
         private final DoubleMatrix time;
 
@@ -499,32 +497,6 @@ public class AnchorManager extends AbstractProcessorTask
                 radius.reshape(data.rows(), 1);
                 scope.reshape(data.rows(), 1);
             }
-            IntPredicate pred = (r)->wind.get(r, 0)>10;
-            /*
-            DoubleMatrix goodWind = wind.getConditionalRows(pred);
-            if (goodWind.rows() > goodWindRows)
-            {
-                goodWindRows = goodWind.rows();
-                DoubleMatrix windPoints = internPoints.getConditionalRows(pred);
-                if (radius.rows() != goodWind.rows())
-                {
-                    radius.reshape(goodWind.rows(), 1);
-                }
-                computeRadius(centerParam, windPoints, radius);
-                if (scopeLengthSolver.optimize(chainParam, goodWind, radius))
-                {
-                    chainParam.set(scopeLengthSolver.getParameters());
-                    if (chainParam.get(0, 0) > 80)
-                    {
-                        System.err.println();
-                    }
-                }
-                if (scopeCoefSolver.optimize(coefParam, goodWind, radius))
-                {
-                    coefParam.set(scopeCoefSolver.getParameters());
-                }
-            }
-            */
             computeScopeCoef(coefParam, wind, scope);
             if (circleSolver.optimize(centerParam, internPoints, scope))
             {
@@ -585,17 +557,44 @@ public class AnchorManager extends AbstractProcessorTask
             }
         }
 
-        private void plot(Plot p)
+        private void finalizeEstimate(Plot p)
         {
-            info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
+            finalCalc();
+            fine("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
             double meanDepth = seabedSurveyor.getMeanDepth();
-            drawPoints(p);
-            p.setColor(BLACK);
-            p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
-            p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
-            p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), meanDepth, circleSolver.getFinalCost()));
+            if (p != null)
+            {
+                drawPoints(p);
+                p.setColor(BLACK);
+                p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
+                p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
+                p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), meanDepth, circleSolver.getFinalCost()));
+            }
         }
 
+        private void finalCalc()
+        {
+            IntPredicate pred = (r)->wind.get(r, 0)>GOOD_WIND;
+            DoubleMatrix goodWind = wind.getConditionalRows(pred);
+            if (!goodWind.isEmpty())
+            {
+                if (!goodWind.sameDimensions(radius))
+                {
+                    radius.reshape(goodWind.rows(), 1);
+                }
+                computeRadius(centerParam, internPoints, radius);
+                if (scopeCoefSolver.optimize(coefParam, goodWind, radius))
+                {
+                    double newCoef = scopeCoefSolver.getParameters().get(0, 0);
+                    info("calculated crossSectionCoefficient=%f (%f)", newCoef, coef);
+                }
+                if (scopeLengthSolver.optimize(chainParam, goodWind, radius))
+                {
+                    double newChain = scopeLengthSolver.getParameters().get(0, 0);
+                    info("calculated actual chain length=%f (%f)", newChain, chainParam.get(0, 0));
+                }
+            }
+        }
         private void drawPoints(Plot p)
         {
             int rows = coordinates.rows();
@@ -645,7 +644,7 @@ public class AnchorManager extends AbstractProcessorTask
         }
         public void stop()
         {
-            config("stop TLL");
+            fine("stop TLL");
             if (Double.isFinite(latitude))
             {
                 tll = NMEASentence.tll(0, latitude, longitude, "Anchor", clock, 'L', "");
