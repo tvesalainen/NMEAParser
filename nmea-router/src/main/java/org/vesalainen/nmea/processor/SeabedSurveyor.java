@@ -17,15 +17,11 @@
 package org.vesalainen.nmea.processor;
 
 import java.awt.Color;
-import static java.lang.Math.*;
 import java.time.Clock;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.LongToDoubleFunction;
-import org.vesalainen.math.CosineFitter;
-import org.vesalainen.math.MathFunction;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
-import org.vesalainen.math.matrix.DoubleMatrix;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.CoordinateMap;
@@ -45,7 +41,6 @@ public class SeabedSurveyor extends JavaLogging
     private final DoubleBinaryOperator latPos;
     private final TideFitter tideFitter;
     private final Clock clock;
-    private LongToDoubleFunction tideFunc;
     private final double boxSize;
     private double depthSum;
     private long depthCount;
@@ -79,9 +74,9 @@ public class SeabedSurveyor extends JavaLogging
         if (square != null)
         {
             double stdDepth = square.getStandardDepth();
-            if (tideFunc != null)
+            if (tideFitter.isValid())
             {
-                return (t)->stdDepth - tideFunc.applyAsDouble(t);
+                return (t)->stdDepth - tideFitter.getTide(t);
             }
             else
             {
@@ -92,15 +87,15 @@ public class SeabedSurveyor extends JavaLogging
     }
     private double tide(long time)
     {
-        if (tideFunc != null)
+        if (tideFitter.isValid())
         {
-            return tideFunc.applyAsDouble(time);
+            return tideFitter.getTide(time);
         }
         return 0;
     }
     public void draw(ChartPlotter p)
     {
-        info("tide a=%f b=%f", tideFitter.getParamA(), tideFitter.getParamB());
+        info("tide a=%f b=%f cnt=%d cost=%f", tideFitter.getParamA(), tideFitter.getParamB(), tideFitter.getPointCount(), tideFitter.getFinalCost());
         map.forEachCoordinate((double lon, double lat, Square square)->
         {
             double dpt = square.getStandardDepth();
@@ -122,8 +117,6 @@ public class SeabedSurveyor extends JavaLogging
                 double slope = sloper.slope();
                 tideFitter.add(sloper.meanTime(), slope);
                 tideFitter.fit();
-                MathFunction ader = tideFitter.getAntiderivative();
-                tideFunc = (t)->ader.applyAsDouble(Tide.TIME_TO_RAD.applyAsDouble((long) t));
                 sloper.clear();
             }
             this.time = clock.millis();

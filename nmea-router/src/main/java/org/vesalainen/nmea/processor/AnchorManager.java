@@ -43,6 +43,7 @@ import org.vesalainen.math.LevenbergMarquardt;
 import org.vesalainen.math.Polygon;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.matrix.DoubleMatrix;
+import org.vesalainen.math.matrix.ReadableDoubleMatrix;
 import org.vesalainen.navi.AnchorWatch;
 import org.vesalainen.navi.AnchorWatch.Watcher;
 import org.vesalainen.navi.AngleRange;
@@ -167,34 +168,6 @@ public class AnchorManager extends AbstractProcessorTask
         }
     }
 
-    private void startAnchoring()
-    {
-        config("start anchoring");
-        anchorWatch = new AnchorWatch();
-        anchorWatch.addWatcher(nmeaManager);
-        anchorWatch.setChainLength((int) horizontalScope);
-        processor.setData(ANCHOR_WATCH_NAME, anchorWatch);
-    }
-
-    private void stopAnchoring()
-    {
-        nmeaManager.stop();
-        processor.setData(ANCHOR_WATCH_NAME, null);
-        anchorWatch = null;
-        try
-        {
-            if (path != null)
-            {
-                Files.deleteIfExists(path);
-            }
-        }
-        catch (IOException ex)
-        {
-            log(SEVERE, ex, "deleting%s", path);
-        }
-        config("stop anchoring");
-    }
-
     @Override
     public void commitTask(String reason, Collection<String> updatedProperties)
     {
@@ -317,8 +290,6 @@ public class AnchorManager extends AbstractProcessorTask
     private class WindManager extends AbstractChainedState<Collection<String>,String>
     {
         private float previous = 180;
-        private float hdg;
-        private AngleRange range = new AngleRange();
         private DoubleMatrix data = new DoubleMatrix(0, 7);
         private DoubleMatrix params = new DoubleMatrix(4, 1);
         private LocalLongitude localLongitude = LocalLongitude.getInstance(longitude, latitude);
@@ -328,10 +299,12 @@ public class AnchorManager extends AbstractProcessorTask
         private final DoubleBinaryOperator bowLongitude;
         private SeabedSurveyor seabedSurveyor;
         private final Plot p;
-        private final AbstractPlotter.Polyline polyline;
+        private final AbstractPlotter.Polyline path;
         private final LocationCenter center = new LocationCenter();
+        private final NMEAManager nmeaManager = new NMEAManager();
         private double bowLat;
         private double bowLon;
+        private final AbstractPlotter.Polyline centers;
 
         public WindManager()
         {
@@ -340,15 +313,18 @@ public class AnchorManager extends AbstractProcessorTask
             this.seabedSurveyor = new SeabedSurveyor(clock, latitude, 3, METER, gpsPosition, depthSounderPosition);
             ZonedDateTime zdt = ZonedDateTime.now(clock);
             this.p = new Plot("c:\\temp\\"+zdt.toString().replace(':', '-')+".png");
-            this.polyline = p.polyline(Color.LIGHT_GRAY);
-            p.drawPolyline(polyline);
+            this.path = p.polyline(Color.LIGHT_GRAY);
+            p.drawPolyline(path);
+            this.centers = p.polyline(Color.RED);
+            p.drawPolyline(path);
             params.set(2, 0, coef);
+            info("anchoring started");
         }
 
         @Override
         protected Action test(Collection<String> updatedProperties)
         {
-            polyline.lineTo(longitude, latitude);
+            path.lineTo(longitude, latitude);
             if (updatedProperties.contains("relativeWindAngle"))
             {
                 update();
@@ -365,24 +341,53 @@ public class AnchorManager extends AbstractProcessorTask
             bowLon = bowLongitude.applyAsDouble(longitude, trueHeading);
             if (
                     (relativeWindAngle < 30 && previous > 330 ||
-                    relativeWindAngle > 330 && previous < 30) &&
-                    relativeWindSpeed > MIN_WIND)
+                    relativeWindAngle > 330 && previous < 30)
+                    )
+                    
             {
-                if (estimator == null)
+                if (relativeWindSpeed > MIN_WIND)
                 {
-                    estimator = new AnchorEstimator(localLongitude, seabedSurveyor, data, params);
+                    if (estimator == null)
+                    {
+                        estimator = new AnchorEstimator(localLongitude, seabedSurveyor, data, params);
+                    }
+                    add();
+                    params.set(0, 0, localLongitude.getInternal(center.longitude()));
+                    params.set(1, 0, center.latitude());
+                    params.set(3, 0, chain.chainLength(maxFairleadTension, depthOfWater));
+                    estimator.update();
                 }
-                add();
-                params.set(0, 0, localLongitude.getInternal(center.longitude()));
-                params.set(1, 0, center.latitude());
-                params.set(3, 0, chain.chainLength(maxFairleadTension, depthOfWater));
-                estimator.update();
+                else
+                {
+                    if (relativeWindSpeed > 0)
+                    {
+                        addUpwindCenter(bowLon, bowLat, relativeWindSpeed, trueHeading, depthOfWater, coef);
+                    }
+                    else
+                    {
+                        center.add(bowLon, bowLat);
+                    }
+                }
             }
             else
             {
-                addUpwindCenter(bowLon, bowLat, relativeWindSpeed, trueHeading, depthOfWater, 0.06);
+                center.add(bowLon, bowLat);
             }
             previous = relativeWindAngle;
+            if (estimator != null)
+            {
+                double lon = localLongitude.getExternal(params.get(0, 0));
+                double lat = params.get(1, 0);
+                nmeaManager.estimated(lon, lat);
+                centers.lineTo(lon, lat);
+            }
+            else
+            {
+                double lon = center.longitude();
+                double lat = center.latitude();
+                nmeaManager.estimated(lon, lat);
+                centers.lineTo(lon, lat);
+            }
         }
 
         private void add()
@@ -428,21 +433,26 @@ public class AnchorManager extends AbstractProcessorTask
             double nm = METER.convertTo(scope, NAUTICAL_MILE);
             double dLat = Navis.deltaLatitude(nm, heading);
             double dLon = Navis.deltaLongitude(lat, nm, heading);
-            center.add(lon + dLon, lat + dLat);
+            center.add(lon + dLon, lat + dLat, 1 + wind*wind);
         }
         @Override
         protected void failed(String reason)
         {
             info("anchoring stopped because %s", reason);
+            nmeaManager.stop();
             if (estimator != null)
             {
                 estimator.plot(p);
             }
-        }
-        
-        private boolean near(double angle, double r1)
-        {
-            return abs(angle-r1) < 1.0;
+            seabedSurveyor.draw(p);
+            try
+            {
+                p.plot();
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(AnchorManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         
     }
@@ -459,7 +469,6 @@ public class AnchorManager extends AbstractProcessorTask
         private final DoubleMatrix params;
         private final DoubleMatrix radius = new DoubleMatrix(1, 1);
         private final DoubleMatrix scope = new DoubleMatrix(1, 1);
-        private final DoubleMatrix centers = new DoubleMatrix(0, 2);
         private final LevenbergMarquardt scopeCoefSolver = new LevenbergMarquardt(this::computeScopeCoef, null);
         private final LevenbergMarquardt scopeLengthSolver = new LevenbergMarquardt(this::computeScopeLength, null);
         private final LevenbergMarquardt circleSolver = new LevenbergMarquardt(this::computeRadius, null);
@@ -520,11 +529,10 @@ public class AnchorManager extends AbstractProcessorTask
             if (circleSolver.optimize(centerParam, internPoints, scope))
             {
                 centerParam.set(circleSolver.getParameters());
-                centers.addRow(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             }
         }
 
-        private void computeRadius(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        private void computeRadius(DoubleMatrix param, ReadableDoubleMatrix x, DoubleMatrix y)
         {
             double xx = param.get(0, 0);
             double yy = param.get(1, 0);
@@ -534,10 +542,17 @@ public class AnchorManager extends AbstractProcessorTask
                 double px = x.get(row, 0);
                 double py = x.get(row, 1);
                 double di = NAUTICAL_DEGREE.convertTo(hypot(xx-px, yy-py), METER);
-                y.set(row, 0, di);
+                if (Double.isFinite(di))
+                {
+                    y.set(row, 0, di);
+                }
+                else
+                {
+                    throw new IllegalArgumentException("nan");
+                }
             }
         }
-        private void computeScopeCoef(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        private void computeScopeCoef(DoubleMatrix param, ReadableDoubleMatrix x, DoubleMatrix y)
         {
             LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             double co = param.get(0, 0);
@@ -553,7 +568,7 @@ public class AnchorManager extends AbstractProcessorTask
                 y.set(row, 0, scope);
             }
         }
-        private void computeScopeLength(DoubleMatrix param, DoubleMatrix x, DoubleMatrix y)
+        private void computeScopeLength(DoubleMatrix param, ReadableDoubleMatrix x, DoubleMatrix y)
         {
             LongToDoubleFunction depthFunc = seabedSurveyor.getDepthAt(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             double co = coefParam.get(0, 0);
@@ -574,21 +589,11 @@ public class AnchorManager extends AbstractProcessorTask
         {
             info("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
             double meanDepth = seabedSurveyor.getMeanDepth();
-            seabedSurveyor.draw(p);
             drawPoints(p);
             p.setColor(BLACK);
-            p.drawLines(centers);
             p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
             p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
             p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), meanDepth, circleSolver.getFinalCost()));
-            try
-            {
-                p.plot();
-            }
-            catch (IOException ex)
-            {
-                Logger.getLogger(AnchorManager.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
 
         private void drawPoints(Plot p)
@@ -605,11 +610,12 @@ public class AnchorManager extends AbstractProcessorTask
         }
 
     }
-    private class NMEAManager implements Watcher, Serializable
+    private class NMEAManager
     {
         private NMEASentence tll;
         private long next;
-        private Circle estimated;
+        private double longitude = Double.NaN;
+        private double latitude = Double.NaN;
         
         public void refresh()
         {
@@ -624,7 +630,7 @@ public class AnchorManager extends AbstractProcessorTask
             {
                 try
                 {
-                    fine("send %s", tll);
+                    //fine("send %s", tll);
                     tll.writeTo(channel);
                 }
                 catch (IOException ex)
@@ -640,53 +646,22 @@ public class AnchorManager extends AbstractProcessorTask
         public void stop()
         {
             config("stop TLL");
-            if (estimated != null)
+            if (Double.isFinite(latitude))
             {
-                tll = NMEASentence.tll(0, estimated.getY(), estimated.getX(), "Anchor", clock, 'L', "");
+                tll = NMEASentence.tll(0, latitude, longitude, "Anchor", clock, 'L', "");
                 transmit();
             }
             tll = null;
         }
 
-        @Override
-        public void alarm(double distance)
-        {
-            warning("Anchor alarm %f meters", distance);
-        }
-
-        @Override
-        public void location(double x, double y, long time, double accuracy, double speed)
-        {
-            refresh();
-        }
-
-        @Override
-        public void area(Polygon area)
-        {
-        }
-
-        @Override
-        public void outer(Polygon path)
-        {
-        }
-
-        @Override
-        public void estimated(Circle estimated)
+        public void estimated(double longitude, double latitude)
         {
             char status = tll == null ? 'Q' : 'T';
-            tll = NMEASentence.tll(0, estimated.getY(), estimated.getX(), "Anchor", clock, status, "");
+            tll = NMEASentence.tll(0, latitude, longitude, "Anchor", clock, status, "");
             transmit();
-            this.estimated = estimated;
+            this.longitude = longitude;
+            this.latitude = latitude;
         }
 
-        @Override
-        public void safeSector(SafeSector safe)
-        {
-        }
-
-        @Override
-        public void suggestNextUpdateIn(double seconds, double meters)
-        {
-        }
     }
 }
