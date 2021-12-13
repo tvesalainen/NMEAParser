@@ -135,7 +135,7 @@ public class AISSender extends AnnotatedPropertyStore
         }
         double crs = course < 360.0 ? course : 0;
         int hdt = (int) (heading < 360 ? Math.round(heading) : 511);
-        info("mmsi %d rateOfTurn %f", mmsi, rateOfTurn);
+        //info("mmsi %d rateOfTurn %f", mmsi, rateOfTurn);
         return new AISBuilder(message, repeat, mmsi)
             .transceiver(getTransceiver())
             .ownMessage(isOwnMessage())

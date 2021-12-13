@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea proprietaryPrefix="IRS" ctrlTcpPort="10110" allDevices="COM4 COM5" dontScan="" nativeDebug="false">
-    <boat 
-        length="11.9" 
-        beam="3.55" 
-        draft="1.7" 
-        anchorWeight="20" 
-        chainDiameter="10" 
-        maxChainLength="80"
-        crossSectionCoefficient="0.5"
-    >
+    <boat length="11.9" beam="3.55" draft="1.7" anchorWeight="20" chainDiameter="10" maxChainLength="80" crossSectionCoefficient="0.5">
         <gps-position toSb="1" toStern="0"/>
         <depthSounder-position toSb="1.775" toStern="7"/>
     </boat>
@@ -59,7 +51,7 @@
             <route prefix="$VW" target=""/>
             <route prefix="$SD" target=""/>
         </multicast-nmea-0183>
-        <consumer-endpoint classname="org.vesalainen.nmea.router.endpoint.n2kgw.AisComparator" name="Cmp" enable="true"/>
-        <log-endpoint logName="org.vesalainen.router.log" logLevel="INFO" name="Log" enable="true"/>
+        <consumer-endpoint classname="org.vesalainen.nmea.router.endpoint.n2kgw.AisComparator" name="Cmp" enable="false"/>
+        <log-endpoint logName="org.vesalainen.router.log" logLevel="INFO" name="Log" enable="false"/>
     </endPoints>
 </nmea>

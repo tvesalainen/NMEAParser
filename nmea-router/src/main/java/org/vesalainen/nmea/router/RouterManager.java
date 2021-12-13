@@ -18,7 +18,9 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
@@ -39,7 +41,8 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class RouterManager extends JavaLogging implements RouterManagerMXBean, Runnable
 {
-    public static CachedScheduledThreadPool POOL = new CachedScheduledThreadPool();
+    public static final int MAX_POOL_SIZE = 256;
+    public static CachedScheduledThreadPool POOL = createPool();
     private final ObjectName objectName;
     private CommandLine cmdArgs;
     private RouterConfig config;
@@ -101,7 +104,7 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
     {
         severe("restarting because %s", reason);
         ScheduledExecutorService oldPool = POOL;
-        POOL = new CachedScheduledThreadPool();
+        POOL = createPool();
         config("created new thread pool");
         jmx.stop();
         POOL.schedule(()->start(), 2, TimeUnit.MINUTES);
@@ -158,4 +161,10 @@ public class RouterManager extends JavaLogging implements RouterManagerMXBean, R
         }
     }
 
+    private static CachedScheduledThreadPool createPool()
+    {
+        CachedScheduledThreadPool pool = new CachedScheduledThreadPool(MAX_POOL_SIZE);
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        return pool;
+    }
 }
