@@ -60,6 +60,10 @@ public class NMEASender extends AnnotatedPropertyStore
     private @Property float speedOverGround;
     private @Property float trackMadeGood;
     private @Property int methodGnss;
+    private @Property int batteryInstance;
+    private @Property float voltage;
+    private @Property float current;
+    private @Property float temperature;
     
     private Clock frameClock;
     private N2KClock positionClock;
@@ -76,7 +80,8 @@ public class NMEASender extends AnnotatedPropertyStore
     private final NMEASentence mtw;
     private final NMEASentence mwv;
     private final NMEASentence vhw;
-    private final NMEASentence xdr;
+    private final NMEASentence attitude;
+    private final NMEASentence battery;
     
     public NMEASender(SourceManager sourceManager, WritableByteChannel channel)
     {
@@ -135,11 +140,17 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->sourceManager.getTalkerId(canId), 
                 ()->waterSpeed, 
                 METERS_PER_SECOND);
-        this.xdr = NMEASentence.attitude(
+        this.attitude = NMEASentence.attitude(
                 ()->sourceManager.getTalkerId(canId),
                 ()->yaw,
                 ()->pitch,
                 ()->roll);
+        this.battery = NMEASentence.battery(
+                ()->sourceManager.getTalkerId(canId),
+                ()->batteryInstance,
+                ()->voltage,
+                ()->current,
+                ()->temperature);
         
         IntConsumer ic = createPgnConsumer(GNSS_POSITION_DATA, POSITION_RAPID_UPDATE);
         pgnMap.put(GNSS_POSITION_DATA.getPGN(), ic);
@@ -150,6 +161,7 @@ public class NMEASender extends AnnotatedPropertyStore
         pgnMap.put(WIND_DATA.getPGN(), createPgnConsumer(WIND_DATA));
         pgnMap.put(SPEED_WATER_REFERENCED.getPGN(), createPgnConsumer(SPEED_WATER_REFERENCED));
         pgnMap.put(ATTITUDE.getPGN(), createPgnConsumer(ATTITUDE));
+        pgnMap.put(BATTERY_STATUS.getPGN(), createPgnConsumer(BATTERY_STATUS));
     }
     private IntConsumer createPgnConsumer(NMEAPGN... pgns)
     {
@@ -190,7 +202,13 @@ public class NMEASender extends AnnotatedPropertyStore
                     vhw.writeTo(channel);
                     break;
                 case ATTITUDE:
-                    xdr.writeTo(channel);
+                    attitude.writeTo(channel);
+                    break;
+                case BATTERY_STATUS:
+                    if (Float.isFinite(voltage) || Float.isFinite(current) || Float.isFinite(temperature))
+                    {
+                        battery.writeTo(channel);
+                    }
                     break;
                 default:
                     throw new UnsupportedOperationException(pgn+" not supported");

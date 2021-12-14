@@ -313,9 +313,17 @@ public class NMEASentence
     public static NMEASentence attitude(Supplier<TalkerId> talkerId, DoubleSupplier yaw, DoubleSupplier pitch, DoubleSupplier roll)
     {
         return builder(talkerId, XDR)
-                .bindXdrGroup('A', yaw, 'D', "YAW")
-                .bindXdrGroup('A', pitch, 'D', "PITCH")
-                .bindXdrGroup('A', roll, 'D', "ROLL")
+                .bindXdrGroup('A', yaw, 'D', "YAW", null)
+                .bindXdrGroup('A', pitch, 'D', "PITCH", null)
+                .bindXdrGroup('A', roll, 'D', "ROLL", null)
+                .build();
+    }
+    public static NMEASentence battery(Supplier<TalkerId> talkerId, IntSupplier instance, DoubleSupplier voltage, DoubleSupplier amp, DoubleSupplier temp)
+    {
+        return builder(talkerId, XDR)
+                .bindXdrGroup('V', voltage, 'V', "BATT", instance) 
+                .bindXdrGroup('A', amp, 'A', "BATT", instance)
+                .bindXdrGroup('T', temp, 'C', "BATT", instance)
                 .build();
     }
     /**
@@ -556,8 +564,15 @@ public class NMEASentence
                 bind((p)->
                 {
                     double fld = fldsup.getAsDouble();
-                    String str = String.format(Locale.US, ",%.1f", fld);
-                    p.print(str.endsWith(".0") ? str.substring(0, str.length()-2) : str);
+                    if (Double.isFinite(fld))
+                    {
+                        String str = String.format(Locale.US, ",%.1f", fld);
+                        p.print(str.endsWith(".0") ? str.substring(0, str.length()-2) : str);
+                    }
+                    else
+                    {
+                        p.print(',');
+                    }
                 });
             }
             else
@@ -574,18 +589,25 @@ public class NMEASentence
                 {
                     double latitude = latsup.getAsDouble();
                     double longitude = lonsup.getAsDouble();
-                    double alat = Math.abs(latitude);
-                    double alon = Math.abs(longitude);
-                    int lat = (int) alat;
-                    int lon = (int) alon;
-                    p.format(",%02d%08.5f,%c,%03d%08.5f,%c", 
-                            lat, 
-                            (alat-lat)*60,
-                            latitude>0?'N':'S',
-                            lon, 
-                            (alon-lon)*60,
-                            longitude>0?'E':'W'
-                    );
+                    if (Double.isFinite(latitude) && Double.isFinite(longitude))
+                    {
+                        double alat = Math.abs(latitude);
+                        double alon = Math.abs(longitude);
+                        int lat = (int) alat;
+                        int lon = (int) alon;
+                        p.format(",%02d%08.5f,%c,%03d%08.5f,%c", 
+                                lat, 
+                                (alat-lat)*60,
+                                latitude>0?'N':'S',
+                                lon, 
+                                (alon-lon)*60,
+                                longitude>0?'E':'W'
+                        );
+                    }
+                    else
+                    {
+                        p.print(",,,,");
+                    }
                 });
             }
             else
@@ -736,7 +758,14 @@ public class NMEASentence
                 bind((p)->
                 {
                     double value = supplier.getAsDouble();
-                    p.format(Locale.US, ",%.1f", value);
+                    if (Double.isFinite(value))
+                    {
+                        p.format(Locale.US, ",%.1f", value);
+                    }
+                    else
+                    {
+                        p.print(',');
+                    }
                 });
             }
             else
@@ -746,14 +775,21 @@ public class NMEASentence
             return this;
         }
 
-        private Builder bindDegrees(DoubleSupplier declsup)
+        private Builder bindDegrees(DoubleSupplier degsup)
         {
-            if (declsup != null)
+            if (degsup != null)
             {
                 bind((p)->
                 {
-                    double declination = declsup.getAsDouble();
-                    p.format(Locale.US, ",%.1f,%c", Math.abs(declination), declination > 0 ? 'E' : 'W');
+                    double degrees = degsup.getAsDouble();
+                    if (Double.isFinite(degrees))
+                    {
+                        p.format(Locale.US, ",%.1f,%c", Math.abs(degrees), degrees > 0 ? 'E' : 'W');
+                    }
+                    else
+                    {
+                        p.print(",,");
+                    }
                 });
             }
             else
@@ -770,7 +806,14 @@ public class NMEASentence
                 bind((p)->
                 {
                     double value = supplier.getAsDouble();
-                    p.format(Locale.US, ",%.1f", from.convertTo(value, to));
+                    if (Double.isFinite(value))
+                    {
+                        p.format(Locale.US, ",%.1f", from.convertTo(value, to));
+                    }
+                    else
+                    {
+                        p.print(',');
+                    }
                 });
             }
             else
@@ -779,16 +822,24 @@ public class NMEASentence
             }
             return this;
         }
-        private Builder bindXdrGroup(char type, DoubleSupplier supplier, char unit, String name)
+        private Builder bindXdrGroup(char type, DoubleSupplier supplier, char unit, String name, IntSupplier instance)
         {
                 bind((p)->
                 {
-                    p.print(',');
-                    p.print(type);
-                    p.format(Locale.US, ",%.1f,", supplier.getAsDouble());
-                    p.print(unit);
-                    p.print(',');
-                    p.print(name);
+                    double v = supplier.getAsDouble();
+                    if (Double.isFinite(v))
+                    {
+                        p.print(',');
+                        p.print(type);
+                        p.format(Locale.US, ",%.1f,", v);
+                        p.print(unit);
+                        p.print(',');
+                        p.print(name);
+                        if (instance != null)
+                        {
+                            p.print(instance.getAsInt());
+                        }
+                    }
                 });
                 return this;
         }

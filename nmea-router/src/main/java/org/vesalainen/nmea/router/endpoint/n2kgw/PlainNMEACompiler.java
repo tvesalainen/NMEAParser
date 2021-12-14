@@ -16,6 +16,11 @@
  */
 package org.vesalainen.nmea.router.endpoint.n2kgw;
 
+import java.util.function.LongSupplier;
+import java.util.function.LongToDoubleFunction;
+import org.vesalainen.can.dbc.MessageClass;
+import org.vesalainen.can.dbc.SignalClass;
+import static org.vesalainen.can.dbc.ValueType.SIGNED;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
 
 /**
@@ -56,6 +61,49 @@ public final class PlainNMEACompiler extends AbstractNMEACompiler
         addPgnSetter(ATTITUDE, "Yaw", "yaw");
         addPgnSetter(ATTITUDE, "Pitch", "pitch");
         addPgnSetter(ATTITUDE, "Roll", "roll");
+
+        addPgnSetter(BATTERY_STATUS, "Battery_Instance", "batteryInstance");
+        addPgnSetter(BATTERY_STATUS, "Battery_Voltage", "voltage");
+        addPgnSetter(BATTERY_STATUS, "Battery_Current", "current");
+        addPgnSetter(BATTERY_STATUS, "Battery_Case_Temperature", "temperature");
+    }
+
+    @Override
+    public LongToDoubleFunction compileDoubleBoundCheck(MessageClass mc, SignalClass sc, LongSupplier longSupplier)
+    {
+        // bit field max values usually mean that data is not available.
+        int size = sc.getSize();
+        if (sc.getValueType() == SIGNED)
+        {
+            long max = -1L>>>(65-size);
+            long min =-(max+1);
+            return (value)->
+            {
+                if (value == max || value == min)
+                {
+                    return Double.NaN;
+                }
+                else
+                {
+                    return value;
+                }
+            };
+        }
+        else
+        {
+            long max = -1L>>>(64-size);
+            return (value)->
+            {
+                if (value == max)
+                {
+                    return Double.NaN;
+                }
+                else
+                {
+                    return value;
+                }
+            };
+        }
     }
 
     
