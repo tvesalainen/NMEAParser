@@ -51,7 +51,7 @@ public class N2KGateway implements Stoppable
 
     public static N2KGateway getInstance(N2KGatewayType type, WritableByteChannel out, ExecutorService executor) throws IOException
     {
-        SourceManager sourceManager = new SourceManager();
+        SourceManager sourceManager = new SourceManager(type);
         NMEASender nmeaSender = new NMEASender(sourceManager, out);
         AISSender aisSender = new AISSender(out);
         AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));

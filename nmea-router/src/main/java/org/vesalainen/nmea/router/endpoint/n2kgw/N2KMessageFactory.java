@@ -51,12 +51,4 @@ public class N2KMessageFactory extends AbstractMessageFactory
         }
     }
 
-    @Override
-    public AbstractMessage createPgnMessage(Executor executor, int canId, MessageClass mc)
-    {
-        sourceManager.add(canId, mc);
-        return super.createPgnMessage(executor, canId, mc);
-    }
-        
-    
 }

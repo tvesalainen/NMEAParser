@@ -20,6 +20,12 @@
             <route prefix="$SDVHW" target="TCP Prc"/>
             <route prefix="$WIMWV" target="TCP Prc"/>
             <route prefix="$??XDR" target="TCP Prc"/>
+            <source talkerId="WI" source="1"/>
+            <source talkerId="HC" source="16"/>
+            <source talkerId="SD" source="35"/>
+            <source talkerId="AI" source="43"/>
+            <source talkerId="U0" source="36"/>
+            <source talkerId="U1" source="224"/>
         </n2k-gateway>
         <processor dataAccessPort="10111" name="Prc" enable="true">
             <route prefix="$??TLL" target="TCP"/>

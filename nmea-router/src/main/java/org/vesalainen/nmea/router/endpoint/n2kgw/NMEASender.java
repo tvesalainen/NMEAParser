@@ -71,7 +71,6 @@ public class NMEASender extends AnnotatedPropertyStore
     private final WritableByteChannel channel;
     private final TSAGeoMag geoMag = new TSAGeoMag();
     
-    private final Map<Integer,IntConsumer> pgnMap = new HashMap<>();
     private final NMEASentence rmc;
     private final NMEASentence rmc2;
     private final NMEASentence dpt;
@@ -152,72 +151,6 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->current,
                 ()->temperature);
         
-        IntConsumer ic = createPgnConsumer(GNSS_POSITION_DATA, POSITION_RAPID_UPDATE);
-        pgnMap.put(GNSS_POSITION_DATA.getPGN(), ic);
-        pgnMap.put(POSITION_RAPID_UPDATE.getPGN(), ic);
-        pgnMap.put(WATER_DEPTH.getPGN(), createPgnConsumer(WATER_DEPTH));
-        pgnMap.put(VESSEL_HEADING.getPGN(), createPgnConsumer(VESSEL_HEADING));
-        pgnMap.put(ENVIRONMENTAL_PARAMETERS.getPGN(), createPgnConsumer(ENVIRONMENTAL_PARAMETERS));
-        pgnMap.put(WIND_DATA.getPGN(), createPgnConsumer(WIND_DATA));
-        pgnMap.put(SPEED_WATER_REFERENCED.getPGN(), createPgnConsumer(SPEED_WATER_REFERENCED));
-        pgnMap.put(ATTITUDE.getPGN(), createPgnConsumer(ATTITUDE));
-        pgnMap.put(BATTERY_STATUS.getPGN(), createPgnConsumer(BATTERY_STATUS));
-    }
-    private IntConsumer createPgnConsumer(NMEAPGN... pgns)
-    {
-        Priorizer.Builder builder = Priorizer.builder()
-                .setMillisSupplier(()->millis);
-        for (NMEAPGN pgn : pgns)
-        {
-            builder.addPgn(pgn.getPGN(), ()->write(pgn));
-        }
-        return builder.build();
-    }
-    private void write(NMEAPGN pgn)
-    {
-        try
-        {
-            switch (pgn)
-            {
-                case GNSS_POSITION_DATA:
-                    rmc2.writeTo(channel);
-                    break;
-                case POSITION_RAPID_UPDATE:
-                    rmc.writeTo(channel);
-                    break;
-                case WATER_DEPTH:
-                    dpt.writeTo(channel);
-                    break;
-                case VESSEL_HEADING:
-                    hdt.writeTo(channel);
-                    hdg.writeTo(channel);
-                    break;
-                case ENVIRONMENTAL_PARAMETERS:
-                    mtw.writeTo(channel);
-                    break;
-                case WIND_DATA:
-                    mwv.writeTo(channel);
-                    break;
-                case SPEED_WATER_REFERENCED:
-                    vhw.writeTo(channel);
-                    break;
-                case ATTITUDE:
-                    attitude.writeTo(channel);
-                    break;
-                case BATTERY_STATUS:
-                    if (Float.isFinite(voltage) || Float.isFinite(current) || Float.isFinite(temperature))
-                    {
-                        battery.writeTo(channel);
-                    }
-                    break;
-                default:
-                    throw new UnsupportedOperationException(pgn+" not supported");
-            }
-        }
-        catch (IOException ex)
-        {
-            log(SEVERE, ex, "write(%s)", pgn);
-        }
     }
     private double magneticVariation(Clock clock)
     {
@@ -272,10 +205,47 @@ public class NMEASender extends AnnotatedPropertyStore
     @Override
     public void commit(String reason)
     {
-        IntConsumer ic = pgnMap.get(PGN.pgn(canId));
-        if (ic != null)
+        try
         {
-            ic.accept(canId);
+            NMEAPGN pgn = NMEAPGN.getForPgn(PGN.pgn(canId));
+            switch (pgn)
+            {
+                case GNSS_POSITION_DATA:
+                    rmc2.writeTo(channel);
+                    break;
+                case POSITION_RAPID_UPDATE:
+                    rmc.writeTo(channel);
+                    break;
+                case WATER_DEPTH:
+                    dpt.writeTo(channel);
+                    break;
+                case VESSEL_HEADING:
+                    hdt.writeTo(channel);
+                    hdg.writeTo(channel);
+                    break;
+                case ENVIRONMENTAL_PARAMETERS:
+                    mtw.writeTo(channel);
+                    break;
+                case WIND_DATA:
+                    mwv.writeTo(channel);
+                    break;
+                case SPEED_WATER_REFERENCED:
+                    vhw.writeTo(channel);
+                    break;
+                case ATTITUDE:
+                    attitude.writeTo(channel);
+                    break;
+                case BATTERY_STATUS:
+                    if (Float.isFinite(voltage) || Float.isFinite(current) || Float.isFinite(temperature))
+                    {
+                        battery.writeTo(channel);
+                    }
+                    break;
+            }
+        }
+        catch (IOException ex)
+        {
+            throw new RuntimeException(ex);
         }
     }
     private @Property void setPositionDate(int days)

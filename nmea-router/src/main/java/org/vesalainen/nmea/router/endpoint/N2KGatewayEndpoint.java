@@ -19,7 +19,6 @@ package org.vesalainen.nmea.router.endpoint;
 import java.io.IOException;
 import static java.util.logging.Level.SEVERE;
 import org.vesalainen.nio.channels.PipeChannel;
-import org.vesalainen.nmea.jaxb.router.LogEndpointType;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.router.Router;
 import static org.vesalainen.nmea.router.RouterManager.POOL;

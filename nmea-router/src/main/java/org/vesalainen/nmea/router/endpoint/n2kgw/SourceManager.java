@@ -16,11 +16,17 @@
  */
 package org.vesalainen.nmea.router.endpoint.n2kgw;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import org.vesalainen.can.dbc.MessageClass;
 import org.vesalainen.can.j1939.PGN;
+import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
+import org.vesalainen.nmea.jaxb.router.SourceType;
 import org.vesalainen.parsers.nmea.NMEAPGN;
 import org.vesalainen.parsers.nmea.TalkerId;
 import static org.vesalainen.parsers.nmea.TalkerId.*;
+import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -29,96 +35,48 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class SourceManager extends JavaLogging
 {
-    private Source[] map = new Source[256];
+    private TalkerId[] map = new TalkerId[256];
+    private Iterator<TalkerId> free;
 
     public SourceManager()
     {
+        this(null);
+    }
+
+    public SourceManager(N2KGatewayType type)
+    {
         super(SourceManager.class);
+        Set<TalkerId> freeSet = new HashSet<>();
+        CollectionHelp.addAll(freeSet, U0, U1, U2, U3, U4, U5, U6, U7, U8);
+        if (type != null)
+        {
+            for (SourceType src : type.getSource())
+            {
+                TalkerId id = TalkerId.valueOf(src.getTalkerId());
+                map[src.getSource()] = id;
+                freeSet.remove(id);
+            }
+        }
+        this.free = freeSet.iterator();
     }
     
     public TalkerId getTalkerId(int canId)
     {
         int sa = PGN.sourceAddress(canId);
-        Source src = map[sa];
-        if (src != null)
+        TalkerId id = map[sa];
+        if (id != null)
         {
-            return src.getTalkerId();
+            return id;
         }
-        return U0;
-    }
-    public void add(int canId, MessageClass mc)
-    {
-        int sa = PGN.sourceAddress(canId);
-        Source src = map[sa];
-        if (src == null)
+        else
         {
-            src = new Source();
-            map[sa] = src;
-        }
-        src.add(canId, sa, mc);
-    }
-    private class Source
-    {
-        private TalkerId talkerId = U0;
-
-        public void add(int canId, int src, MessageClass mc)
-        {
-            String category = mc.getTransmitter();
-            if ("Ais".equals(category))
+            if (free.hasNext())
             {
-                finest("source(%d) %s -> %s", src, talkerId, AI);
-                talkerId = AI;
-            }
-            else
-            {
-                int pgn = PGN.pgn(canId);
-                NMEAPGN nmeaPgn = NMEAPGN.getForPgn(pgn);
-                if (nmeaPgn == null)
-                {
-                    warning("pgn %d unknown", pgn);
-                    return;
-                }
-                switch (talkerId)
-                {
-                    case U0:
-                        switch (nmeaPgn)
-                        {
-                            case GNSS_POSITION_DATA:
-                            case POSITION_RAPID_UPDATE:
-                                finest("source(%d) %s -> %s", src, talkerId, GN);
-                                talkerId = GN;
-                                break;
-                            case WATER_DEPTH:
-                            case SPEED_WATER_REFERENCED:
-                                finest("source(%d) %s -> %s", src, talkerId, SD);
-                                talkerId = SD;
-                                break;
-                            case VESSEL_HEADING:
-                                finest("source(%d) %s -> %s", src, talkerId, HC);
-                                talkerId = HC;
-                                break;
-                            case WIND_DATA:
-                                finest("source(%d) %s -> %s", src, talkerId, WI);
-                                talkerId = WI;
-                                break;
-                        }
-                        break;
-                    case GN:
-                        switch (nmeaPgn)
-                        {
-                            case VESSEL_HEADING:
-                                finest("source(%d) %s -> %s", src, talkerId, HC);
-                                talkerId = HC;
-                                break;
-                        }
-                        break;
-                }
+                TalkerId next = free.next();
+                map[sa] = next;
+                return next;
             }
         }
-        public TalkerId getTalkerId()
-        {
-            return talkerId;
-        }
-        
+        return U9;
     }
 }

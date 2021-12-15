@@ -321,9 +321,9 @@ public class NMEASentence
     public static NMEASentence battery(Supplier<TalkerId> talkerId, IntSupplier instance, DoubleSupplier voltage, DoubleSupplier amp, DoubleSupplier temp)
     {
         return builder(talkerId, XDR)
-                .bindXdrGroup('V', voltage, 'V', "BATT", instance) 
-                .bindXdrGroup('A', amp, 'A', "BATT", instance)
-                .bindXdrGroup('T', temp, 'C', "BATT", instance)
+                .bindXdrGroup('V', voltage, 'V', "BAT", instance) 
+                .bindXdrGroup('C', amp, 'A', "BAT", instance)
+                .bindXdrGroup('T', temp, 'C', "BAT", instance)
                 .build();
     }
     /**
