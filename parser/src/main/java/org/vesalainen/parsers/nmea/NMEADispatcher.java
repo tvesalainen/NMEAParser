@@ -16,7 +16,6 @@
  */
 package org.vesalainen.parsers.nmea;
 
-import java.lang.invoke.MethodHandles;
 import org.vesalainen.code.InterfaceDispatcher;
 import org.vesalainen.code.InterfaceDispatcherAnnotation;
 
@@ -45,6 +44,62 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                 break;
             case "ROLL":
                 setRoll(value);
+                break;
+            case "BAT0":
+                switch (type)
+                {
+                    case 'V':
+                        setBatteryVoltage0(value);
+                        break;
+                    case 'C':
+                        setBatteryCurrent0(value);
+                        break;
+                    case 'T':
+                        setBatteryTemperature0(value);
+                        break;
+                }
+                break;
+            case "BAT1":
+                switch (type)
+                {
+                    case 'V':
+                        setBatteryVoltage1(value);
+                        break;
+                    case 'C':
+                        setBatteryCurrent1(value);
+                        break;
+                    case 'T':
+                        setBatteryTemperature1(value);
+                        break;
+                }
+                break;
+            case "BAT2":
+                switch (type)
+                {
+                    case 'V':
+                        setBatteryVoltage2(value);
+                        break;
+                    case 'C':
+                        setBatteryCurrent2(value);
+                        break;
+                    case 'T':
+                        setBatteryTemperature2(value);
+                        break;
+                }
+                break;
+            case "BAT3":
+                switch (type)
+                {
+                    case 'V':
+                        setBatteryVoltage3(value);
+                        break;
+                    case 'C':
+                        setBatteryCurrent3(value);
+                        break;
+                    case 'T':
+                        setBatteryTemperature3(value);
+                        break;
+                }
                 break;
             default: 
                 warning("xdr %s not supported", name);

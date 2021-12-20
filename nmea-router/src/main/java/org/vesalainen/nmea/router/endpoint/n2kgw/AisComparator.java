@@ -195,7 +195,7 @@ public class AisComparator extends AbstractConsumer implements AttachedLogger
             }
             catch (IOException ex)
             {
-                Logger.getLogger(AisComparator.class.getName()).log(Level.SEVERE, null, ex);
+                log(Level.SEVERE, "%s", ex);
             }
         }
 
@@ -208,7 +208,7 @@ public class AisComparator extends AbstractConsumer implements AttachedLogger
             }
             catch (IOException ex)
             {
-                Logger.getLogger(AisComparator.class.getName()).log(Level.SEVERE, null, ex);
+                log(Level.SEVERE, "%", ex);
             }
         }
     }

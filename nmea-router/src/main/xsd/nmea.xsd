@@ -92,6 +92,7 @@
                     <xsd:element name="sntp-server" type="sntp-serverType"/>
                     <xsd:element name="compass-corrector" type="compassCorrectorType"/>
                     <xsd:element name="anchor-manager" type="anchorManagerType"/>
+                    <xsd:element name="sunset-manager" type="sunsetManagerType"/>
                 </xsd:choice>
                 <xsd:attribute name="dataAccessPort" type="portType"/>
             </xsd:extension>
@@ -235,6 +236,12 @@
         <xsd:attribute name="toPort" type="xsd:decimal" use="required"/>
         <xsd:attribute name="toBow" type="xsd:decimal" use="required"/>
         <xsd:attribute name="toStern" type="xsd:decimal" use="required"/>
+    </xsd:complexType>
+    <xsd:complexType name="sunsetManagerType">
+        <xsd:attribute name="modbusHost" type="xsd:string" use="required"/>
+        <xsd:attribute name="unitId" type="xsd:unsignedShort" use="required"/>
+        <xsd:attribute name="relayAddress" type="xsd:unsignedShort" use="required"/>
+        <xsd:attribute name="batteryNumber" type="xsd:unsignedShort" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="anchorManagerType">
         <xsd:attribute name="directory" type="xsd:string" use="required"/>

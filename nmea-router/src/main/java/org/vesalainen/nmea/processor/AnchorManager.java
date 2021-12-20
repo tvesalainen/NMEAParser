@@ -450,7 +450,7 @@ public class AnchorManager extends AbstractProcessorTask
             }
             catch (IOException ex)
             {
-                Logger.getLogger(AnchorManager.class.getName()).log(Level.SEVERE, null, ex);
+                log(Level.SEVERE, "%s", ex);
             }
         }
         

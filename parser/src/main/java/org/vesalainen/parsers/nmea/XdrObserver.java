@@ -17,10 +17,9 @@
 package org.vesalainen.parsers.nmea;
 
 import org.vesalainen.math.Unit;
-import static org.vesalainen.math.UnitType.DEGREE_NEG;
-import static org.vesalainen.math.UnitType.GFORCE_EARTH;
-import static org.vesalainen.parsers.nmea.NMEACategory.ACCELERATION;
-import static org.vesalainen.parsers.nmea.NMEACategory.ATTITUDE;
+import static org.vesalainen.math.UnitType.*;
+import static org.vesalainen.parsers.nmea.MessageType.*;
+import static org.vesalainen.parsers.nmea.NMEACategory.*;
 
 /**
  *
@@ -28,21 +27,72 @@ import static org.vesalainen.parsers.nmea.NMEACategory.ATTITUDE;
  */
 public interface XdrObserver
 {
-    public void setYaw(float value);
+    @NMEA0183({XDR})
+    void setYaw(float value);
     /**
      * Pitch: oscillation of vessel about its latitudinal axis. Bow moving up is
      * positive. Value reported to the nearest 0.1 degree.
      * @param value 
      */
+    @NMEA0183({XDR})
     @NMEACat(ATTITUDE)
     @Unit(value=DEGREE_NEG, min=-60, max=60)
-    public void setPitch(float value);
+    void setPitch(float value);
     /**
      * Roll: oscillation of vessel about its longitudinal axis. Roll to the
      * starboard is positive. Value reported to the nearest 0.1 degree.
      * @param value 
      */
+    @NMEA0183({XDR})
     @NMEACat(ATTITUDE)
     @Unit(value=DEGREE_NEG, min=-100, max=100)
-    public void setRoll(float value);
+    void setRoll(float value);
+    @NMEA0183({XDR})
+    @NMEACat(VOLTAGE)
+    @Unit(value=VOLT, min=0, max=100)
+    void setBatteryVoltage0(float v);
+    @NMEA0183({XDR})
+    @NMEACat(VOLTAGE)
+    @Unit(value=VOLT, min=0, max=100)
+    void setBatteryVoltage1(float v);
+    @NMEA0183({XDR})
+    @NMEACat(VOLTAGE)
+    @Unit(value=VOLT, min=0, max=100)
+    void setBatteryVoltage2(float v);
+    @NMEA0183({XDR})
+    @NMEACat(VOLTAGE)
+    @Unit(value=VOLT, min=0, max=100)
+    void setBatteryVoltage3(float v);
+    @NMEA0183({XDR})
+    @NMEACat(ELECTRIC_CURRENT)
+    @Unit(value=AMPERE, min=0, max=100)
+    void setBatteryCurrent0(float a);
+    @NMEA0183({XDR})
+    @NMEACat(ELECTRIC_CURRENT)
+    @Unit(value=AMPERE, min=0, max=100)
+    void setBatteryCurrent1(float a);
+    @NMEA0183({XDR})
+    @NMEACat(ELECTRIC_CURRENT)
+    @Unit(value=AMPERE, min=0, max=100)
+    void setBatteryCurrent2(float a);
+    @NMEA0183({XDR})
+    @NMEACat(ELECTRIC_CURRENT)
+    @Unit(value=AMPERE, min=0, max=100)
+    void setBatteryCurrent3(float a);
+    @NMEA0183({XDR})
+    @NMEACat(TEMPERATURE)
+    @Unit(value=CELSIUS, min=0, max=100)
+    void setBatteryTemperature0(float c);
+    @NMEA0183({XDR})
+    @NMEACat(TEMPERATURE)
+    @Unit(value=CELSIUS, min=0, max=100)
+    void setBatteryTemperature1(float c);
+    @NMEA0183({XDR})
+    @NMEACat(TEMPERATURE)
+    @Unit(value=CELSIUS, min=0, max=100)
+    void setBatteryTemperature2(float c);
+    @NMEA0183({XDR})
+    @NMEACat(TEMPERATURE)
+    @Unit(value=CELSIUS, min=0, max=100)
+    void setBatteryTemperature3(float c);
 }

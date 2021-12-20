@@ -92,6 +92,10 @@
         </dependency>
         <dependency>
             <groupId>org.vesalainen</groupId>
+            <artifactId>modbus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.vesalainen</groupId>
             <artifactId>vfs</artifactId>
             <scope>test</scope>
         </dependency>

@@ -139,7 +139,7 @@ public class GPSCompass
         }
         catch (IOException | InterruptedException | ExecutionException ex)
         {
-            Logger.getLogger(GPSCompass.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GPSCompass.class.getName()).log(Level.SEVERE, "%s", ex);
         }
     }
     private class Pairer implements Runnable
@@ -256,7 +256,7 @@ public class GPSCompass
                 }
                 catch (InterruptedException ex)
                 {
-                    Logger.getLogger(GPSCompass.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(GPSCompass.class.getName()).log(Level.SEVERE, "%s", ex);
                 }
             }
             latitude = lat;

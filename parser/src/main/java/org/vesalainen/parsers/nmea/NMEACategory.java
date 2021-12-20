@@ -36,5 +36,7 @@ public enum NMEACategory
     ATTITUDE,
     ACCELERATION,
     TIME,
+    VOLTAGE,
+    ELECTRIC_CURRENT,
     MISCELLENEOUS
 }

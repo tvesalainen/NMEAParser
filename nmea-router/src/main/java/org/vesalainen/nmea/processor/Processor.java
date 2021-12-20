@@ -16,7 +16,6 @@
  */
 package org.vesalainen.nmea.processor;
 
-import org.vesalainen.nmea.router.endpoint.n2kgw.N2KGateway;
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -34,9 +33,9 @@ import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import org.vesalainen.nmea.jaxb.router.BoatDataType;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
-import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
+import org.vesalainen.nmea.jaxb.router.SunsetManagerType;
 import org.vesalainen.nmea.jaxb.router.TrackerType;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.nmea.jaxb.router.VariationSourceType;
@@ -162,6 +161,16 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                     processes.add(anchorManager);
                     addNMEAObserver(anchorManager);
                     anchorManager.start("");
+                    continue;
+                }
+                if (ob instanceof SunsetManagerType)
+                {
+                    info("starting SunsetManager");
+                    SunsetManagerType sunsetManagerType = (SunsetManagerType) ob;
+                    SunsetManager sunsetManager = new SunsetManager(sunsetManagerType, executor);
+                    processes.add(sunsetManager);
+                    addNMEAObserver(sunsetManager);
+                    sunsetManager.start("");
                     continue;
                 }
                 if (process == null)

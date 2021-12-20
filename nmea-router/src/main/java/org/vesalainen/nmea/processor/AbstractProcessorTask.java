@@ -64,7 +64,9 @@ public abstract class AbstractProcessorTask extends AnnotatedPropertyStore imple
         }
         else
         {
-            warning(getClass().getSimpleName()+" task doesn't have all needed properties");
+            Set<String> set = new HashSet<>(neededProperties);
+            set.removeAll(currentProperties);
+            warning(getClass().getSimpleName()+" task doesn't have all needed properties "+set);
         }
     }
 

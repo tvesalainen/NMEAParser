@@ -19,7 +19,7 @@
             <route prefix="$SDMTW" target="TCP"/>
             <route prefix="$SDVHW" target="TCP Prc"/>
             <route prefix="$WIMWV" target="TCP Prc"/>
-            <route prefix="$??XDR" target="TCP Prc"/>
+            <route prefix="$U0XDR" target="Prc"/>
             <source talkerId="WI" source="1"/>
             <source talkerId="HC" source="16"/>
             <source talkerId="SD" source="35"/>
@@ -37,6 +37,7 @@
             <compass-corrector configFile="c:\\temp\\deviation.txt"/>
             <sntp-server rootDelay="1600" server="pi3media"/>
             <anchor-manager directory="c:\\temp"/>
+            <sunset-manager modbusHost="192.168.214.222" unitId="100" relayAddress="807" batteryNumber="1"/>
         </processor>
         <multicast-nmea-0183 address="224.0.0.3" name="Net" enable="true">
             <route prefix="$GPRMC" target="TCP"/>
