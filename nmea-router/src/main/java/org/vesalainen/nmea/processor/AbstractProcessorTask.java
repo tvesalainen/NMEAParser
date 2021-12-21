@@ -52,6 +52,7 @@ public abstract class AbstractProcessorTask extends AnnotatedPropertyStore imple
         {
             CollectionHelp.addAll(this.neededProperties, getProperties());
         }
+        this.neededProperties.remove("clock");  // clock has special treatment
     }
 
     @Override

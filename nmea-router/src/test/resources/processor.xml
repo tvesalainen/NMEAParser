@@ -14,7 +14,7 @@
             <route prefix="!AIVDO" target="TCP"/>
             <route prefix="$HCHDT" target="TCP Prc"/>
             <route prefix="$HCHDG" target="TCP"/>
-            <route prefix="$SDDPT" target="TCP"/>
+            <route prefix="$SDDPT" target="TCP Prc"/>
             <route prefix="$HCRMC" target="TCP Prc"/>
             <route prefix="$SDMTW" target="TCP"/>
             <route prefix="$SDVHW" target="TCP Prc"/>
