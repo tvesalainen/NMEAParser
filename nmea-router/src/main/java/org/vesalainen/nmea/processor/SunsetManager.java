@@ -191,13 +191,17 @@ public class SunsetManager extends AbstractProcessorTask
             try (ModbusTcp modbus = ModbusTcp.open(modbusHost))
             {
                 modbus.setShort(unitId, relayAddress, on);
-                relay = modbus.getShort(unitId, relayAddress);
+                relay = on;
                 info("set relay(%d) = %d", on, relay);
             }
             catch (IOException ex)
             {
                 throw new RuntimeException(ex);
             }
+        }
+        else
+        {
+            info("not setting relay = %d", on, relay);
         }
     }
 }

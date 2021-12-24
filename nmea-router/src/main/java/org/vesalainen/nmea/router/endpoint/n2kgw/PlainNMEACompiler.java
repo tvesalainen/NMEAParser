@@ -52,6 +52,8 @@ public final class PlainNMEACompiler extends AbstractNMEACompiler
         addPgnSetter(COG_SOG_RAPID_UPDATE, "True_Course_Over_Ground", "trackMadeGood");
         
         addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Sea_Temperature", "waterTemperature");
+        addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Outside_Temperature", "outsideTemperature");
+        addPgnSetter(ENVIRONMENTAL_PARAMETERS, "Atmospheric_Pressure", "atmosphericPressure");
         
         addPgnSetter(WIND_DATA, "Apparent_Wind_Speed", "relativeWindSpeed");
         addPgnSetter(WIND_DATA, "Apparent_Wind_Direction", "relativeWindAngle");

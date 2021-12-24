@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>CUSTOM-packager</actionName>
+            <displayName>packager</displayName>
+            <goals>
+                <goal>org.vesalainen:packager-plugin:1.8.1:pack</goal>
+            </goals>
+        </action>
+    </actions>

@@ -60,6 +60,8 @@ public class NMEASender extends AnnotatedPropertyStore
     private @Property float voltage;
     private @Property float current;
     private @Property float temperature;
+    private @Property float outsideTemperature;
+    private @Property float atmosphericPressure;
     
     private Clock frameClock;
     private N2KClock positionClock;
@@ -77,6 +79,7 @@ public class NMEASender extends AnnotatedPropertyStore
     private final NMEASentence vhw;
     private final NMEASentence attitude;
     private final NMEASentence battery;
+    private final NMEASentence environmental;
     
     public NMEASender(SourceManager sourceManager, WritableByteChannel channel)
     {
@@ -146,6 +149,11 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->voltage,
                 ()->current,
                 ()->temperature);
+        this.environmental = NMEASentence.environmental(
+                ()->sourceManager.getTalkerId(canId),
+                ()->outsideTemperature,
+                ()->waterTemperature,
+                ()->atmosphericPressure/1000F);
         
     }
     private double magneticVariation(Clock clock)
@@ -221,6 +229,7 @@ public class NMEASender extends AnnotatedPropertyStore
                     break;
                 case ENVIRONMENTAL_PARAMETERS:
                     mtw.writeTo(channel);
+                    environmental.writeTo(channel);
                     break;
                 case WIND_DATA:
                     mwv.writeTo(channel);

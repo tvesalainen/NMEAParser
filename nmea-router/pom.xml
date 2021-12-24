@@ -50,6 +50,25 @@
                     <packageName>org.vesalainen.nmea.jaxb.router</packageName> <!-- The name of your generated source package -->
                 </configuration>
             </plugin>        
+            <plugin>
+                <groupId>org.vesalainen</groupId>
+                <artifactId>packager-plugin</artifactId>
+                <version>1.8.1</version>
+                <executions>
+                    <execution>
+                        <id>pack</id>
+                        <goals>
+                            <goal>pack</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <packageDir>C:\\Users\\tkv\\share</packageDir>
+                    <packageType>deb</packageType>
+                    <shortName>true</shortName>
+                    <maintainer>Timo Vesalainen </maintainer>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
