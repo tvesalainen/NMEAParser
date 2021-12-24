@@ -45,6 +45,16 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
             case "ROLL":
                 setRoll(value);
                 break;
+            case "ENV_OUTAIR_T":
+            case "TempAir":
+                setOutsideTemperature(value);
+                break;
+            case "ENV_WATER_T":
+                setWaterTemperature(value);
+                break;
+            case "Barometer":
+                setAtmosphericPressure(value);
+                break;
             case "BAT0":
                 switch (type)
                 {

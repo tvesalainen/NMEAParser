@@ -1581,7 +1581,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     @Terminal(expression = "[0-9A-Fa-f]")
     protected abstract char hexAlpha(char x);
 
-    @Terminal(expression = "[a-zA-Z0-9 \\.\\-\\(\\)\\^]+")
+    @Terminal(expression = "[a-zA-Z0-9_ \\.\\-\\(\\)\\^]+")
     protected String string(CharSequence seq)
     {
         StringBuilder sb = new StringBuilder();

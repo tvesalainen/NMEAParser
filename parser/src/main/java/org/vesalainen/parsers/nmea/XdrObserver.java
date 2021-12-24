@@ -28,6 +28,14 @@ import static org.vesalainen.parsers.nmea.NMEACategory.*;
 public interface XdrObserver
 {
     @NMEA0183({XDR})
+    @NMEACat(TEMPERATURE)
+    @Unit(value=CELSIUS, min=-60, max=60)
+    void setOutsideTemperature(float value);
+    @NMEA0183({XDR})
+    @NMEACat(PRESSURE)
+    @Unit(value=BAR, min=0.8, max=1.4)
+    void setAtmosphericPressure(float value);
+    @NMEA0183({XDR})
     void setYaw(float value);
     /**
      * Pitch: oscillation of vessel about its latitudinal axis. Bow moving up is

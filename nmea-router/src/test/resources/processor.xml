@@ -20,7 +20,7 @@
             <route prefix="$SDVHW" target="TCP Prc"/>
             <route prefix="$WIMWV" target="TCP Prc"/>
             <route prefix="$U0XDR" target="Prc"/>
-            <route prefix="$U2XDR" target="TCP"/>
+            <route prefix="$U2XDR" target="TCP Prc"/>
             <source talkerId="WI" source="1"/>
             <source talkerId="HC" source="16"/>
             <source talkerId="SD" source="35"/>

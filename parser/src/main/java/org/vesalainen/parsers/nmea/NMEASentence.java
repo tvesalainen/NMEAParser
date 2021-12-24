@@ -326,6 +326,14 @@ public class NMEASentence
                 .bindXdrGroup('T', temp, 'C', "BAT", instance)
                 .build();
     }
+    public static NMEASentence environmental(Supplier<TalkerId> talkerId, DoubleSupplier outTemp, DoubleSupplier waterTemp, DoubleSupplier pressure)
+    {
+        return builder(talkerId, XDR)
+                .bindXdrGroup('C', outTemp, 'C', "ENV_OUTAIR_T", null)
+                .bindXdrGroup('C', waterTemp, 'C', "ENV_WATER_T", null)
+                .bindXdrGroup3('P', pressure, 'B', "Barometer", null)
+                .build();
+    }
     /**
      * Returns byte buffer containing the sentence. Changes to returned buffer
      * will not affect this sentence.
@@ -832,6 +840,27 @@ public class NMEASentence
                         p.print(',');
                         p.print(type);
                         p.format(Locale.US, ",%.1f,", v);
+                        p.print(unit);
+                        p.print(',');
+                        p.print(name);
+                        if (instance != null)
+                        {
+                            p.print(instance.getAsInt());
+                        }
+                    }
+                });
+                return this;
+        }
+        private Builder bindXdrGroup3(char type, DoubleSupplier supplier, char unit, String name, IntSupplier instance)
+        {
+                bind((p)->
+                {
+                    double v = supplier.getAsDouble();
+                    if (Double.isFinite(v))
+                    {
+                        p.print(',');
+                        p.print(type);
+                        p.format(Locale.US, ",%.4f,", v);
                         p.print(unit);
                         p.print(',');
                         p.print(name);
