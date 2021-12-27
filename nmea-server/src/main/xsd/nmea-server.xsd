@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (C) 2021 Timo Vesalainen <timo.vesalainen@iki.fi>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+           elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xsd:element name="nmea-server" type="nmeaServerType"/>
+    <xsd:complexType name="nmeaServerType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="property" type="propertyType"/>
+        </xsd:choice>
+        <xsd:attribute name="nmeaMulticastAddress" type="xsd:string"></xsd:attribute>
+        <xsd:attribute name="nmeaMulticastPort" type="xsd:unsignedShort"></xsd:attribute>
+        <xsd:attribute name="httpPort" type="xsd:unsignedShort"></xsd:attribute>
+    </xsd:complexType>
+    <xsd:complexType name="propertyType">
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+        <xsd:attribute name="description" type="xsd:string"/>
+        <xsd:attribute name="type" type="xsd:string"/>
+        <xsd:attribute name="min" type="xsd:decimal"/>
+        <xsd:attribute name="max" type="xsd:decimal"/>
+        <xsd:attribute name="unit" type="xsd:string"/>
+        <xsd:attribute name="unit-category" type="xsd:string"/>
+        <xsd:attribute name="format" type="xsd:string"/>
+        <xsd:attribute name="decimals" type="xsd:unsignedShort"></xsd:attribute>
+        <xsd:attribute name="averageMillis" type="xsd:unsignedInt"></xsd:attribute>
+        <xsd:attribute name="periodMillis" type="xsd:unsignedInt"></xsd:attribute>
+        <xsd:attribute name="historyMinutes" type="xsd:unsignedInt"></xsd:attribute>
+    </xsd:complexType>
+</xsd:schema>
