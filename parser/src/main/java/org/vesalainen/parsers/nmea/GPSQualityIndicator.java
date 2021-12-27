@@ -22,14 +22,13 @@ package org.vesalainen.parsers.nmea;
  */
 public enum GPSQualityIndicator
 {
-
-    FixNotAvailable,
-    GPSFix,
-    DifferentialGPSFix,
-    PPSFix,
-    RealTimeKinematic,
-    FloatRTK,
-    Estimated, // (dead reckoning)
-    ManualInputMode,
-    SimulationMode
+    FIX_NOT_AVAILABLE,
+    GPS_FIX,
+    DIFFERENTIAL_GPS_FIX,
+    PPS_FIX,
+    REAL_TIME_KINEMATIC,
+    FLOAT_RTK,
+    ESTIMATED, // (dead reckoning)
+    MANUAL_INPUT_MODE,
+    SIMULATION_MODE
 }
