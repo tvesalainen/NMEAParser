@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.time.Clock;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,37 +30,62 @@ import org.vesalainen.parsers.nmea.NMEAProperties;
  */
 public class PropertyServer extends AbstractPropertySetter
 {
-    private Map<String,Property> map = new ConcurrentHashMap<>();
+    private final Clock clock;
+    private final Map<String,Property> map = new ConcurrentHashMap<>();
     private final Config config;
     
-    public PropertyServer(Config config)
+    public PropertyServer(Clock clock, Config config)
     {
         super(allNMEAProperties());
+        this.clock = clock;
         this.config = config;
     }
 
+    public void attach(Observer observer)
+    {
+        Property p = getProperty(observer.getName());
+        p.attach(observer);
+    }
     @Override
     public <T> void set(String property, T arg)
     {
-        super.set(property, arg); //To change body of generated methods, choose Tools | Templates.
+        Property p = getProperty(property);
+        p.set(clock.millis(), arg);
     }
 
     @Override
     public void set(String property, double arg)
     {
-        super.set(property, arg); //To change body of generated methods, choose Tools | Templates.
+        Property p = getProperty(property);
+        p.set(clock.millis(), arg);
     }
 
     @Override
     public void set(String property, float arg)
     {
-        super.set(property, arg); //To change body of generated methods, choose Tools | Templates.
+        Property p = getProperty(property);
+        p.set(clock.millis(), arg);
     }
 
     @Override
     public void set(String property, int arg)
     {
-        super.set(property, arg); //To change body of generated methods, choose Tools | Templates.
+        Property p = getProperty(property);
+        p.set(clock.millis(), arg);
+    }
+    
+    @Override
+    public void set(String property, long arg)
+    {
+        Property p = getProperty(property);
+        p.set(clock.millis(), arg);
+    }
+    
+    @Override
+    public void set(String property, char arg)
+    {
+        Property p = getProperty(property);
+        p.set(clock.millis(), arg+"");
     }
     
     

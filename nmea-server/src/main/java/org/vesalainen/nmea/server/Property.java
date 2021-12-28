@@ -16,59 +16,83 @@
  */
 package org.vesalainen.nmea.server;
 
-import java.util.Locale;
-import java.util.function.DoubleFunction;
+import static java.util.concurrent.TimeUnit.*;
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import org.vesalainen.code.AbstractPropertySetter;
-import org.vesalainen.code.PropertySetter;
+import org.vesalainen.lang.Primitives;
 import org.vesalainen.management.AbstractDynamicMBean;
+import org.vesalainen.math.UnitType;
+import static org.vesalainen.math.UnitType.*;
+import org.vesalainen.math.sliding.DoubleTimeoutSlidingAverage;
+import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
+import org.vesalainen.math.sliding.TimeValueConsumer;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
+import org.vesalainen.parsers.nmea.NMEAProperties;
+import org.vesalainen.util.TimeToLiveList;
+import org.vesalainen.util.WeakList;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class Property extends AbstractDynamicMBean implements PropertySetter
+public abstract class Property extends AbstractDynamicMBean
 {
-    protected final PropertyType property;
-    protected final DoubleFunction<String> format;
+    private final PropertyType property;
+    private WeakList<Observer> observers = new WeakList<>();
 
     private Property(PropertyType property)
     {
         super(property.getDescription(), property);
         this.property = property;
-        this.format = createFormat();
         register();
+    }
+
+    @Override
+    public final void register()
+    {
+        super.register();
     }
 
     public static Property getInstance(PropertyType property)
     {
-        switch (property.getType())
+        NMEAProperties p = NMEAProperties.getInstance();
+        Class<?> type = p.getType(property.getName());
+        switch (type.getSimpleName())
         {
-            case "float32":
-                return new FloatProperty(property);
-            case "float64":
+            case "int":
+            case "long":
+            case "float":
+            case "double":
                 return new DoubleProperty(property);
-            case "int32":
-                return new IntProperty(property);
-            case "string":
-                return new StringProperty(property);
+            case "char":
+            case "String":
+                return new ObjectProperty(property);
             default:
-                throw new UnsupportedOperationException(property.getType()+" not supported");
+                if (type.isEnum())
+                {
+                    return new ObjectProperty(property);
+                }
+                else
+                {
+                    throw new UnsupportedOperationException(type+" not supported");
+                }
         }
     }
 
-    @Override
-    public void set(String property, double arg)
+    public void attach(Observer observer)
     {
-        PropertySetter.super.set(property, arg); //To change body of generated methods, choose Tools | Templates.
+        observers.add(observer);
     }
 
-    @Override
-    public <T> void set(String property, T arg)
+    public <T> void set(long time, double value)
     {
-        PropertySetter.super.set(property, arg); //To change body of generated methods, choose Tools | Templates.
+        observers.forEach((o)->o.accept(time, value));
+    }
+    public <T> void set(long time, T value)
+    {
+        observers.forEach((o)->o.accept(time, value.toString()));
     }
     
     @Override
@@ -77,93 +101,169 @@ public class Property extends AbstractDynamicMBean implements PropertySetter
         return ObjectName.getInstance(Config.class.getName(), "Property", property.getName());
     }
 
-    protected DoubleFunction<String> createFormat()
+    public String getName()
     {
-        String f = property.getFormat();
-        if (f != null)
-        {
-            return (x)->String.format(Locale.US, f, x);
-        }
-        else
-        {
-            Integer decimals = property.getDecimals();
-            if (decimals != null)
-            {
-                String fmt = String.format("%%.%df", decimals);
-                return (x)->String.format(Locale.US, fmt, x);
-            }
-        }
+        return property.getName();
     }
-    private static class FloatProperty extends DoubleProperty
-    {
-        public FloatProperty(PropertyType property)
-        {
-            super(property);
-        }
-        @Override
-        public void set(String property, float arg)
-        {
-            super.set(property, (double)arg);
-        }
 
+    public String getDescription()
+    {
+        return property.getDescription();
     }
+
+    public double getMin()
+    {
+        return Primitives.getDouble(property.getMin(), -Double.MAX_VALUE);
+    }
+
+    public double getMax()
+    {
+        return Primitives.getDouble(property.getMax(), Double.MAX_VALUE);
+    }
+
+    public UnitType getUnit()
+    {
+        String unit = property.getUnit();
+        try
+        {
+            return UnitType.valueOf(unit);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            return UNITLESS;
+        }
+    }
+
+    public int getDecimals()
+    {
+        return Primitives.getInt(property.getDecimals(), 0);
+    }
+
+    public long getAverageMillis()
+    {
+        return Primitives.getLong(property.getAverageMillis(), 0);
+    }
+
+    public long getPeriodMillis()
+    {
+        return Primitives.getLong(property.getPeriodMillis(), 0);
+    }
+
+    public long getHistoryMinutes()
+    {
+        return Primitives.getLong(property.getHistoryMinutes(), 0);
+    }
+
     private static class DoubleProperty extends Property
     {
+        private DoubleTimeoutSlidingSlope history;
+        private TimeValueConsumer func;
+        
         public DoubleProperty(PropertyType property)
         {
             super(property);
-        }
-        @Override
-        public void set(String property, double arg)
-        {
-            super.set(property, arg);
-        }
-        @Override
-        protected DoubleFunction<String> createFormat()
-        {
-            String f = property.getFormat();
-            if (f != null)
+            func = (t,v)->accept(t, v);
+            Long periodMillis = property.getPeriodMillis();
+            if (periodMillis != null)
             {
-                return (x)->String.format(Locale.US, f, x);
+                long per = periodMillis;
+                func = new Delay(per, func);
             }
-            else
+            Long averageMillis = property.getAverageMillis();
+            if (averageMillis != null)
             {
-                Integer decimals = property.getDecimals();
-                if (decimals != null)
+                DoubleTimeoutSlidingAverage ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
+                func = (t,v)->
                 {
-                    String fmt = String.format("%%.%df", decimals);
-                    return (x)->String.format(Locale.US, fmt, x);
-                }
-                else
-                {
-                    return (x)->String.format(Locale.US, "%.1f", x);
-                }
+                    ave.accept(v, t);
+                    func.accept(t, ave.fast());
+                };
+            }
+            long historyMinutes = getHistoryMinutes();
+            if (historyMinutes > 0)
+            {
+                this.history = new DoubleTimeoutSlidingSlope(256, MILLISECONDS.convert(historyMinutes, MINUTES));
+            }
+        }
+        @Override
+        public void set(long time, double arg)
+        {
+            func.accept(time, arg);
+        }
+        private void accept(long time, double arg)
+        {
+            super.set(time, arg);
+            if (history != null)
+            {
+                history.accept(arg, time);
+            }
+        }
+
+        @Override
+        public void attach(Observer observer)
+        {
+            super.attach(observer);
+            if (history != null)
+            {
+                history.forEach((t, d)->observer.accept(t, d));
+            }
+        }
+
+    }
+    private static class ObjectProperty extends Property
+    {
+        private TimeToLiveList<String> history;
+        public ObjectProperty(PropertyType property)
+        {
+            super(property);
+            long historyMinutes = getHistoryMinutes();
+            if (historyMinutes > 0)
+            {
+                this.history = new TimeToLiveList(historyMinutes, MINUTES);
+            }
+        }
+        @Override
+        public <T> void set(long time, T arg)
+        {
+            super.set(time, arg);
+            if (history != null)
+            {
+                history.add(time, arg.toString());
+            }
+        }
+
+        @Override
+        public void attach(Observer observer)
+        {
+            super.attach(observer);
+            if (history != null)
+            {
+                history.forEach((t, d)->observer.accept(t, d));
+            }
+        }
+
+    }
+    private class Delay implements TimeValueConsumer
+    {
+        private final long delay;
+        private long last;
+        private TimeValueConsumer next;
+
+        public Delay(long delay, TimeValueConsumer next)
+        {
+            this.delay = delay;
+            this.next = next;
+        }
+
+        @Override
+        public void accept(long t, double v)
+        {
+            if (t - last >= delay)
+            {
+                next.accept(t, v);
+                last = t;
             }
         }
         
-    }
-    private static class IntProperty extends DoubleProperty
-    {
-        public IntProperty(PropertyType property)
-        {
-            super(property);
-        }
-        @Override
-        public void set(String property, int arg)
-        {
-            super.set(property, (double)arg);
-        }
-    }
-    private static class StringProperty extends Property
-    {
-        public StringProperty(PropertyType property)
-        {
-            super(property);
-        }
-        @Override
-        public <T> void set(String property, T arg)
-        {
-            super.set(property, arg);
-        }
     }
 }

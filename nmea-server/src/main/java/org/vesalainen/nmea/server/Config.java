@@ -197,32 +197,8 @@ public class Config extends JavaLogging
             pt.setMax(BigDecimal.valueOf(p.getMax(property)));
             pt.setMin(BigDecimal.valueOf(p.getMin(property)));
             pt.setUnit(p.getUnit(property).name());
-            pt.setUnitCategory(p.getCategory(property).name());
             pt.setPeriodMillis(Long.valueOf(0));
             pt.setAverageMillis(Long.valueOf(0));
-            Class<?> type = p.getType(property);
-            switch (type.getSimpleName())
-            {
-                case "int":
-                    pt.setType("int32");
-                    break;
-                case "long":
-                    pt.setType("int64");
-                    break;
-                case "float":
-                    pt.setType("float32");
-                    pt.setDecimals(1);
-                    break;
-                case "double":
-                    pt.setType("float64");
-                    pt.setDecimals(4);
-                    break;
-                case "String":
-                    pt.setType("string");
-                    break;
-                default:
-                    throw new UnsupportedOperationException(type+" not supported");
-            }
         }
     }
     

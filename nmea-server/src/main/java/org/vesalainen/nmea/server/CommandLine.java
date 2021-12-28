@@ -18,6 +18,7 @@ package org.vesalainen.nmea.server;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBException;
@@ -52,7 +53,8 @@ public class CommandLine extends LoggingCommandLine
         CachedScheduledThreadPool executor = new CachedScheduledThreadPool(64);
         config("ThreadPool started %s", executor);
         NMEAService nmeaService = new NMEAService(address, nmeaPort, executor);
-        
+        PropertyServer propertyServer = new PropertyServer(Clock.systemDefaultZone(), config);
+        nmeaService.addNMEAObserver(propertyServer);
         nmeaService.start();
         config("NMEA Service started");
         executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
