@@ -25,7 +25,7 @@ import java.util.Collection;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import java.util.function.DoubleSupplier;
 import org.vesalainen.code.Property;
-import org.vesalainen.modbus.ModbusTcp;
+import org.vesalainen.modbus.ModbusTcpClient;
 import org.vesalainen.navi.SolarPosition;
 import org.vesalainen.nmea.jaxb.router.SunsetManagerType;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
@@ -85,7 +85,7 @@ public class SunsetManager extends AbstractProcessorTask
             default:
                 throw new UnsupportedOperationException("battery "+batteryNumber+" not supported");
         }
-        try (ModbusTcp modbus = ModbusTcp.open(modbusHost))
+        try (ModbusTcpClient modbus = ModbusTcpClient.open(modbusHost))
         {
             relay = modbus.getShort(unitId, relayAddress);
             info("modbus ok relay=%d", relay);
@@ -188,7 +188,7 @@ public class SunsetManager extends AbstractProcessorTask
     {
         if (relay != on)
         {
-            try (ModbusTcp modbus = ModbusTcp.open(modbusHost))
+            try (ModbusTcpClient modbus = ModbusTcpClient.open(modbusHost))
             {
                 modbus.setShort(unitId, relayAddress, on);
                 relay = on;

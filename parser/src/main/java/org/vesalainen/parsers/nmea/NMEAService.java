@@ -226,7 +226,7 @@ public class NMEAService<T extends ByteChannel & ScatteringByteChannel & Gatheri
             running = null;
             parser.parse(channel, clock, origin, nmeaDispatcher, aisDispatcher, executor);
         }
-        catch (Exception ex)
+        catch (Throwable ex)
         {
             log(Level.SEVERE, ex, "");
         }

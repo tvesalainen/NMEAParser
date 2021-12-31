@@ -16,6 +16,7 @@
         <module>IcomManager</module>
         <module>track-plotter</module>
     <module>viewer</module>
+        <module>nmea-server</module>
     </modules>
     <name>NMEA Utilities</name>
     <description>

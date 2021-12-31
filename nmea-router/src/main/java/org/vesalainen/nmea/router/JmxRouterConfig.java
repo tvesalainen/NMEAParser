@@ -73,16 +73,9 @@ public class JmxRouterConfig
         }
 
         @Override
-        protected ObjectName createObjectName()
+        protected ObjectName createObjectName() throws MalformedObjectNameException
         {
-            try
-            {
-                return ObjectName.getInstance(RouterConfig.class.getName(), "Type", "Common");
-            }
-            catch (MalformedObjectNameException ex)
-            {
-                throw new RuntimeException(ex);
-            }
+            return ObjectName.getInstance(RouterConfig.class.getName(), "Type", "Common");
         }
         
     }

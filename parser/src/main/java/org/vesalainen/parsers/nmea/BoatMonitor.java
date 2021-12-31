@@ -70,7 +70,7 @@ public class BoatMonitor extends AbstractPropertySetter implements Transactional
     }
 
     @Override
-    protected void setProperty(String property, Object arg)
+    public void setProperty(String property, Object arg)
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

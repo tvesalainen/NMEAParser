@@ -173,10 +173,11 @@ public abstract class Property extends AbstractDynamicMBean
             if (averageMillis != null)
             {
                 DoubleTimeoutSlidingAverage ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
+                TimeValueConsumer oldFunc = func;
                 func = (t,v)->
                 {
                     ave.accept(v, t);
-                    func.accept(t, ave.fast());
+                    oldFunc.accept(t, ave.fast());
                 };
             }
             long historyMinutes = getHistoryMinutes();
