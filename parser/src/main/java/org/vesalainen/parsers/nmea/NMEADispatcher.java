@@ -18,6 +18,7 @@ package org.vesalainen.parsers.nmea;
 
 import org.vesalainen.code.InterfaceDispatcher;
 import org.vesalainen.code.InterfaceDispatcherAnnotation;
+import static org.vesalainen.math.UnitType.*;
 
 /**
  *
@@ -53,7 +54,7 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                 setWaterTemperature(value);
                 break;
             case "Barometer":
-                setAtmosphericPressure(value);
+                setAtmosphericPressure((float) BAR.convertTo(value, HPA));
                 break;
             case "BAT0":
                 switch (type)
