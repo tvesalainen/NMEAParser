@@ -33,7 +33,7 @@ public interface XdrObserver
     void setOutsideTemperature(float value);
     @NMEA0183({XDR})
     @NMEACat(PRESSURE)
-    @Unit(value=BAR, min=0.8, max=1.4)
+    @Unit(value=HPA, min=800, max=1400)
     void setAtmosphericPressure(float value);
     @NMEA0183({XDR})
     void setYaw(float value);
