@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.util.Iterator;
 import static java.util.concurrent.TimeUnit.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
@@ -88,11 +89,27 @@ public abstract class Property extends AbstractDynamicMBean
 
     public <T> void set(long time, double value)
     {
-        observers.forEach((o)->o.accept(time, value));
+        Iterator<Observer> iterator = observers.iterator();
+        while (iterator.hasNext())
+        {
+            Observer next = iterator.next();
+            if (!next.accept(time, value))
+            {
+                iterator.remove();
+            }
+        }
     }
     public <T> void set(long time, T value)
     {
-        observers.forEach((o)->o.accept(time, value.toString()));
+        Iterator<Observer> iterator = observers.iterator();
+        while (iterator.hasNext())
+        {
+            Observer next = iterator.next();
+            if (!next.accept(time, value.toString()))
+            {
+                iterator.remove();
+            }
+        }
     }
     
     @Override
@@ -163,14 +180,14 @@ public abstract class Property extends AbstractDynamicMBean
         {
             super(property);
             func = (t,v)->accept(t, v);
-            Long periodMillis = property.getPeriodMillis();
-            if (periodMillis != null)
+            long periodMillis = getPeriodMillis();
+            if (periodMillis > 0)
             {
                 long per = periodMillis;
                 func = new Delay(per, func);
             }
-            Long averageMillis = property.getAverageMillis();
-            if (averageMillis != null)
+            long averageMillis = getAverageMillis();
+            if (averageMillis > 0)
             {
                 DoubleTimeoutSlidingAverage ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
                 TimeValueConsumer oldFunc = func;

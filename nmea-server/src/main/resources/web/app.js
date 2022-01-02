@@ -22,13 +22,26 @@ $(document).ready(function () {
     
     var eventSource = new EventSource("/sse");
 
-    var targets = document.getElementsByClassName('gauge');
-    for (var i=0;i<targets.length;i++)
+    eventSource.onerror = function(err)
     {
-        var target = targets[i];
-        gauge[i] = new Gauge(target, i);
-        eventSource.addEventListener(gauge[i].event(), gauge[i].call, false);
-        $.post("/sse", gauge[i].request());
-    }
+    };
+    eventSource.onopen = function()
+    {
+        var targets = document.getElementsByClassName('gauge');
+        for (var i=0;i<targets.length;i++)
+        {
+            var target = targets[i];
+            var g = new Gauge(target, i);
+            var event = g.event();
+            gauge[event] = g;
+            eventSource.addEventListener(event, fired, false);
+            $.post("/sse", g.request());
+        }
+    };
+    function fired(event)
+    {
+        var g = gauge[event.type];
+        g.call(event.data);
+    };
 });
 

@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <title>TODO supply a title</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="w3.css">        
+        <link rel="stylesheet" href="w3.css">
+        <link rel="stylesheet" href="style.css">        
         <script src="jquery-3.6.0.js"></script>
         <script src="svg.js"></script>
         <script src="gauge.js"></script>
@@ -28,15 +29,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </head>
     <body>
         <div class="w3-row">
-            <div class="w3-col m4 l3 gauge" data-property="waterDepth">
+            <div class="w3-col s6 m6 l6 gauge" data-property="depthOfWater">
             </div>
-            <div class="w3-col m8 l9 gauge" data-property="waterTEmperature">
+            <div class="w3-col s6 m6 l6 gauge" data-property="waterTemperature">
             </div>
         </div>
         <div class="w3-row">
-            <div class="w3-col m4 l3 gauge" data-property="trueWindSpeed">
+            <div class="w3-col s4 m4 l4 gauge" data-property="trueWindSpeed">
             </div>
-            <div class="w3-col m8 l9 gauge" data-property="trueWindAngle">
+            <div class="w3-col s4 m4 l4 gauge" data-property="trueWindAngle">
+            </div>
+            <div class="w3-col s4 m4 l4 gauge" data-property="depthOfWater">
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-col s2 m2 gauge" data-property="trueWindSpeed">
+            </div>
+            <div class="w3-col s2 m2 gauge" data-property="trueWindAngle">
+            </div>
+            <div class="w3-col s2 m2 gauge" data-property="depthOfWater">
+            </div>
+            <div class="w3-col s2 m2 gauge" data-property="waterTemperature">
+            </div>
+            <div class="w3-col s2 m2 gauge" data-property="depthOfWater">
+            </div>
+            <div class="w3-col s2 m2 gauge" data-property="waterTemperature">
             </div>
         </div>
     </body>

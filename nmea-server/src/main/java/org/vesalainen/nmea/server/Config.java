@@ -90,6 +90,13 @@ public class Config extends JavaLogging
             element = (JAXBElement<NmeaServerType>) unmarshaller.unmarshal(path.toFile());
             this.server = element.getValue();
             this.lastModified = Files.getLastModifiedTime(path);
+            server.getProperty().forEach((pt)->
+            {
+                if (pt != null)
+                {
+                    map.put(pt.getName(), pt);
+                }
+            });
         }
         else
         {
@@ -113,6 +120,7 @@ public class Config extends JavaLogging
             pt = objectFactory.createPropertyType();
             pt.setName(property);
             init(pt);
+            server.getProperty().add(pt);
             map.put(pt.getName(), pt);
             return pt;
         }
@@ -199,6 +207,16 @@ public class Config extends JavaLogging
             pt.setUnit(p.getUnit(property).name());
             pt.setPeriodMillis(Long.valueOf(0));
             pt.setAverageMillis(Long.valueOf(0));
+            Class<?> type = p.getType(property);
+            switch (type.getSimpleName())
+            {
+                case "float":
+                    pt.setDecimals(1);
+                    break;
+                case "double":
+                    pt.setDecimals(3);
+                    break;
+            }
         }
     }
     

@@ -38,6 +38,7 @@ function OneRow()
     this.titleText = '';
     this.title = document.createElementNS(this.svgNS, 'text');
     this.svg.appendChild(this.title);
+    this.title.setAttribute("class", "title");
     this.title.setAttributeNS(null, "x", "-45");
     this.title.setAttributeNS(null, "y", "-32");
     this.title.setAttributeNS(null, "text-anchor", "start");
@@ -47,6 +48,7 @@ function OneRow()
 
     this.unit = document.createElementNS(this.svgNS, 'text');
     this.svg.appendChild(this.unit);
+    this.unit.setAttribute("class", "unit");
     this.unit.setAttributeNS(null, "x", "45");
     this.unit.setAttributeNS(null, "y", "-32");
     this.unit.setAttributeNS(null, "text-anchor", "end");
@@ -68,10 +70,10 @@ function OneRow()
 
     this.text = document.createElementNS(this.svgNS, 'text');
     this.svg.appendChild(this.text);
-    this.text.setAttributeNS(null, "x", "-45");
+    this.text.setAttribute("class", "text");
+    this.text.setAttributeNS(null, "x", "40");
     this.text.setAttributeNS(null, "y", "-5");
-    this.text.setAttributeNS(null, "textLength", "90");
-    this.text.setAttributeNS(null, "lengthAdjust", "spacingAndGlyphs");
+    this.text.setAttributeNS(null, "text-anchor", "end");
     this.text.setAttributeNS(null, "style", "font-size: 2em");
     this.txt = document.createTextNode('');
     this.text.appendChild(this.txt);
@@ -80,5 +82,51 @@ function OneRow()
         var t = document.createTextNode(str);
         this.text.replaceChild(t, this.txt);
         this.txt = t;
+    };
+    this.setData = function(time, value)
+    {
+        this.setText(value);
+        if (this.history)
+        {
+            while (this.data.length > 0 && (time - this.data[0]) > this.historyMillis)
+            {
+                this.data.shift();
+                this.data.shift();
+            }
+            this.data.push(time);
+            this.data.push(value);
+            var arr = [];
+            var len = this.data.length/2;
+            for (var i=0;i<len;i++)
+            {
+                var t = this.data[2*i];
+                var v = this.data[2*i+1];
+                arr.push(this.historyMillis-(time-t));
+                arr.push(this.min+(this.max-v));
+            }
+            //this.polyline.setAttributeNS(null, "points", arr.join(' '));
+        }
+    };
+    this.setHistory = function(history, min, max)
+    {
+        if (history > 0)
+        {
+            this.historyMillis = history;
+            this.min = min;
+            this.max = max;
+            this.history = document.createElementNS(this.svgNS, 'svg');
+            this.svg.appendChild(this.history);
+            var gap = max - min;
+            this.history.setAttributeNS(null, 'x', '-50');
+            this.history.setAttributeNS(null, 'y', '-40');
+            this.history.setAttributeNS(null, 'viewBox', "0 "+min+" "+history+" "+gap);
+            this.history.setAttributeNS(null, "preserveAspectRatio", "none");
+            this.polyline = document.createElementNS(this.svgNS, 'polyline');
+            this.history.appendChild(this.polyline);
+            this.polyline.setAttributeNS(null, "fill", "none");
+            this.polyline.setAttributeNS(null, "stroke", "red");
+            this.polyline.setAttributeNS(null, "stroke-width", "5");
+            this.data = [];
+        }
     };
 }

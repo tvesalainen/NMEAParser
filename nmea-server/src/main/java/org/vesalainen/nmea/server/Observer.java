@@ -16,8 +16,9 @@
  */
 package org.vesalainen.nmea.server;
 
-import java.util.function.DoubleConsumer;
+import java.util.Locale;
 import org.vesalainen.math.UnitType;
+import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 
 /**
@@ -26,31 +27,36 @@ import org.vesalainen.parsers.nmea.NMEAProperties;
  */
 public class Observer
 {
-    private String name;
+    protected final String event;
+    protected final Property property;
+    protected final SseHandler sseHandler;
+    private String last;
 
-    public Observer(String name)
+    private Observer(String event, Property property, SseHandler sseHandler)
     {
-        this.name = name;
+        this.event = event;
+        this.property = property;
+        this.sseHandler = sseHandler;
     }
     
-    public static Observer getInstance(String name, String unit, String decimals)
+    public static Observer getInstance(String event, Property property, String unit, String decimals, SseHandler sseHandler)
     {
         NMEAProperties p = NMEAProperties.getInstance();
-        Class<?> type = p.getType(name);
+        Class<?> type = p.getType(property.getName());
         switch (type.getSimpleName())
         {
             case "int":
             case "long":
             case "float":
             case "double":
-                return new DoubleObserver(name, unit, decimals);
+                return new DoubleObserver(event, property, unit, decimals, sseHandler);
             case "char":
             case "String":
-                return new StringObserver(name);
+                return new Observer(event, property, sseHandler);
             default:
                 if (type.isEnum())
                 {
-                    return new StringObserver(name);
+                    return new Observer(event, property, sseHandler);
                 }
                 else
                 {
@@ -59,19 +65,20 @@ public class Observer
         }
     }
 
-    public String getName()
+    public boolean accept(long time, double arg)
     {
-        return name;
+        throw new UnsupportedOperationException("not supported");
     }
     
-    public void accept(long time, double arg)
+    public boolean accept(long time, String arg)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
-    public void accept(long time, String arg)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (!arg.equals(last))
+        {
+            boolean succeeded = sseHandler.fireEvent(event, "{\"time\": \""+time+"\", \"value\": \""+arg+"\"}");
+            last = arg;
+            return succeeded;
+        }
+        return true;
     }
     
     public static class DoubleObserver extends Observer
@@ -79,34 +86,21 @@ public class Observer
         private UnitType from;
         private UnitType to;
         private int decimals;
+        private String format;
         
-        public DoubleObserver(String name, String unit, String decimals)
+        public DoubleObserver(String event, Property property, String unit, String decimals, SseHandler sseHandler)
         {
-            super(name);
-            this.from = NMEAProperties.getInstance().getUnit(name);
-            this.to = UnitType.valueOf(unit);
-            this.decimals = Integer.parseInt(decimals);
+            super(event, property, sseHandler);
+            this.from = NMEAProperties.getInstance().getUnit(property.getName());
+            this.to = unit!=null?UnitType.valueOf(unit):property.getUnit();
+            this.decimals = decimals!=null?Integer.parseInt(decimals):property.getDecimals();
+            this.format = String.format("%%.%df", this.decimals);
         }
 
         @Override
-        public void accept(long time, double arg)
+        public boolean accept(long time, double arg)
         {
-            super.accept(time, arg); //To change body of generated methods, choose Tools | Templates.
-        }
-
-    }
-    public static class StringObserver extends Observer
-    {
-
-        public StringObserver(String name)
-        {
-            super(name);
-        }
-
-        @Override
-        public void accept(long time, String arg)
-        {
-            super.accept(time, arg); //To change body of generated methods, choose Tools | Templates.
+            return accept(time, String.format(Locale.US, format, arg));
         }
 
     }

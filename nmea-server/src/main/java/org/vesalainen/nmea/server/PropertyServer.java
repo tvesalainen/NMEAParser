@@ -20,7 +20,10 @@ import java.time.Clock;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import static java.util.concurrent.TimeUnit.*;
 import org.vesalainen.code.AbstractPropertySetter;
+import org.vesalainen.math.UnitType;
+import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 
@@ -41,10 +44,35 @@ public class PropertyServer extends AbstractPropertySetter
         this.config = config;
     }
 
-    public void attach(Observer observer)
+    public void addSse(Map<String,String[]> map, SseHandler sseHandler)
     {
-        Property p = getProperty(observer.getName());
-        p.attach(observer);
+        String[] arr = map.get("event");
+        String event = arr[0];
+        String[] properties = map.get("property");
+        for (String name : properties)
+        {
+            Property p = getProperty(name);
+            Observer observer = Observer.getInstance(event, p, null, null, sseHandler);
+            sseHandler.addReference(observer);
+            p.attach(observer);
+            populate(event, sseHandler, p);
+        }
+    }
+    private void populate(String event, SseHandler sseHandler, Property p)
+    {
+        String description = p.getDescription();
+        UnitType unit = p.getUnit();
+        long historyMinutes = p.getHistoryMinutes();
+        long history = MINUTES.toMillis(historyMinutes);
+        double min = p.getMin();
+        double max = p.getMax();
+        sseHandler.fireEvent(event, "{"
+                + "\"title\": \""+description+"\", "
+                + "\"unit\": \""+unit.getUnit()+ "\", "
+                + "\"history\": \""+history+ "\", "
+                + "\"min\": \""+min+ "\", "
+                + "\"max\": \""+max+ "\" "
+                + "}");
     }
     @Override
     public <T> void set(String property, T arg)
@@ -107,4 +135,5 @@ public class PropertyServer extends AbstractPropertySetter
         }
         return prop;
     }
+
 }

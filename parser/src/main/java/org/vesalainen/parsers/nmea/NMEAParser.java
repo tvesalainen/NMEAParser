@@ -1638,14 +1638,6 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             @ParserContext(ParserConstants.THROWABLE) Throwable thr
             ) throws IOException
     {
-        if (thr != null)
-        {
-            log(Level.SEVERE, thr, "recover exp=%s", expected);
-        }
-        else
-        {
-            log(Level.SEVERE, "recover exp=%s", expected);
-        }
         StringBuilder sb = new StringBuilder();
         sb.append(reader.getInput());
         sb.append('^');
@@ -1656,6 +1648,14 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             cc = reader.read();
         }
         String reason = "skipping " + sb+"\nexpected:"+expected;
+        if (thr != null)
+        {
+            log(Level.SEVERE, thr, "recover exp=%s", reason);
+        }
+        else
+        {
+            log(Level.SEVERE, "recover exp=%s", reason);
+        }
         data.rollback(reason);
         reader.clear();
     }

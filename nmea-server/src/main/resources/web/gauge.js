@@ -35,9 +35,19 @@ function Gauge(element, seq)
         return {event : this.event(), property : this.property};
     };
     
-    this.call = function(event)
+    this.call = function(data)
     {
-        var json = JSON(data.data);
-    }
+        var json = JSON.parse(data);
+        if (json['time'] && json['value'])
+        {
+            this.svg.setData(json['time'], json['value']);
+        }
+        else
+        {
+            this.svg.setTitle(json['title']);
+            this.svg.setUnit(json['unit']);
+            this.svg.setHistory(json['history'], json['min'], json['max']);
+        }
+    };
 }
 
