@@ -66,4 +66,6 @@
     <property name="localZoneMinutes" description="Local Zone Minutes" min="0.0" max="59.0" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
     <property name="depthBelowTransducer" description="Depth Below Transducer" min="0.0" max="100.0" unit="METER" decimals="1" averageMillis="0" periodMillis="0"/>
     <property name="depthOffsetOfWater" description="Depth Offset Of Water" min="0.0" max="10.0" unit="METER" decimals="1" averageMillis="0" periodMillis="0"/>
+    <property name="batteryTemperature1" description="Battery Temperature1" min="0.0" max="100.0" unit="CELSIUS" decimals="1" averageMillis="0" periodMillis="0"/>
+    <property name="outsideTemperature" description="Outside Temperature" min="-60.0" max="60.0" unit="CELSIUS" decimals="1" averageMillis="0" periodMillis="0"/>
 </nmea-server>

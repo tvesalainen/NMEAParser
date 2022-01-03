@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+/* global refresh */
+
 "use strict";
 
 var gauge = {};
@@ -43,5 +45,8 @@ $(document).ready(function () {
         var g = gauge[event.type];
         g.call(event.data);
     };
+    
+    setInterval(refresh, 1000);
+
 });
 

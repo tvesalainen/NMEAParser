@@ -17,7 +17,6 @@
 package org.vesalainen.nmea.server;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
@@ -26,9 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.attribute.FileTime;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import static java.util.logging.Level.*;
 import javax.management.MalformedObjectNameException;
@@ -42,6 +39,9 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import org.vesalainen.management.AbstractDynamicMBean;
+import org.vesalainen.math.UnitCategory;
+import static org.vesalainen.math.UnitCategory.*;
+import org.vesalainen.math.UnitType;
 import org.vesalainen.nmea.server.jaxb.NmeaServerType;
 import org.vesalainen.nmea.server.jaxb.ObjectFactory;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
@@ -207,14 +207,24 @@ public class Config extends JavaLogging
             pt.setUnit(p.getUnit(property).name());
             pt.setPeriodMillis(Long.valueOf(0));
             pt.setAverageMillis(Long.valueOf(0));
-            Class<?> type = p.getType(property);
-            switch (type.getSimpleName())
+            UnitType unit = p.getUnit(property);
+            UnitCategory category = unit.getCategory();
+            switch (category)
             {
-                case "float":
-                    pt.setDecimals(1);
+                case PLANE_ANGLE:
+                    pt.setDecimals(0);
                     break;
-                case "double":
-                    pt.setDecimals(3);
+                default:
+                    Class<?> type = p.getType(property);
+                    switch (type.getSimpleName())
+                    {
+                        case "float":
+                            pt.setDecimals(1);
+                            break;
+                        case "double":
+                            pt.setDecimals(3);
+                            break;
+                    }
                     break;
             }
         }

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.viewer;
+package web;
 
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -22,10 +22,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Vector;
-import javafx.beans.property.Property;
-import javafx.beans.property.ReadOnlyStringPropertyBase;
-import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.value.ObservableStringValue;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.text.CamelCase;
 
@@ -61,7 +57,7 @@ public class I18n extends ResourceBundle
     @Override
     protected Object handleGetObject(String key)
     {
-        return CamelCase.delimited(key, " ");
+        return null;//CamelCase.delimited(key, " ");
     }
 
     @Override
@@ -73,54 +69,6 @@ public class I18n extends ResourceBundle
     public static I18nString getI18nString(String key)
     {
         return new I18nString(key, get().getString(key));
-    }
-    /**
-     * Binds target to resource with key
-     * @param target
-     * @param key 
-     */
-    public static void bind(Property<String> target, String key)
-    {
-        bind(target, new ReadOnlyStringWrapper(key));
-    }
-    /**
-     * Binds target to resource with key
-     * @param target
-     * @param key 
-     */
-    public static void bind(Property<String> target, ObservableStringValue key)
-    {
-        target.bind(new ObservableResource(get(), key));
-    }
-    private static class ObservableResource extends ReadOnlyStringPropertyBase
-    {
-        private ResourceBundle resources;
-        private ObservableStringValue key;
-
-        public ObservableResource(ResourceBundle resources, ObservableStringValue key)
-        {
-            this.resources = resources;
-            this.key = key;
-        }
-        
-        @Override
-        public String get()
-        {
-            return resources.getString(key.get());
-        }
-
-        @Override
-        public Object getBean()
-        {
-            return resources;
-        }
-
-        @Override
-        public String getName()
-        {
-            return key.get();
-        }
-
     }
     public static class I18nString implements Comparable<I18nString>
     {
