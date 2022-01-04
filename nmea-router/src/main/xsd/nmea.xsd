@@ -220,6 +220,8 @@
     <xsd:complexType name="sourceType">
         <xsd:attribute name="talkerId" type="xsd:string" use="required"/>
         <xsd:attribute name="source" type="xsd:unsignedShort" use="required"/>
+        <xsd:attribute name="instanceOffset" type="xsd:unsignedShort"/>
+        <xsd:attribute name="comment" type="xsd:string"/>
     </xsd:complexType>
     <xsd:complexType name="gpsPositionType">
         <xsd:complexContent>

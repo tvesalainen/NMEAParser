@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* global refresh */
+/* global refresh, eventSource */
 
 "use strict";
 
@@ -22,10 +22,16 @@ var gauge = {};
 
 $(document).ready(function () {
     
+    if (eventSource)
+    {
+        eventSource.close();
+    }
     var eventSource = new EventSource("/sse");
 
     eventSource.onerror = function(err)
     {
+        console.log("EventSource failed:", err);
+        eventSource.close();
     };
     eventSource.onopen = function()
     {
@@ -34,10 +40,10 @@ $(document).ready(function () {
         {
             var target = targets[i];
             var g = new Gauge(target, i);
-            var event = g.event();
+            var event = g.event;
             gauge[event] = g;
             eventSource.addEventListener(event, fired, false);
-            $.post("/sse", g.request());
+            $.post("/sse", g.request);
         }
     };
     function fired(event)

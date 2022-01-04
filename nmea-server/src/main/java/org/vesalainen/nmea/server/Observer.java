@@ -31,11 +31,13 @@ public class Observer
     protected final Property property;
     protected final SseHandler sseHandler;
     private String last;
+    private final String name;
 
     private Observer(String event, Property property, SseHandler sseHandler)
     {
         this.event = event;
         this.property = property;
+        this.name = property.getName();
         this.sseHandler = sseHandler;
     }
     
@@ -74,7 +76,7 @@ public class Observer
     {
         if (!arg.equals(last))
         {
-            boolean succeeded = sseHandler.fireEvent(event, "{\"time\": \""+time+"\", \"value\": \""+arg+"\"}");
+            boolean succeeded = sseHandler.fireEvent(event, "{\"name\": \""+name+"\", \"time\": \""+time+"\", \"value\": \""+arg+"\"}");
             last = arg;
             return succeeded;
         }

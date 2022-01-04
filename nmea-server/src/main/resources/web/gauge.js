@@ -18,36 +18,36 @@
 
 function Gauge(element, seq)
 {
-    this.seq = seq;
+    this.event = seq;
     this.property = element.getAttribute("data-property");
-    this.svg = new OneRow();
-    this.svg.setTitle(this.property);
-    this.svg.setUnit("Knot");
+    switch (this.property)
+    {
+        case "tacktical":
+            this.svg = new Svg(-100,-100,200,200);
+            this.svg.tacktical(100);
+            this.request = {event : this.event, property : []};
+            break;
+        default:
+            this.svg = new Svg(0,0,100,40);
+            this.svg.setFrame();
+            this.request = {event : this.event, property : this.property};
+            this.call = function(data)
+            {
+                var json = JSON.parse(data);
+                if (json['time'] && json['value'])
+                {
+                    this.svg.setData(json['time'], json['value']);
+                }
+                else
+                {
+                    this.svg.setTitle(json['title']);
+                    this.svg.setUnit(json['unit']);
+                    this.svg.setHistory(json['history'], json['min'], json['max']);
+                }
+            };
+            break;
+    }
     element.appendChild(this.svg.svg);
-    this.svg.setText('10.2');
     
-    this.event = function()
-    {
-        return this.property+"_"+this.seq;
-    };
-    this.request = function()
-    {
-        return {event : this.event(), property : this.property};
-    };
-    
-    this.call = function(data)
-    {
-        var json = JSON.parse(data);
-        if (json['time'] && json['value'])
-        {
-            this.svg.setData(json['time'], json['value']);
-        }
-        else
-        {
-            this.svg.setTitle(json['title']);
-            this.svg.setUnit(json['unit']);
-            this.svg.setHistory(json['history'], json['min'], json['max']);
-        }
-    };
 }
 

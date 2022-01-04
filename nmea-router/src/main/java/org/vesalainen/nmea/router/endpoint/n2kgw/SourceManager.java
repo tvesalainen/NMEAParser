@@ -16,14 +16,15 @@
  */
 package org.vesalainen.nmea.router.endpoint.n2kgw;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
-import org.vesalainen.can.dbc.MessageClass;
 import org.vesalainen.can.j1939.PGN;
+import org.vesalainen.lang.Primitives;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.jaxb.router.SourceType;
-import org.vesalainen.parsers.nmea.NMEAPGN;
 import org.vesalainen.parsers.nmea.TalkerId;
 import static org.vesalainen.parsers.nmea.TalkerId.*;
 import org.vesalainen.util.CollectionHelp;
@@ -35,7 +36,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class SourceManager extends JavaLogging
 {
-    private TalkerId[] map = new TalkerId[256];
+    private Map<Byte,Source> map = new HashMap<>();
     private Iterator<TalkerId> free;
 
     public SourceManager()
@@ -50,33 +51,57 @@ public class SourceManager extends JavaLogging
         CollectionHelp.addAll(freeSet, U0, U1, U2, U3, U4, U5, U6, U7, U8);
         if (type != null)
         {
-            for (SourceType src : type.getSource())
+            for (SourceType sourceType : type.getSource())
             {
-                TalkerId id = TalkerId.valueOf(src.getTalkerId());
-                map[src.getSource()] = id;
+                TalkerId id = TalkerId.valueOf(sourceType.getTalkerId());
+                Source source = new Source(id, Primitives.getInt(sourceType.getInstanceOffset(), 0));
+                map.put((byte)sourceType.getSource(), source);
                 freeSet.remove(id);
             }
         }
         this.free = freeSet.iterator();
     }
     
+    public int getInstanceOffset(int canId)
+    {
+        int sa = PGN.sourceAddress(canId);
+        Source source = map.get(sa);
+        if (source != null)
+        {
+            return source.instanceOffset;
+        }
+        return 0;
+    }
     public TalkerId getTalkerId(int canId)
     {
         int sa = PGN.sourceAddress(canId);
-        TalkerId id = map[sa];
-        if (id != null)
+        Source source = map.get(sa);
+        if (source != null)
         {
-            return id;
+            return source.id;
         }
         else
         {
             if (free.hasNext())
             {
                 TalkerId next = free.next();
-                map[sa] = next;
+                source = new Source(next, 0);
+                map.put((byte)sa, source);
                 return next;
             }
         }
         return U9;
+    }
+    private class Source
+    {
+        private TalkerId id;
+        private int instanceOffset;
+
+        public Source(TalkerId id, int instanceOffset)
+        {
+            this.id = id;
+            this.instanceOffset = instanceOffset;
+        }
+        
     }
 }

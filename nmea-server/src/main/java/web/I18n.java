@@ -16,14 +16,24 @@
  */
 package web;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.Vector;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.text.CamelCase;
+import org.vesalainen.util.CollectionHelp;
 
 /**
  *
@@ -31,6 +41,9 @@ import org.vesalainen.text.CamelCase;
  */
 public class I18n extends ResourceBundle
 {
+    private static final List<String> FORMATS = new ArrayList<>(CollectionHelp.create("direct", "java.properties", "java.class"));
+    private static final Path RESOURCES = Paths.get("src", "main", "resources");
+    
     private static final Map<Locale,ResourceBundle> map = new HashMap<>();
     
     private Vector<String> resources = new Vector<>();
@@ -46,18 +59,13 @@ public class I18n extends ResourceBundle
     }
     public static ResourceBundle get(Locale locale)
     {
-        ResourceBundle rb = map.get(locale);
-        if (rb == null)
-        {
-            rb = ResourceBundle.getBundle(I18n.class.getName(), locale);
-            map.put(locale, rb);
-        }
-        return rb;
+        return ResourceBundle.getBundle(I18n.class.getName(), locale, new Ctrl());
     }
+    
     @Override
     protected Object handleGetObject(String key)
     {
-        return null;//CamelCase.delimited(key, " ");
+        return CamelCase.delimited(key, " ");
     }
 
     @Override
@@ -96,6 +104,61 @@ public class I18n extends ResourceBundle
         public int compareTo(I18nString o)
         {
             return string.compareTo(o.string);
+        }
+        
+    }
+    private static class Ctrl extends ResourceBundle.Control
+    {
+        private boolean development;
+
+        public Ctrl()
+        {
+            development = Files.exists(RESOURCES);
+        }
+        
+        @Override
+        public List<String> getFormats(String baseName)
+        {
+            return FORMATS;
+        }
+
+        @Override
+        public long getTimeToLive(String baseName, Locale locale)
+        {
+            if (development)
+            {
+                return TTL_DONT_CACHE;
+            }
+            else
+            {
+                return super.getTimeToLive(baseName, locale);
+            }
+        }
+
+        @Override
+        public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload) throws IllegalAccessException, InstantiationException, IOException
+        {
+            if ("direct".equals(format))
+            {
+                if (development)
+                {
+                    String bundleName = toBundleName(baseName, locale);
+                    String resourceName = toResourceName(bundleName, "properties");
+                    Path path = RESOURCES.resolve(resourceName);
+                    if (Files.exists(path))
+                    {
+                        try (BufferedReader br = Files.newBufferedReader(path, UTF_8))
+                        {
+                            return new PropertyResourceBundle(br);
+                        }
+                    }
+                }
+                return null;
+            }
+            else
+            {
+                return super.newBundle(baseName, locale, format, loader, reload);
+            }
         }
         
     }

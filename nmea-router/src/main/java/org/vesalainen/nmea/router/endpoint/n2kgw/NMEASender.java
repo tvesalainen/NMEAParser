@@ -145,7 +145,7 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->roll);
         this.battery = NMEASentence.battery(
                 ()->sourceManager.getTalkerId(canId),
-                ()->batteryInstance,
+                ()->batteryInstance+sourceManager.getInstanceOffset(canId),
                 ()->voltage,
                 ()->current,
                 ()->temperature);

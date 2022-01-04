@@ -25,8 +25,8 @@
             <source talkerId="HC" source="16"/>
             <source talkerId="SD" source="35"/>
             <source talkerId="AI" source="43"/>
-            <source talkerId="U0" source="36"/>
-            <source talkerId="U1" source="224"/>
+            <source talkerId="U0" source="36" comment="Solar Charger"/>
+            <source talkerId="U1" source="224" instanceOffset="2" comment="BMS"/>
             <source talkerId="U2" source="32"/>
         </n2k-gateway>
         <processor dataAccessPort="10111" name="Prc" enable="true">

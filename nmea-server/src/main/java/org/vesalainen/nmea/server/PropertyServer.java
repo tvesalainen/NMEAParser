@@ -26,6 +26,7 @@ import org.vesalainen.math.UnitType;
 import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
+import web.I18n;
 
 /**
  *
@@ -54,13 +55,13 @@ public class PropertyServer extends AbstractPropertySetter
             Property p = getProperty(name);
             Observer observer = Observer.getInstance(event, p, null, null, sseHandler);
             sseHandler.addReference(observer);
-            p.attach(observer);
             populate(event, sseHandler, p);
+            p.attach(observer);
         }
     }
     private void populate(String event, SseHandler sseHandler, Property p)
     {
-        String description = p.getDescription();
+        String description = I18n.get().getString(p.getName());
         UnitType unit = p.getUnit();
         long historyMinutes = p.getHistoryMinutes();
         long history = MINUTES.toMillis(historyMinutes);
