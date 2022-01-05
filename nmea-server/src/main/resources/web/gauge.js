@@ -23,9 +23,24 @@ function Gauge(element, seq)
     switch (this.property)
     {
         case "tacktical":
-            this.svg = new Svg(-100,-100,200,200);
-            this.svg.tacktical(100);
-            this.request = {event : this.event, property : []};
+            this.svg = new Svg(-50,-50,100,100);
+            this.svg.tacktical(45);
+            this.request = {event : this.event, property : ["trueHeading", "relativeWindAngle", "trackMadeGood", "magneticVariation"]};
+            this.call = function(data)
+            {
+                var json = JSON.parse(data);
+                var name = json["name"];
+                var value = json["value"];
+                switch (name)
+                {
+                    case "trueHeading":
+                        this.svg.setTrueHeading(value);
+                        break;
+                    case "relativeWindAngle":
+                        this.svg.setRelativeWindAngle(value);
+                        break;
+                }
+            };
             break;
         default:
             this.svg = new Svg(0,0,100,40);

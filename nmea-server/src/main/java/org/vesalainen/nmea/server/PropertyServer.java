@@ -50,6 +50,10 @@ public class PropertyServer extends AbstractPropertySetter
         String[] arr = map.get("event");
         String event = arr[0];
         String[] properties = map.get("property");
+        if (properties == null)
+        {
+            properties = map.get("property[]");
+        }
         for (String name : properties)
         {
             Property p = getProperty(name);

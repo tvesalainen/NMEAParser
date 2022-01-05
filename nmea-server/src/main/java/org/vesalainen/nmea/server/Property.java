@@ -18,17 +18,19 @@ package org.vesalainen.nmea.server;
 
 import java.util.Iterator;
 import static java.util.concurrent.TimeUnit.*;
-import java.util.function.Consumer;
-import java.util.function.DoubleConsumer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.management.AbstractDynamicMBean;
+import org.vesalainen.math.UnitCategory;
+import static org.vesalainen.math.UnitCategory.*;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingAverage;
+import org.vesalainen.math.sliding.DoubleTimeoutSlidingSeries;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
 import org.vesalainen.math.sliding.TimeValueConsumer;
+import org.vesalainen.math.sliding.TimeoutSlidingAngleAverage;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.TimeToLiveList;
@@ -173,7 +175,7 @@ public abstract class Property extends AbstractDynamicMBean
 
     private static class DoubleProperty extends Property
     {
-        private DoubleTimeoutSlidingSlope history;
+        private DoubleTimeoutSlidingSeries history;
         private TimeValueConsumer func;
         
         public DoubleProperty(PropertyType property)
@@ -189,18 +191,31 @@ public abstract class Property extends AbstractDynamicMBean
             long averageMillis = getAverageMillis();
             if (averageMillis > 0)
             {
-                DoubleTimeoutSlidingAverage ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
                 TimeValueConsumer oldFunc = func;
-                func = (t,v)->
+                UnitCategory category = getUnit().getCategory();
+                if (PLANE_ANGLE == category)
                 {
-                    ave.accept(v, t);
-                    oldFunc.accept(t, ave.fast());
-                };
+                    TimeoutSlidingAngleAverage ave = new TimeoutSlidingAngleAverage(8, averageMillis);
+                    func = (t,v)->
+                    {
+                        ave.accept(v);
+                        oldFunc.accept(t, ave.fast());
+                    };
+                }
+                else
+                {
+                    DoubleTimeoutSlidingAverage ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
+                    func = (t,v)->
+                    {
+                        ave.accept(v, t);
+                        oldFunc.accept(t, ave.fast());
+                    };
+                }
             }
             long historyMinutes = getHistoryMinutes();
             if (historyMinutes > 0)
             {
-                this.history = new DoubleTimeoutSlidingSlope(256, MILLISECONDS.convert(historyMinutes, MINUTES));
+                this.history = new DoubleTimeoutSlidingSeries(256, MILLISECONDS.convert(historyMinutes, MINUTES));
             }
         }
         @Override

@@ -142,7 +142,7 @@ function Svg(x, y, width, height)
             this.history.setAttributeNS(null, "stroke-opacity", "0.5");
             this.polyline = document.createElementNS(this.svgNS, 'polyline');
             this.history.appendChild(this.polyline);
-            this.polyline.setAttributeNS(null, "stroke-width", "0.5");
+            this.polyline.setAttributeNS(null, "stroke-width", gap/200);
             this.data = [];
             refreshables.push(this);
             // x-scale
@@ -176,7 +176,7 @@ function Svg(x, y, width, height)
                         div *= 1.5;
                         un = '3hour';
                         break;
-                    case 14400000:
+                    case 10800000:
                         div *= 2;
                         un = '6hour';
                         break;
@@ -194,7 +194,7 @@ function Svg(x, y, width, height)
                 }
             }
             var grid = document.createElementNS(this.svgNS, 'path');
-            grid.setAttributeNS(null, "stroke-width", "0.3");
+            grid.setAttributeNS(null, "stroke-width", "0.2");
             this.history.appendChild(grid);
             var d = "";
             var x = history;
@@ -232,7 +232,7 @@ function Svg(x, y, width, height)
             unit.setAttributeNS(null, "x", xx);
             unit.setAttributeNS(null, "y", yy);
             unit.setAttributeNS(null, "text-anchor", "middle");
-            unit.setAttributeNS(null, "style", "font-size: 0.5em");
+            unit.setAttributeNS(null, "style", "font-size: 0.3em");
             unit.setAttributeNS(null, "stroke-width", "0.5");
             var unitText = document.createTextNode("Grid: "+div+" "+this.unitString+" / "+un);
             unit.appendChild(unitText);
@@ -248,115 +248,83 @@ function Svg(x, y, width, height)
         use.setAttributeNS(this.xlinkNS, "href", "/defs.svg#compass-scale-1");
         use.setAttributeNS(null, "transform", "scale("+r+")");
         use.setAttributeNS(null, "stroke", "black");
-        use.setAttributeNS(null, "stroke-width", 0.3/r);
+        use.setAttributeNS(null, "stroke-width", 0.2/r);
 
         var use = document.createElementNS(this.svgNS, 'use');
         this.compass.appendChild(use);
         use.setAttributeNS(this.xlinkNS, "href", "/defs.svg#compass-scale-5");
         use.setAttributeNS(null, "transform", "scale("+r+")");
         use.setAttributeNS(null, "stroke", "black");
-        use.setAttributeNS(null, "stroke-width", 0.6/r);
+        use.setAttributeNS(null, "stroke-width", 0.4/r);
 
         var use = document.createElementNS(this.svgNS, 'use');
         this.compass.appendChild(use);
         use.setAttributeNS(this.xlinkNS, "href", "/defs.svg#compass-scale-10");
         use.setAttributeNS(null, "transform", "scale("+r+")");
         use.setAttributeNS(null, "stroke", "black");
-        use.setAttributeNS(null, "stroke-width", 1/r);
+        use.setAttributeNS(null, "stroke-width", 0.5/r);
 
         var use = document.createElementNS(this.svgNS, 'use');
         this.compass.appendChild(use);
         use.setAttributeNS(this.xlinkNS, "href", "/defs.svg#compass-scale");
         use.setAttributeNS(null, "transform", "scale("+r+")");
-        use.setAttributeNS(null, "font-size", "0.008em");
+        use.setAttributeNS(null, "font-size", "0.006em");
         
-        var g1 = document.createElementNS(this.svgNS, 'g');
-        this.svg.appendChild(g1);
-        //g1.setAttributeNS(null, "style", "display: none;");
-        g1.setAttributeNS(null, "transform", "rotate(0)");
-        //g1.setAttributeNS(null, AbstractSSESource.EventSink, "BearingToDestination-"+DEGREE+"-"+Route1);
+        this.boatGroup = document.createElementNS(this.svgNS, 'g');
+        this.svg.appendChild(this.boatGroup);
+        this.boatGroup.setAttributeNS(null, "transform", "rotate(0)");
 
-        var g2 = document.createElementNS(this.svgNS, 'g');
-        g1.appendChild(g2);
-        g2.setAttributeNS(null, "transform", "rotate(0)");
-        //g2.setAttributeNS(null, AbstractSSESource.EventSink, "CrossTrackError-"+NAUTICAL_MILE+"-"+Route2);
-        
-        var g3 = document.createElementNS(this.svgNS, 'g');
-        g2.appendChild(g3);
-        g3.setAttributeNS(null, "transform", "rotate(0)")
-                //.setAttr(AbstractSSESource.EventSink, "CrossTrackError-"+NAUTICAL_MILE+"-"+Route3);
-
-        var path1 = document.createElementNS(this.svgNS, 'path');
-        g3.appendChild(path1);
-        path1.setAttributeNS(null, "id", "centerLine");
-        path1.setAttributeNS(null, "stroke", "green");
-        path1.setAttributeNS(null, "stroke-width", "1");
-        path1.setAttributeNS(null, "fill", "none");
-        path1.setAttributeNS(null, "d", "M 0 50 l 0 -100");
-
-        var path2 = document.createElementNS(this.svgNS, 'path');
-        g3.appendChild(path2);
-        path2.setAttributeNS(null, "id", "leftLine");
-        path2.setAttributeNS(null, "stroke", "green");
-        path2.setAttributeNS(null, "stroke-width", "1");
-        path2.setAttributeNS(null, "fill", "none");
-        path2.setAttributeNS(null, "d", "M -30 50 l 0 -100");
-
-        var path3 = document.createElementNS(this.svgNS, 'path');
-        g3.appendChild(path3);
-        path3.setAttributeNS(null, "id", "rightLine");
-        path3.setAttributeNS(null, "stroke", "green");
-        path3.setAttributeNS(null, "stroke-width", "1");
-        path3.setAttributeNS(null, "fill", "none");
-        path3.setAttributeNS(null, "d", "M 30 50 l 0 -100");
-        
-        var path4 = document.createElementNS(this.svgNS, 'path');
-        g3.appendChild(path4);
-        path4.setAttributeNS(null, "id", "boat");
-        //path4.setAttributeNS(null, "style", "display: none;");
-        path4.setAttributeNS(null, "stroke", "blue");
-        path4.setAttributeNS(null, "stroke-width", "1");
-        path4.setAttributeNS(null, "fill", "none");
-        path4.setAttributeNS(null, "transform", "rotate(0)");
-        //.setAttr(AbstractSSESource.EventSink, "TrueHeading-"+DEGREE+"-"+Rotate)
-        path4.setAttributeNS(null, "d", 
+        var boat = document.createElementNS(this.svgNS, 'path');
+        this.boatGroup.appendChild(boat);
+        boat.setAttributeNS(null, "id", "boat");
+        boat.setAttributeNS(null, "stroke", "blue");
+        boat.setAttributeNS(null, "stroke-width", "1");
+        boat.setAttributeNS(null, "fill", "none");
+        boat.setAttributeNS(null, "transform", "rotate(0)");
+        boat.setAttributeNS(null, "d", 
                 "M -20 40 l 40 0 "+
                 "C 23 10 20 -15 0 -40"+
                 "M -20 40 "+
                 "C -23 10 -20 -15 0 -40"
         );
 
-        var relativeWindAngle = document.createElementNS(this.svgNS, 'g');
-        this.svg.appendChild(relativeWindAngle);
-                //relativeWindAngle.setAttributeNS(null, "style", "display: none;");
-                relativeWindAngle.setAttributeNS(null, "transform", "rotate(0)");
-                //.setAttr(AbstractSSESource.EventSink, "RelativeWindAngle-"+DEGREE+"-"+BoatRelativeRotate);
+        this.windIndicatorGroup = document.createElementNS(this.svgNS, 'g');
+        this.boatGroup.appendChild(this.windIndicatorGroup);
+                this.windIndicatorGroup.setAttributeNS(null, "transform", "rotate(0)");
 
-        var relativePath1 = document.createElementNS(this.svgNS, 'path');
-        relativeWindAngle.appendChild(relativePath1);
-        relativePath1.setAttributeNS(null, "id", "windIndicatorTip");
-        relativePath1.setAttributeNS(null, "stroke", "red");
-        relativePath1.setAttributeNS(null, "stroke-width", "1");
-        relativePath1.setAttributeNS(null, "fill", "red");
-        relativePath1.setAttributeNS(null, "d", "M -3 -15 L 0 -25 L 3 -15 Z");
+        var windIndicatorTip = document.createElementNS(this.svgNS, 'path');
+        this.windIndicatorGroup.appendChild(windIndicatorTip);
+        windIndicatorTip.setAttributeNS(null, "id", "windIndicatorTip");
+        windIndicatorTip.setAttributeNS(null, "stroke", "red");
+        windIndicatorTip.setAttributeNS(null, "stroke-width", "1");
+        windIndicatorTip.setAttributeNS(null, "fill", "red");
+        windIndicatorTip.setAttributeNS(null, "d", "M -3 -15 L 0 -25 L 3 -15 Z");
 
-        var relativePath2 = document.createElementNS(this.svgNS, 'path');
-        relativeWindAngle.appendChild(relativePath2);
-        relativePath2.setAttributeNS(null, "id", "windIndicatorShaft");
-        relativePath2.setAttributeNS(null,"stroke", "black");
-        relativePath2.setAttributeNS(null,"stroke-width", "1");
-        relativePath2.setAttributeNS(null,"fill", "none");
-        relativePath2.setAttributeNS(null,"d", "M 0 15 l 0 -30");
+        var windIndicatorShaft = document.createElementNS(this.svgNS, 'path');
+        this.windIndicatorGroup.appendChild(windIndicatorShaft);
+        windIndicatorShaft.setAttributeNS(null, "id", "windIndicatorShaft");
+        windIndicatorShaft.setAttributeNS(null,"stroke", "black");
+        windIndicatorShaft.setAttributeNS(null,"stroke-width", "1");
+        windIndicatorShaft.setAttributeNS(null,"fill", "none");
+        windIndicatorShaft.setAttributeNS(null,"d", "M 0 15 l 0 -30");
 
-        var relativePath3 = document.createElementNS(this.svgNS, 'path');
-        relativeWindAngle.appendChild(relativePath3);
-        relativePath3.setAttributeNS(null,"id", "windIndicatorTail");
-        relativePath3.setAttributeNS(null,"stroke", "red");
-        relativePath3.setAttributeNS(null,"stroke-width", "1");
-        relativePath3.setAttributeNS(null,"fill", "red");
-        relativePath3.setAttributeNS(null,"d", "M -3 25 L -3 20 L 0 15 L 3 20 L 3 25 Z");
+        var windIndicatorTail = document.createElementNS(this.svgNS, 'path');
+        this.windIndicatorGroup.appendChild(windIndicatorTail);
+        windIndicatorTail.setAttributeNS(null,"id", "windIndicatorTail");
+        windIndicatorTail.setAttributeNS(null,"stroke", "red");
+        windIndicatorTail.setAttributeNS(null,"stroke-width", "1");
+        windIndicatorTail.setAttributeNS(null,"fill", "red");
+        windIndicatorTail.setAttributeNS(null,"d", "M -3 25 L -3 20 L 0 15 L 3 20 L 3 25 Z");
 
         
+    };
+    this.setTrueHeading = function(heading)
+    {
+        this.boatGroup.setAttributeNS(null, "transform", "rotate("+heading+")");
+    };
+    this.setRelativeWindAngle = function(angle)
+    {
+        this.windIndicatorGroup.setAttributeNS(null, "transform", "rotate("+angle+")");
     };
     this.setData = function(time, value)
     {
@@ -383,8 +351,11 @@ function Svg(x, y, width, height)
             var t = this.data[2*i];
             var v = this.data[2*i+1];
             arr.push((this.historyMillis-(time-t))/this.ratio);
-            arr.push(this.max - v - this.min);
+            arr.push(this.max - v); // (max-min)-(v-min)
         }
+        var v = this.data[2*(len-1)+1];
+        arr.push(this.historyMillis/this.ratio);
+        arr.push(this.max - v);
         this.polyline.setAttributeNS(null, "points", arr.join(' '));
     };
 }

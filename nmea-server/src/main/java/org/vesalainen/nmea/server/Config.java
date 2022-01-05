@@ -132,7 +132,7 @@ public class Config extends JavaLogging
             FileTime lmt = getLastModifiedTime(path);
             if (lastModified == null || lastModified.compareTo(lmt) == 0)
             {
-                try (BufferedWriter writer = Files.newBufferedWriter(path, UTF_8, CREATE))
+                try (BufferedWriter writer = Files.newBufferedWriter(path, UTF_8, CREATE, TRUNCATE_EXISTING))
                 {
                     store(writer);
                 }
