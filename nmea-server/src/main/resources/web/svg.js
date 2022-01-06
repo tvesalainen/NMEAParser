@@ -49,20 +49,11 @@ function Svg(x, y, width, height)
     var viewBox = x+" "+y+" "+width+" "+height; //'-50,-40,100,40';
     this.svgNS = 'http://www.w3.org/2000/svg';
     this.xlinkNS = 'http://www.w3.org/1999/xlink';
-    this.svg = document.createElementNS(this.svgNS, 'svg');
-    this.svg.setAttributeNS(null, 'viewBox', viewBox);
+    this.svg = createSvg(viewBox);
 
     this.setFrame = function()
     {
-        var frame = document.createElementNS(this.svgNS, 'rect');
-        frame.setAttributeNS(null, 'x', this.x);
-        frame.setAttributeNS(null, 'y', this.y);
-        frame.setAttributeNS(null, 'width', this.width);
-        frame.setAttributeNS(null, 'height', this.height);
-        frame.setAttributeNS(null, 'fill', 'none');
-        frame.setAttributeNS(null, 'stroke', 'blue');
-        frame.setAttributeNS(null, 'stroke-width', '1');
-        this.svg.appendChild(frame);
+        this.svg.appendChild(createFrame(this.x, this.y, this.width, this.height));
     }
 
     this.setTitle = function(str)
@@ -70,15 +61,10 @@ function Svg(x, y, width, height)
         if (!this.title)
         {
             this.titleText = '';
-            this.title = document.createElementNS(this.svgNS, 'text');
+            this.title = createTitle(this.x, this.y, this.padding);
             this.svg.appendChild(this.title);
-            this.title.setAttribute("class", "title");
-            this.title.setAttributeNS(null, "x", this.x+this.padding);
-            this.title.setAttributeNS(null, "y", this.y+this.padding*2);
-            this.title.setAttributeNS(null, "text-anchor", "start");
             this.titleText = document.createTextNode('');
             this.title.appendChild(this.titleText);
-            this.title.setAttributeNS(null, "style", "font-size: 0.5em");
         }
         var t = document.createTextNode(str);
         this.title.replaceChild(t, this.titleText);
@@ -88,15 +74,10 @@ function Svg(x, y, width, height)
     {
         if (!this.unit)
         {
-            this.unit = document.createElementNS(this.svgNS, 'text');
+            this.unit = createUnit(this.x, this.y, this.width, this.height, this.padding);
             this.svg.appendChild(this.unit);
-            this.unit.setAttribute("class", "unit");
-            this.unit.setAttributeNS(null, "x", this.x+this.width-this.padding);
-            this.unit.setAttributeNS(null, "y", this.y+this.padding*2);
-            this.unit.setAttributeNS(null, "text-anchor", "end");
             this.unitText = document.createTextNode('');
             this.unit.appendChild(this.unitText);
-            this.unit.setAttributeNS(null, "style", "font-size: 0.5em");
         }
         this.unitString = str;
         var t = document.createTextNode(str);
@@ -108,13 +89,8 @@ function Svg(x, y, width, height)
     {
         if (!this.text)
         {
-            this.text = document.createElementNS(this.svgNS, 'text');
+            this.text = createText(this.x, this.y, this.width, this.height, this.padding);
             this.svg.appendChild(this.text);
-            this.text.setAttribute("class", "text");
-            this.text.setAttributeNS(null, "x", this.x+this.width-this.padding);
-            this.text.setAttributeNS(null, "y", this.y+this.height-5);
-            this.text.setAttributeNS(null, "text-anchor", "end");
-            this.text.setAttributeNS(null, "style", "font-size: 2em");
             this.txt = document.createTextNode('');
             this.text.appendChild(this.txt);
         }
@@ -129,194 +105,28 @@ function Svg(x, y, width, height)
             this.historyMillis = history;
             this.min = min;
             this.max = max;
-            this.history = document.createElementNS(this.svgNS, 'svg');
+            this.gap = max - min;
+            this.ratioX = this.historyMillis/this.width;
+            this.ratioY = this.gap/this.height;
+            this.history = createHistory(history, min, max, this.width, this.height, this.unitString);
             this.svg.appendChild(this.history);
-            var gap = max - min;
-            this.ratio = history/gap;
-            this.history.setAttributeNS(null, 'x', this.x);
-            this.history.setAttributeNS(null, 'y', this.y);
-            this.history.setAttributeNS(null, 'viewBox', "0 0 "+gap+" "+gap);
-            this.history.setAttributeNS(null, "preserveAspectRatio", "none");
-            this.history.setAttributeNS(null, "fill", "none");
-            this.history.setAttributeNS(null, "stroke", "currentColor");
-            this.history.setAttributeNS(null, "stroke-opacity", "0.5");
             this.polyline = document.createElementNS(this.svgNS, 'polyline');
             this.history.appendChild(this.polyline);
-            this.polyline.setAttributeNS(null, "stroke-width", gap/200);
+            this.polyline.setAttributeNS(null, "stroke-width", "0.02em");
             this.data = [];
             refreshables.push(this);
-            // x-scale
-            var div = 1;
-            var un;
-            while (history / div > 10)
-            {
-                switch (div)
-                {
-                    case 1:
-                        div *= 1000;
-                        un = 'sec';
-                        break;
-                    case 1000:
-                        div *= 60;
-                        un = 'min';
-                        break;
-                    case 60000:
-                        div *= 10;
-                        un = '10min';
-                        break;
-                    case 600000:
-                        div *= 6;
-                        un = 'hour';
-                        break;
-                    case 3600000:
-                        div *= 2;
-                        un = '2hour';
-                        break;
-                    case 7200000:
-                        div *= 1.5;
-                        un = '3hour';
-                        break;
-                    case 10800000:
-                        div *= 2;
-                        un = '6hour';
-                        break;
-                    case 28800000:
-                        div *= 2;
-                        un = '12hour';
-                        break;
-                    case 57600000:
-                        div *= 2;
-                        un = 'day';
-                        break;
-                    default:
-                        un = undefined;
-                        break;
-                }
-            }
-            var grid = document.createElementNS(this.svgNS, 'path');
-            grid.setAttributeNS(null, "stroke-width", "0.2");
-            this.history.appendChild(grid);
-            var d = "";
-            var x = history;
-            while (x > 0)
-            {
-                
-                d += "M "+x/this.ratio+" 0 V"+gap;
-                x -= div;
-            }
-            div = 1;
-            while (gap / div > 5)
-            {
-                switch (div)
-                {
-                    case 1:
-                        div = 5;
-                        break;
-                    default:
-                        div *= 2;
-                        break;
-                }
-            }
-            x = gap;
-            while (x > 0)
-            {
-                
-                d += "M 0 "+x+" H"+history/this.ratio;
-                x -= div;
-            }
-            grid.setAttributeNS(null, "d", d);
-            var unit = document.createElementNS(this.svgNS, 'text');
-            this.history.appendChild(unit);
-            var xx = gap/2;
-            var yy = gap-4;
-            unit.setAttributeNS(null, "x", xx);
-            unit.setAttributeNS(null, "y", yy);
-            unit.setAttributeNS(null, "text-anchor", "middle");
-            unit.setAttributeNS(null, "style", "font-size: 0.3em");
-            unit.setAttributeNS(null, "stroke-width", "0.5");
-            var unitText = document.createTextNode("Grid: "+div+" "+this.unitString+" / "+un);
-            unit.appendChild(unitText);
         }
     };
     this.tacktical = function(r)
     {
-        this.compass = document.createElementNS(this.svgNS, 'g');
+        this.compass = createCompass(r*0.8);
         this.svg.appendChild(this.compass);
 
-        var use = document.createElementNS(this.svgNS, 'use');
-        this.compass.appendChild(use);
-        use.setAttributeNS(this.xlinkNS, "href", "/defs.svg#compass-scale-1");
-        use.setAttributeNS(null, "transform", "scale("+r+")");
-        use.setAttributeNS(null, "stroke", "black");
-        use.setAttributeNS(null, "stroke-width", 0.2/r);
-
-        var use = document.createElementNS(this.svgNS, 'use');
-        this.compass.appendChild(use);
-        use.setAttributeNS(this.xlinkNS, "href", "/defs.svg#compass-scale-5");
-        use.setAttributeNS(null, "transform", "scale("+r+")");
-        use.setAttributeNS(null, "stroke", "black");
-        use.setAttributeNS(null, "stroke-width", 0.4/r);
-
-        var use = document.createElementNS(this.svgNS, 'use');
-        this.compass.appendChild(use);
-        use.setAttributeNS(this.xlinkNS, "href", "/defs.svg#compass-scale-10");
-        use.setAttributeNS(null, "transform", "scale("+r+")");
-        use.setAttributeNS(null, "stroke", "black");
-        use.setAttributeNS(null, "stroke-width", 0.5/r);
-
-        var use = document.createElementNS(this.svgNS, 'use');
-        this.compass.appendChild(use);
-        use.setAttributeNS(this.xlinkNS, "href", "/defs.svg#compass-scale");
-        use.setAttributeNS(null, "transform", "scale("+r+")");
-        use.setAttributeNS(null, "font-size", "0.006em");
-        
-        this.boatGroup = document.createElementNS(this.svgNS, 'g');
+        this.boatGroup = createBoat(r/3);
         this.svg.appendChild(this.boatGroup);
-        this.boatGroup.setAttributeNS(null, "transform", "rotate(0)");
 
-        var boat = document.createElementNS(this.svgNS, 'path');
-        this.boatGroup.appendChild(boat);
-        boat.setAttributeNS(null, "id", "boat");
-        boat.setAttributeNS(null, "stroke", "blue");
-        boat.setAttributeNS(null, "stroke-width", "1");
-        boat.setAttributeNS(null, "fill", "none");
-        boat.setAttributeNS(null, "transform", "rotate(0)");
-        boat.setAttributeNS(null, "d", 
-                "M -20 40 l 40 0 "+
-                "C 23 10 20 -15 0 -40"+
-                "M -20 40 "+
-                "C -23 10 -20 -15 0 -40"
-        );
-
-        this.windIndicatorGroup = document.createElementNS(this.svgNS, 'g');
+        this.windIndicatorGroup = createWindIndicator(r);
         this.boatGroup.appendChild(this.windIndicatorGroup);
-                this.windIndicatorGroup.setAttributeNS(null, "transform", "rotate(0)");
-
-        var windIndicatorTip = document.createElementNS(this.svgNS, 'path');
-        this.windIndicatorGroup.appendChild(windIndicatorTip);
-        windIndicatorTip.setAttributeNS(null, "id", "windIndicatorTip");
-        windIndicatorTip.setAttributeNS(null, "stroke", "red");
-        windIndicatorTip.setAttributeNS(null, "stroke-width", "1");
-        windIndicatorTip.setAttributeNS(null, "fill", "red");
-        windIndicatorTip.setAttributeNS(null, "d", "M -3 -15 L 0 -25 L 3 -15 Z");
-
-        var windIndicatorShaft = document.createElementNS(this.svgNS, 'path');
-        this.windIndicatorGroup.appendChild(windIndicatorShaft);
-        windIndicatorShaft.setAttributeNS(null, "id", "windIndicatorShaft");
-        windIndicatorShaft.setAttributeNS(null,"stroke", "black");
-        windIndicatorShaft.setAttributeNS(null,"stroke-width", "1");
-        windIndicatorShaft.setAttributeNS(null,"fill", "none");
-        windIndicatorShaft.setAttributeNS(null,"d", "M 0 15 l 0 -30");
-
-        var windIndicatorTail = document.createElementNS(this.svgNS, 'path');
-        this.windIndicatorGroup.appendChild(windIndicatorTail);
-        windIndicatorTail.setAttributeNS(null,"id", "windIndicatorTail");
-        windIndicatorTail.setAttributeNS(null,"stroke", "red");
-        windIndicatorTail.setAttributeNS(null,"stroke-width", "1");
-        windIndicatorTail.setAttributeNS(null,"fill", "red");
-        windIndicatorTail.setAttributeNS(null,"d", "M -3 25 L -3 20 L 0 15 L 3 20 L 3 25 Z");
-
-        
     };
     this.setTrueHeading = function(heading)
     {
@@ -350,12 +160,12 @@ function Svg(x, y, width, height)
         {
             var t = this.data[2*i];
             var v = this.data[2*i+1];
-            arr.push((this.historyMillis-(time-t))/this.ratio);
-            arr.push(this.max - v); // (max-min)-(v-min)
+            arr.push((this.historyMillis-(time-t))/this.ratioX);
+            arr.push((this.max - v)/this.ratioY); // (max-min)-(v-min)
         }
         var v = this.data[2*(len-1)+1];
-        arr.push(this.historyMillis/this.ratio);
-        arr.push(this.max - v);
+        arr.push(this.historyMillis/this.ratioX);
+        arr.push((this.max - v)/this.ratioY);
         this.polyline.setAttributeNS(null, "points", arr.join(' '));
     };
 }
