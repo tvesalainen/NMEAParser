@@ -22,8 +22,10 @@
 var SVG_NS = 'http://www.w3.org/2000/svg';
 var XLINK_NS = 'http://www.w3.org/1999/xlink';
 
-function createSvg(viewBox)
+
+function createSvg(x, y, width, height)
 {
+    var viewBox = x+" "+y+" "+width+" "+height;
     var svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttributeNS(null, 'viewBox', viewBox);
     return svg;
@@ -205,7 +207,7 @@ function createHistory(historyMillis, min, max, width, height, unitString)
     return history;
 };
 
-function createCompass(r)
+function createCompass(r, haveNSWE)
 {
     var compass = document.createElementNS(SVG_NS, 'g');
 
@@ -228,11 +230,24 @@ function createCompass(r)
     scale10.setAttributeNS(null, "stroke", "black");
     scale10.setAttributeNS(null, "stroke-width", 0.3/r);
 
-    var scale = createCircleScale();
+    var scale90 = createCompassScale(1.15, 0, 0, 90, 0.1);
+    compass.appendChild(scale90);
+    scale90.setAttributeNS(null, "transform", "scale("+rulerR+")");
+    scale90.setAttributeNS(null, "stroke", "black");
+    scale90.setAttributeNS(null, "stroke-width", 0.3/r);
+
+    var scale = createCircleScale(1.01, 0.06);
     compass.appendChild(scale);
     scale.setAttributeNS(null, "transform", "scale("+r+")");
-    scale.setAttributeNS(null, "font-size", "0.006em");
-
+    scale.setAttributeNS(null, "font-size", "0.005em");
+    
+    if (haveNSWE)
+    {
+        var nswe = createNSWE(1.2, 0.1);
+        compass.appendChild(nswe);
+        nswe.setAttributeNS(null, "transform", "scale("+r+")");
+        nswe.setAttributeNS(null, "font-size", "0.01em");
+    }
     return compass;
 };
 function createCompassScale(r1, cx, cy, step, length)
@@ -285,55 +300,69 @@ function createCompassScale2(r1, cx, cy, start, end, step, length)
     path.setAttributeNS(null, "stroke-linecap", "round");
     return g;
 };
-function createCircleScale()
+function createCircleScale(r, length)
 {
     var g = document.createElementNS(SVG_NS, 'g');
     
-    var a1 = [0].join(" ");
-    var a2 = [357, 3].join(" ");
-    var a3 = [355, 0, 5].join(" ");
-
-    var x1 = [Math.sin(toRadians(0))].join(" ");
-    var x2 = [Math.sin(toRadians(357)), Math.sin(toRadians(3))].join(" ");
-    var x3 = [Math.sin(toRadians(355)), Math.sin(toRadians(0)), Math.sin(toRadians(5))].join(" ");
-
-    var y1 = [-Math.cos(toRadians(0))].join(" ");
-    var y2 = [-Math.cos(toRadians(357)), -Math.cos(toRadians(3))].join(" ");
-    var y3 = [-Math.cos(toRadians(355)), -Math.cos(toRadians(0)), -Math.cos(toRadians(5))].join(" ");
-
-    for (var a = 0; a < 360; a += 30)
+    for (var a = 0; a < 360; a += 10)
     {
         var text = document.createElementNS(SVG_NS, 'text');
         g.appendChild(text);
-        text.setAttributeNS(null, "text-anchor", "middle");
-        text.setAttributeNS(null, "transform", "rotate(" + a + ")");
         var l = a.toString();
         var aTxt = document.createTextNode(l);
         text.appendChild(aTxt);
-        var angles = "";
-        var x = "";
-        var y = "";
-        switch (l.length)
+        text.setAttributeNS(null, "text-anchor", "middle");
+        if (a > 90 && a < 270)
         {
-            case 1:
-                y = y1;
-                x = x1;
-                angles = a1;
-                break;
-            case 2:
-                y = y2;
-                x = x2;
-                angles = a2;
-                break;
-            case 3:
-                y = y3;
-                x = x3;
-                angles = a3;
-                break;
+            var b = a+180;
+            var tick = r+length;
+            text.setAttributeNS(null, "transform", "rotate(" + b + ") translate(0, "+tick+")");
         }
-        text.setAttributeNS(null, "x", x);
-        text.setAttributeNS(null, "y", y);
-        text.setAttributeNS(null, "rotate", angles);
+        else
+        {
+            text.setAttributeNS(null, "transform", "rotate(" + a + ") translate(0, -"+r+")");
+        }
+    }
+    
+    return g;
+};
+function createNSWE(r, length)
+{
+    var g = document.createElementNS(SVG_NS, 'g');
+    
+    for (var a = 0; a < 360; a += 90)
+    {
+        var text = document.createElementNS(SVG_NS, 'text');
+        g.appendChild(text);
+        var aTxt = document.createTextNode("N");
+        text.appendChild(aTxt);
+        text.setAttributeNS(null, "text-anchor", "middle");
+        text.setAttributeNS(null, "x", "0");
+        text.setAttributeNS(null, "y", -r);
+
+        text = document.createElementNS(SVG_NS, 'text');
+        g.appendChild(text);
+        var aTxt = document.createTextNode("S");
+        text.appendChild(aTxt);
+        text.setAttributeNS(null, "text-anchor", "middle");
+        text.setAttributeNS(null, "x", "0");
+        text.setAttributeNS(null, "y", r+length);
+
+        text = document.createElementNS(SVG_NS, 'text');
+        g.appendChild(text);
+        var aTxt = document.createTextNode("E");
+        text.appendChild(aTxt);
+        text.setAttributeNS(null, "text-anchor", "start");
+        text.setAttributeNS(null, "x", r);
+        text.setAttributeNS(null, "y", length/2);
+
+        text = document.createElementNS(SVG_NS, 'text');
+        g.appendChild(text);
+        var aTxt = document.createTextNode("W");
+        text.appendChild(aTxt);
+        text.setAttributeNS(null, "text-anchor", "end");
+        text.setAttributeNS(null, "x", -r);
+        text.setAttributeNS(null, "y", length/2);
     }
     
     return g;
@@ -343,7 +372,7 @@ function createBoat(r)
     var boatGroup = document.createElementNS(SVG_NS, 'g');
     var g = document.createElementNS(SVG_NS, 'g');
     boatGroup.appendChild(g);
-    g.setAttributeNS(null, "transform", `scale(${r/50})`);
+    g.setAttributeNS(null, "transform", `translate(0,-4) scale(${r/20})`);
     boatGroup.setAttributeNS(null, "transform", "rotate(0)");
 
     var boat = document.createElementNS(SVG_NS, 'path');
@@ -351,6 +380,7 @@ function createBoat(r)
     boat.setAttributeNS(null, "id", "boat");
     boat.setAttributeNS(null, "stroke", "blue");
     boat.setAttributeNS(null, "stroke-width", "1");
+    boat.setAttributeNS(null, "stroke-linejoin", "miter");
     boat.setAttributeNS(null, "fill", "none");
     boat.setAttributeNS(null, "transform", "rotate(0)");
     boat.setAttributeNS(null, "d", 
@@ -360,6 +390,23 @@ function createBoat(r)
             "C -23 10 -20 -15 0 -40"
     );
     return boatGroup;
+};
+function createCOG(r)
+{
+    var cog = document.createElementNS(SVG_NS, 'g');
+    var g = document.createElementNS(SVG_NS, 'g');
+    cog.appendChild(g);
+
+    var boat = document.createElementNS(SVG_NS, 'path');
+    g.appendChild(boat);
+    boat.setAttributeNS(null, "id", "boat");
+    boat.setAttributeNS(null, "stroke", "blue");
+    boat.setAttributeNS(null, "stroke-width", "1");
+    boat.setAttributeNS(null, "fill", "red");
+    boat.setAttributeNS(null, "d", 
+            "M 2 -25 L 0 -34 L -2 -25 Z"
+    );
+    return cog;
 };
 
 function createWindIndicator(r)
@@ -395,5 +442,11 @@ function createWindIndicator(r)
     windIndicatorTail.setAttributeNS(null,"d", "M -3 25 L -3 20 L 0 15 L 3 20 L 3 25 Z");
     
     return windIndicatorGroup;
+
+}
+function createWindArrow(r)
+{
+    var g = document.createElementNS(SVG_NS, 'g');
+    return g;
 
 }

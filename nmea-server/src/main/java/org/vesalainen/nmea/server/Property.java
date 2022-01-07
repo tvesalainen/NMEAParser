@@ -28,7 +28,6 @@ import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingAverage;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSeries;
-import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
 import org.vesalainen.math.sliding.TimeValueConsumer;
 import org.vesalainen.math.sliding.TimeoutSlidingAngleAverage;
 import org.vesalainen.nmea.server.jaxb.PropertyType;

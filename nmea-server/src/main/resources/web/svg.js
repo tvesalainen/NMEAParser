@@ -46,10 +46,9 @@ function Svg(x, y, width, height)
     this.width = width;
     this.height = height;
     this.padding = 4;
-    var viewBox = x+" "+y+" "+width+" "+height; //'-50,-40,100,40';
     this.svgNS = 'http://www.w3.org/2000/svg';
     this.xlinkNS = 'http://www.w3.org/1999/xlink';
-    this.svg = createSvg(viewBox);
+    this.svg = createSvg(x, y, width, height);
 
     this.setFrame = function()
     {
@@ -60,15 +59,10 @@ function Svg(x, y, width, height)
     {
         if (!this.title)
         {
-            this.titleText = '';
             this.title = createTitle(this.x, this.y, this.padding);
             this.svg.appendChild(this.title);
-            this.titleText = document.createTextNode('');
-            this.title.appendChild(this.titleText);
         }
-        var t = document.createTextNode(str);
-        this.title.replaceChild(t, this.titleText);
-        this.titleText = t;
+        this.title.innerHTML = str;
     };
     this.setUnit = function(str)
     {
@@ -76,13 +70,8 @@ function Svg(x, y, width, height)
         {
             this.unit = createUnit(this.x, this.y, this.width, this.height, this.padding);
             this.svg.appendChild(this.unit);
-            this.unitText = document.createTextNode('');
-            this.unit.appendChild(this.unitText);
         }
-        this.unitString = str;
-        var t = document.createTextNode(str);
-        this.unit.replaceChild(t, this.unitText);
-        this.unitText = t;
+        this.unit.innerHTML = str;
     };
 
     this.setText = function(str)
@@ -91,12 +80,8 @@ function Svg(x, y, width, height)
         {
             this.text = createText(this.x, this.y, this.width, this.height, this.padding);
             this.svg.appendChild(this.text);
-            this.txt = document.createTextNode('');
-            this.text.appendChild(this.txt);
         }
-        var t = document.createTextNode(str);
-        this.text.replaceChild(t, this.txt);
-        this.txt = t;
+        this.text.innerHTML = str;
     };
     this.setHistory = function(history, min, max)
     {
@@ -119,22 +104,65 @@ function Svg(x, y, width, height)
     };
     this.tacktical = function(r)
     {
-        this.compass = createCompass(r*0.8);
+        this.compass = createCompass(r*0.8, "yes");
         this.svg.appendChild(this.compass);
 
-        this.boatGroup = createBoat(r/3);
-        this.svg.appendChild(this.boatGroup);
+        //this.variation = createCompass(r*0.62);
+        //this.svg.appendChild(this.variation);
 
-        this.windIndicatorGroup = createWindIndicator(r);
-        this.boatGroup.appendChild(this.windIndicatorGroup);
+        this.boat = createBoat(r/3);
+        this.svg.appendChild(this.boat);
+
+        this.windIndicator = createWindIndicator(r);
+        this.boat.appendChild(this.windIndicator);
+        
+        this.windArrow = createWindArrow(r);
+        this.boat.appendChild(this.windArrow);
+        this.windArrowPath = document.createElementNS(SVG_NS, 'path');
+        this.windArrow.appendChild(this.windArrowPath);
+        this.windArrowPath.setAttributeNS(null,"id", "windArrow");
+        this.windArrowPath.setAttributeNS(null,"stroke-width", "1");
+        
+        this.cog =  createCOG(r);
+        this.svg.appendChild(this.cog);
     };
     this.setTrueHeading = function(heading)
     {
-        this.boatGroup.setAttributeNS(null, "transform", "rotate("+heading+")");
+        this.boat.setAttributeNS(null, "transform", "rotate("+heading+")");
     };
     this.setRelativeWindAngle = function(angle)
     {
-        this.windIndicatorGroup.setAttributeNS(null, "transform", "rotate("+angle+")");
+        this.windIndicator.setAttributeNS(null, "transform", "rotate("+angle+")");
+    };
+    this.setVariation = function(angle)
+    {
+        //this.variation.setAttributeNS(null, "transform", "rotate("+angle+")");
+    };
+    this.setTrueWindAngle = function(angle)
+    {
+        this.windArrow.setAttributeNS(null, "transform", "scale(0.4) rotate("+angle+") translate(0, -60)");
+    };
+    this.setCOG = function(angle)
+    {
+        this.cog.setAttributeNS(null, "transform", "rotate("+angle+")");
+    };
+    this.setSpeedOverGround = function(knots)
+    {
+        if (knots > 1)
+        {
+            this.cog.setAttributeNS(null, "display", "inline");
+        }
+        else
+        {
+            this.cog.setAttributeNS(null, "display", "none");
+        }
+    }
+    this.setTrueWindSpeed = function(knots)
+    {
+        var d = getWindArrowPath(knots);
+        var color = getWindArrowColor(knots);
+        this.windArrowPath.setAttributeNS(null, "d", d);
+        this.windArrowPath.setAttributeNS(null, "fill", color);
     };
     this.setData = function(time, value)
     {

@@ -65,13 +65,15 @@ public class PropertyServer extends AbstractPropertySetter
     }
     private void populate(String event, SseHandler sseHandler, Property p)
     {
-        String description = I18n.get().getString(p.getName());
+        String name = p.getName();
+        String description = I18n.get().getString(name);
         UnitType unit = p.getUnit();
         long historyMinutes = p.getHistoryMinutes();
         long history = MINUTES.toMillis(historyMinutes);
         double min = p.getMin();
         double max = p.getMax();
         sseHandler.fireEvent(event, "{"
+                + "\"name\": \""+name+"\", "
                 + "\"title\": \""+description+"\", "
                 + "\"unit\": \""+unit.getUnit()+ "\", "
                 + "\"history\": \""+history+ "\", "
