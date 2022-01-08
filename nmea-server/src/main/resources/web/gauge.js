@@ -70,8 +70,7 @@ function Gauge(element, seq)
                 }
                 else
                 {
-                    this.svg.setTitle(json['title']);
-                    this.svg.setUnit(json['unit']);
+                    this.svg.setTitle(json['title'], json['unit']);
                     this.svg.setHistory(json['history'], json['min'], json['max']);
                 }
             };

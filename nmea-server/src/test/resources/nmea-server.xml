@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea-server nmeaMulticastAddress="224.0.0.3" nmeaMulticastPort="10110" httpPort="8081">
-    <property name="trueWindSpeed" description="True Wind Speed" min="0.0" max="50" unit="KNOT" decimals="1" averageMillis="0" periodMillis="0" historyMinutes="60"/>
-    <property name="epochMillis" description="Epoch Millis" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
-    <property name="hour" description="Hour" min="0.0" max="23.0" unit="DURATION_HOURS" averageMillis="0" periodMillis="0"/>
-    <property name="minute" description="Minute" min="0.0" max="59.0" unit="DURATION_MINUTES" averageMillis="0" periodMillis="0"/>
-    <property name="second" description="Second" min="0.0" max="60.0" unit="DURATION_SECONDS" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="status" description="Status" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
-    <property name="latitude" description="Latitude" min="-90.0" max="90.0" unit="COORDINATE_DEGREES_AND_MINUTES" decimals="3" averageMillis="0" periodMillis="0"/>
-    <property name="longitude" description="Longitude" min="-180.0" max="180.0" unit="COORDINATE_DEGREES_AND_MINUTES" decimals="3" averageMillis="0" periodMillis="0"/>
-    <property name="speedOverGround" description="Speed Over Ground" min="0.0" max="50.0" unit="KNOT" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="trackMadeGood" description="Track Made Good" min="0.0" max="360.0" unit="DEGREE" decimals="0" averageMillis="1000" periodMillis="0"/>
-    <property name="day" description="Day" min="1.0" max="31.0" unit="DURATION_DAYS" averageMillis="0" periodMillis="0"/>
-    <property name="month" description="Month" min="1.0" max="12.0" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
-    <property name="year" description="Year" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
-    <property name="magneticVariation" description="Magnetic Variation" min="0.0" max="360.0" unit="DEGREE" decimals="0" averageMillis="0" periodMillis="0"/>
-    <property name="trueHeading" description="True Heading" min="0.0" max="360.0" unit="DEGREE" decimals="0" averageMillis="0" periodMillis="0"/>
-    <property name="waterSpeed" description="Water Speed" min="0.0" max="50.0" unit="KNOT" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="relativeWindAngle" description="Relative Wind Angle" min="0.0" max="360.0" unit="DEGREE" decimals="0" averageMillis="0" periodMillis="0"/>
-    <property name="relativeWindSpeed" description="Relative Wind Speed" min="0.0" max="100.0" unit="KNOT" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="trueWindAngle" description="True Wind Angle" min="0.0" max="360.0" unit="DEGREE" decimals="0" averageMillis="0" periodMillis="0"/>
-    <property name="outsideTemperature" description="Outside Temperature" min="-60.0" max="60.0" unit="CELSIUS" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="waterTemperature" description="Water Temperature" min="0.0" max="40.0" unit="CELSIUS" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="atmosphericPressure" description="Atmospheric Pressure" min="800.0" max="1400.0" unit="HPA" decimals="0" averageMillis="0" periodMillis="0" historyMinutes="1440"/>
-    <property name="gpsQualityIndicator" description="Gps Quality Indicator" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
-    <property name="numberOfSatellitesInView" description="Number Of Satellites In View" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
-    <property name="horizontalDilutionOfPrecision" description="Horizontal Dilution Of Precision" min="0.0" max="50.0" unit="METER" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="antennaAltitude" description="Antenna Altitude" min="0.0" max="10000.0" unit="METER" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="depthOfWater" description="Depth Of Water" min="0.0" max="50" unit="METER" decimals="1" averageMillis="0" periodMillis="0" historyMinutes="800"/>
-    <property name="depthBelowTransducer" description="Depth Below Transducer" min="0.0" max="100.0" unit="METER" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="depthOffsetOfWater" description="Depth Offset Of Water" min="0.0" max="10.0" unit="METER" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="localZoneHours" description="Local Zone Hours" min="-24.0" max="24.0" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
-    <property name="localZoneMinutes" description="Local Zone Minutes" min="0.0" max="59.0" unit="UNITLESS" averageMillis="0" periodMillis="0"/>
-    <property name="batteryVoltage0" description="Battery Voltage0" min="0.0" max="100.0" unit="VOLT" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="batteryCurrent0" description="Battery Current0" min="0.0" max="100.0" unit="AMPERE" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="batteryVoltage1" description="Battery Voltage1" min="0.0" max="100.0" unit="VOLT" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="batteryCurrent1" description="Battery Current1" min="0.0" max="100.0" unit="AMPERE" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="batteryTemperature0" description="Battery Temperature0" min="0.0" max="100.0" unit="CELSIUS" decimals="1" averageMillis="0" periodMillis="0"/>
-    <property name="batteryTemperature1" description="Battery Temperature1" min="0.0" max="100.0" unit="CELSIUS" decimals="1" averageMillis="0" periodMillis="0"/>
+    <property name="officialWindSpeed" source="trueWindSpeed" min="0.0" max="50" unit="KNOT" decimals="1" history="10m"/>
+    <property name="officialWindAngle" source="trueWindAngle" unit="SECONDARY_INTERCARDINAL_DIRECTION" history="10m"/>
+    <property name="batteryVoltage0" min="0.0" max="100.0" unit="VOLT" decimals="1"/>
+    <property name="batteryCurrent0" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
+    <property name="epochMillis" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS"/>
+    <property name="hour" min="0.0" max="23.0" unit="DURATION_HOURS"/>
+    <property name="minute" min="0.0" max="59.0" unit="DURATION_MINUTES"/>
+    <property name="second" min="0.0" max="60.0" unit="DURATION_SECONDS" decimals="1"/>
+    <property name="status" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS"/>
+    <property name="latitude" min="-90.0" max="90.0" unit="COORDINATE_DEGREES_AND_MINUTES" decimals="3"/>
+    <property name="longitude" min="-180.0" max="180.0" unit="COORDINATE_DEGREES_AND_MINUTES" decimals="3"/>
+    <property name="speedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1"/>
+    <property name="trackMadeGood" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
+    <property name="day" min="1.0" max="31.0" unit="DURATION_DAYS"/>
+    <property name="month" min="1.0" max="12.0" unit="UNITLESS"/>
+    <property name="year" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS"/>
+    <property name="magneticVariation" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
+    <property name="trueHeading" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
+    <property name="relativeWindAngle" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
+    <property name="relativeWindSpeed" min="0.0" max="100.0" unit="KNOT" decimals="1"/>
+    <property name="trueWindAngle" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
+    <property name="trueWindSpeed" min="0.0" max="100.0" unit="KNOT" decimals="1" history="2h"/>
+    <property name="depthOfWater" min="0.0" max="100.0" unit="METER" decimals="1" history="2h"/>
+    <property name="depthBelowTransducer" min="0.0" max="100.0" unit="METER" decimals="1"/>
+    <property name="depthOffsetOfWater" min="0.0" max="10.0" unit="METER" decimals="1"/>
+    <property name="waterTemperature" min="0.0" max="40.0" unit="CELSIUS" decimals="1"/>
+    <property name="gpsQualityIndicator" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS"/>
+    <property name="numberOfSatellitesInView" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS"/>
+    <property name="horizontalDilutionOfPrecision" min="0.0" max="50.0" unit="METER" decimals="1"/>
+    <property name="antennaAltitude" min="0.0" max="10000.0" unit="METER" decimals="1"/>
+    <property name="outsideTemperature" min="-60.0" max="60.0" unit="CELSIUS" decimals="1"/>
+    <property name="atmosphericPressure" min="800.0" max="1400.0" unit="HPA" decimals="1" history="1d"/>
+    <property name="localZoneHours" min="-24.0" max="24.0" unit="UNITLESS"/>
+    <property name="localZoneMinutes" min="0.0" max="59.0" unit="UNITLESS"/>
+    <property name="waterSpeed" min="0.0" max="50.0" unit="KNOT" decimals="1"/>
+    <property name="batteryVoltage1" min="0.0" max="100.0" unit="VOLT" decimals="1"/>
+    <property name="batteryCurrent1" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
 </nmea-server>

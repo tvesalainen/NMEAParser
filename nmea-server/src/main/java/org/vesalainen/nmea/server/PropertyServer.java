@@ -17,15 +17,17 @@
 package org.vesalainen.nmea.server;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import static java.util.concurrent.TimeUnit.*;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.math.UnitType;
 import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
+import org.vesalainen.util.ConcurrentHashMapList;
+import org.vesalainen.util.MapList;
 import web.I18n;
 
 /**
@@ -35,6 +37,7 @@ import web.I18n;
 public class PropertyServer extends AbstractPropertySetter
 {
     private final Clock clock;
+    private final MapList<String,Property> mapList = new ConcurrentHashMapList<>();
     private final Map<String,Property> map = new ConcurrentHashMap<>();
     private final Config config;
     
@@ -68,8 +71,7 @@ public class PropertyServer extends AbstractPropertySetter
         String name = p.getName();
         String description = I18n.get().getString(name);
         UnitType unit = p.getUnit();
-        long historyMinutes = p.getHistoryMinutes();
-        long history = MINUTES.toMillis(historyMinutes);
+        long history = p.getHistoryMillis();
         double min = p.getMin();
         double max = p.getMax();
         sseHandler.fireEvent(event, "{"
@@ -84,43 +86,49 @@ public class PropertyServer extends AbstractPropertySetter
     @Override
     public <T> void set(String property, T arg)
     {
-        Property p = getProperty(property);
-        p.set(clock.millis(), arg);
+        List<Property> p = getProperty(property);
+        long millis = clock.millis();
+        p.forEach((pr)->pr.set(millis, arg));
     }
 
     @Override
     public void set(String property, double arg)
     {
-        Property p = getProperty(property);
-        p.set(clock.millis(), arg);
+        List<Property> p = getProperty(property);
+        long millis = clock.millis();
+        p.forEach((pr)->pr.set(millis, arg));
     }
 
     @Override
     public void set(String property, float arg)
     {
-        Property p = getProperty(property);
-        p.set(clock.millis(), arg);
+        List<Property> p = getProperty(property);
+        long millis = clock.millis();
+        p.forEach((pr)->pr.set(millis, arg));
     }
 
     @Override
     public void set(String property, int arg)
     {
-        Property p = getProperty(property);
-        p.set(clock.millis(), arg);
+        List<Property> p = getProperty(property);
+        long millis = clock.millis();
+        p.forEach((pr)->pr.set(millis, arg));
     }
     
     @Override
     public void set(String property, long arg)
     {
-        Property p = getProperty(property);
-        p.set(clock.millis(), arg);
+        List<Property> p = getProperty(property);
+        long millis = clock.millis();
+        p.forEach((pr)->pr.set(millis, arg));
     }
     
     @Override
     public void set(String property, char arg)
     {
-        Property p = getProperty(property);
-        p.set(clock.millis(), arg+"");
+        List<Property> p = getProperty(property);
+        long millis = clock.millis();
+        p.forEach((pr)->pr.set(millis, arg+""));
     }
     
     
@@ -131,16 +139,17 @@ public class PropertyServer extends AbstractPropertySetter
         return allProperties.toArray(new String[allProperties.size()]);
     }
     
-    private Property getProperty(String property)
+    private List<Property> getProperty(String property)
     {
-        Property prop = map.get(property);
+        List<Property> prop = mapList.get(property);
         if (prop == null)
         {
             PropertyType pt = config.getProperty(property);
-            prop = Property.getInstance(pt);
-            map.put(property, prop);
+            Property p = Property.getInstance(pt);
+            mapList.add(property, p);
+            map.put(property, p);
         }
-        return prop;
+        return mapList.get(property);
     }
 
 }

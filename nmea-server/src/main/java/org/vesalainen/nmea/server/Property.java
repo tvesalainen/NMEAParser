@@ -46,7 +46,7 @@ public abstract class Property extends AbstractDynamicMBean
 
     private Property(PropertyType property)
     {
-        super(property.getDescription(), property);
+        super(property.getName(), property);
         this.property = property;
         register();
     }
@@ -124,11 +124,6 @@ public abstract class Property extends AbstractDynamicMBean
         return property.getName();
     }
 
-    public String getDescription()
-    {
-        return property.getDescription();
-    }
-
     public double getMin()
     {
         return Primitives.getDouble(property.getMin(), -Double.MAX_VALUE);
@@ -137,6 +132,11 @@ public abstract class Property extends AbstractDynamicMBean
     public double getMax()
     {
         return Primitives.getDouble(property.getMax(), Double.MAX_VALUE);
+    }
+
+    public String getFormat()
+    {
+        return property.getFormat();
     }
 
     public UnitType getUnit()
@@ -159,19 +159,29 @@ public abstract class Property extends AbstractDynamicMBean
 
     public long getAverageMillis()
     {
-        return Primitives.getLong(property.getAverageMillis(), 0);
+        return getMillis(property.getAverage());
     }
 
     public long getPeriodMillis()
     {
-        return Primitives.getLong(property.getPeriodMillis(), 0);
+        return getMillis(property.getPeriod());
     }
 
-    public long getHistoryMinutes()
+    public long getHistoryMillis()
     {
-        return Primitives.getLong(property.getHistoryMinutes(), 0);
+        return getMillis(property.getHistory());
     }
-
+    private long getMillis(String text)
+    {
+        if (text != null)
+        {
+            return (long) DURATION_MILLI_SECONDS.parse(text);
+        }
+        else
+        {
+            return 0;
+        }
+    }
     private static class DoubleProperty extends Property
     {
         private DoubleTimeoutSlidingSeries history;
@@ -211,10 +221,10 @@ public abstract class Property extends AbstractDynamicMBean
                     };
                 }
             }
-            long historyMinutes = getHistoryMinutes();
-            if (historyMinutes > 0)
+            long historyMillis = getHistoryMillis();
+            if (historyMillis > 0)
             {
-                this.history = new DoubleTimeoutSlidingSeries(256, MILLISECONDS.convert(historyMinutes, MINUTES));
+                this.history = new DoubleTimeoutSlidingSeries(256, historyMillis);
             }
         }
         @Override
@@ -248,10 +258,10 @@ public abstract class Property extends AbstractDynamicMBean
         public ObjectProperty(PropertyType property)
         {
             super(property);
-            long historyMinutes = getHistoryMinutes();
+            long historyMinutes = getHistoryMillis();
             if (historyMinutes > 0)
             {
-                this.history = new TimeToLiveList(historyMinutes, MINUTES);
+                this.history = new TimeToLiveList(historyMinutes, MILLISECONDS);
             }
         }
         @Override

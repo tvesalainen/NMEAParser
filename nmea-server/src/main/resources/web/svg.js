@@ -55,31 +55,22 @@ function Svg(x, y, width, height)
         this.svg.appendChild(createFrame(this.x, this.y, this.width, this.height));
     }
 
-    this.setTitle = function(str)
+    this.setTitle = function(title, unit)
     {
         if (!this.title)
         {
-            this.title = createTitle(this.x, this.y, this.padding);
-            this.svg.appendChild(this.title);
+            this.title = createTitle(this.svg, this.x, this.y, this.padding);
+            this.unit = createUnit(this.svg, this.x, this.y, this.width, this.height, this.padding);
         }
-        this.title.innerHTML = str;
-    };
-    this.setUnit = function(str)
-    {
-        if (!this.unit)
-        {
-            this.unit = createUnit(this.x, this.y, this.width, this.height, this.padding);
-            this.svg.appendChild(this.unit);
-        }
-        this.unit.innerHTML = str;
+        this.title.innerHTML = title;
+        this.unit.innerHTML = unit;
     };
 
     this.setText = function(str)
     {
         if (!this.text)
         {
-            this.text = createText(this.x, this.y, this.width, this.height, this.padding);
-            this.svg.appendChild(this.text);
+            this.text = createText(this.svg, this.x, this.y, this.width, this.height, this.padding);
         }
         this.text.innerHTML = str;
     };
@@ -93,8 +84,7 @@ function Svg(x, y, width, height)
             this.gap = max - min;
             this.ratioX = this.historyMillis/this.width;
             this.ratioY = this.gap/this.height;
-            this.history = createHistory(history, min, max, this.width, this.height, this.unitString);
-            this.svg.appendChild(this.history);
+            this.history = createHistory(this.svg, history, min, max, this.width, this.height, this.unitString);
             this.polyline = document.createElementNS(this.svgNS, 'polyline');
             this.history.appendChild(this.polyline);
             this.polyline.setAttributeNS(null, "stroke-width", "0.02em");
@@ -104,27 +94,21 @@ function Svg(x, y, width, height)
     };
     this.tacktical = function(r)
     {
-        this.compass = createCompass(r*0.8, "yes");
-        this.svg.appendChild(this.compass);
+        var size = 1.25*r;
+        this.compass = createCompass(this.svg, size*0.8);
 
         //this.variation = createCompass(r*0.62);
         //this.svg.appendChild(this.variation);
 
-        this.boat = createBoat(r/3);
-        this.svg.appendChild(this.boat);
+        this.boat = createBoat(this.svg, size/3);
 
-        this.windIndicator = createWindIndicator(r);
-        this.boat.appendChild(this.windIndicator);
+        this.windIndicator = createWindIndicator(this.boat, size);
         
-        this.windArrow = createWindArrow(r);
-        this.boat.appendChild(this.windArrow);
-        this.windArrowPath = document.createElementNS(SVG_NS, 'path');
-        this.windArrow.appendChild(this.windArrowPath);
-        this.windArrowPath.setAttributeNS(null,"id", "windArrow");
-        this.windArrowPath.setAttributeNS(null,"stroke-width", "1");
+        var arr = createWindArrow(this.boat, size);
+        this.windArrow = arr[0];
+        this.windArrowPath = arr[1];
         
-        this.cog =  createCOG(r);
-        this.svg.appendChild(this.cog);
+        this.cog =  createCOG(this.svg, size);
     };
     this.setTrueHeading = function(heading)
     {
@@ -140,7 +124,7 @@ function Svg(x, y, width, height)
     };
     this.setTrueWindAngle = function(angle)
     {
-        this.windArrow.setAttributeNS(null, "transform", "scale(0.4) rotate("+angle+") translate(0, -60)");
+        this.windArrow.setAttributeNS(null, "transform", "rotate("+angle+")");
     };
     this.setCOG = function(angle)
     {

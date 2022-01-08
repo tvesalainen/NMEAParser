@@ -73,7 +73,7 @@ public interface NMEAObserver extends Transactional
      */
     @NMEA0183({BWC, BWR, GGA, GLL, RMA, RMC})
     @NMEACat(COORDINATE)
-    @Unit(value=COORDINATE_DEGREES_AND_MINUTES, min=-90, max=90)
+    @Unit(value=COORDINATE_DEGREES_AND_MINUTES_LATITUDE, min=-90, max=90)
     void setLatitude(double latitude);
     /**
      * Longitude in degrees. BWC, BWR, GGA, GLL, RMA, RMC 
@@ -81,7 +81,7 @@ public interface NMEAObserver extends Transactional
      */
     @NMEA0183({BWC, BWR, GGA, GLL, RMA, RMC})
     @NMEACat(COORDINATE)
-    @Unit(value=COORDINATE_DEGREES_AND_MINUTES, min=-180, max=180)
+    @Unit(value=COORDINATE_DEGREES_AND_MINUTES_LONGITUDE, min=-180, max=180)
     void setLongitude(double longitude);
     /**
      * RMA, RMC
@@ -136,7 +136,7 @@ public interface NMEAObserver extends Transactional
      */
     @NMEA0183({RMB, WPL})
     @NMEACat(WAYPOINT)
-    @Unit(value=COORDINATE_DEGREES_AND_MINUTES, min=-90, max=90)
+    @Unit(value=COORDINATE_DEGREES_AND_MINUTES_LATITUDE, min=-90, max=90)
     void setDestinationWaypointLatitude(double latitude);
     /**
      * RMB, WPL
@@ -144,7 +144,7 @@ public interface NMEAObserver extends Transactional
      */
     @NMEA0183({RMB, WPL})
     @NMEACat(WAYPOINT)
-    @Unit(value=COORDINATE_DEGREES_AND_MINUTES, min=-180, max=180)
+    @Unit(value=COORDINATE_DEGREES_AND_MINUTES_LONGITUDE, min=-180, max=180)
     void setDestinationWaypointLongitude(double longitude);
     /**
      * RMB

@@ -44,7 +44,7 @@ function createFrame(x, y, width, height)
     return frame;
 };
 
-function createTitle(x, y, padding)
+function createTitle(parent, x, y, padding)
 {
     var  title = document.createElementNS(SVG_NS, 'text');
     title.setAttribute("class", "title");
@@ -52,10 +52,11 @@ function createTitle(x, y, padding)
     title.setAttributeNS(null, "y", y+padding*2);
     title.setAttributeNS(null, "text-anchor", "start");
     title.setAttributeNS(null, "style", "font-size: 0.5em");
+    parent.appendChild(title);
     return title;
 };
 
-function createUnit(x, y, width, height, padding)
+function createUnit(parent, x, y, width, height, padding)
 {
     var unit = document.createElementNS(SVG_NS, 'text');
     unit.setAttribute("class", "unit");
@@ -63,10 +64,11 @@ function createUnit(x, y, width, height, padding)
     unit.setAttributeNS(null, "y", y+padding*2);
     unit.setAttributeNS(null, "text-anchor", "end");
     unit.setAttributeNS(null, "style", "font-size: 0.5em");
+    parent.appendChild(unit);
     return unit;
 };
 
-function createText(x, y, width, height, padding)
+function createText(parent, x, y, width, height, padding)
 {
     var text = document.createElementNS(SVG_NS, 'text');
     text.setAttribute("class", "text");
@@ -74,15 +76,17 @@ function createText(x, y, width, height, padding)
     text.setAttributeNS(null, "y", y+height-5);
     text.setAttributeNS(null, "text-anchor", "end");
     text.setAttributeNS(null, "style", "font-size: 2em");
+    parent.appendChild(text);
     return text;
 };
 
-function createHistory(historyMillis, min, max, width, height, unitString)
+function createHistory(parent, historyMillis, min, max, width, height, unitString)
 {
     var gap = max - min;
     var ratioX = historyMillis/width;
     var ratioY = gap/height;
     var history = document.createElementNS(SVG_NS, 'g');
+    parent.appendChild(history);
     history.setAttributeNS(null, "fill", "none");
     history.setAttributeNS(null, "stroke", "currentColor");
     history.setAttributeNS(null, "stroke-opacity", "0.5");
@@ -207,7 +211,7 @@ function createHistory(historyMillis, min, max, width, height, unitString)
     return history;
 };
 
-function createCompass(r, haveNSWE)
+function createCompass(parent, r)
 {
     var compass = document.createElementNS(SVG_NS, 'g');
 
@@ -240,14 +244,15 @@ function createCompass(r, haveNSWE)
     compass.appendChild(scale);
     scale.setAttributeNS(null, "transform", "scale("+r+")");
     scale.setAttributeNS(null, "font-size", "0.005em");
-    
+    /*
     if (haveNSWE)
     {
         var nswe = createNSWE(1.2, 0.1);
         compass.appendChild(nswe);
         nswe.setAttributeNS(null, "transform", "scale("+r+")");
         nswe.setAttributeNS(null, "font-size", "0.01em");
-    }
+    }*/
+    parent.appendChild(compass);
     return compass;
 };
 function createCompassScale(r1, cx, cy, step, length)
@@ -367,7 +372,7 @@ function createNSWE(r, length)
     
     return g;
 };
-function createBoat(r)
+function createBoat(parent, r)
 {
     var boatGroup = document.createElementNS(SVG_NS, 'g');
     var g = document.createElementNS(SVG_NS, 'g');
@@ -389,27 +394,30 @@ function createBoat(r)
             "M -20 40 "+
             "C -23 10 -20 -15 0 -40"
     );
+    parent.appendChild(boatGroup);
     return boatGroup;
 };
-function createCOG(r)
+function createCOG(parent, r)
 {
     var cog = document.createElementNS(SVG_NS, 'g');
     var g = document.createElementNS(SVG_NS, 'g');
     cog.appendChild(g);
+    g.setAttributeNS(null, "transform", "translate(0, -33)");
 
-    var boat = document.createElementNS(SVG_NS, 'path');
-    g.appendChild(boat);
-    boat.setAttributeNS(null, "id", "boat");
-    boat.setAttributeNS(null, "stroke", "blue");
-    boat.setAttributeNS(null, "stroke-width", "1");
-    boat.setAttributeNS(null, "fill", "red");
-    boat.setAttributeNS(null, "d", 
-            "M 2 -25 L 0 -34 L -2 -25 Z"
+    var arrow = document.createElementNS(SVG_NS, 'path');
+    g.appendChild(arrow);
+    arrow.setAttributeNS(null, "id", "boat");
+    arrow.setAttributeNS(null, "stroke", "green");
+    arrow.setAttributeNS(null, "stroke-width", "1");
+    arrow.setAttributeNS(null, "fill", "green");
+    arrow.setAttributeNS(null, "d", 
+            "M 2 0 L 0 -9 L -2 0 Z"
     );
+    parent.appendChild(cog);
     return cog;
 };
 
-function createWindIndicator(r)
+function createWindIndicator(parent, r)
 {
     var windIndicatorGroup = document.createElementNS(SVG_NS, 'g');
     var g = document.createElementNS(SVG_NS, 'g');
@@ -441,12 +449,21 @@ function createWindIndicator(r)
     windIndicatorTail.setAttributeNS(null,"fill", "red");
     windIndicatorTail.setAttributeNS(null,"d", "M -3 25 L -3 20 L 0 15 L 3 20 L 3 25 Z");
     
+    parent.appendChild(windIndicatorGroup);
     return windIndicatorGroup;
 
 }
-function createWindArrow(r)
+function createWindArrow(parent, r)
 {
+    var windArrow = document.createElementNS(SVG_NS, 'g');
     var g = document.createElementNS(SVG_NS, 'g');
-    return g;
+    windArrow.appendChild(g);
+    g.setAttributeNS(null, "transform", `scale(${r/120}) translate(0, -63)`);
+    var windArrowPath = document.createElementNS(SVG_NS, 'path');
+    g.appendChild(windArrowPath);
+    windArrowPath.setAttributeNS(null,"id", "windArrow");
+    windArrowPath.setAttributeNS(null,"stroke-width", "1");
+    parent.appendChild(windArrow);
+    return [windArrow,windArrowPath];
 
 }

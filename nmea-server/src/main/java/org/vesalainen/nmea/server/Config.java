@@ -198,15 +198,12 @@ public class Config extends JavaLogging
     private void init(PropertyType pt)
     {
         String property = pt.getName();
-        pt.setDescription(CamelCase.delimited(property, " "));
         NMEAProperties p = NMEAProperties.getInstance();
         if (p.isProperty(property))
         {
             pt.setMax(BigDecimal.valueOf(p.getMax(property)));
             pt.setMin(BigDecimal.valueOf(p.getMin(property)));
             pt.setUnit(p.getUnit(property).name());
-            pt.setPeriodMillis(Long.valueOf(0));
-            pt.setAverageMillis(Long.valueOf(0));
             UnitType unit = p.getUnit(property);
             UnitCategory category = unit.getCategory();
             switch (category)
