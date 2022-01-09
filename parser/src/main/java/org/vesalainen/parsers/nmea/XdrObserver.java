@@ -28,6 +28,14 @@ import static org.vesalainen.parsers.nmea.NMEACategory.*;
 public interface XdrObserver
 {
     @NMEA0183({XDR})
+    @NMEACat(SPEED)
+    @Unit(value=KNOT, min=0, max=50)
+    void setWindSpeedOverGround(float value);
+    @NMEA0183({XDR})
+    @NMEACat(WIND)
+    @Unit(value=DEGREE, min=0, max=360)
+    void setWindAngleOverGround(float value);
+    @NMEA0183({XDR})
     @NMEACat(TEMPERATURE)
     @Unit(value=CELSIUS, min=-60, max=60)
     void setOutsideTemperature(float value);

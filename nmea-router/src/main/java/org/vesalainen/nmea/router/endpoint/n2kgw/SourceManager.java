@@ -75,7 +75,7 @@ public class SourceManager extends JavaLogging
     public TalkerId getTalkerId(int canId)
     {
         int sa = PGN.sourceAddress(canId);
-        Source source = map.get(sa);
+        Source source = map.get((byte)sa);
         if (source != null)
         {
             return source.id;

@@ -112,6 +112,17 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                         break;
                 }
                 break;
+            case "WOG":
+                switch (type)
+                {
+                    case 'S':
+                        setWindSpeedOverGround(value);
+                        break;
+                    case 'A':
+                        setWindAngleOverGround(value);
+                        break;
+                }
+                break;
             default: 
                 warning("xdr %s not supported", name);
         }

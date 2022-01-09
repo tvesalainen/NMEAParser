@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea-server nmeaMulticastAddress="224.0.0.3" nmeaMulticastPort="10110" httpPort="8081">
-    <property name="officialWindSpeed" source="trueWindSpeed" min="0.0" max="50" unit="KNOT" decimals="1" history="10m"/>
-    <property name="officialWindAngle" source="trueWindAngle" unit="SECONDARY_INTERCARDINAL_DIRECTION" history="10m"/>
+    <property name="officialWindSpeed" source="windSpeedOverGround" min="0.0" max="50" unit="KNOT" decimals="1" average="10m"/>
+    <property name="officialWindAngle" source="windAngleOverGround" unit="SECONDARY_INTERCARDINAL_DIRECTION" average="10m"/>
     <property name="batteryVoltage0" min="0.0" max="100.0" unit="VOLT" decimals="1"/>
     <property name="batteryCurrent0" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
     <property name="epochMillis" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS"/>
@@ -31,7 +31,7 @@
     <property name="horizontalDilutionOfPrecision" min="0.0" max="50.0" unit="METER" decimals="1"/>
     <property name="antennaAltitude" min="0.0" max="10000.0" unit="METER" decimals="1"/>
     <property name="outsideTemperature" min="-60.0" max="60.0" unit="CELSIUS" decimals="1"/>
-    <property name="atmosphericPressure" min="800.0" max="1400.0" unit="HPA" decimals="1" history="1d"/>
+    <property name="atmosphericPressure" min="800.0" max="1400.0" unit="HPA" decimals="0" history="1d"/>
     <property name="localZoneHours" min="-24.0" max="24.0" unit="UNITLESS"/>
     <property name="localZoneMinutes" min="0.0" max="59.0" unit="UNITLESS"/>
     <property name="waterSpeed" min="0.0" max="50.0" unit="KNOT" decimals="1"/>

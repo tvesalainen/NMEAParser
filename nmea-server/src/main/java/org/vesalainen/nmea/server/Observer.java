@@ -22,9 +22,6 @@ import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.CardinalDirection;
 import org.vesalainen.navi.CoordinateFormat;
-import static org.vesalainen.navi.CoordinateFormat.deg;
-import static org.vesalainen.navi.CoordinateFormat.degmin;
-import static org.vesalainen.navi.CoordinateFormat.degminsec;
 import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 
@@ -51,7 +48,7 @@ public class Observer
     public static Observer getInstance(String event, Property property, String unit, String decimals, SseHandler sseHandler)
     {
         NMEAProperties p = NMEAProperties.getInstance();
-        Class<?> type = p.getType(property.getName());
+        Class<?> type = property.getType();
         switch (type.getSimpleName())
         {
             case "int":
@@ -72,6 +69,11 @@ public class Observer
                     throw new UnsupportedOperationException(type+" not supported");
                 }
         }
+    }
+
+    public boolean fireEvent(CharSequence seq)
+    {
+        return sseHandler.fireEvent(event, seq);
     }
 
     public boolean accept(long time, double arg)
@@ -97,7 +99,7 @@ public class Observer
         public DoubleObserver(String event, Property property, String unit, String decimals, SseHandler sseHandler)
         {
             super(event, property, sseHandler);
-            UnitType  from = NMEAProperties.getInstance().getUnit(property.getName());
+            UnitType  from = property.getUnit();
             UnitType  to = unit!=null?UnitType.valueOf(unit):property.getUnit();
             int dec = decimals!=null?Integer.parseInt(decimals):property.getDecimals();
             switch (to)

@@ -16,9 +16,14 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.lang.management.ManagementFactory;
 import java.util.Iterator;
 import static java.util.concurrent.TimeUnit.*;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
+import javax.management.Notification;
+import javax.management.NotificationListener;
 import javax.management.ObjectName;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.management.AbstractDynamicMBean;
@@ -34,13 +39,15 @@ import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.TimeToLiveList;
 import org.vesalainen.util.WeakList;
+import web.I18n;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class Property extends AbstractDynamicMBean
+public abstract class Property extends AbstractDynamicMBean implements NotificationListener, Comparable<Property>
 {
+    private final String name;
     private final PropertyType property;
     private WeakList<Observer> observers = new WeakList<>();
 
@@ -48,6 +55,7 @@ public abstract class Property extends AbstractDynamicMBean
     {
         super(property.getName(), property);
         this.property = property;
+        this.name = property.getName();
         register();
     }
 
@@ -55,12 +63,20 @@ public abstract class Property extends AbstractDynamicMBean
     public final void register()
     {
         super.register();
+        MBeanServer pbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            pbs.addNotificationListener(objectName, this, null, null);
+        }
+        catch (InstanceNotFoundException ex)
+        {
+            throw new RuntimeException(ex);
+        }
     }
 
     public static Property getInstance(PropertyType property)
     {
-        NMEAProperties p = NMEAProperties.getInstance();
-        Class<?> type = p.getType(property.getName());
+        Class<?> type = getType(property);
         switch (type.getSimpleName())
         {
             case "int":
@@ -85,9 +101,27 @@ public abstract class Property extends AbstractDynamicMBean
 
     public void attach(Observer observer)
     {
+        advertise(observer);
         observers.add(observer);
     }
 
+    private void advertise(Observer observer)
+    {
+        String name = getName();
+        String description = I18n.get().getString(name);
+        UnitType unit = getUnit();
+        long history = getHistoryMillis();
+        double min = getMin();
+        double max = getMax();
+        observer.fireEvent("{"
+                + "\"name\": \""+name+"\", "
+                + "\"title\": \""+description+"\", "
+                + "\"unit\": \""+unit.getUnit()+ "\", "
+                + "\"history\": \""+history+ "\", "
+                + "\"min\": \""+min+ "\", "
+                + "\"max\": \""+max+ "\" "
+                + "}");
+    }
     public <T> void set(long time, double value)
     {
         Iterator<Observer> iterator = observers.iterator();
@@ -121,9 +155,14 @@ public abstract class Property extends AbstractDynamicMBean
 
     public String getName()
     {
-        return property.getName();
+        return name;
     }
 
+    public String getProperty()
+    {
+        return property.getSource()!=null?property.getSource():property.getName();
+    }
+    
     public double getMin()
     {
         return Primitives.getDouble(property.getMin(), -Double.MAX_VALUE);
@@ -142,21 +181,63 @@ public abstract class Property extends AbstractDynamicMBean
     public UnitType getUnit()
     {
         String unit = property.getUnit();
-        try
+        if (unit != null)
         {
-            return UnitType.valueOf(unit);
+            try
+            {
+                return UnitType.valueOf(unit);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException(unit+" illegal");
+            }
         }
-        catch (IllegalArgumentException ex)
-        {
-            return UNITLESS;
-        }
+        return NMEAProperties.getInstance().getUnit(getProperty());
     }
 
     public int getDecimals()
     {
-        return Primitives.getInt(property.getDecimals(), 0);
+        Integer decimals = property.getDecimals();
+        if (decimals != null)
+        {
+            return decimals;
+        }
+        UnitType unit = getUnit();
+        UnitCategory category = unit.getCategory();
+        switch (category)
+        {
+            case PLANE_ANGLE:
+                return 0;
+            default:
+                Class<?> type = getType();
+                switch (type.getSimpleName())
+                {
+                    case "float":
+                        return 1;
+                    case "double":
+                        return 3;
+                    default:
+                        return 0;
+                }
+        }
     }
 
+    public Class<?> getType()
+    {
+        return getType(property);
+    }
+    public static Class<?> getType(PropertyType property)
+    {
+        NMEAProperties p = NMEAProperties.getInstance();
+        if (p.isProperty(property.getName()))
+        {
+            return p.getType(property.getName());
+        }
+        else
+        {
+            return p.getType(property.getSource());
+        }
+    }
     public long getAverageMillis()
     {
         return getMillis(property.getAverage());
@@ -171,9 +252,10 @@ public abstract class Property extends AbstractDynamicMBean
     {
         return getMillis(property.getHistory());
     }
+    
     private long getMillis(String text)
     {
-        if (text != null)
+        if (text != null && !text.isEmpty())
         {
             return (long) DURATION_MILLI_SECONDS.parse(text);
         }
@@ -181,6 +263,24 @@ public abstract class Property extends AbstractDynamicMBean
         {
             return 0;
         }
+    }
+
+    @Override
+    public void handleNotification(Notification notification, Object handback)
+    {
+        init();
+        observers.forEach((o)->advertise(o));
+    }
+
+    protected void init()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public int compareTo(Property o)
+    {
+        return name.compareTo(o.name);
     }
     private static class DoubleProperty extends Property
     {
@@ -190,22 +290,28 @@ public abstract class Property extends AbstractDynamicMBean
         public DoubleProperty(PropertyType property)
         {
             super(property);
-            func = (t,v)->accept(t, v);
+            init();
+        }
+
+        @Override
+        protected void init()
+        {
+            TimeValueConsumer f = (t,v)->accept(t, v);
             long periodMillis = getPeriodMillis();
             if (periodMillis > 0)
             {
                 long per = periodMillis;
-                func = new Delay(per, func);
+                f = new Delay(per, f);
             }
             long averageMillis = getAverageMillis();
             if (averageMillis > 0)
             {
-                TimeValueConsumer oldFunc = func;
+                TimeValueConsumer oldFunc = f;
                 UnitCategory category = getUnit().getCategory();
                 if (PLANE_ANGLE == category)
                 {
                     TimeoutSlidingAngleAverage ave = new TimeoutSlidingAngleAverage(8, averageMillis);
-                    func = (t,v)->
+                    f = (t,v)->
                     {
                         ave.accept(v);
                         oldFunc.accept(t, ave.fast());
@@ -214,7 +320,7 @@ public abstract class Property extends AbstractDynamicMBean
                 else
                 {
                     DoubleTimeoutSlidingAverage ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
-                    func = (t,v)->
+                    f = (t,v)->
                     {
                         ave.accept(v, t);
                         oldFunc.accept(t, ave.fast());
@@ -226,7 +332,13 @@ public abstract class Property extends AbstractDynamicMBean
             {
                 this.history = new DoubleTimeoutSlidingSeries(256, historyMillis);
             }
+            else
+            {
+                this.history = null;
+            }
+            func = f;
         }
+        
         @Override
         public void set(long time, double arg)
         {
@@ -258,12 +370,28 @@ public abstract class Property extends AbstractDynamicMBean
         public ObjectProperty(PropertyType property)
         {
             super(property);
+            init();
             long historyMinutes = getHistoryMillis();
             if (historyMinutes > 0)
             {
                 this.history = new TimeToLiveList(historyMinutes, MILLISECONDS);
             }
         }
+
+        @Override
+        protected void init()
+        {
+            long historyMinutes = getHistoryMillis();
+            if (historyMinutes > 0)
+            {
+                this.history = new TimeToLiveList(historyMinutes, MILLISECONDS);
+            }
+            else
+            {
+                this.history = null;
+            }
+        }
+        
         @Override
         public <T> void set(long time, T arg)
         {

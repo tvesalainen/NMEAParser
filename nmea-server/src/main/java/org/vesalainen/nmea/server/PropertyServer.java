@@ -17,18 +17,17 @@
 package org.vesalainen.nmea.server;
 
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.vesalainen.code.AbstractPropertySetter;
-import org.vesalainen.math.UnitType;
 import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
-import org.vesalainen.util.ConcurrentHashMapList;
-import org.vesalainen.util.MapList;
-import web.I18n;
+import org.vesalainen.util.ConcurrentHashMapSet;
+import org.vesalainen.util.MapSet;
 
 /**
  *
@@ -37,8 +36,8 @@ import web.I18n;
 public class PropertyServer extends AbstractPropertySetter
 {
     private final Clock clock;
-    private final MapList<String,Property> mapList = new ConcurrentHashMapList<>();
-    private final Map<String,Property> map = new ConcurrentHashMap<>();
+    private final MapSet<String,Property> dispatchMap = new ConcurrentHashMapSet<>();
+    private final Map<String,Property> propertyMap = new ConcurrentHashMap<>();
     private final Config config;
     
     public PropertyServer(Clock clock, Config config)
@@ -46,6 +45,32 @@ public class PropertyServer extends AbstractPropertySetter
         super(allNMEAProperties());
         this.clock = clock;
         this.config = config;
+        List<String> sources = new ArrayList<>();
+        config.getProperties().forEach((p)->
+        {
+            Property property = Property.getInstance(p);
+            String name = p.getName();
+            propertyMap.put(name, property);
+            String source = p.getSource();
+            if (source != null)
+            {
+                dispatchMap.add(source, property);
+                sources.add(source);
+            }
+            else
+            {
+                dispatchMap.add(name, property);
+            }
+        });
+        sources.forEach((source)->
+        {
+            if (!propertyMap.containsKey(source))
+            {
+                Property sourceProperty = Property.getInstance(config.getProperty(source));
+                dispatchMap.add(source, sourceProperty);
+                propertyMap.put(source, sourceProperty);
+            }
+        });
     }
 
     public void addSse(Map<String,String[]> map, SseHandler sseHandler)
@@ -59,34 +84,16 @@ public class PropertyServer extends AbstractPropertySetter
         }
         for (String name : properties)
         {
-            Property p = getProperty(name);
+            Property p = propertyMap.get(name);
             Observer observer = Observer.getInstance(event, p, null, null, sseHandler);
             sseHandler.addReference(observer);
-            populate(event, sseHandler, p);
             p.attach(observer);
         }
-    }
-    private void populate(String event, SseHandler sseHandler, Property p)
-    {
-        String name = p.getName();
-        String description = I18n.get().getString(name);
-        UnitType unit = p.getUnit();
-        long history = p.getHistoryMillis();
-        double min = p.getMin();
-        double max = p.getMax();
-        sseHandler.fireEvent(event, "{"
-                + "\"name\": \""+name+"\", "
-                + "\"title\": \""+description+"\", "
-                + "\"unit\": \""+unit.getUnit()+ "\", "
-                + "\"history\": \""+history+ "\", "
-                + "\"min\": \""+min+ "\", "
-                + "\"max\": \""+max+ "\" "
-                + "}");
     }
     @Override
     public <T> void set(String property, T arg)
     {
-        List<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(millis, arg));
     }
@@ -94,7 +101,7 @@ public class PropertyServer extends AbstractPropertySetter
     @Override
     public void set(String property, double arg)
     {
-        List<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(millis, arg));
     }
@@ -102,7 +109,7 @@ public class PropertyServer extends AbstractPropertySetter
     @Override
     public void set(String property, float arg)
     {
-        List<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(millis, arg));
     }
@@ -110,7 +117,7 @@ public class PropertyServer extends AbstractPropertySetter
     @Override
     public void set(String property, int arg)
     {
-        List<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(millis, arg));
     }
@@ -118,7 +125,7 @@ public class PropertyServer extends AbstractPropertySetter
     @Override
     public void set(String property, long arg)
     {
-        List<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(millis, arg));
     }
@@ -126,7 +133,7 @@ public class PropertyServer extends AbstractPropertySetter
     @Override
     public void set(String property, char arg)
     {
-        List<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(millis, arg+""));
     }
@@ -139,17 +146,17 @@ public class PropertyServer extends AbstractPropertySetter
         return allProperties.toArray(new String[allProperties.size()]);
     }
     
-    private List<Property> getProperty(String property)
+    private Set<Property> getProperty(String property)
     {
-        List<Property> prop = mapList.get(property);
+        Set<Property> prop = dispatchMap.get(property);
         if (prop == null)
         {
             PropertyType pt = config.getProperty(property);
             Property p = Property.getInstance(pt);
-            mapList.add(property, p);
-            map.put(property, p);
+            dispatchMap.add(property, p);
+            propertyMap.put(property, p);
         }
-        return mapList.get(property);
+        return dispatchMap.get(property);
     }
 
 }

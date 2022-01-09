@@ -334,6 +334,17 @@ public class NMEASentence
                 .bindXdrGroup3('P', pressure, 'B', "Barometer", null)
                 .build();
     }
+    public static NMEASentence windOverGround(DoubleSupplier speed, DoubleSupplier angle)
+    {
+        return windOverGround(()->UP, speed, angle);
+    }
+    public static NMEASentence windOverGround(Supplier<TalkerId> talkerId, DoubleSupplier angle, DoubleSupplier speed)
+    {
+        return builder(talkerId, XDR)
+                .bindXdrGroup('A', angle, 'D', "WOG", null)
+                .bindXdrGroup('S', speed, 'N', "WOG", null)
+                .build();
+    }
     /**
      * Returns byte buffer containing the sentence. Changes to returned buffer
      * will not affect this sentence.

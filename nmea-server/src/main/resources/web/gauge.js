@@ -31,29 +31,32 @@ function Gauge(element, seq)
                 var json = JSON.parse(data);
                 var name = json["name"];
                 var value = json["value"];
-                switch (name)
+                if (value)
                 {
-                    case "trueHeading":
-                        this.svg.setTrueHeading(value);
-                        break;
-                    case "relativeWindAngle":
-                        this.svg.setRelativeWindAngle(value);
-                        break;
-                    case "trueWindAngle":
-                        this.svg.setTrueWindAngle(value);
-                        break;
-                    case "trueWindSpeed":
-                        this.svg.setTrueWindSpeed(value);
-                        break;
-                    case "trackMadeGood":
-                        this.svg.setCOG(value);
-                        break;
-                    case "speedOverGround":
-                        this.svg.setSpeedOverGround(value);
-                        break;
-                    case "magneticVariation":
-                        this.svg.setVariation(value);
-                        break;
+                    switch (name)
+                    {
+                        case "trueHeading":
+                            this.svg.setTrueHeading(value);
+                            break;
+                        case "relativeWindAngle":
+                            this.svg.setRelativeWindAngle(value);
+                            break;
+                        case "trueWindAngle":
+                            this.svg.setTrueWindAngle(value);
+                            break;
+                        case "trueWindSpeed":
+                            this.svg.setTrueWindSpeed(value);
+                            break;
+                        case "trackMadeGood":
+                            this.svg.setCOG(value);
+                            break;
+                        case "speedOverGround":
+                            this.svg.setSpeedOverGround(value);
+                            break;
+                        case "magneticVariation":
+                            this.svg.setVariation(value);
+                            break;
+                    }
                 }
             };
             break;

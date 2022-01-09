@@ -108,6 +108,7 @@ function Svg(x, y, width, height)
         this.windArrow = arr[0];
         this.windArrowPath = arr[1];
         
+        createTriangle(this.svg);
         this.cog =  createCOG(this.svg, size);
     };
     this.setTrueHeading = function(heading)

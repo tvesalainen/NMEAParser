@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.attribute.FileTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import static java.util.logging.Level.*;
 import javax.management.MalformedObjectNameException;
@@ -46,7 +47,6 @@ import org.vesalainen.nmea.server.jaxb.NmeaServerType;
 import org.vesalainen.nmea.server.jaxb.ObjectFactory;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
-import org.vesalainen.text.CamelCase;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -95,7 +95,7 @@ public class Config extends JavaLogging
                 if (pt != null)
                 {
                     map.put(pt.getName(), pt);
-                }
+        }
             });
         }
         else
@@ -108,23 +108,25 @@ public class Config extends JavaLogging
         mBean.register();
     }
 
+    public List<PropertyType> getProperties()
+    {
+        return server.getProperty();
+    }
+
+    
     public PropertyType getProperty(String property)
     {
         PropertyType pt = map.get(property);
-        if (pt != null)
-        {
-            return pt;
-        }
-        else
+        if (pt == null)
         {
             pt = objectFactory.createPropertyType();
             pt.setName(property);
-            init(pt);
             server.getProperty().add(pt);
-            map.put(pt.getName(), pt);
-            return pt;
+            map.put(property, pt);
         }
+        return pt;
     }
+    
     public void store() throws IOException
     {
         try

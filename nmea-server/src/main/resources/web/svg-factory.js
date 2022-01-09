@@ -397,21 +397,40 @@ function createBoat(parent, r)
     parent.appendChild(boatGroup);
     return boatGroup;
 };
+function createTriangle(parent)
+{
+    var defs = document.createElementNS(SVG_NS, 'defs');
+    parent.appendChild(defs);
+    var marker = document.createElementNS(SVG_NS, 'marker');
+    defs.appendChild(marker);
+    marker.setAttributeNS(null, "id", "triangle");
+    marker.setAttributeNS(null, "viewBox", "0 0 10 10");
+    marker.setAttributeNS(null, "refX", "0");
+    marker.setAttributeNS(null, "refY", "5");
+    marker.setAttributeNS(null, "markerUnits", "strokeWidth");
+    marker.setAttributeNS(null, "markerWidth", "4");
+    marker.setAttributeNS(null, "markerHeight", "3");
+    marker.setAttributeNS(null, "orient", "auto");
+    var path = document.createElementNS(SVG_NS, 'path');
+    marker.appendChild(path);
+    path.setAttributeNS(null, "d", "M 0 0 L 10 5 L 0 10 z");
+}
 function createCOG(parent, r)
 {
     var cog = document.createElementNS(SVG_NS, 'g');
     var g = document.createElementNS(SVG_NS, 'g');
     cog.appendChild(g);
-    g.setAttributeNS(null, "transform", "translate(0, -33)");
+    //g.setAttributeNS(null, "transform", "scale("+r/50+")");
 
     var arrow = document.createElementNS(SVG_NS, 'path');
     g.appendChild(arrow);
     arrow.setAttributeNS(null, "id", "boat");
-    arrow.setAttributeNS(null, "stroke", "green");
+    arrow.setAttributeNS(null, "stroke", "red");
     arrow.setAttributeNS(null, "stroke-width", "1");
-    arrow.setAttributeNS(null, "fill", "green");
+    arrow.setAttributeNS(null, "fill", "none");
+    arrow.setAttributeNS(null, "marker-end", "url(#triangle)");
     arrow.setAttributeNS(null, "d", 
-            "M 2 0 L 0 -9 L -2 0 Z"
+            "M 0 0 L 0 "+-r*0.7
     );
     parent.appendChild(cog);
     return cog;

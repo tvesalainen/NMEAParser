@@ -45,6 +45,7 @@ public class TrueWindSource extends AbstractProcessorTask
     private final TrueWindCalculator trueWindCalculator;
     private boolean overGround;
     private final NMEASentence mwv;
+    private final NMEASentence wog;
 
     public TrueWindSource(GatheringByteChannel channel, TrueWindSourceType trueWindSourceType, ScheduledExecutorService executor)
     {
@@ -52,6 +53,7 @@ public class TrueWindSource extends AbstractProcessorTask
         this.channel = channel;
         this.trueWindCalculator = new TrueWindCalculator();
         this.mwv = NMEASentence.mwv(trueWindCalculator::getTrueWindAngle, trueWindCalculator::getTrueWindSpeed, KNOT, true);
+        this.wog = NMEASentence.windOverGround(trueWindCalculator::getTrueWindAngle, trueWindCalculator::getTrueWindSpeed);
         this.overGround = trueWindSourceType.isOverGround()!=null?trueWindSourceType.isOverGround():false;
     }
 
@@ -62,21 +64,18 @@ public class TrueWindSource extends AbstractProcessorTask
         {
             try
             {
-                if (overGround)
-                {
-                    trueWindCalculator.setSpeed(speedOverGround);
-                    trueWindCalculator.setSpeedAngle(trackMadeGood);
-                }
-                else
-                {
-                    trueWindCalculator.setSpeed(waterSpeed);
-                    trueWindCalculator.setSpeedAngle(trueHeading);
-                }
                 trueWindCalculator.setZeroAngle(trueHeading);
                 trueWindCalculator.setTrueHeading(trueHeading);
                 trueWindCalculator.setRelativeWindAngle(relativeWindAngle);
                 trueWindCalculator.setRelativeWindSpeed(relativeWindSpeed);
+
+                trueWindCalculator.setSpeed(waterSpeed);
+                trueWindCalculator.setSpeedAngle(trueHeading);
                 mwv.writeTo(channel);
+                
+                trueWindCalculator.setSpeed(speedOverGround);
+                trueWindCalculator.setSpeedAngle(trackMadeGood);
+                wog.writeTo(channel);
             }
             catch (IOException ex)
             {
