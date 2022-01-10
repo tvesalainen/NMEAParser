@@ -17,7 +17,7 @@
 
 "use strict";
 
-/* global createSvg createFrame createTitle createUnit createText createHistory createCompass createBoat createWindIndicator */
+/* global createSvg createFrame createTitle createUnit createText createHistory createCompass createBoat createWindIndicator createRudder */
 
 var SVG_NS = 'http://www.w3.org/2000/svg';
 var XLINK_NS = 'http://www.w3.org/1999/xlink';
@@ -110,7 +110,15 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
                 un = '10min';
                 break;
             case 600000:
-                div *= 6;
+                div *= 2;
+                un = '20min';
+                break;
+            case 1200000:
+                div *= 1.5;
+                un = '30min';
+                break;
+            case 1800000:
+                div *= 2;
                 un = 'hour';
                 break;
             case 3600000:
@@ -397,6 +405,20 @@ function createBoat(parent, r)
     parent.appendChild(boatGroup);
     return boatGroup;
 };
+function createRudder(parent, r)
+{
+    var rudderGroup = document.createElementNS(SVG_NS, 'g');
+    var g = document.createElementNS(SVG_NS, 'g');
+    rudderGroup.appendChild(g);
+    g.setAttributeNS(null, "transform", `translate(0,-4) scale(${r/20})`);
+    var rudder = document.createElementNS(SVG_NS, 'path');
+    g.appendChild(rudder);
+    rudder.setAttributeNS(null, "stroke", "blue");
+    rudder.setAttributeNS(null, "stroke-width", "1");
+    rudder.setAttributeNS(null, "d", "M 0 40 l 0 9");
+    parent.appendChild(rudderGroup);
+    return rudderGroup;
+}
 function createTriangle(parent)
 {
     var defs = document.createElementNS(SVG_NS, 'defs');

@@ -21,8 +21,8 @@
     <property name="relativeWindAngle" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
     <property name="relativeWindSpeed" min="0.0" max="100.0" unit="KNOT" decimals="1"/>
     <property name="trueWindAngle" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
-    <property name="trueWindSpeed" min="0.0" max="100.0" unit="KNOT" decimals="1" history="2h"/>
-    <property name="depthOfWater" min="0.0" max="100.0" unit="METER" decimals="1" history="2h"/>
+    <property name="trueWindSpeed" min="0.0" max="50" unit="KNOT" decimals="1" history="2h"/>
+    <property name="depthOfWater" min="0.0" max="50" unit="METER" decimals="1" history="2h"/>
     <property name="depthBelowTransducer" min="0.0" max="100.0" unit="METER" decimals="1"/>
     <property name="depthOffsetOfWater" min="0.0" max="10.0" unit="METER" decimals="1"/>
     <property name="waterTemperature" min="0.0" max="40.0" unit="CELSIUS" decimals="1"/>
@@ -37,4 +37,6 @@
     <property name="waterSpeed" min="0.0" max="50.0" unit="KNOT" decimals="1"/>
     <property name="batteryVoltage1" min="0.0" max="100.0" unit="VOLT" decimals="1"/>
     <property name="batteryCurrent1" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
+    <property name="windSpeedOverGround"/>
+    <property name="windAngleOverGround"/>
 </nmea-server>

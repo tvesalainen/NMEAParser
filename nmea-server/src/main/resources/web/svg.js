@@ -84,7 +84,7 @@ function Svg(x, y, width, height)
             this.gap = max - min;
             this.ratioX = this.historyMillis/this.width;
             this.ratioY = this.gap/this.height;
-            this.history = createHistory(this.svg, history, min, max, this.width, this.height, this.unitString);
+            this.history = createHistory(this.svg, history, min, max, this.width, this.height, this.unit.innerHTML);
             this.polyline = document.createElementNS(this.svgNS, 'polyline');
             this.history.appendChild(this.polyline);
             this.polyline.setAttributeNS(null, "stroke-width", "0.02em");
@@ -101,6 +101,7 @@ function Svg(x, y, width, height)
         //this.svg.appendChild(this.variation);
 
         this.boat = createBoat(this.svg, size/3);
+        this.rudder = createRudder(this.boat, size/3);
 
         this.windIndicator = createWindIndicator(this.boat, size);
         
@@ -176,9 +177,9 @@ function Svg(x, y, width, height)
             arr.push((this.historyMillis-(time-t))/this.ratioX);
             arr.push((this.max - v)/this.ratioY); // (max-min)-(v-min)
         }
-        var v = this.data[2*(len-1)+1];
-        arr.push(this.historyMillis/this.ratioX);
-        arr.push((this.max - v)/this.ratioY);
+        //var v = this.data[2*(len-1)+1];
+        //arr.push(this.historyMillis/this.ratioX);
+        //arr.push((this.max - v)/this.ratioY);
         this.polyline.setAttributeNS(null, "points", arr.join(' '));
     };
 }
