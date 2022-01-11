@@ -18,6 +18,7 @@ package org.vesalainen.nmea.server;
 
 import java.util.Locale;
 import java.util.function.DoubleFunction;
+import org.json.JSONObject;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.CardinalDirection;
@@ -71,9 +72,9 @@ public class Observer
         }
     }
 
-    public boolean fireEvent(CharSequence seq)
+    public boolean fireEvent(JSONObject json)
     {
-        return sseHandler.fireEvent(event, seq);
+        return sseHandler.fireEvent(event, json);
     }
 
     public boolean accept(long time, double arg)
@@ -85,7 +86,11 @@ public class Observer
     {
         if (!arg.equals(last))
         {
-            boolean succeeded = sseHandler.fireEvent(event, "{\"name\": \""+name+"\", \"time\": \""+time+"\", \"value\": \""+arg+"\"}");
+            JSONObject json = new JSONObject()
+                    .put("name", name)
+                    .put("time", time)
+                    .put("value", arg);
+            boolean succeeded = sseHandler.fireEvent(event, json);
             last = arg;
             return succeeded;
         }

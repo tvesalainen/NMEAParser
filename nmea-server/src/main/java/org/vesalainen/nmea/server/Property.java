@@ -25,6 +25,8 @@ import javax.management.MalformedObjectNameException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.management.AbstractDynamicMBean;
 import org.vesalainen.math.UnitCategory;
@@ -113,14 +115,14 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         long history = getHistoryMillis();
         double min = getMin();
         double max = getMax();
-        observer.fireEvent("{"
-                + "\"name\": \""+name+"\", "
-                + "\"title\": \""+description+"\", "
-                + "\"unit\": \""+unit.getUnit()+ "\", "
-                + "\"history\": \""+history+ "\", "
-                + "\"min\": \""+min+ "\", "
-                + "\"max\": \""+max+ "\" "
-                + "}");
+        JSONObject json = new JSONObject()
+            .put("name", name)
+            .put("title", description)
+            .put("unit", unit.getUnit())
+            .put("history", history)
+            .put("min", min)
+            .put("max", max);
+        observer.fireEvent(json);
     }
     public <T> void set(long time, double value)
     {
@@ -359,7 +361,15 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
             super.attach(observer);
             if (history != null)
             {
-                history.forEach((t, d)->observer.accept(t, d));
+                JSONObject json = new JSONObject();
+                JSONArray array = new JSONArray()
+                json.put("historyData", array);
+                history.forEach((t, d)->
+                {
+                    array.put(t);
+                    array.put(d);
+                });
+                observer.fireEvent(json);
             }
         }
 
@@ -408,7 +418,15 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
             super.attach(observer);
             if (history != null)
             {
-                history.forEach((t, d)->observer.accept(t, d));
+                JSONObject json = new JSONObject();
+                JSONArray array = new JSONArray()
+                json.put("historyData", array);
+                history.forEach((t, d)->
+                {
+                    array.put(t);
+                    array.put(d);
+                });
+                observer.fireEvent(json);
             }
         }
 

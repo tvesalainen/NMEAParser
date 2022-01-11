@@ -149,7 +149,7 @@ public class PropertyServer extends AbstractPropertySetter
     private Set<Property> getProperty(String property)
     {
         Set<Property> prop = dispatchMap.get(property);
-        if (prop == null)
+        if (prop == null || prop.isEmpty())
         {
             PropertyType pt = config.getProperty(property);
             Property p = Property.getInstance(pt);

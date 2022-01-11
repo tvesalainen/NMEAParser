@@ -24,6 +24,27 @@ function Gauge(element, seq)
     this.property = element.getAttribute("data-property");
     switch (this.property)
     {
+        case "inclino":
+            this.svg = new Svg(-50,-45,100,40);
+            this.svg.inclino(45);
+            this.svg.setFrame();
+            this.request = {event : this.event, property : "roll"};
+            this.call = function(data)
+            {
+                var json = JSON.parse(data);
+                var name = json["name"];
+                var value = json["value"];
+                if (value)
+                {
+                    switch (name)
+                    {
+                        case "roll":
+                            this.svg.setRoll(value);
+                            break;
+                    }
+                }
+            };
+            break;
         case "tacktical":
             this.svg = new Svg(-50,-50,100,100);
             this.svg.tacktical(45);
@@ -69,14 +90,21 @@ function Gauge(element, seq)
             this.call = function(data)
             {
                 var json = JSON.parse(data);
-                if (json['time'] && json['value'])
+                if (json['historyData'])
                 {
-                    this.svg.setData(json['time'], json['value']);
+                    this.svg.setHistoryData(json['historyData']);
                 }
                 else
                 {
-                    this.svg.setTitle(json['title'], json['unit']);
-                    this.svg.setHistory(json['history'], json['min'], json['max']);
+                    if (json['time'] && json['value'])
+                    {
+                        this.svg.setData(json['time'], json['value']);
+                    }
+                    else
+                    {
+                        this.svg.setTitle(json['title'], json['unit']);
+                        this.svg.setHistory(json['history'], json['min'], json['max']);
+                    }
                 }
             };
             break;

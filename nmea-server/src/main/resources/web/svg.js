@@ -112,6 +112,26 @@ function Svg(x, y, width, height)
         createTriangle(this.svg);
         this.cog =  createCOG(this.svg, size);
     };
+    this.inclino = function(r)
+    {
+        var arr = createInclinoMeter(this.svg, r);
+        this.ball = arr[0];
+        this.portLimit = arr[1];
+        this.sbLimit = arr[2];
+        this.minIncline = 90;
+        this.maxIncline = -90;
+    }
+    this.setRoll = function(roll)
+    {
+        this.ball.setAttributeNS(null, "transform", "rotate("+roll+")");
+        this.minIncline = Math.min(roll, this.minIncline);
+        this.maxIncline = Math.max(roll, this.maxIncline);
+        var d = 14;
+        var max = this.maxIncline+d;
+        var min = this.minIncline-d;
+        this.portLimit.setAttributeNS(null, "transform", "rotate("+max+")");
+        this.sbLimit.setAttributeNS(null, "transform", "rotate("+min+")");
+    };
     this.setTrueHeading = function(heading)
     {
         this.boat.setAttributeNS(null, "transform", "rotate("+heading+")");
@@ -165,6 +185,10 @@ function Svg(x, y, width, height)
             this.data.push(value);
         }
     };
+    this.setHistoryData = function(array)
+    {
+        this.data = array;
+    }
     this.refresh = function()
     {
         var arr = [];
@@ -177,9 +201,9 @@ function Svg(x, y, width, height)
             arr.push((this.historyMillis-(time-t))/this.ratioX);
             arr.push((this.max - v)/this.ratioY); // (max-min)-(v-min)
         }
-        //var v = this.data[2*(len-1)+1];
-        //arr.push(this.historyMillis/this.ratioX);
-        //arr.push((this.max - v)/this.ratioY);
+        var v = this.data[2*(len-1)+1];
+        arr.push(this.historyMillis/this.ratioX);
+        arr.push((this.max - v)/this.ratioY);
         this.polyline.setAttributeNS(null, "points", arr.join(' '));
     };
 }

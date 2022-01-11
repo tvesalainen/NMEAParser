@@ -17,7 +17,7 @@
 
 "use strict";
 
-/* global createSvg createFrame createTitle createUnit createText createHistory createCompass createBoat createWindIndicator createRudder */
+/* global createSvg createFrame createTitle createUnit createText createHistory createCompass createBoat createWindIndicator createRudder createInclinoMeter */
 
 var SVG_NS = 'http://www.w3.org/2000/svg';
 var XLINK_NS = 'http://www.w3.org/1999/xlink';
@@ -219,6 +219,62 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     return history;
 };
 
+function createInclinoMeter(parent, r)
+{
+    var size = 1.5*r;
+    var g = document.createElementNS(SVG_NS, 'g');
+    g.setAttributeNS(null, "transform", "translate(0, -40)");
+    
+    var scale1 = createCompassScale2(size, 0, -r, 140, 220, 1, 2);
+    scale1.setAttributeNS(null, "stroke", "black");
+    scale1.setAttributeNS(null, "stroke-width", 0.3);
+    g.appendChild(scale1);
+
+    var scale5 = createCompassScale2(size, 0, -r, 140, 220, 5, 3);
+    scale5.setAttributeNS(null, "stroke", "black");
+    scale5.setAttributeNS(null, "stroke-width", 0.5);
+    g.appendChild(scale5);
+
+    var scale10 = createCompassScale2(size, 0, -r, 140, 221, 10, 3.5);
+    scale10.setAttributeNS(null, "stroke", "black");
+    scale10.setAttributeNS(null, "stroke-width", 0.5);
+    g.appendChild(scale10);
+
+    var scale = createCircleScale2(size*1.15, 0, -r, 150, 211, 0.06, function(a)
+    {
+        return Math.abs(a-180);
+    });
+    g.appendChild(scale);
+    scale.setAttributeNS(null, "font-size", "0.5em");
+    
+    var ball = document.createElementNS(SVG_NS, 'circle');
+    g.appendChild(ball);
+    ball.setAttributeNS(null, "cx", 0);
+    ball.setAttributeNS(null, "cy", r*0.423);
+    ball.setAttributeNS(null, "r", r*0.07);
+    ball.setAttributeNS(null, "fill", "red");
+
+    var portLimit = document.createElementNS(SVG_NS, 'line');
+    g.appendChild(portLimit);
+    portLimit.setAttributeNS(null, "x1", 0);
+    portLimit.setAttributeNS(null, "y1", r*0.35);
+    portLimit.setAttributeNS(null, "x2", 0);
+    portLimit.setAttributeNS(null, "y2", r*0.5);
+    portLimit.setAttributeNS(null, "stroke", "black");
+    portLimit.setAttributeNS(null, "stroke-width", 0.06*r);
+
+    var sbLimit = document.createElementNS(SVG_NS, 'line');
+    g.appendChild(sbLimit);
+    sbLimit.setAttributeNS(null, "x1", 0);
+    sbLimit.setAttributeNS(null, "y1", r*0.35);
+    sbLimit.setAttributeNS(null, "x2", 0);
+    sbLimit.setAttributeNS(null, "y2", r*0.5);
+    sbLimit.setAttributeNS(null, "stroke", "black");
+    sbLimit.setAttributeNS(null, "stroke-width", 0.06*r);
+
+    parent.appendChild(g);
+    return [ball, portLimit, sbLimit];
+};
 function createCompass(parent, r)
 {
     var compass = document.createElementNS(SVG_NS, 'g');
@@ -315,13 +371,25 @@ function createCompassScale2(r1, cx, cy, start, end, step, length)
 };
 function createCircleScale(r, length)
 {
+    return createCircleScale2(r, 0, 0, 0, 360, length, );
+}
+function createCircleScale2(r, cx, cy, start, end, length, conv)
+{
     var g = document.createElementNS(SVG_NS, 'g');
     
-    for (var a = 0; a < 360; a += 10)
+    for (var a = start; a < end; a += 10)
     {
         var text = document.createElementNS(SVG_NS, 'text');
         g.appendChild(text);
-        var l = a.toString();
+        var l;
+        if (conv)
+        {
+            l = conv(a);
+        }
+        else
+        {
+            l = a.toString();
+        }
         var aTxt = document.createTextNode(l);
         text.appendChild(aTxt);
         text.setAttributeNS(null, "text-anchor", "middle");
@@ -329,7 +397,7 @@ function createCircleScale(r, length)
         {
             var b = a+180;
             var tick = r+length;
-            text.setAttributeNS(null, "transform", "rotate(" + b + ") translate(0, "+tick+")");
+            text.setAttributeNS(null, "transform", "translate("+cx+", "+cy+") rotate(" + b + ") translate(0, "+tick+")");
         }
         else
         {
