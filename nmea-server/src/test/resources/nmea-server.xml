@@ -39,4 +39,7 @@
     <property name="batteryCurrent1" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
     <property name="windSpeedOverGround"/>
     <property name="windAngleOverGround"/>
+    <property name="pitch"/>
+    <property name="roll" decimals="1"/>
+    <property name="batteryTemperature1"/>
 </nmea-server>

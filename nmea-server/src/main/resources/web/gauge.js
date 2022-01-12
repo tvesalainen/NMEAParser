@@ -25,7 +25,7 @@ function Gauge(element, seq)
     switch (this.property)
     {
         case "inclino":
-            this.svg = new Svg(-50,-45,100,40);
+            this.svg = new Svg(-50,40,100,40);
             this.svg.inclino(45);
             this.svg.setFrame();
             this.request = {event : this.event, property : "roll"};

@@ -223,24 +223,24 @@ function createInclinoMeter(parent, r)
 {
     var size = 1.5*r;
     var g = document.createElementNS(SVG_NS, 'g');
-    g.setAttributeNS(null, "transform", "translate(0, -40)");
+    //g.setAttributeNS(null, "transform", "translate(0, -40)");
     
-    var scale1 = createCompassScale2(size, 0, -r, 140, 220, 1, 2);
+    var scale1 = createCompassScale2(size, 0, 0, 140, 220, 1, 2);
     scale1.setAttributeNS(null, "stroke", "black");
     scale1.setAttributeNS(null, "stroke-width", 0.3);
     g.appendChild(scale1);
 
-    var scale5 = createCompassScale2(size, 0, -r, 140, 220, 5, 3);
+    var scale5 = createCompassScale2(size, 0, 0, 140, 220, 5, 3);
     scale5.setAttributeNS(null, "stroke", "black");
     scale5.setAttributeNS(null, "stroke-width", 0.5);
     g.appendChild(scale5);
 
-    var scale10 = createCompassScale2(size, 0, -r, 140, 221, 10, 3.5);
+    var scale10 = createCompassScale2(size, 0, 0, 140, 221, 10, 3.5);
     scale10.setAttributeNS(null, "stroke", "black");
     scale10.setAttributeNS(null, "stroke-width", 0.5);
     g.appendChild(scale10);
 
-    var scale = createCircleScale2(size*1.15, 0, -r, 150, 211, 0.06, function(a)
+    var scale = createCircleScale2(size*1.15, 0, 0, 150, 211, 0.06, function(a)
     {
         return Math.abs(a-180);
     });
@@ -250,26 +250,26 @@ function createInclinoMeter(parent, r)
     var ball = document.createElementNS(SVG_NS, 'circle');
     g.appendChild(ball);
     ball.setAttributeNS(null, "cx", 0);
-    ball.setAttributeNS(null, "cy", r*0.423);
+    ball.setAttributeNS(null, "cy", r*1.425);
     ball.setAttributeNS(null, "r", r*0.07);
-    ball.setAttributeNS(null, "fill", "red");
+    ball.setAttributeNS(null, "fill", "black");
 
     var portLimit = document.createElementNS(SVG_NS, 'line');
     g.appendChild(portLimit);
     portLimit.setAttributeNS(null, "x1", 0);
-    portLimit.setAttributeNS(null, "y1", r*0.35);
+    portLimit.setAttributeNS(null, "y1", r*1.35);
     portLimit.setAttributeNS(null, "x2", 0);
-    portLimit.setAttributeNS(null, "y2", r*0.5);
-    portLimit.setAttributeNS(null, "stroke", "black");
+    portLimit.setAttributeNS(null, "y2", r*1.5);
+    portLimit.setAttributeNS(null, "stroke", "red");
     portLimit.setAttributeNS(null, "stroke-width", 0.06*r);
 
     var sbLimit = document.createElementNS(SVG_NS, 'line');
     g.appendChild(sbLimit);
     sbLimit.setAttributeNS(null, "x1", 0);
-    sbLimit.setAttributeNS(null, "y1", r*0.35);
+    sbLimit.setAttributeNS(null, "y1", r*1.35);
     sbLimit.setAttributeNS(null, "x2", 0);
-    sbLimit.setAttributeNS(null, "y2", r*0.5);
-    sbLimit.setAttributeNS(null, "stroke", "black");
+    sbLimit.setAttributeNS(null, "y2", r*1.5);
+    sbLimit.setAttributeNS(null, "stroke", "green");
     sbLimit.setAttributeNS(null, "stroke-width", 0.06*r);
 
     parent.appendChild(g);

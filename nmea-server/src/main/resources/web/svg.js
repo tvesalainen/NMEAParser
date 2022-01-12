@@ -123,14 +123,21 @@ function Svg(x, y, width, height)
     }
     this.setRoll = function(roll)
     {
-        this.ball.setAttributeNS(null, "transform", "rotate("+roll+")");
-        this.minIncline = Math.min(roll, this.minIncline);
-        this.maxIncline = Math.max(roll, this.maxIncline);
-        var d = 14;
-        var max = this.maxIncline+d;
-        var min = this.minIncline-d;
-        this.portLimit.setAttributeNS(null, "transform", "rotate("+max+")");
-        this.sbLimit.setAttributeNS(null, "transform", "rotate("+min+")");
+        var r = Number(roll);
+        this.ball.setAttributeNS(null, "transform", "rotate("+r+")");
+        var d = 4;
+        if (r < this.minIncline)
+        {
+            this.minIncline = r;
+            var min = this.minIncline-d;
+            this.sbLimit.setAttributeNS(null, "transform", "rotate("+min+")");
+        }
+        if (r > this.maxIncline)
+        {
+            this.maxIncline = r;
+            var max = this.maxIncline+d;
+            this.portLimit.setAttributeNS(null, "transform", "rotate("+max+")");
+        }
     };
     this.setTrueHeading = function(heading)
     {
@@ -193,17 +200,20 @@ function Svg(x, y, width, height)
     {
         var arr = [];
         var time = getServerTime();
-        var len = this.data.length/2;
-        for (var i=0;i<len;i++)
+        if (time)
         {
-            var t = this.data[2*i];
-            var v = this.data[2*i+1];
-            arr.push((this.historyMillis-(time-t))/this.ratioX);
-            arr.push((this.max - v)/this.ratioY); // (max-min)-(v-min)
+            var len = this.data.length/2;
+            for (var i=0;i<len;i++)
+            {
+                var t = this.data[2*i];
+                var v = this.data[2*i+1];
+                arr.push((this.historyMillis-(time-t))/this.ratioX);
+                arr.push((this.max - v)/this.ratioY); // (max-min)-(v-min)
+            }
+            var v = this.data[2*(len-1)+1];
+            arr.push(this.historyMillis/this.ratioX);
+            arr.push((this.max - v)/this.ratioY);
+            this.polyline.setAttributeNS(null, "points", arr.join(' '));
         }
-        var v = this.data[2*(len-1)+1];
-        arr.push(this.historyMillis/this.ratioX);
-        arr.push((this.max - v)/this.ratioY);
-        this.polyline.setAttributeNS(null, "points", arr.join(' '));
     };
 }

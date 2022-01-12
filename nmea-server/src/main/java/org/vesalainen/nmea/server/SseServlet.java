@@ -18,12 +18,12 @@ package org.vesalainen.nmea.server;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
-import static java.util.logging.Level.INFO;
+import java.util.function.Consumer;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -33,9 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.json.JSONObject;
-import org.vesalainen.net.ExceptionParser;
-import org.vesalainen.web.servlet.sse.AbstractSSESource;
-import org.vesalainen.web.servlet.sse.SSEOMap;
 
 /**
  *
@@ -119,12 +116,7 @@ public class SseServlet extends HttpServlet
             references.add(reference);
         }
         
-        public boolean fireEvent(String event, JSONObject data)
-        {
-            return fireEvent(event, data.toString());
-        }
-    
-        public boolean fireEvent(String event, CharSequence seq)
+        public boolean fireEvent(String event, Consumer<Writer> json)
         {
             lock.lock();
             try
@@ -136,7 +128,7 @@ public class SseServlet extends HttpServlet
                     writer.write(event);
                     writer.write("\n");
                     writer.write("data:");
-                    writer.append(seq);
+                    json.accept(writer);
                     writer.write("\n\n");
                     writer.flush();
                     return true;
@@ -148,7 +140,7 @@ public class SseServlet extends HttpServlet
             }
             catch (Throwable ex)
             {
-                log("SSE quit "+ex.getMessage());
+                log("SSE quit "+ex.getMessage(), ex);
                 asyncContext.complete();
                 references = null;
                 return false;

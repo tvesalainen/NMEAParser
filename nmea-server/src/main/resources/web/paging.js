@@ -38,24 +38,31 @@ $(document).ready(function ()
         }
     }
     var x = 0;
+    var y = 0;
     document.addEventListener('pointerdown', function(event)
     {
         x = event.screenX;
+        y = event.screenY;
     });
     document.addEventListener('pointerup', function(event)
     {
-        if (event.screenX - x < 0)
+        var dx = event.screenX - x;
+        var dy = event.screenY - y;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10)
         {
-            if (nextHref)
+            if (dx < 0)
             {
-                location.href = nextHref;
+                if (nextHref)
+                {
+                    location.href = nextHref;
+                }
             }
-        }
-        else
-        {
-            if (prevHref)
+            else
             {
-                location.href = prevHref;
+                if (prevHref)
+                {
+                    location.href = prevHref;
+                }
             }
         }
     });

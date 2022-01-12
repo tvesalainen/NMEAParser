@@ -16,9 +16,12 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.io.Writer;
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.function.DoubleFunction;
 import org.json.JSONObject;
+import org.json.JSONWriter;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.CardinalDirection;
@@ -72,7 +75,7 @@ public class Observer
         }
     }
 
-    public boolean fireEvent(JSONObject json)
+    public boolean fireEvent(Consumer<Writer> json)
     {
         return sseHandler.fireEvent(event, json);
     }
@@ -86,11 +89,15 @@ public class Observer
     {
         if (!arg.equals(last))
         {
-            JSONObject json = new JSONObject()
-                    .put("name", name)
-                    .put("time", time)
-                    .put("value", arg);
-            boolean succeeded = sseHandler.fireEvent(event, json);
+            boolean succeeded = sseHandler.fireEvent(event, (w)->
+            {
+                JSONWriter json = new JSONWriter(w)
+                    .object()
+                    .key("name").value(name)
+                    .key("time").value(time)
+                    .key("value").value(arg)
+                    .endObject();
+            });
             last = arg;
             return succeeded;
         }

@@ -27,6 +27,7 @@ import javax.management.NotificationListener;
 import javax.management.ObjectName;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONWriter;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.management.AbstractDynamicMBean;
 import org.vesalainen.math.UnitCategory;
@@ -115,14 +116,18 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         long history = getHistoryMillis();
         double min = getMin();
         double max = getMax();
-        JSONObject json = new JSONObject()
-            .put("name", name)
-            .put("title", description)
-            .put("unit", unit.getUnit())
-            .put("history", history)
-            .put("min", min)
-            .put("max", max);
-        observer.fireEvent(json);
+        observer.fireEvent((w)->
+        {
+            JSONWriter json = new JSONWriter(w)
+                .object()
+                .key("name").value(name)
+                .key("title").value(description)
+                .key("unit").value(unit.getUnit())
+                .key("history").value(history)
+                .key("min").value(min)
+                .key("max").value(max)
+                .endObject();
+        });
     }
     public <T> void set(long time, double value)
     {
@@ -361,15 +366,20 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
             super.attach(observer);
             if (history != null)
             {
-                JSONObject json = new JSONObject();
-                JSONArray array = new JSONArray()
-                json.put("historyData", array);
-                history.forEach((t, d)->
+                observer.fireEvent((w)->
                 {
-                    array.put(t);
-                    array.put(d);
+                    JSONWriter json = new JSONWriter(w);
+                    json.object();
+                    json.key("historyData");
+                    json.array();
+                    history.forEach((t, d)->
+                    {
+                        json.value(t);
+                        json.value(d);
+                    });
+                    json.endArray();
+                    json.endObject();
                 });
-                observer.fireEvent(json);
             }
         }
 
@@ -418,15 +428,20 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
             super.attach(observer);
             if (history != null)
             {
-                JSONObject json = new JSONObject();
-                JSONArray array = new JSONArray()
-                json.put("historyData", array);
-                history.forEach((t, d)->
+                observer.fireEvent((w)->
                 {
-                    array.put(t);
-                    array.put(d);
+                    JSONWriter json = new JSONWriter(w);
+                    json.object();
+                    json.key("historyData");
+                    json.array();
+                    history.forEach((t, d)->
+                    {
+                        json.value(t);
+                        json.value(d);
+                    });
+                    json.endArray();
+                    json.endObject();
                 });
-                observer.fireEvent(json);
             }
         }
 
