@@ -123,7 +123,7 @@ function Svg(x, y, width, height)
     }
     this.setRoll = function(roll)
     {
-        var r = Number(roll);
+        var r = Number(-roll);
         this.ball.setAttributeNS(null, "transform", "rotate("+r+")");
         var d = 4;
         if (r < this.minIncline)

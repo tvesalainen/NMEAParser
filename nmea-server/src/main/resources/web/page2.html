@@ -33,33 +33,86 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <script src="app.js"></script>
     </head>
     <body>
-        <div  class="w3-row">
-            <div class="w3-col m12">
-                <div class="w3-col s6">
-                    <div class="w3-col s12 gauge" data-property="waterSpeed">
-                    </div>
-                    <div class="w3-col s12 gauge" data-property="depthOfWater">
-                    </div>
-                    <div class="w3-col s6 gauge" data-property="waterTemperature">
-                    </div>
-                    <div class="w3-col s6 gauge" data-property="trueHeading">
-                    </div>
-                </div>
-                <div class="w3-col s6 gauge" data-property="tacktical">
-                </div>
-            </div>
-        </div>
 
 
         <div class="w3-row">
-            <div class="w3-col s4 m4 l4 gauge" data-property="trueWindSpeed">
+            <div class="w3-col s6 m4 l2 gauge" data-property="atmosphericPressure"> <! --- Barometri --->
             </div>
-            <div class="w3-col s4 m4 l4 gauge" data-property="trueWindAngle">
+            <div class="w3-col s6 m4 l2 gauge" data-property="batteryCurrent0"> <! --- BlueSolar to Battery --->
             </div>
-            <div class="w3-col s4 m4 l4 gauge" data-property="speedOverGround">
+            <div class="w3-col s6 m4 l2 gauge" data-property="crossTrackError"> <! --- XTE --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="depthOfWater"> <! --- Depth --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="latitude"> <! --- latitude  --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="longitude"> <! --- longitude --->
             </div>
         </div>
         
+        <div class="w3-row">
+            <div class="w3-col s6 m4 l2 gauge" data-property="officialWindAngle"> <! --- 10 min keskituuli --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="officialWindSpeed"> <! --- 10 min keskituuli --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="outsideTemperature"> <! --- outside air temp --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="roll"> <! --- kallistus --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="speedOverGround"> <! --- SOG --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="trackMadeGood"> <! --- COG --->
+            </div>
+        </div>        
+        <div class="w3-row">
+            <div class="w3-col s6 m4 l2 gauge" data-property="trueHeading"> <! --- Heading --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="trueWindAngle"> <! --- tosituui  --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="trueWindSpeed"> <! --- tosituuli --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="waterSpeed"> <! --- loki --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="waterTemperature"> <! --- veden lämpö --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property=""> <! ---  --->
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading">temp cerbosta <! ---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindAngle">kello utc <! ---   --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindSpeed">kello local <! ---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed"> <! --- SOC --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="waterTemperature"> <! --- Current to/from battery --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property=""> <! ---  --->
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading">etäisyys pisteeseen <! ---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindAngle">suunta pisteeseen <! ---   --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindSpeed"> <! ---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed"> <! ---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="waterTemperature"> <! ---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property=""> <! ---  --->
+            </div>
+        </div>
+        
+<! --- 
+
+
+etäisyys pisteeseen
+suunta pisteeseen
+--->
     </body>
 </html>
 

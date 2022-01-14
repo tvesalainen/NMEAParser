@@ -9,8 +9,8 @@
     <property name="minute" min="0.0" max="59.0" unit="DURATION_MINUTES"/>
     <property name="second" min="0.0" max="60.0" unit="DURATION_SECONDS" decimals="1"/>
     <property name="status" min="-179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" max="179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" unit="UNITLESS"/>
-    <property name="latitude" min="-90.0" max="90.0" unit="COORDINATE_DEGREES_AND_MINUTES" decimals="3"/>
-    <property name="longitude" min="-180.0" max="180.0" unit="COORDINATE_DEGREES_AND_MINUTES" decimals="3"/>
+    <property name="latitude" min="-90.0" max="90.0" unit="" decimals="3"/>
+    <property name="longitude" min="-180.0" max="180.0" unit="" decimals="3"/>
     <property name="speedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1"/>
     <property name="trackMadeGood" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
     <property name="day" min="1.0" max="31.0" unit="DURATION_DAYS"/>
@@ -42,4 +42,13 @@
     <property name="pitch"/>
     <property name="roll" decimals="1"/>
     <property name="batteryTemperature1"/>
+    <property name="crossTrackError"/>
+    <property name="toWaypoint"/>
+    <property name="fromWaypoint"/>
+    <property name="destinationWaypointLatitude"/>
+    <property name="destinationWaypointLongitude"/>
+    <property name="rangeToDestination"/>
+    <property name="bearingToDestination"/>
+    <property name="destinationClosingVelocity"/>
+    <property name="arrivalStatus"/>
 </nmea-server>

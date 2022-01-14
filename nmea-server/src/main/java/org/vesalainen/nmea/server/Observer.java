@@ -16,12 +16,12 @@
  */
 package org.vesalainen.nmea.server;
 
-import java.io.Writer;
+import java.lang.ref.WeakReference;
 import java.util.Locale;
-import java.util.function.Consumer;
 import java.util.function.DoubleFunction;
-import org.json.JSONObject;
-import org.json.JSONWriter;
+import org.vesalainen.json.JSONBuilder;
+import org.vesalainen.json.JSONBuilder.Element;
+import org.vesalainen.json.SseWriter;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.CardinalDirection;
@@ -37,16 +37,26 @@ public class Observer
 {
     protected final String event;
     protected final Property property;
-    protected final SseHandler sseHandler;
+    protected final WeakReference<SseHandler> sseHandler;   // weak reference to not prevent Sse from gc which can happen with not updated property
     private String last;
     private final String name;
+    private final SseWriter writer;
+    private long time;
+    private String value;
 
     private Observer(String event, Property property, SseHandler sseHandler)
     {
         this.event = event;
         this.property = property;
         this.name = property.getName();
-        this.sseHandler = sseHandler;
+        this.sseHandler = new WeakReference<>(sseHandler);
+        this.writer = new SseWriter(event,
+            JSONBuilder
+                .object()
+                .string("name", ()->name)
+                .number("time", ()->time)
+                .string("value", ()->value));
+        
     }
     
     public static Observer getInstance(String event, Property property, String unit, String decimals, SseHandler sseHandler)
@@ -75,9 +85,17 @@ public class Observer
         }
     }
 
-    public boolean fireEvent(Consumer<Writer> json)
+    public boolean fireEvent(Element element)
     {
-        return sseHandler.fireEvent(event, json);
+        SseHandler sse = sseHandler.get();
+        if (sse != null)
+        {
+            return sse.fireEvent(new SseWriter(event, element));
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public boolean accept(long time, double arg)
@@ -87,21 +105,23 @@ public class Observer
     
     public boolean accept(long time, String arg)
     {
-        if (!arg.equals(last))
+        SseHandler sse = sseHandler.get();
+        if (sse != null)
         {
-            boolean succeeded = sseHandler.fireEvent(event, (w)->
+            if (!arg.equals(last))
             {
-                JSONWriter json = new JSONWriter(w)
-                    .object()
-                    .key("name").value(name)
-                    .key("time").value(time)
-                    .key("value").value(arg)
-                    .endObject();
-            });
-            last = arg;
-            return succeeded;
+                this.time = time;
+                this.value = arg;
+                boolean succeeded = sse.fireEvent(writer);
+                last = arg;
+                return succeeded;
+            }
+            return true;
         }
-        return true;
+        else
+        {
+            return false;
+        }
     }
     
     public static class DoubleObserver extends Observer

@@ -22,8 +22,12 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -33,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.json.JSONObject;
+import org.vesalainen.json.SseWriter;
 
 /**
  *
@@ -100,15 +105,17 @@ public class SseServlet extends HttpServlet
         }
     }
     
-    public class SseHandler
+    public class SseHandler implements Runnable
     {
         private AsyncContext asyncContext;
-        private ReentrantLock lock = new ReentrantLock();
+        private SynchronousQueue<SseWriter> queue = new SynchronousQueue<>();
         private List<Object> references = new ArrayList<>();   // to maintain reference
+        private boolean disconnected = false;
 
         public SseHandler(AsyncContext asyncContext)
         {
             this.asyncContext = asyncContext;
+            asyncContext.start(this);
         }
 
         public void addReference(Object reference)
@@ -116,46 +123,56 @@ public class SseServlet extends HttpServlet
             references.add(reference);
         }
         
-        public boolean fireEvent(String event, Consumer<Writer> json)
+        public boolean fireEvent(SseWriter event)
         {
-            lock.lock();
             try
             {
-                if (references != null)
+                if (!disconnected)
                 {
-                    PrintWriter writer = asyncContext.getResponse().getWriter();
-                    writer.write("event:");
-                    writer.write(event);
-                    writer.write("\n");
-                    writer.write("data:");
-                    json.accept(writer);
-                    writer.write("\n\n");
-                    writer.flush();
-                    return true;
+                    boolean ok = queue.offer(event, 100, TimeUnit.MILLISECONDS);
+                    if (!ok)
+                    {
+                        disconnected = true;
+                    }
+                    return ok;
                 }
                 else
                 {
                     return false;
                 }
             }
-            catch (Throwable ex)
+            catch (InterruptedException ex)
             {
-                log("SSE quit "+ex.getMessage(), ex);
-                asyncContext.complete();
-                references = null;
+                log("Sse Fire", ex);
+                disconnected = true;
                 return false;
-            }
-            finally
-            {
-                lock.unlock();
             }
         }
 
+        @Override
+        public void run()
+        {
+            try
+            {
+                while (true)
+                {
+                    SseWriter event = queue.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+                    PrintWriter writer = asyncContext.getResponse().getWriter();
+                    event.write(writer);
+                    writer.flush();
+                }
+            }
+            catch (Throwable ex)
+            {
+                log("Sse", ex);
+            }
+        }
+        
         private void close()
         {
             asyncContext.complete();
             references = null;
         }
-        
+
     }
 }
