@@ -1366,22 +1366,22 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
 
     @Rule("string c string")
     protected void waypointToWaypoint(
-            String toWaypoint,
             String fromWaypoint,
+            String toWaypoint,
             @ParserContext("data") NMEAObserver data
     )
     {
-        data.setToWaypoint(toWaypoint);
         data.setFromWaypoint(fromWaypoint);
+        data.setToWaypoint(toWaypoint);
     }
 
     @Rule("string c")
     protected void waypointToWaypoint(
-            String toWaypoint,
+            String fromWaypoint,
             @ParserContext("data") NMEAObserver data
     )
     {
-        data.setToWaypoint(toWaypoint);
+        data.setFromWaypoint(fromWaypoint);
     }
 
     @Rule("decimal c letter c letter")

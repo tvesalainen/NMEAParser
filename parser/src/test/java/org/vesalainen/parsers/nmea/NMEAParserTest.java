@@ -255,8 +255,8 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 assertEquals(nch.getFloat(1), ss.getProperty(nch.getPrefix(2)+"Bearing"));
                 assertEquals(nch.getFloat(3), ss.getProperty(nch.getPrefix(4)+"Bearing"));
-                assertEquals(nch.getString(5), ss.getProperty("toWaypoint"));
-                assertEquals(nch.getString(6), ss.getProperty("fromWaypoint"));
+                assertEquals(nch.getString(5), ss.getProperty("fromWaypoint"));
+                assertEquals(nch.getString(6), ss.getProperty("toWaypoint"));
             }
         }
         catch (Exception ex)
@@ -371,8 +371,8 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 assertEquals(nch.getFloat(1), ss.getProperty(nch.getPrefix(2)+"Bearing"));
                 assertEquals(nch.getFloat(3), ss.getProperty(nch.getPrefix(4)+"Bearing"));
-                assertEquals(nch.getString(5), ss.getProperty("toWaypoint"));
-                assertEquals(nch.getString(6), ss.getProperty("fromWaypoint"));
+                assertEquals(nch.getString(5), ss.getProperty("fromWaypoint"));
+                assertEquals(nch.getString(6), ss.getProperty("toWaypoint"));
             }
         }
         catch (Exception ex)
@@ -945,8 +945,8 @@ public class NMEAParserTest
                 assertEquals(TalkerId.GP, ss.getProperty("talkerId"));
                 assertEquals(nch.getChar(1), ss.getProperty("status"));
                 assertEquals(nch.getSign(3)*nch.getFloat(2), ss.getFloat("crossTrackError"), Epsilon);
-                assertEquals(nch.getString(4), ss.getProperty("toWaypoint"));
-                assertEquals(nch.getString(5), ss.getProperty("fromWaypoint"));
+                assertEquals(nch.getString(4), ss.getProperty("fromWaypoint"));
+                assertEquals(nch.getString(5), ss.getProperty("toWaypoint"));
                 assertEquals(nch.getDegree(6), ss.getDouble("destinationWaypointLatitude"), Epsilon);
                 assertEquals(nch.getDegree(8), ss.getDouble("destinationWaypointLongitude"), Epsilon);
                 assertEquals(nch.getFloat(10), ss.getFloat("rangeToDestination"), Epsilon);
