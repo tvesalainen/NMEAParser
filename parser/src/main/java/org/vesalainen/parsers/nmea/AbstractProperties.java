@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import org.vesalainen.bean.BeanHelper;
 import org.vesalainen.math.Unit;
 import org.vesalainen.math.UnitType;
+import static org.vesalainen.parsers.nmea.NMEACategory.MISCELLENEOUS;
 
 /**
  *
@@ -47,12 +48,16 @@ public abstract class AbstractProperties
             {
                 if (BeanHelper.isSetter(method))
                 {
+                    NMEACategory nmeaCategory;
                     NMEACat nmeaCat = method.getAnnotation(NMEACat.class);
-                    if (nmeaCat == null)
+                    if (nmeaCat != null)
                     {
-                        continue;
+                        nmeaCategory = nmeaCat.value();
                     }
-                    NMEACategory nmeaCategory = nmeaCat.value();
+                    else
+                    {
+                        nmeaCategory = MISCELLENEOUS;
+                    }
                     String property = BeanHelper.getProperty(method);
                     Unit unit = method.getAnnotation(Unit.class);
                     Class<?> type = method.getParameterTypes()[0];
