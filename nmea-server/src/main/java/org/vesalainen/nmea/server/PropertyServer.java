@@ -85,8 +85,11 @@ public class PropertyServer extends AbstractPropertySetter
         for (String name : properties)
         {
             Property p = propertyMap.get(name);
+            if (p == null)
+            {
+                throw new IllegalArgumentException(name+" not a property");
+            }
             Observer observer = Observer.getInstance(event, p, null, null, sseHandler);
-            sseHandler.addReference(observer);
             p.attach(observer);
         }
     }

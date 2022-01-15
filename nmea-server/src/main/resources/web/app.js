@@ -50,9 +50,18 @@ $(document).ready(function () {
     {
         var g = gauge[event.type];
         g.call(event.data);
+        g.activate();
+    };
+    function passivate()
+    {
+        for (var g in gauge)
+        {
+            gauge[g].passivate();
+        }
     };
     
     setInterval(refresh, 1000);
+    setInterval(passivate, 2000);
 
 });
 

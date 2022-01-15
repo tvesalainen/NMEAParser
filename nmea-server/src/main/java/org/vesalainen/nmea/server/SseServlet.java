@@ -22,6 +22,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -108,8 +111,7 @@ public class SseServlet extends HttpServlet
     public class SseHandler implements Runnable
     {
         private AsyncContext asyncContext;
-        private SynchronousQueue<SseWriter> queue = new SynchronousQueue<>();
-        private List<Object> references = new ArrayList<>();   // to maintain reference
+        private BlockingQueue<SseWriter> queue = new ArrayBlockingQueue<>(16);
         private boolean disconnected = false;
 
         public SseHandler(AsyncContext asyncContext)
@@ -118,33 +120,19 @@ public class SseServlet extends HttpServlet
             asyncContext.start(this);
         }
 
-        public void addReference(Object reference)
-        {
-            references.add(reference);
-        }
-        
         public boolean fireEvent(SseWriter event)
         {
-            try
+            if (!disconnected)
             {
-                if (!disconnected)
+                boolean ok = queue.offer(event);
+                if (!ok)
                 {
-                    boolean ok = queue.offer(event, 100, TimeUnit.MILLISECONDS);
-                    if (!ok)
-                    {
-                        disconnected = true;
-                    }
-                    return ok;
+                    disconnected = true;
                 }
-                else
-                {
-                    return false;
-                }
+                return ok;
             }
-            catch (InterruptedException ex)
+            else
             {
-                log("Sse Fire", ex);
-                disconnected = true;
                 return false;
             }
         }
@@ -156,11 +144,15 @@ public class SseServlet extends HttpServlet
             {
                 while (true)
                 {
-                    SseWriter event = queue.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+                    SseWriter event = queue.take();
                     PrintWriter writer = asyncContext.getResponse().getWriter();
                     event.write(writer);
                     writer.flush();
                 }
+            }
+            catch (IllegalStateException ex)
+            {
+                log("Sse completed");
             }
             catch (Throwable ex)
             {
@@ -171,7 +163,6 @@ public class SseServlet extends HttpServlet
         private void close()
         {
             asyncContext.complete();
-            references = null;
         }
 
     }

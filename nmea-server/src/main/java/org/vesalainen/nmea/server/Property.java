@@ -21,9 +21,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentSkipListSet;
 import static java.util.concurrent.TimeUnit.*;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
@@ -31,7 +29,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
-import org.json.JSONWriter;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.management.AbstractDynamicMBean;
@@ -46,7 +43,6 @@ import org.vesalainen.math.sliding.TimeoutSlidingAngleAverage;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.TimeToLiveList;
-import org.vesalainen.util.WeakList;
 import web.I18n;
 
 /**

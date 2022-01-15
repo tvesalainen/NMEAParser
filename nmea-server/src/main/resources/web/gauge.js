@@ -83,6 +83,39 @@ function Gauge(element, seq)
                 }
             };
             break;
+        case "estimatedTimeOfArrival":
+            this.svg = new Svg(0,0,100,40);
+            this.svg.eta();
+            this.request = {event : this.event, property : ["estimatedTimeOfArrival", "toWaypoint"]};
+            this.call = function(data)
+            {
+                var json = JSON.parse(data);
+                if (json['historyData'])
+                {
+                    this.svg.setHistoryData(json['historyData']);
+                }
+                else
+                {
+                    var name = json["name"];
+                    if (json['time'] && json['value'])
+                    {
+                        switch (name)
+                        {
+                            case "estimatedTimeOfArrival":
+                                this.svg.setEta(json['time'], json['value']);
+                                break;
+                            case "toWaypoint":
+                                this.svg.resetEta(json['time'], json['value']);
+                                break;
+                        }
+                    }
+                    if (json['title'] && name === "estimatedTimeOfArrival")
+                    {
+                        this.svg.setTitle(json['title'], json['unit']);
+                    }
+                }
+            };
+            break;
         default:
             this.svg = new Svg(0,0,100,40);
             this.svg.setFrame();
@@ -100,7 +133,7 @@ function Gauge(element, seq)
                     {
                         this.svg.setData(json['time'], json['value']);
                     }
-                    else
+                    if (json['title'])
                     {
                         this.svg.setTitle(json['title'], json['unit']);
                         this.svg.setHistory(json['history'], json['min'], json['max']);
@@ -110,6 +143,29 @@ function Gauge(element, seq)
             break;
     }
     element.appendChild(this.svg.svg);
+    
+    this.activate = function()
+    {
+        var now = new Date();
+        this.refreshTime = now.getTime();
+        if (!this.status || this.status !== "active")
+        {
+            this.svg.svg.setAttributeNS(null, 'class', 'active');
+            this.status = "active";
+        }
+    };
+    this.passivate = function()
+    {
+        var now = new Date();
+        if (now.getTime()-this.refreshTime > 2000)
+        {
+            if (!this.status || this.status === "active")
+            {
+                this.svg.svg.setAttributeNS(null, 'class', 'passive');
+                this.status = "passive";
+            }
+        }
+    };
     
 }
 

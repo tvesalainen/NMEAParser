@@ -30,3 +30,9 @@ body {
     font-size: 2.3em;
 }
 
+.passive {
+    color: red;
+}
+.active {
+    color: green;
+}

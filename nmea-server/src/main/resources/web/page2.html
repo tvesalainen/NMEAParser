@@ -67,9 +67,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <div class="w3-row">
             <div class="w3-col s6 m4 l2 gauge" data-property="trueHeading"> <! --- Heading --->
             </div>
-            <div class="w3-col s6 m4 l2 gauge" data-property="trueWindAngle"> <! --- tosituui  --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="trueWindAngle"> <! --- tosituui kulma --->
             </div>
-            <div class="w3-col s6 m4 l2 gauge" data-property="trueWindSpeed"> <! --- tosituuli --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="trueWindSpeed"> <! --- tosituuli voimakkuus--->
             </div>
             <div class="w3-col s6 m4 l2 gauge" data-property="waterSpeed"> <! --- loki --->
             </div>
@@ -78,28 +78,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <div class="w3-col s6 m4 l2 gauge" data-property=""> <! ---  --->
             </div>
         </div>
+
         <div class="w3-row">
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading">temp cerbosta <! ---  --->
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading"> <! ---  --->
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindAngle">kello utc <! ---   --->
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindAngle"> <! ---   --->
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindSpeed">kello local <! ---  --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="relativeWindSpeed"><! ---  --->
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed"> <! --- SOC --->
-            </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="waterTemperature"> <! --- Current to/from battery --->
-            </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property=""> <! ---  --->
-            </div>
-        </div>
-        <div class="w3-row">
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading">etäisyys pisteeseen <! ---  --->
-            </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindAngle">suunta pisteeseen <! ---   --->
-            </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindSpeed"> <! ---  --->
-            </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed"> <! ---  --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="relativeWindAngle"> <! ---   --->
             </div>
             <div class="w3-col s6 m4 l2 xgauge" data-property="waterTemperature"> <! ---  --->
             </div>
@@ -107,11 +94,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
         </div>
         
+        <div class="w3-row">
+            <div class="w3-col s6 m4 l2 gauge" data-property="destinationClosingVelocity"><! --- VMG --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="toWaypoint"><! --- waypoint name  --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="estimatedTimeOfArrival"> <!--- ETA --->
+            </div>
+            <div class="w3-col s6 m4 l2 gauge" data-property="rangeToDestination"> <!--- matka pisteelle  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property=""> <! ---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property=""> <! ---  --->
+            </div>
+        </div>
+
+        <div class="w3-row">
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading">temp cerbosta <!---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindAngle">kello utc <!---   --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindSpeed">kello local <!---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed"> SOC <!---  --->
+            </div>
+            <div class="w3-col s6 m4 l2 xgauge" data-property="waterTemperature"> Current to/from battery <!---  --->
+            </div>
+            <!---  <div class="w3-col s6 m4 l2 xgauge" data-property=""> --->
+            </div>
+        </div>
+        
 <! --- 
 
 
-etäisyys pisteeseen
-suunta pisteeseen
+
 --->
     </body>
 </html>

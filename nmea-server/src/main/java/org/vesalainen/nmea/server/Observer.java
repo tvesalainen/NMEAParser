@@ -41,6 +41,7 @@ public class Observer
     private String last;
     private final String name;
     private final SseWriter writer;
+    private final SseWriter empty;
     private long time;
     private String value;
 
@@ -56,7 +57,7 @@ public class Observer
                 .string("name", ()->name)
                 .number("time", ()->time)
                 .string("value", ()->value));
-        
+        this.empty = new SseWriter(event, JSONBuilder.object());
     }
     
     public static Observer getInstance(String event, Property property, String unit, String decimals, SseHandler sseHandler)
@@ -116,7 +117,10 @@ public class Observer
                 last = arg;
                 return succeeded;
             }
-            return true;
+            else
+            {
+                return sse.fireEvent(empty);
+            }
         }
         else
         {

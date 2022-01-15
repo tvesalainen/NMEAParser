@@ -53,7 +53,7 @@ function Svg(x, y, width, height)
     this.setFrame = function()
     {
         this.svg.appendChild(createFrame(this.x, this.y, this.width, this.height));
-    }
+    };
 
     this.setTitle = function(title, unit)
     {
@@ -120,7 +120,46 @@ function Svg(x, y, width, height)
         this.sbLimit = arr[2];
         this.minIncline = 90;
         this.maxIncline = -90;
-    }
+    };
+    this.eta = function()
+    {
+        this.data = [];
+    };
+    this.resetEta = function(time, value)
+    {
+        if (this.toWaypoint)
+        {
+            if (this.toWaypoint !== value)
+            {
+                this.data = [];
+            }
+        }
+        this.toWaypoint = value;
+    };
+    this.setEta = function(time, value)
+    {
+        setServerTime(time);
+        while (this.data.length > 0 && (time - this.data[0]) > 86400000)
+        {
+            this.data.shift();
+            this.data.shift();
+        }
+        this.data.push(time);
+        this.data.push(value);
+
+        var firstTime = this.data[0];
+        var firstRange = this.data[1];
+        var duration = time - firstTime;
+        var range = firstRange - value;
+        var left = value*duration/range;
+        left /= 60000;
+        var m = (left % 60).toFixed(0);
+        left /= 60;
+        var h = (left % 60).toFixed(0);
+        left /= 24;
+        var d = (left % 24).toFixed(0);
+        this.setText(`${d}d${h}h${m}m`);
+    };
     this.setRoll = function(roll)
     {
         var r = Number(-roll);

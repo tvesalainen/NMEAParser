@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea-server nmeaMulticastAddress="224.0.0.3" nmeaMulticastPort="10110" httpPort="8081">
+    <property name="estimatedTimeOfArrival" source="rangeToDestination" unit="UNITLESS" history=""/>
     <property name="officialWindSpeed" source="windSpeedOverGround" min="0.0" max="50" unit="KNOT" decimals="1" average="10m"/>
     <property name="officialWindAngle" source="windAngleOverGround" unit="SECONDARY_INTERCARDINAL_DIRECTION" average="10m"/>
     <property name="batteryVoltage0" min="0.0" max="100.0" unit="VOLT" decimals="1"/>
