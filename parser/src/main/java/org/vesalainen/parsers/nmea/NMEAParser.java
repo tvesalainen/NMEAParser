@@ -362,7 +362,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     }
     @Rule("stringList")
     protected void proprietaryData(
-            List<CharSequence> pdata,
+            List<String> pdata,
             @ParserContext("data") NMEAObserver data)
     {
         data.setProprietaryData(pdata);
@@ -741,7 +741,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
 
     @Rule("stringList")
     protected void waypoints(
-            List<CharSequence> list,
+            List<String> list,
             @ParserContext("data") NMEAObserver data)
     {
         data.setWaypoints(list);

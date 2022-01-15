@@ -31,7 +31,7 @@ import static org.vesalainen.parsers.nmea.MessageType.*;
  * 
  * <p>User of NMEAParser is probably only interested in a small subset of the data.
  For this reason creation of Strings is avoided because of performance and GC
- overhead. CharSequence arguments should not be stored. They are mostly valid
+ overhead. String arguments should not be stored. They are mostly valid
  only during the observer method call. Use toString method to convertTo to string.
  
  <p>It is mostly easier to derive your class from AbstractNMEAObserver class.
@@ -122,14 +122,14 @@ public interface NMEAObserver extends Transactional
      */
     @NMEA0183({BOD, BWW, RMB, WNC})
     @NMEACat(WAYPOINT)
-    void setToWaypoint(CharSequence toWaypoint);
+    void setToWaypoint(String toWaypoint);
     /**
      * BOD, BWW, RMB, WNC
      * @param fromWaypoint 
      */
     @NMEA0183({BOD, BWW, RMB, WNC})
     @NMEACat(WAYPOINT)
-    void setFromWaypoint(CharSequence fromWaypoint);
+    void setFromWaypoint(String fromWaypoint);
     /**
      * RMB, WPL
      * @param latitude 
@@ -270,7 +270,7 @@ public interface NMEAObserver extends Transactional
      * @param waypoint 
      */
     @NMEA0183({AAM, APA, APB, BWC, BWR, R00, WCV, WPL})
-    void setWaypoint(CharSequence waypoint);
+    void setWaypoint(String waypoint);
     /**
      * ALM, RTE
      * @param totalNumberOfMessages 
@@ -445,7 +445,7 @@ public interface NMEAObserver extends Transactional
      * @param list 
      */
     @NMEA0183({R00, RTE})
-    void setWaypoints(List<CharSequence> list);
+    void setWaypoints(List<String> list);
     /**
      * BWC, BWR, WNC
      * @param nm
@@ -681,24 +681,24 @@ public interface NMEAObserver extends Transactional
      * @param name Target name
      */
     @NMEA0183({TXT})
-    void setTargetName(CharSequence name);
+    void setTargetName(String name);
     /**
      * TXT
      * @param message 
      */
     @NMEA0183({TXT})
-    void setMessage(CharSequence message);
+    void setMessage(String message);
     /**
      * Proprietary sentences start with $P. Proprietary type is the string
      * following that prefix. E.g. $PGRMI,... GRMI is the type.
      * @param type
      */
-    void setProprietaryType(CharSequence type);
+    void setProprietaryType(String type);
     /**
      * Proprietary data. Comma separated proprietary data fields.
      * @param data
      */
-    void setProprietaryData(List<CharSequence> data);
+    void setProprietaryData(List<String> data);
     /**
      * GSA
      * Selection mode: M=Manual, forced to operate in 2D or 3D, A=Automatic, 3D/2D
@@ -821,7 +821,7 @@ public interface NMEAObserver extends Transactional
      * Route id
      * @param route 
      */
-    public void setRoute(CharSequence route);
+    public void setRoute(String route);
 
     public void setTargetNumber(int target);
 
@@ -834,7 +834,7 @@ public interface NMEAObserver extends Transactional
      */
     public void setTargetStatus(char status);
 
-    public void setReferenceTarget(CharSequence referenceTarget);
+    public void setReferenceTarget(String referenceTarget);
 
     public void setMessageType(MessageType messageType);
     @NMEACat(DISTANCE)
