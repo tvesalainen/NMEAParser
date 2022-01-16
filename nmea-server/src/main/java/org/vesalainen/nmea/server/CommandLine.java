@@ -60,7 +60,7 @@ public class CommandLine extends LoggingCommandLine
         CachedScheduledThreadPool executor = new CachedScheduledThreadPool(64);
         config("ThreadPool started %s", executor);
         NMEAService nmeaService = new NMEAService(address, nmeaPort, executor);
-        PropertyServer propertyServer = new PropertyServer(Clock.systemDefaultZone(), config);
+        PropertyServer propertyServer = new PropertyServer(Clock.systemDefaultZone(), config, executor);
         nmeaService.addNMEAObserver(propertyServer);
         nmeaService.start();
         config("NMEA Service started");

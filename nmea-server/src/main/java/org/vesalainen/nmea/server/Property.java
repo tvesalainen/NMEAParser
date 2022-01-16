@@ -17,12 +17,9 @@
 package org.vesalainen.nmea.server;
 
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import static java.util.concurrent.TimeUnit.*;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -36,13 +33,9 @@ import org.vesalainen.math.UnitCategory;
 import static org.vesalainen.math.UnitCategory.*;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
-import org.vesalainen.math.sliding.DoubleTimeoutSlidingAverage;
-import org.vesalainen.math.sliding.DoubleTimeoutSlidingSeries;
-import org.vesalainen.math.sliding.TimeValueConsumer;
-import org.vesalainen.math.sliding.TimeoutSlidingAngleAverage;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
-import org.vesalainen.util.TimeToLiveList;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import web.I18n;
 
 /**
@@ -51,15 +44,23 @@ import web.I18n;
  */
 public abstract class Property extends AbstractDynamicMBean implements NotificationListener, Comparable<Property>
 {
-    private final String name;
-    private final PropertyType property;
-    private Deque<Observer> observers = new ConcurrentLinkedDeque<>();
+    protected final CachedScheduledThreadPool executor;
+    protected final String name;
+    protected final PropertyType property;
+    protected Deque<Observer> observers = new ConcurrentLinkedDeque<>();
+    private final String[] sources;
 
-    private Property(PropertyType property)
+    protected Property(CachedScheduledThreadPool executor, PropertyType property)
+    {
+        this(executor, property, property.getSource()!=null?new String[]{property.getSource()}:new String[]{});
+    }
+    protected Property(CachedScheduledThreadPool executor, PropertyType property, String... sources)
     {
         super(property.getName(), property);
+        this.executor = executor;
         this.property = property;
         this.name = property.getName();
+        this.sources = sources;
         register();
     }
 
@@ -78,28 +79,25 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         }
     }
 
-    public static Property getInstance(PropertyType property)
+    public static Property getInstance(CachedScheduledThreadPool executor, PropertyType property)
     {
-        Class<?> type = getType(property);
-        switch (type.getSimpleName())
+        switch (property.getName())
         {
-            case "int":
-            case "long":
-            case "float":
-            case "double":
-                return new DoubleProperty(property);
-            case "char":
-            case "String":
-            case "CharSequence":
-                return new ObjectProperty(property);
+            case "estimatedTimeOfArrival":
+                return new ETAProperty(executor, property);
+            case "dayPhase":
+                return new DayPhaseProperty(executor, property);
             default:
-                if (type.isEnum())
+                Class<?> type = getType(property);
+                switch (type.getSimpleName())
                 {
-                    return new ObjectProperty(property);
-                }
-                else
-                {
-                    throw new UnsupportedOperationException(type+" not supported");
+                    case "int":
+                    case "long":
+                    case "float":
+                    case "double":
+                        return new DoubleProperty(executor, property);
+                    default:
+                        return new ObjectProperty(executor, property);
                 }
         }
     }
@@ -110,7 +108,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         observers.add(observer);
     }
 
-    private void advertise(Observer observer)
+    protected void advertise(Observer observer)
     {
         String description = I18n.get().getString(name);
         UnitType unit = getUnit();
@@ -125,7 +123,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
                 .number("max", this::getMax)
         );
     }
-    public <T> void set(long time, double value)
+    public <T> void set(String property, long time, double value)
     {
         Iterator<Observer> iterator = observers.iterator();
         while (iterator.hasNext())
@@ -137,7 +135,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
             }
         }
     }
-    public <T> void set(long time, T value)
+    public <T> void set(String property, long time, T value)
     {
         Iterator<Observer> iterator = observers.iterator();
         while (iterator.hasNext())
@@ -156,11 +154,19 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         return ObjectName.getInstance(Config.class.getName(), "Property", property.getName());
     }
 
+    public String[] getSources()
+    {
+        return sources;
+    }
+    
     public String getName()
     {
         return name;
     }
-
+    /**
+     * Returns concrete property name
+     * @return 
+     */
     public String getProperty()
     {
         return property.getSource()!=null?property.getSource():property.getName();
@@ -284,173 +290,5 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
     public int compareTo(Property o)
     {
         return name.compareTo(o.name);
-    }
-    private static class DoubleProperty extends Property
-    {
-        private DoubleTimeoutSlidingSeries history;
-        private TimeValueConsumer func;
-        
-        public DoubleProperty(PropertyType property)
-        {
-            super(property);
-            init();
-        }
-
-        @Override
-        protected void init()
-        {
-            TimeValueConsumer f = (t,v)->accept(t, v);
-            long periodMillis = getPeriodMillis();
-            if (periodMillis > 0)
-            {
-                long per = periodMillis;
-                f = new Delay(per, f);
-            }
-            long averageMillis = getAverageMillis();
-            if (averageMillis > 0)
-            {
-                TimeValueConsumer oldFunc = f;
-                UnitCategory category = getUnit().getCategory();
-                if (PLANE_ANGLE == category)
-                {
-                    TimeoutSlidingAngleAverage ave = new TimeoutSlidingAngleAverage(8, averageMillis);
-                    f = (t,v)->
-                    {
-                        ave.accept(v);
-                        oldFunc.accept(t, ave.fast());
-                    };
-                }
-                else
-                {
-                    DoubleTimeoutSlidingAverage ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
-                    f = (t,v)->
-                    {
-                        ave.accept(v, t);
-                        oldFunc.accept(t, ave.fast());
-                    };
-                }
-            }
-            long historyMillis = getHistoryMillis();
-            if (historyMillis > 0)
-            {
-                this.history = new DoubleTimeoutSlidingSeries(256, historyMillis);
-            }
-            else
-            {
-                this.history = null;
-            }
-            func = f;
-        }
-        
-        @Override
-        public void set(long time, double arg)
-        {
-            func.accept(time, arg);
-        }
-        private void accept(long time, double arg)
-        {
-            super.set(time, arg);
-            if (history != null)
-            {
-                history.accept(arg, time);
-            }
-        }
-
-        @Override
-        public void attach(Observer observer)
-        {
-            super.attach(observer);
-            if (history != null)
-            {
-                observer.fireEvent(
-                    JSONBuilder
-                        .object()
-                        .numberArray("historyData", history::pointStream)
-                );
-            }
-        }
-
-    }
-    private static class ObjectProperty extends Property
-    {
-        private TimeToLiveList<String> history;
-        public ObjectProperty(PropertyType property)
-        {
-            super(property);
-            init();
-            long historyMinutes = getHistoryMillis();
-            if (historyMinutes > 0)
-            {
-                this.history = new TimeToLiveList(historyMinutes, MILLISECONDS);
-            }
-        }
-
-        @Override
-        protected void init()
-        {
-            long historyMinutes = getHistoryMillis();
-            if (historyMinutes > 0)
-            {
-                this.history = new TimeToLiveList(historyMinutes, MILLISECONDS);
-            }
-            else
-            {
-                this.history = null;
-            }
-        }
-        
-        @Override
-        public <T> void set(long time, T arg)
-        {
-            super.set(time, arg);
-            if (history != null)
-            {
-                history.add(time, arg.toString());
-            }
-        }
-
-        @Override
-        public void attach(Observer observer)
-        {
-            super.attach(observer);
-            if (history != null)
-            {
-                List<String> list = new ArrayList<>();
-                history.forEach((t, d)->
-                {
-                    list.add(String.valueOf(t));
-                    list.add(d);
-                });
-                observer.fireEvent(
-                    JSONBuilder
-                    .object()
-                    .stringArray("historyData", list::stream)
-                );
-            }
-        }
-
-    }
-    private class Delay implements TimeValueConsumer
-    {
-        private final long delay;
-        private long last;
-        private TimeValueConsumer next;
-
-        public Delay(long delay, TimeValueConsumer next)
-        {
-            this.delay = delay;
-            this.next = next;
-        }
-
-        @Override
-        public void accept(long t, double v)
-        {
-            if (t - last >= delay)
-            {
-                next.accept(t, v);
-                last = t;
-            }
-        }
-        
     }
 }

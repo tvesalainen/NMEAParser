@@ -64,26 +64,18 @@ public class Observer
     {
         NMEAProperties p = NMEAProperties.getInstance();
         Class<?> type = property.getType();
-        switch (type.getSimpleName())
+        if (type != null)
         {
-            case "int":
-            case "long":
-            case "float":
-            case "double":
-                return new DoubleObserver(event, property, unit, decimals, sseHandler);
-            case "char":
-            case "String":
-                return new Observer(event, property, sseHandler);
-            default:
-                if (type.isEnum())
-                {
-                    return new Observer(event, property, sseHandler);
-                }
-                else
-                {
-                    throw new UnsupportedOperationException(type+" not supported");
-                }
+            switch (type.getSimpleName())
+            {
+                case "int":
+                case "long":
+                case "float":
+                case "double":
+                    return new DoubleObserver(event, property, unit, decimals, sseHandler);
+            }
         }
+        return new Observer(event, property, sseHandler);
     }
 
     public boolean fireEvent(Element element)

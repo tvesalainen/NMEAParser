@@ -35,6 +35,7 @@ $(document).ready(function () {
     };
     eventSource.onopen = function()
     {
+        
         var targets = document.getElementsByClassName('gauge');
         for (var i=0;i<targets.length;i++)
         {
@@ -45,6 +46,17 @@ $(document).ready(function () {
             eventSource.addEventListener(event, fired, false);
             $.post("/sse", g.request);
         }
+        eventSource.addEventListener("dayPhase", dayPhase, false);
+        $.post("/sse", {event: "dayPhase", property: "dayPhase"});
+    };
+    function dayPhase(event)
+    {
+        var json = JSON.parse(event.data);
+        var l = document.body.classList;
+        l.remove("DAY");
+        l.remove("NIGHT");
+        l.remove("TWILIGHT");
+        l.add(json["value"]);
     };
     function fired(event)
     {

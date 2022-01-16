@@ -85,6 +85,7 @@ function Gauge(element, seq)
             break;
         case "estimatedTimeOfArrival":
             this.svg = new Svg(0,0,100,40);
+            this.svg.setFrame();
             this.svg.eta();
             this.request = {event : this.event, property : ["estimatedTimeOfArrival", "toWaypoint"]};
             this.call = function(data)

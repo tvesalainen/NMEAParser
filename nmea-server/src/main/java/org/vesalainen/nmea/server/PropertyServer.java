@@ -28,6 +28,7 @@ import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.ConcurrentHashMapSet;
 import org.vesalainen.util.MapSet;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
@@ -39,29 +40,35 @@ public class PropertyServer extends AbstractPropertySetter
     private final MapSet<String,Property> dispatchMap = new ConcurrentHashMapSet<>();
     private final Map<String,Property> propertyMap = new ConcurrentHashMap<>();
     private final Config config;
+    private final CachedScheduledThreadPool executor;
     
-    public PropertyServer(Clock clock, Config config)
+    public PropertyServer(Clock clock, Config config, CachedScheduledThreadPool executor)
     {
         super(allNMEAProperties());
         this.clock = clock;
         this.config = config;
+        this.executor = executor;
         List<String> sources = new ArrayList<>();
         config.getProperties().forEach((p)->
         {
-            Property property = Property.getInstance(p);
+            Property property = Property.getInstance(executor, p);
             String name = p.getName();
             propertyMap.put(name, property);
-            String source = p.getSource();
-            if (source != null)
+            String[] srcs = property.getSources();
+            if (srcs.length > 0)
             {
-                dispatchMap.add(source, property);
-                sources.add(source);
+                for (String source : srcs)
+                {
+                    dispatchMap.add(source, property);
+                    sources.add(source);
+                }
             }
             else
             {
                 dispatchMap.add(name, property);
             }
         });
+        /*
         sources.forEach((source)->
         {
             if (!propertyMap.containsKey(source))
@@ -70,7 +77,7 @@ public class PropertyServer extends AbstractPropertySetter
                 dispatchMap.add(source, sourceProperty);
                 propertyMap.put(source, sourceProperty);
             }
-        });
+        });*/
     }
 
     public void addSse(Map<String,String[]> map, SseHandler sseHandler)
@@ -98,7 +105,7 @@ public class PropertyServer extends AbstractPropertySetter
     {
         Set<Property> p = getProperty(property);
         long millis = clock.millis();
-        p.forEach((pr)->pr.set(millis, arg));
+        p.forEach((pr)->pr.set(property, millis, arg));
     }
 
     @Override
@@ -106,7 +113,7 @@ public class PropertyServer extends AbstractPropertySetter
     {
         Set<Property> p = getProperty(property);
         long millis = clock.millis();
-        p.forEach((pr)->pr.set(millis, arg));
+        p.forEach((pr)->pr.set(property, millis, arg));
     }
 
     @Override
@@ -114,7 +121,7 @@ public class PropertyServer extends AbstractPropertySetter
     {
         Set<Property> p = getProperty(property);
         long millis = clock.millis();
-        p.forEach((pr)->pr.set(millis, arg));
+        p.forEach((pr)->pr.set(property, millis, arg));
     }
 
     @Override
@@ -122,7 +129,7 @@ public class PropertyServer extends AbstractPropertySetter
     {
         Set<Property> p = getProperty(property);
         long millis = clock.millis();
-        p.forEach((pr)->pr.set(millis, arg));
+        p.forEach((pr)->pr.set(property, millis, arg));
     }
     
     @Override
@@ -130,7 +137,7 @@ public class PropertyServer extends AbstractPropertySetter
     {
         Set<Property> p = getProperty(property);
         long millis = clock.millis();
-        p.forEach((pr)->pr.set(millis, arg));
+        p.forEach((pr)->pr.set(property, millis, arg));
     }
     
     @Override
@@ -138,7 +145,7 @@ public class PropertyServer extends AbstractPropertySetter
     {
         Set<Property> p = getProperty(property);
         long millis = clock.millis();
-        p.forEach((pr)->pr.set(millis, arg+""));
+        p.forEach((pr)->pr.set(property, millis, arg+""));
     }
     
     
@@ -155,7 +162,7 @@ public class PropertyServer extends AbstractPropertySetter
         if (prop == null || prop.isEmpty())
         {
             PropertyType pt = config.getProperty(property);
-            Property p = Property.getInstance(pt);
+            Property p = Property.getInstance(executor, pt);
             dispatchMap.add(property, p);
             propertyMap.put(property, p);
         }

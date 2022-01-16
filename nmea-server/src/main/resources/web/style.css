@@ -19,20 +19,92 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     Author     : Timo Vesalainen <timo.vesalainen@iki.fi>
 */
 
-body {
-    touch-action: none;
+* {
+    touch-action: pan-y;
 }
-.w3-row {
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+    --red: red;
+}
+.DAY {
+    
+}
+
+.TWILIGHT {
+    
+}
+
+.NIGHT {
+    --red: black;
+}
+
+.gauge {
+    font-family: sans-serif, Arial, Helvetica;
+    
+    /*stroke: black;
+    fill: black;*/
+}
+
+
+.title {
+    font-size: 0.5em;
+}
+.unit {
+    font-size: 0.5em;
 }
 
 .text {
-    font-size: 2.3em;
+    font-size: 2.4em;
+    /*font-weight: bolder;*/
 }
 
+ .long {
+    font-size: 0.5em;
+ }
+
 .passive {
-    color: red;
+    color: var(--red);
 }
 .active {
     color: green;
+}
+
+.frame {
+    stroke: black;
+    stroke-width: 1px;
+}
+
+.history {
+    stroke: black;
+    font-size: 0.1em;
+}
+.inclino {
+    stroke: black;
+}
+.inclino-ball {
+    fill: black;
+}
+.inclino-port {
+    stroke: red;
+}
+.inclino-sb {
+    stroke: green;
+}
+.boat {
+    stroke: blue;
+}
+.rudder {
+    stroke: red;
+}
+.cog {
+    stroke: red;
+}
+.windIndicatorTip, .windIndicatorTail {
+    stroke: red;
+    fill: red;
+}
+.windIndicatorShaft {
+    stroke: black;
+    fill: black;
+}
+.compass {
 }

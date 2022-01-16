@@ -38,9 +38,10 @@ function createFrame(x, y, width, height)
     frame.setAttributeNS(null, 'y', y);
     frame.setAttributeNS(null, 'width', width);
     frame.setAttributeNS(null, 'height', height);
+    frame.setAttributeNS(null, 'class', 'frame');
     frame.setAttributeNS(null, 'fill', 'none');
-    frame.setAttributeNS(null, 'stroke', 'blue');
-    frame.setAttributeNS(null, 'stroke-width', '1');
+    //frame.setAttributeNS(null, 'stroke', 'blue');
+    //frame.setAttributeNS(null, 'stroke-width', '1');
     return frame;
 };
 
@@ -51,7 +52,7 @@ function createTitle(parent, x, y, padding)
     title.setAttributeNS(null, "x", x+padding);
     title.setAttributeNS(null, "y", y+padding*2);
     title.setAttributeNS(null, "text-anchor", "start");
-    title.setAttributeNS(null, "style", "font-size: 0.5em");
+    //title.setAttributeNS(null, "style", "font-size: 0.5em");
     parent.appendChild(title);
     return title;
 };
@@ -63,7 +64,7 @@ function createUnit(parent, x, y, width, height, padding)
     unit.setAttributeNS(null, "x", x+width-padding);
     unit.setAttributeNS(null, "y", y+padding*2);
     unit.setAttributeNS(null, "text-anchor", "end");
-    unit.setAttributeNS(null, "style", "font-size: 0.5em");
+    //unit.setAttributeNS(null, "style", "font-size: 0.5em");
     parent.appendChild(unit);
     return unit;
 };
@@ -75,7 +76,7 @@ function createText(parent, x, y, width, height, padding)
     text.setAttributeNS(null, "x", x+width-padding);
     text.setAttributeNS(null, "y", y+height-5);
     text.setAttributeNS(null, "text-anchor", "end");
-    text.setAttributeNS(null, "style", "font-size: 2em");
+    //text.setAttributeNS(null, "style", "font-size: 2em");
     parent.appendChild(text);
     return text;
 };
@@ -87,8 +88,7 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     var ratioY = gap/height;
     var history = document.createElementNS(SVG_NS, 'g');
     parent.appendChild(history);
-    history.setAttributeNS(null, "fill", "none");
-    history.setAttributeNS(null, "stroke", "currentColor");
+    history.setAttributeNS(null, "class", "history");
     history.setAttributeNS(null, "stroke-opacity", "0.5");
     // x-scale
     var div = 1;
@@ -200,7 +200,6 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     unitX.setAttributeNS(null, "x", 0);
     unitX.setAttributeNS(null, "y", 0);
     unitX.setAttributeNS(null, "text-anchor", "middle");
-    unitX.setAttributeNS(null, "style", "font-size: 0.15em");
     unitX.setAttributeNS(null, "stroke-width", "0.05");
     unitX.setAttributeNS(null, "transform", "translate("+xx+", "+yy+") rotate(-90) ");
     var unitTextX = document.createTextNode(div+" "+unitString);
@@ -212,7 +211,6 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     unitY.setAttributeNS(null, "x", xx);
     unitY.setAttributeNS(null, "y", yy);
     unitY.setAttributeNS(null, "text-anchor", "middle");
-    unitY.setAttributeNS(null, "style", "font-size: 0.15em");
     unitY.setAttributeNS(null, "stroke-width", "0.05");
     var unitTextY = document.createTextNode(un);
     unitY.appendChild(unitTextY);
@@ -223,20 +221,17 @@ function createInclinoMeter(parent, r)
 {
     var size = 1.5*r;
     var g = document.createElementNS(SVG_NS, 'g');
-    //g.setAttributeNS(null, "transform", "translate(0, -40)");
+    g.setAttributeNS(null, "class", "inclino");
     
     var scale1 = createCompassScale2(size, 0, 0, 140, 220, 1, 2);
-    scale1.setAttributeNS(null, "stroke", "black");
     scale1.setAttributeNS(null, "stroke-width", 0.3);
     g.appendChild(scale1);
 
     var scale5 = createCompassScale2(size, 0, 0, 140, 220, 5, 3);
-    scale5.setAttributeNS(null, "stroke", "black");
     scale5.setAttributeNS(null, "stroke-width", 0.5);
     g.appendChild(scale5);
 
     var scale10 = createCompassScale2(size, 0, 0, 140, 221, 10, 3.5);
-    scale10.setAttributeNS(null, "stroke", "black");
     scale10.setAttributeNS(null, "stroke-width", 0.5);
     g.appendChild(scale10);
 
@@ -249,27 +244,27 @@ function createInclinoMeter(parent, r)
     
     var ball = document.createElementNS(SVG_NS, 'circle');
     g.appendChild(ball);
+    ball.setAttributeNS(null, "class", "inclino-ball");
     ball.setAttributeNS(null, "cx", 0);
     ball.setAttributeNS(null, "cy", r*1.425);
     ball.setAttributeNS(null, "r", r*0.07);
-    ball.setAttributeNS(null, "fill", "black");
 
     var portLimit = document.createElementNS(SVG_NS, 'line');
     g.appendChild(portLimit);
+    portLimit.setAttributeNS(null, "class", "inclino-port");
     portLimit.setAttributeNS(null, "x1", 0);
     portLimit.setAttributeNS(null, "y1", r*1.35);
     portLimit.setAttributeNS(null, "x2", 0);
     portLimit.setAttributeNS(null, "y2", r*1.5);
-    portLimit.setAttributeNS(null, "stroke", "red");
     portLimit.setAttributeNS(null, "stroke-width", 0.06*r);
 
     var sbLimit = document.createElementNS(SVG_NS, 'line');
     g.appendChild(sbLimit);
+    sbLimit.setAttributeNS(null, "class", "inclino-sb");
     sbLimit.setAttributeNS(null, "x1", 0);
     sbLimit.setAttributeNS(null, "y1", r*1.35);
     sbLimit.setAttributeNS(null, "x2", 0);
     sbLimit.setAttributeNS(null, "y2", r*1.5);
-    sbLimit.setAttributeNS(null, "stroke", "green");
     sbLimit.setAttributeNS(null, "stroke-width", 0.06*r);
 
     parent.appendChild(g);
@@ -278,30 +273,27 @@ function createInclinoMeter(parent, r)
 function createCompass(parent, r)
 {
     var compass = document.createElementNS(SVG_NS, 'g');
+    compass.setAttributeNS(null, "class", "compass");
 
     var rulerR = r*0.94;
     var scale1 = createCompassScale(1, 0, 0, 1, 0.04);
     compass.appendChild(scale1);
     scale1.setAttributeNS(null, "transform", "scale("+rulerR+")");
-    scale1.setAttributeNS(null, "stroke", "black");
     scale1.setAttributeNS(null, "stroke-width", 0.2/r);
 
     var scale5 = createCompassScale(1, 0, 0, 5, 0.05);
     compass.appendChild(scale5);
     scale5.setAttributeNS(null, "transform", "scale("+rulerR+")");
-    scale5.setAttributeNS(null, "stroke", "black");
     scale5.setAttributeNS(null, "stroke-width", 0.3/r);
 
     var scale10 = createCompassScale(1, 0, 0, 10, 0.06);
     compass.appendChild(scale10);
     scale10.setAttributeNS(null, "transform", "scale("+rulerR+")");
-    scale10.setAttributeNS(null, "stroke", "black");
     scale10.setAttributeNS(null, "stroke-width", 0.3/r);
 
     var scale90 = createCompassScale(1.15, 0, 0, 90, 0.1);
     compass.appendChild(scale90);
     scale90.setAttributeNS(null, "transform", "scale("+rulerR+")");
-    scale90.setAttributeNS(null, "stroke", "black");
     scale90.setAttributeNS(null, "stroke-width", 0.3/r);
 
     var scale = createCircleScale(1.01, 0.06);
@@ -458,8 +450,7 @@ function createBoat(parent, r)
 
     var boat = document.createElementNS(SVG_NS, 'path');
     g.appendChild(boat);
-    boat.setAttributeNS(null, "id", "boat");
-    boat.setAttributeNS(null, "stroke", "blue");
+    boat.setAttributeNS(null, "class", "boat");
     boat.setAttributeNS(null, "stroke-width", "1");
     boat.setAttributeNS(null, "stroke-linejoin", "miter");
     boat.setAttributeNS(null, "fill", "none");
@@ -481,6 +472,7 @@ function createRudder(parent, r)
     g.setAttributeNS(null, "transform", `translate(0,-4) scale(${r/20})`);
     var rudder = document.createElementNS(SVG_NS, 'path');
     g.appendChild(rudder);
+    rudder.setAttributeNS(null, "class", "rudder");
     rudder.setAttributeNS(null, "stroke", "blue");
     rudder.setAttributeNS(null, "stroke-width", "1");
     rudder.setAttributeNS(null, "d", "M 0 40 l 0 9");
@@ -514,8 +506,7 @@ function createCOG(parent, r)
 
     var arrow = document.createElementNS(SVG_NS, 'path');
     g.appendChild(arrow);
-    arrow.setAttributeNS(null, "id", "boat");
-    arrow.setAttributeNS(null, "stroke", "red");
+    arrow.setAttributeNS(null, "class", "cog");
     arrow.setAttributeNS(null, "stroke-width", "1");
     arrow.setAttributeNS(null, "fill", "none");
     arrow.setAttributeNS(null, "marker-end", "url(#triangle)");
@@ -536,26 +527,21 @@ function createWindIndicator(parent, r)
 
     var windIndicatorTip = document.createElementNS(SVG_NS, 'path');
     g.appendChild(windIndicatorTip);
-    windIndicatorTip.setAttributeNS(null, "id", "windIndicatorTip");
-    windIndicatorTip.setAttributeNS(null, "stroke", "red");
+    windIndicatorTip.setAttributeNS(null, "class", "windIndicatorTip");
     windIndicatorTip.setAttributeNS(null, "stroke-width", "1");
-    windIndicatorTip.setAttributeNS(null, "fill", "red");
     windIndicatorTip.setAttributeNS(null, "d", "M -3 -15 L 0 -25 L 3 -15 Z");
 
     var windIndicatorShaft = document.createElementNS(SVG_NS, 'path');
     g.appendChild(windIndicatorShaft);
-    windIndicatorShaft.setAttributeNS(null, "id", "windIndicatorShaft");
-    windIndicatorShaft.setAttributeNS(null,"stroke", "black");
+    windIndicatorShaft.setAttributeNS(null, "class", "windIndicatorShaft");
     windIndicatorShaft.setAttributeNS(null,"stroke-width", "1");
     windIndicatorShaft.setAttributeNS(null,"fill", "none");
     windIndicatorShaft.setAttributeNS(null,"d", "M 0 15 l 0 -30");
 
     var windIndicatorTail = document.createElementNS(SVG_NS, 'path');
     g.appendChild(windIndicatorTail);
-    windIndicatorTail.setAttributeNS(null,"id", "windIndicatorTail");
-    windIndicatorTail.setAttributeNS(null,"stroke", "red");
+    windIndicatorTail.setAttributeNS(null,"class", "windIndicatorTail");
     windIndicatorTail.setAttributeNS(null,"stroke-width", "1");
-    windIndicatorTail.setAttributeNS(null,"fill", "red");
     windIndicatorTail.setAttributeNS(null,"d", "M -3 25 L -3 20 L 0 15 L 3 20 L 3 25 Z");
     
     parent.appendChild(windIndicatorGroup);
