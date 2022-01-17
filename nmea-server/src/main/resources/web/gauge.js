@@ -24,6 +24,10 @@ function Gauge(element, seq)
     this.property = element.getAttribute("data-property");
     switch (this.property)
     {
+        case "utcDateTime":
+            this.svg = new Svg(-50,40,100,40);
+            this.svg.setFrame();
+            break;
         case "tworow":
             this.property1 = element.getAttribute("data-property1");
             this.property2 = element.getAttribute("data-property2");

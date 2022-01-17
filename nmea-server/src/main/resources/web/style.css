@@ -20,39 +20,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 :root {
-    --text: black;
-    --background: white;
+    --text: yellow;
+    --background: purple;
 }
 
 body {
     touch-action: pan-y;
-    background-color: var(--background) 
+    background-color: var(--background);
 }
 
-.DAY {
-    
+body.DAY {
+    --background: white;
+}
+
+body.NIGHT {
+    --background: black;
+}
+
+.DAY .active {
+    --text: black;
+    --background: white;
+}
+
+.DAY .passive {
+    --text: gray;
+    --background: lightgray;
 }
 
 .TWILIGHT {
     
 }
 
-.NIGHT {
-    --text: pink;
-    --background: gray;
+.NIGHT .active {
+    --text: white;
+    --background: black;
 }
 
+.NIGHT .passive {
+    --text: gray;
+    --background: black;
+}
 .gauge {
     font-family: sans-serif, Arial, Helvetica;   
+    background-color: var(--background);
     /*stroke: black;
     fill: black;*/
 }
 
 .title {
     font-size: 0.5em;
+    color: var(--text);
 }
 .unit {
     font-size: 0.5em;
+    color: var(--text);
 }
 
 .text {
@@ -69,13 +90,6 @@ body {
  .long .text {
     font-size: 0.5em;
  }
-
-.passive {
-    color: var(--red);
-}
-.active {
-    color: green;
-}
 
 .frame {
     stroke: var(--text);
@@ -127,3 +141,4 @@ body {
     stroke: none;
     font-size: 0.005em;
 }
+
