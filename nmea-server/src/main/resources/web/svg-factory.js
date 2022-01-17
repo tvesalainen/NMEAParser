@@ -52,7 +52,7 @@ function createTitle(parent, x, y, padding)
     title.setAttributeNS(null, "x", x+padding);
     title.setAttributeNS(null, "y", y+padding*2);
     title.setAttributeNS(null, "text-anchor", "start");
-    //title.setAttributeNS(null, "style", "font-size: 0.5em");
+    title.setAttributeNS(null, "fill", "currentColor");
     parent.appendChild(title);
     return title;
 };
@@ -64,7 +64,7 @@ function createUnit(parent, x, y, width, height, padding)
     unit.setAttributeNS(null, "x", x+width-padding);
     unit.setAttributeNS(null, "y", y+padding*2);
     unit.setAttributeNS(null, "text-anchor", "end");
-    //unit.setAttributeNS(null, "style", "font-size: 0.5em");
+    unit.setAttributeNS(null, "fill", "currentColor");
     parent.appendChild(unit);
     return unit;
 };
@@ -76,7 +76,31 @@ function createText(parent, x, y, width, height, padding)
     text.setAttributeNS(null, "x", x+width-padding);
     text.setAttributeNS(null, "y", y+height-5);
     text.setAttributeNS(null, "text-anchor", "end");
-    //text.setAttributeNS(null, "style", "font-size: 2em");
+    text.setAttributeNS(null, "fill", "currentColor");
+    parent.appendChild(text);
+    return text;
+};
+
+function createText1(parent, x, y, width, height, padding)
+{
+    var text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute("class", "text1");
+    text.setAttributeNS(null, "x", x+width-padding);
+    text.setAttributeNS(null, "y", y+height-20);
+    text.setAttributeNS(null, "text-anchor", "end");
+    text.setAttributeNS(null, "fill", "currentColor");
+    parent.appendChild(text);
+    return text;
+};
+
+function createText2(parent, x, y, width, height, padding)
+{
+    var text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute("class", "text2");
+    text.setAttributeNS(null, "x", x+width-padding);
+    text.setAttributeNS(null, "y", y+height-5);
+    text.setAttributeNS(null, "text-anchor", "end");
+    text.setAttributeNS(null, "fill", "currentColor");
     parent.appendChild(text);
     return text;
 };
@@ -193,28 +217,35 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
         x -= div;
     }
     grid.setAttributeNS(null, "d", d);
+    var g = document.createElementNS(SVG_NS, 'g');
+    history.appendChild(g);
+    g.setAttributeNS(null, "text-anchor", "middle");
+    g.setAttributeNS(null, "stroke", "none");
+    g.setAttributeNS(null, "fill", "currentColor");
     var unitX = document.createElementNS(SVG_NS, 'text');
-    history.appendChild(unitX);
+    g.appendChild(unitX);
     var xx = 3;
     var yy = height/2;
     unitX.setAttributeNS(null, "x", 0);
     unitX.setAttributeNS(null, "y", 0);
-    unitX.setAttributeNS(null, "text-anchor", "middle");
-    unitX.setAttributeNS(null, "stroke-width", "0.05");
     unitX.setAttributeNS(null, "transform", "translate("+xx+", "+yy+") rotate(-90) ");
     var unitTextX = document.createTextNode(div+" "+unitString);
     unitX.appendChild(unitTextX);
     var unitY = document.createElementNS(SVG_NS, 'text');
-    history.appendChild(unitY);
+    g.appendChild(unitY);
     xx = width/2;
     yy = height-1;
     unitY.setAttributeNS(null, "x", xx);
     unitY.setAttributeNS(null, "y", yy);
-    unitY.setAttributeNS(null, "text-anchor", "middle");
-    unitY.setAttributeNS(null, "stroke-width", "0.05");
     var unitTextY = document.createTextNode(un);
     unitY.appendChild(unitTextY);
-    return history;
+    var polyline = document.createElementNS(SVG_NS, 'polyline');
+    history.appendChild(polyline);
+    polyline.setAttributeNS(null, "class", "history-graph");
+    polyline.setAttributeNS(null, "fill", "none");
+    polyline.setAttributeNS(null, "stroke", "currentColor");
+    polyline.setAttributeNS(null, "stroke-width", "0.02em");
+    return [history, polyline];
 };
 
 function createInclinoMeter(parent, r)
@@ -239,8 +270,10 @@ function createInclinoMeter(parent, r)
     {
         return Math.abs(a-180);
     });
+    scale.setAttributeNS(null, "class", "inclino-scale");
+    scale.setAttributeNS(null, "fill", "currentColor");
     g.appendChild(scale);
-    scale.setAttributeNS(null, "font-size", "0.5em");
+    //scale.setAttributeNS(null, "font-size", "0.5em");
     
     var ball = document.createElementNS(SVG_NS, 'circle');
     g.appendChild(ball);
@@ -299,7 +332,8 @@ function createCompass(parent, r)
     var scale = createCircleScale(1.01, 0.06);
     compass.appendChild(scale);
     scale.setAttributeNS(null, "transform", "scale("+r+")");
-    scale.setAttributeNS(null, "font-size", "0.005em");
+    scale.setAttributeNS(null, "class", "compass-scale");
+    scale.setAttributeNS(null, "fill", "currentColor");
     /*
     if (haveNSWE)
     {

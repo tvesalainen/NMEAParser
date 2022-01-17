@@ -77,6 +77,7 @@ public class CommandLine extends LoggingCommandLine
         context.addServlet(ResourceServlet.class, "*.gif");
         context.addServlet(ResourceServlet.class, "*.png");
         context.addServlet(ResourceServlet.class, "*.ico");
+        context.addServlet(PrefsServlet.class, "/prefs");
         SessionHandler sessionHandler = new SessionHandler();
         context.setSessionHandler(sessionHandler);
         handlers.addHandler(context);

@@ -19,12 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     Author     : Timo Vesalainen <timo.vesalainen@iki.fi>
 */
 
-* {
-    touch-action: pan-y;
-}
 :root {
-    --red: red;
+    --text: black;
+    --background: white;
 }
+
+body {
+    touch-action: pan-y;
+    background-color: var(--background) 
+}
+
 .DAY {
     
 }
@@ -34,16 +38,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 }
 
 .NIGHT {
-    --red: black;
+    --text: pink;
+    --background: gray;
 }
 
 .gauge {
-    font-family: sans-serif, Arial, Helvetica;
-    
+    font-family: sans-serif, Arial, Helvetica;   
     /*stroke: black;
     fill: black;*/
 }
-
 
 .title {
     font-size: 0.5em;
@@ -54,10 +57,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 .text {
     font-size: 2.4em;
+    color: var(--text);
+    /*font-weight: bolder;*/
+}
+.text1, .text2 {
+    font-size: 1em;
+    color: var(--text);
     /*font-weight: bolder;*/
 }
 
- .long {
+ .long .text {
     font-size: 0.5em;
  }
 
@@ -69,16 +78,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 }
 
 .frame {
-    stroke: black;
+    stroke: var(--text);
     stroke-width: 1px;
 }
 
 .history {
-    stroke: black;
+    stroke: var(--text);
     font-size: 0.1em;
 }
 .inclino {
-    stroke: black;
+    stroke: var(--text);
+}
+.inclino-scale {
+    stroke: none;
+    font-size: 0.5em;
 }
 .inclino-ball {
     fill: black;
@@ -107,4 +120,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     fill: black;
 }
 .compass {
+    stroke: var(--text);
+}
+
+.compass-scale {
+    stroke: none;
+    font-size: 0.005em;
 }

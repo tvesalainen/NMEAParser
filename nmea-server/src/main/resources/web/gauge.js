@@ -24,6 +24,31 @@ function Gauge(element, seq)
     this.property = element.getAttribute("data-property");
     switch (this.property)
     {
+        case "tworow":
+            this.property1 = element.getAttribute("data-property1");
+            this.property2 = element.getAttribute("data-property2");
+            this.svg = new Svg(-50,40,100,40);
+            this.svg.setFrame();
+            this.request = {event : this.event, property : [this.property1, this.property2]};
+            this.call = function(data)
+            {
+                var json = JSON.parse(data);
+                var name = json["name"];
+                var value = json["value"];
+                if (value)
+                {
+                    switch (name)
+                    {
+                        case this.property1:
+                            this.svg.setText1(value);
+                            break;
+                        case this.property2:
+                            this.svg.setText2(value);
+                            break;
+                    }
+                }
+            };
+            break;
         case "inclino":
             this.svg = new Svg(-50,40,100,40);
             this.svg.inclino(45);

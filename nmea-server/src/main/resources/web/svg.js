@@ -74,6 +74,22 @@ function Svg(x, y, width, height)
         }
         this.text.innerHTML = str;
     };
+    this.setText1 = function(str)
+    {
+        if (!this.text1)
+        {
+            this.text1 = createText1(this.svg, this.x, this.y, this.width, this.height, this.padding);
+        }
+        this.text1.innerHTML = str;
+    };
+    this.setText2 = function(str)
+    {
+        if (!this.text2)
+        {
+            this.text2 = createText2(this.svg, this.x, this.y, this.width, this.height, this.padding);
+        }
+        this.text2.innerHTML = str;
+    };
     this.setHistory = function(history, min, max)
     {
         if (history > 0)
@@ -84,10 +100,9 @@ function Svg(x, y, width, height)
             this.gap = max - min;
             this.ratioX = this.historyMillis/this.width;
             this.ratioY = this.gap/this.height;
-            this.history = createHistory(this.svg, history, min, max, this.width, this.height, this.unit.innerHTML);
-            this.polyline = document.createElementNS(this.svgNS, 'polyline');
-            this.history.appendChild(this.polyline);
-            this.polyline.setAttributeNS(null, "stroke-width", "0.02em");
+            var arr = createHistory(this.svg, history, min, max, this.width, this.height, this.unit.innerHTML);
+            this.history = arr[0];
+            this.polyline = arr[1];
             this.data = [];
             refreshables.push(this);
         }
@@ -152,13 +167,20 @@ function Svg(x, y, width, height)
         var duration = time - firstTime;
         var range = firstRange - value;
         var left = value*duration/range;
+        var eta = new Date(time+left);
+        var min = eta.getMinutes();
+        if (min.length === 1)
+        {
+            min = "0"+min;
+        }
+        this.setText1(`${eta.getDate()}.${eta.getMonth()+1}. ${eta.getHours()}:${min}`);
         left /= 60000;
         var m = (left % 60).toFixed(0);
         left /= 60;
         var h = (left % 60).toFixed(0);
         left /= 24;
-        var d = (left % 24).toFixed(0);
-        this.setText(`${d}d${h}h${m}m`);
+        var d = left.toFixed(0);
+        this.setText2(`${d}d${h}h${m}m`);
     };
     this.setRoll = function(roll)
     {
@@ -234,7 +256,7 @@ function Svg(x, y, width, height)
     this.setHistoryData = function(array)
     {
         this.data = array;
-    }
+    };
     this.refresh = function()
     {
         var arr = [];

@@ -17,13 +17,10 @@
 package org.vesalainen.nmea.server;
 
 import java.time.Clock;
-import org.vesalainen.json.JSONBuilder;
-import org.vesalainen.math.UnitType;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
-import web.I18n;
 
 /**
  *
