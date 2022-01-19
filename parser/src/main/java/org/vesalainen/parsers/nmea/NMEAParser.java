@@ -99,7 +99,7 @@ import org.vesalainen.util.CharSequences;
     @Rule(left = "nmeaSentence", value = "ths c trueHeading c status"),
     @Rule(left = "nmeaSentence", value = "tll c targetNumber c destinationWaypointLocation c targetName c targetTime c targetStatus c referenceTarget"),
     @Rule(left = "nmeaSentence", value = "ttm c targetNumber c targetDistance c bearingFromOwnShip c bearingUnit c targetSpeed c targetCourse c courseUnit c distanceOfCPA c timeToCPA c distanceUnit c targetName c targetStatus c referenceTarget"),
-    @Rule(left = "nmeaSentence", value = "txt c totalNumberOfMessages c messageNumber c targetName c message"),
+    @Rule(left = "nmeaSentence", value = "txt c message"),
     @Rule(left = "nmeaSentence", value = "vhw c waterHeading c waterHeading c waterSpeed c waterSpeed"),
     @Rule(left = "nmeaSentence", value = "vlw c waterDistance c waterDistanceSinceReset"),
     @Rule(left = "nmeaSentence", value = "vtg c track c track c speed c speed faaModeIndicator"),
@@ -378,16 +378,15 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
     {
         data.setTargetName(name);
     }
-    @Rule
-    protected void message()
-    {
-    }
-    @Rule("string")
+    @Rule("integer c integer c integer c string")
     protected void message(
+            int totalNumberOfSentences,
+            int sentenceNumber,
+            int textIdentifier,
             String message, 
             @ParserContext("data") NMEAObserver data)
     {
-        data.setMessage(message);
+        data.setMessage(totalNumberOfSentences, sentenceNumber, textIdentifier, message);
     }
     @Rule
     protected int sequentialMessageID()
@@ -574,6 +573,7 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             float starboardRudderSensor,
             @ParserContext("data") NMEAObserver data)
     {
+        data.setRudderSensor(starboardRudderSensor);
         data.setStarboardRudderSensor(starboardRudderSensor);
     }
 

@@ -392,7 +392,7 @@ public class AbstractNMEAObserver implements NMEAObserver
     }
 
     @Override
-    public void setMessage(String message)
+    public void setMessage(NMEAMessage message)
     {
     }
 
@@ -803,6 +803,16 @@ public class AbstractNMEAObserver implements NMEAObserver
 
     @Override
     public void xdrGroup(char type, float value, char unit, String name)
+    {
+    }
+
+    @Override
+    public void setRudderSensor(float rudderSensor)
+    {
+    }
+
+    @Override
+    public void setMessage(int totalNumberOfSentences, int sentenceNumber, int textIdentifier, String message)
     {
     }
 

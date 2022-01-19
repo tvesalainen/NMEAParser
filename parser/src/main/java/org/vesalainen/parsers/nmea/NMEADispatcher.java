@@ -128,4 +128,41 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
         }
     }
 
+    @Override
+    public void setMessage(int totalNumberOfSentences, int sentenceNumber, int textIdentifier, String message)
+    {
+        if (totalNumberOfSentences == 1)
+        {
+            setMessage(new Message(textIdentifier, message));
+        }
+        else
+        {
+            throw new UnsupportedOperationException("multi messages not supported yet");
+        }
+    }
+
+    private static class Message implements NMEAMessage
+    {
+        private int id;
+        private String msg;
+
+        public Message(int id, String msg)
+        {
+            this.id = id;
+            this.msg = msg;
+        }
+        
+        @Override
+        public int getTextIdentifier()
+        {
+            return id;
+        }
+
+        @Override
+        public String getMessage()
+        {
+            return msg;
+        }
+        
+    }
 }

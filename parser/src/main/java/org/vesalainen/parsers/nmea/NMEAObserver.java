@@ -628,6 +628,15 @@ public interface NMEAObserver extends Transactional
      * @param starboardRudderSensor 
      */
     @NMEA0183({RSA})
+    @Unit(value=DEGREE, min=0, max=360)
+    void setRudderSensor(float rudderSensor);
+    /**
+     * RSA
+     * Starboard (or single) rudder sensor, "-" means TURN To Port
+     * @param starboardRudderSensor 
+     */
+    @NMEA0183({RSA})
+    @Unit(value=DEGREE, min=0, max=360)
     void setStarboardRudderSensor(float starboardRudderSensor);
     /**
      * RSA
@@ -635,6 +644,7 @@ public interface NMEAObserver extends Transactional
      * @param portRudderSensor 
      */
     @NMEA0183({RSA})
+    @Unit(value=DEGREE, min=0, max=360)
     void setPortRudderSensor(float portRudderSensor);
     /**
      * VHW
@@ -687,7 +697,13 @@ public interface NMEAObserver extends Transactional
      * @param message 
      */
     @NMEA0183({TXT})
-    void setMessage(String message);
+    void setMessage(int totalNumberOfSentences, int sentenceNumber, int textIdentifier, String message);
+    /**
+     * TXT
+     * @param message 
+     */
+    @NMEA0183({TXT})
+    void setMessage(NMEAMessage message);
     /**
      * Proprietary sentences start with $P. Proprietary type is the string
      * following that prefix. E.g. $PGRMI,... GRMI is the type.
