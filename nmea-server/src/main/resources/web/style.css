@@ -88,7 +88,7 @@ body.NIGHT {
 }
 
  .long .text {
-    font-size: 0.5em;
+    font-size: 1em;
  }
 
 .frame {
@@ -99,6 +99,16 @@ body.NIGHT {
 .history {
     stroke: var(--text);
     font-size: 0.1em;
+}
+.history-graph {
+    stroke: var(--text);
+}
+.rudder {
+    stroke: var(--text);
+}
+.rudder-scale {
+    stroke: none;
+    font-size: 0.5em;
 }
 .inclino {
     stroke: var(--text);
@@ -119,7 +129,7 @@ body.NIGHT {
 .boat {
     stroke: blue;
 }
-.rudder {
+.boat-rudder {
     stroke: red;
 }
 .cog {

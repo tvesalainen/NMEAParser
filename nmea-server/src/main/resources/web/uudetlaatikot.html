@@ -17,11 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <html>
     <head>
-        <title>Boat data Page 1</title>
+        <title>Boat data Page1</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel='prev' href='page3.html'>
-        <link rel='next' href='page2.html'>
         <link rel="stylesheet" href="w3.css">
         <link rel="stylesheet" href="style.css">        
         <script src="jquery-3.6.0.js"></script>
@@ -36,13 +34,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <div  class="w3-row">
             <div class="w3-col m12">
                 <div class="w3-col s6">
-                    <div class="w3-col s12 gauge" data-property="depthOfWater">
+                    <div class="w3-col s12 gauge" data-property="message">
                     </div>
-                    <div class="w3-col s12 gauge" data-property="waterSpeed">
+                    <div class="w3-col s12 gauge" data-property="localDateTime" data-title="time" data-unit="local" onclick="changeZoneOffset(this)">
                     </div>
-                    <div class="w3-col s6 gauge" data-property="trueWindAngle">
+                    <div class="w3-col s6 gauge" data-property="waterTemperature">
                     </div>
-                    <div class="w3-col s6 gauge" data-property="trueWindSpeed">
+                    <div class="w3-col s6 gauge" data-property="trueHeading">
                     </div>
                 </div>
                 <div class="w3-col s6 gauge" data-property="tacktical">
@@ -52,41 +50,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
         <div class="w3-row">
+            <div class="w3-col s4 m4 l4 gauge" data-property="trueWindSpeed">
+            </div>
+            <div class="w3-col s4 m4 l4 gauge" data-property="trueWindAngle">
+            </div>
             <div class="w3-col s4 m4 l4 gauge" data-property="speedOverGround">
-            </div>
-            <div class="w3-col s4 m4 l4 gauge" data-property="trueHeading">
-            </div>
-            <div class="w3-col s4 m4 l4 gauge" data-property="trackMadeGood">
             </div>
         </div>
         <div class="w3-row">
             <div class="w3-col s3 gauge" data-property="inclino">
             </div>
-            <div class="w3-col s3 gauge" data-property="rudder">
+            <div class="w3-col s3 gauge" data-property="outsideTemperature">
             </div>
-            <div class="w3-col s3 gauge" data-property="officialWindSpeed">
+            <div class="w3-col s3 gauge" data-property="atmosphericPressure">
             </div>
             <div class="w3-col s3 gauge" data-property="officialWindAngle">
             </div>
         </div>
         <div class="w3-row">
-            <div class="w3-col s3 gauge" data-property="bearingToDestination">
+            <div class="w3-col s3 gauge" data-property="relativeWindAngle">
             </div>
-            <div class="w3-col s3 gauge" data-property="rangeToDestination">
-            </div>
-            <div class="w3-col s3 gauge" data-property="destinationClosingVelocity">
+            <div class="w3-col s3 gauge" data-property="relativeWindSpeed">
             </div>
             <div class="w3-col s3 gauge" data-property="estimatedTimeOfArrival">
             </div>
-        </div>
-                <div class="w3-row">
-            <div class="w3-col s3 gauge" data-property="waterTemperature">
-            </div>
-            <div class="w3-col s3 gauge" data-property="outsideTemperature">
-            </div>
-            <div class="w3-col s3 gauge" data-property="atmosphericPressure">
-            </div>
-            <div class="w3-col s3 xgauge" data-property="">
+            <div class="w3-col s3 gauge" data-property="tworow" data-property1="latitude" data-property2="longitude" data-title="position">
             </div>
         </div>
     </body>

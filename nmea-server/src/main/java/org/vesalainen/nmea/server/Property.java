@@ -83,6 +83,8 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
     {
         switch (property.getName())
         {
+            case "message":
+                return new MessageProperty(executor, property);
             case "estimatedTimeOfArrival":
                 return new ETAProperty(executor, property);
             case "dayPhase":
@@ -110,14 +112,14 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
 
     protected void advertise(Observer observer)
     {
-        String description = I18n.get().getString(name);
+        String description = I18n.get(observer.getLocale()).getString(name);
         UnitType unit = getUnit();
         observer.fireEvent(
             JSONBuilder
                 .object()
-                .string("name", this::getName)
-                .string("title", ()->description)
-                .string("unit", unit::getUnit)
+                .value("name", this::getName)
+                .value("title", ()->description)
+                .value("unit", unit::getUnit)
                 .number("history", this::getHistoryMillis)
                 .number("min", this::getMin)
                 .number("max", this::getMax)
@@ -141,7 +143,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         while (iterator.hasNext())
         {
             Observer next = iterator.next();
-            if (!next.accept(time, value.toString()))
+            if (!next.accept(time, value))
             {
                 iterator.remove();
             }

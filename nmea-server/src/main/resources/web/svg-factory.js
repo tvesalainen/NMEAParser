@@ -244,10 +244,44 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     polyline.setAttributeNS(null, "class", "history-graph");
     polyline.setAttributeNS(null, "fill", "none");
     polyline.setAttributeNS(null, "stroke", "currentColor");
-    polyline.setAttributeNS(null, "stroke-width", "0.02em");
+    polyline.setAttributeNS(null, "stroke-width", "0.1em");
     return [history, polyline];
 };
 
+function createRudderMeter(parent, r)
+{
+    var size = 1.5*r;
+    var g = document.createElementNS(SVG_NS, 'g');
+    g.setAttributeNS(null, "class", "rudder");
+    
+    var scale1 = createCompassScale2(size, 0, 0, 140, 220, 1, 2);
+    scale1.setAttributeNS(null, "stroke-width", 0.3);
+    g.appendChild(scale1);
+
+    var scale5 = createCompassScale2(size, 0, 0, 140, 220, 5, 3);
+    scale5.setAttributeNS(null, "stroke-width", 0.5);
+    g.appendChild(scale5);
+
+    var scale10 = createCompassScale2(size, 0, 0, 140, 221, 10, 3.5);
+    scale10.setAttributeNS(null, "stroke-width", 0.5);
+    g.appendChild(scale10);
+
+    var scale = createCircleScale2(size*1.15, 0, 0, 150, 211, 0.06, function(a)
+    {
+        return Math.abs(a-180);
+    });
+    scale.setAttributeNS(null, "class", "rudder-scale");
+    scale.setAttributeNS(null, "fill", "currentColor");
+    g.appendChild(scale);
+    //scale.setAttributeNS(null, "font-size", "0.5em");
+    
+    var rudder = createRudder(g, r);
+    rudder.setAttributeNS(null, "class", "rudder");
+    rudder.setAttributeNS(null, "fill", "currentColor");
+    
+    parent.appendChild(g);
+    return rudder;
+};
 function createInclinoMeter(parent, r)
 {
     var size = 1.5*r;
@@ -503,13 +537,12 @@ function createRudder(parent, r)
     var rudderGroup = document.createElementNS(SVG_NS, 'g');
     var g = document.createElementNS(SVG_NS, 'g');
     rudderGroup.appendChild(g);
-    g.setAttributeNS(null, "transform", `translate(0,-4) scale(${r/20})`);
+    g.setAttributeNS(null, "transform", `translate(0,25) scale(${r/50})`);
     var rudder = document.createElementNS(SVG_NS, 'path');
     g.appendChild(rudder);
-    rudder.setAttributeNS(null, "class", "rudder");
-    rudder.setAttributeNS(null, "stroke", "blue");
-    rudder.setAttributeNS(null, "stroke-width", "1");
-    rudder.setAttributeNS(null, "d", "M 0 40 l 0 9");
+    rudder.setAttributeNS(null, "stroke-width", "0.1");
+    rudder.setAttributeNS(null, "transform", "rotate(0)");
+    rudder.setAttributeNS(null, "d", "M 0 -5 C -2 -5 -5 -5 -5 15 C -5 20 -3 35 0 50 C 3 35 5 20 5 15 C 5 -5 2 -5 0 -5");
     parent.appendChild(rudderGroup);
     return rudderGroup;
 }

@@ -29,6 +29,8 @@ import org.eclipse.jetty.server.session.DefaultSessionIdManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.log.JavaUtilLog;
+import org.eclipse.jetty.util.log.Log;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.util.LoggingCommandLine;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
@@ -65,6 +67,9 @@ public class CommandLine extends LoggingCommandLine
         nmeaService.start();
         config("NMEA Service started");
         
+        JavaUtilLog log = new JavaUtilLog();
+        Log.setLog(log);    // make jetty use java.util.logger
+        
         Server server = new Server(httpPort);
         HandlerList handlers = new HandlerList();
         ServletContextHandler context = new ServletContextHandler();
@@ -78,6 +83,7 @@ public class CommandLine extends LoggingCommandLine
         context.addServlet(ResourceServlet.class, "*.png");
         context.addServlet(ResourceServlet.class, "*.ico");
         context.addServlet(PrefsServlet.class, "/prefs");
+        context.addServlet(I18nServlet.class, "/i18n");
         SessionHandler sessionHandler = new SessionHandler();
         context.setSessionHandler(sessionHandler);
         handlers.addHandler(context);

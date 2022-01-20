@@ -19,15 +19,6 @@
 /* global Svg, Title, Svg, serverMillis */
 
 var offsetMillis;
-var refreshables = [];
-
-function refresh()
-{
-    for (var i=0;i<refreshables.length;i++)
-    {
-        refreshables[i].refresh();
-    }
-}
 
 function setServerTime(serverMillis)
 {
@@ -55,14 +46,21 @@ function Svg(x, y, width, height)
         this.svg.appendChild(createFrame(this.x, this.y, this.width, this.height));
     };
 
-    this.setTitle = function(title, unit)
+    this.setTitle = function(title)
     {
         if (!this.title)
         {
             this.title = createTitle(this.svg, this.x, this.y, this.padding);
-            this.unit = createUnit(this.svg, this.x, this.y, this.width, this.height, this.padding);
         }
         this.title.innerHTML = title;
+    };
+
+    this.setUnit = function(unit)
+    {
+        if (!this.unit)
+        {
+            this.unit = createUnit(this.svg, this.x, this.y, this.width, this.height, this.padding);
+        }
         this.unit.innerHTML = unit;
     };
 
@@ -104,7 +102,6 @@ function Svg(x, y, width, height)
             this.history = arr[0];
             this.polyline = arr[1];
             this.data = [];
-            refreshables.push(this);
         }
     };
     this.tacktical = function(r)
@@ -126,6 +123,14 @@ function Svg(x, y, width, height)
         
         createTriangle(this.svg);
         this.cog =  createCOG(this.svg, size);
+    };
+    this.rudder = function(r)
+    {
+        this.rudderAngle = createRudderMeter(this.svg, r);
+    };
+    this.setRudder = function(r)
+    {
+        this.rudderAngle.setAttributeNS(null, "transform", "rotate("+r+")");
     };
     this.inclino = function(r)
     {
@@ -230,7 +235,7 @@ function Svg(x, y, width, height)
         {
             this.cog.setAttributeNS(null, "display", "none");
         }
-    }
+    };
     this.setTrueWindSpeed = function(knots)
     {
         var d = getWindArrowPath(knots);
@@ -257,24 +262,27 @@ function Svg(x, y, width, height)
     {
         this.data = array;
     };
-    this.refresh = function()
+    this.tick = function()
     {
-        var arr = [];
-        var time = getServerTime();
-        if (time)
+        if (this.data)
         {
-            var len = this.data.length/2;
-            for (var i=0;i<len;i++)
+            var arr = [];
+            var time = getServerTime();
+            if (time)
             {
-                var t = this.data[2*i];
-                var v = this.data[2*i+1];
-                arr.push((this.historyMillis-(time-t))/this.ratioX);
-                arr.push((this.max - v)/this.ratioY); // (max-min)-(v-min)
+                var len = this.data.length/2;
+                for (var i=0;i<len;i++)
+                {
+                    var t = this.data[2*i];
+                    var v = this.data[2*i+1];
+                    arr.push((this.historyMillis-(time-t))/this.ratioX);
+                    arr.push((this.max - v)/this.ratioY); // (max-min)-(v-min)
+                }
+                var v = this.data[2*(len-1)+1];
+                arr.push(this.historyMillis/this.ratioX);
+                arr.push((this.max - v)/this.ratioY);
+                this.polyline.setAttributeNS(null, "points", arr.join(' '));
             }
-            var v = this.data[2*(len-1)+1];
-            arr.push(this.historyMillis/this.ratioX);
-            arr.push((this.max - v)/this.ratioY);
-            this.polyline.setAttributeNS(null, "points", arr.join(' '));
         }
     };
 }

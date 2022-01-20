@@ -17,6 +17,8 @@
 package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import org.vesalainen.lang.Primitives;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
 import org.vesalainen.nmea.router.Router;
@@ -28,6 +30,8 @@ import org.vesalainen.nmea.router.Router;
 public class MulticastNMEAEndpoint extends Endpoint<MulticastNMEAType,UnconnectedDatagramChannel>
 {
 
+    private boolean loop;
+
     public MulticastNMEAEndpoint(MulticastNMEAType multicastNMEAType, Router router)
     {
         super(multicastNMEAType, router);
@@ -37,7 +41,29 @@ public class MulticastNMEAEndpoint extends Endpoint<MulticastNMEAType,Unconnecte
     public UnconnectedDatagramChannel createChannel() throws IOException
     {
         String address = endpointType.getAddress();
-        return UnconnectedDatagramChannel.open(address, 10110, bufferSize, true, false);
+        return UnconnectedDatagramChannel.open(address, 10110, bufferSize, true, loop);
+    }
+
+    @Override
+    public void run()
+    {
+        this.loop = Primitives.getBoolean(endpointType.isLoop(), false);
+        if (loop)
+        {
+            try
+            {
+                channel = createChannel();
+                Thread.sleep(Long.MAX_VALUE);
+            }
+            catch (InterruptedException | IOException ex)
+            {
+                log(Level.SEVERE, "", ex);
+            }
+        }
+        else
+        {
+            super.run();
+        }
     }
     
 }

@@ -102,6 +102,7 @@
         <xsd:complexContent>
             <xsd:extension base="endpointType">
                 <xsd:attribute name="address" type="addressType" use="required"/>
+                <xsd:attribute name="loop" type="xsd:boolean"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
@@ -110,6 +111,7 @@
             <xsd:extension base="endpointType">
                 <xsd:attribute name="address" type="addressType" use="required"/>
                 <xsd:attribute name="port" type="portType" use="required"/>
+                <xsd:attribute name="loop" type="xsd:boolean"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>

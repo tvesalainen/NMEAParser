@@ -38,29 +38,31 @@ public class Observer
     protected final String event;
     protected final Property property;
     protected final WeakReference<SseHandler> sseHandler;   // weak reference to not prevent Sse from gc which can happen with not updated property
-    private String last;
+    private Object last;
     private final String name;
     private final SseWriter writer;
     private final SseWriter empty;
     private long time;
-    private String value;
+    private Object value;
+    private final Locale locale;
 
-    private Observer(String event, Property property, SseHandler sseHandler)
+    private Observer(String event, Property property, SseHandler sseHandler, Locale locale)
     {
         this.event = event;
         this.property = property;
         this.name = property.getName();
         this.sseHandler = new WeakReference<>(sseHandler);
+        this.locale = locale;
         this.writer = new SseWriter(event,
             JSONBuilder
                 .object()
-                .string("name", ()->name)
+                .value("name", ()->name)
                 .number("time", ()->time)
-                .string("value", ()->value));
+                .value("value", ()->value));
         this.empty = new SseWriter(event, JSONBuilder.object());
     }
     
-    public static Observer getInstance(String event, Property property, String unit, String decimals, SseHandler sseHandler)
+    public static Observer getInstance(String event, Property property, String unit, String decimals, SseHandler sseHandler, Locale locale)
     {
         NMEAProperties p = NMEAProperties.getInstance();
         Class<?> type = property.getType();
@@ -72,10 +74,10 @@ public class Observer
                 case "long":
                 case "float":
                 case "double":
-                    return new DoubleObserver(event, property, unit, decimals, sseHandler);
+                    return new DoubleObserver(event, property, unit, decimals, sseHandler, locale);
             }
         }
-        return new Observer(event, property, sseHandler);
+        return new Observer(event, property, sseHandler, locale);
     }
 
     public boolean fireEvent(Element element)
@@ -96,7 +98,7 @@ public class Observer
         throw new UnsupportedOperationException("not supported");
     }
     
-    public boolean accept(long time, String arg)
+    public boolean accept(long time, Object arg)
     {
         SseHandler sse = sseHandler.get();
         if (sse != null)
@@ -119,14 +121,19 @@ public class Observer
             return false;
         }
     }
+
+    public Locale getLocale()
+    {
+        return locale;
+    }
     
     public static class DoubleObserver extends Observer
     {
         private DoubleFunction<String> format;
         
-        public DoubleObserver(String event, Property property, String unit, String decimals, SseHandler sseHandler)
+        public DoubleObserver(String event, Property property, String unit, String decimals, SseHandler sseHandler, Locale locale)
         {
-            super(event, property, sseHandler);
+            super(event, property, sseHandler, locale);
             UnitType  from = property.getUnit();
             UnitType  to = unit!=null?UnitType.valueOf(unit):property.getUnit();
             int dec = decimals!=null?Integer.parseInt(decimals):property.getDecimals();

@@ -21,7 +21,10 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -55,7 +58,7 @@ public class SseServlet extends HttpServlet
         lock.lock();
         try
         {
-            log(req.toString());
+            //log(req.toString());
             HttpSession session = req.getSession(true);
             SseHandler sseHandler = (SseHandler) session.getAttribute(SseHandler.class.getName());
             if (sseHandler == null)
@@ -63,7 +66,7 @@ public class SseServlet extends HttpServlet
                 throw new ServletException("SSE not started for session");
             }
             Map<String, String[]> parameterMap = req.getParameterMap();
-            propertyServer.addSse(parameterMap, sseHandler);
+            propertyServer.addSse(parameterMap, sseHandler, req.getLocale());
         }
         finally
         {
@@ -77,7 +80,7 @@ public class SseServlet extends HttpServlet
         lock.lock();
         try
         {
-            log(req.toString());
+            //log(req.toString());
             HttpSession session = req.getSession(true);
             resp.setContentType("text/event-stream");
             resp.setCharacterEncoding("UTF-8");
@@ -101,8 +104,9 @@ public class SseServlet extends HttpServlet
     public class SseHandler implements Runnable
     {
         private AsyncContext asyncContext;
-        private BlockingQueue<SseWriter> queue = new ArrayBlockingQueue<>(16);
+        private BlockingQueue<SseWriter> queue = new ArrayBlockingQueue<>(64);
         private boolean disconnected = false;
+        private CountDownLatch latch = new CountDownLatch(1);
 
         public SseHandler(AsyncContext asyncContext)
         {
@@ -112,11 +116,23 @@ public class SseServlet extends HttpServlet
 
         public boolean fireEvent(SseWriter event)
         {
+            if (latch != null)
+            {
+                try
+                {
+                    latch.await();
+                }
+                catch (InterruptedException ex)
+                {
+                    throw new RuntimeException(ex);
+                }
+            }
             if (!disconnected)
             {
                 boolean ok = queue.offer(event);
                 if (!ok)
                 {
+                    log("queue is full");
                     disconnected = true;
                 }
                 return ok;
@@ -132,12 +148,18 @@ public class SseServlet extends HttpServlet
         {
             try
             {
+                log("Sse started");
+                latch.countDown();
+                latch = null;
                 while (true)
                 {
                     SseWriter event = queue.take();
                     PrintWriter writer = asyncContext.getResponse().getWriter();
                     event.write(writer);
-                    writer.flush();
+                    if (queue.isEmpty())
+                    {
+                        writer.flush();
+                    }
                 }
             }
             catch (IllegalStateException ex)
@@ -152,6 +174,8 @@ public class SseServlet extends HttpServlet
         
         private void close()
         {
+            log("close sse handler");
+            disconnected = true;
             asyncContext.complete();
         }
 

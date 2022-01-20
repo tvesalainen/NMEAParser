@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <html>
     <head>
-        <title>Boat data page2</title>
+        <title>Boat data page 2 (all)</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel='prev' href='index.html'>
@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </head>
     <body class="NIGHT">
 
-
+    <div>
         <div class="w3-row">
             <div class="w3-col s6 m4 l2 gauge" data-property="atmosphericPressure"> <! --- Barometri --->
             </div>
@@ -80,22 +80,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         </div>
 
         <div class="w3-row">
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading"> <! ---  --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="localDateTime" data-title="time" data-unit="local" onclick="changeZoneOffset(this)">
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindAngle"> <! ---   --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="utcDateTime" data-title="time" data-unit="utc">
             </div>
             <div class="w3-col s6 m4 l2 gauge" data-property="relativeWindSpeed"><! ---  --->
             </div>
             <div class="w3-col s6 m4 l2 gauge" data-property="relativeWindAngle"> <! ---   --->
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="waterTemperature"> <! ---  --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="bearingToDestination"> <! ---  --->
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed"> <! ---  --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="rudder"> <! ---  --->
             </div>
         </div>
         
         <div class="w3-row">
-            <div class="w3-col s6 m4 l2 gauge" data-property="destinationClosingVelocity"><! --- VMG --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="destinationClosingVelocity"><! --- VMG to WP--->
             </div>
             <div class="w3-col s6 m4 l2 gauge long" data-property="toWaypoint"><! --- waypoint name  --->
             </div>
@@ -103,27 +103,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
             <div class="w3-col s6 m4 l2 gauge" data-property="rangeToDestination"> <!--- matka pisteelle  --->
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property=""> <! ---  --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="tworow" data-property1="latitude" data-property2="longitude" data-title="position">
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property=""> <! ---  --->
+            <div class="w3-col s6 m4 l2 gauge" data-property="inclino">
             </div>
         </div>
 
         <div class="w3-row">
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading">temp cerbosta <!---  --->
+            <div class="w3-col s6 m4 l2 xgauge" data-property="localDateTime" data-title="time" data-unit="local">
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindAngle">kello utc <!---   --->
+            <div class="w3-col s6 m4 l2 xgauge" data-property="utcDateTime" data-title="time" data-unit="utc">
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="trueWindSpeed">kello local <!---  --->
+            <div class="w3-col s6 m4 l2 xgauge" data-property="trueHeading">ruorikulma
             </div>
             <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed"> SOC <!---  --->
             </div>
             <div class="w3-col s6 m4 l2 xgauge" data-property="waterTemperature"> Current to/from battery <!---  --->
             </div>
-            <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed">
+            <div class="w3-col s6 m4 l2 xgauge" data-property="waterSpeed">temp cerbosta <!---  --->
             </div>
         </div>
-        
+    </div>   
 <! --- 
 
 

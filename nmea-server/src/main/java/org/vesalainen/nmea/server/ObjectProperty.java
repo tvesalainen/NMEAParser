@@ -28,10 +28,10 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-class ObjectProperty extends Property
+public class ObjectProperty extends Property
 {
     
-    protected TimeToLiveList<String> history;
+    protected TimeToLiveList<Object> history;
 
     public ObjectProperty(CachedScheduledThreadPool executor, PropertyType property)
     {
@@ -65,7 +65,7 @@ class ObjectProperty extends Property
         super.set(property, time, arg);
         if (history != null)
         {
-            history.add(time, arg.toString());
+            history.add(time, (T) arg);
         }
     }
 
@@ -75,13 +75,13 @@ class ObjectProperty extends Property
         super.attach(observer);
         if (history != null)
         {
-            List<String> list = new ArrayList<>();
+            List<Object> list = new ArrayList<>();
             history.forEach((t, d) ->
             {
                 list.add(String.valueOf(t));
                 list.add(d);
             });
-            observer.fireEvent(JSONBuilder.object().stringArray("historyData", list::stream));
+            observer.fireEvent(JSONBuilder.object().objectArray("historyData", list::stream));
         }
     }
     

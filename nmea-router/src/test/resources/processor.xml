@@ -10,17 +10,17 @@
             <route prefix="$EC" target="Prc"/>
         </tcp-endpoint>
         <n2k-gateway bus="can1" name="N2K" enable="true">
-            <route prefix="!AIVDM" target="TCP Prc Cmp"/>
-            <route prefix="!AIVDO" target="TCP"/>
-            <route prefix="$HCHDT" target="TCP Prc"/>
-            <route prefix="$HCHDG" target="TCP"/>
-            <route prefix="$SDDPT" target="TCP Prc"/>
-            <route prefix="$HCRMC" target="TCP Prc"/>
-            <route prefix="$SDMTW" target="TCP"/>
-            <route prefix="$SDVHW" target="TCP Prc"/>
-            <route prefix="$WIMWV" target="TCP Prc"/>
-            <route prefix="$U0XDR" target="Prc"/>
-            <route prefix="$U2XDR" target="TCP Prc"/>
+            <route prefix="!AIVDM" target="TCP Prc Cmp Net"/>
+            <route prefix="!AIVDO" target="TCP Net"/>
+            <route prefix="$HCHDT" target="TCP Prc Net"/>
+            <route prefix="$HCHDG" target="TCP Net"/>
+            <route prefix="$SDDPT" target="TCP Prc Net"/>
+            <route prefix="$HCRMC" target="TCP Prc Net"/>
+            <route prefix="$SDMTW" target="TCP Net"/>
+            <route prefix="$SDVHW" target="TCP Prc Net"/>
+            <route prefix="$WIMWV" target="TCP Prc Net"/>
+            <route prefix="$U0XDR" target="Prc Net"/>
+            <route prefix="$U2XDR" target="TCP Prc Net"/>
             <source talkerId="WI" source="1"/>
             <source talkerId="HC" source="16"/>
             <source talkerId="SD" source="35"/>
@@ -41,7 +41,7 @@
             <anchor-manager directory="c:\\temp"/>
             <sunset-manager modbusHost="192.168.214.222" unitId="100" relayAddress="807" batteryNumber="1"/>
         </processor>
-        <multicast-nmea-0183 address="224.0.0.3" name="Net" enable="true">
+        <multicast-nmea-0183 address="224.0.0.3" loop="true" name="Net" enable="true">
             <route prefix="$GPRMC" target="TCP"/>
             <route prefix="$IIMWV" target=""/>
             <route prefix="!AIVDM" target="Prc Cmp"/>

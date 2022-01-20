@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* global refresh, eventSource */
+/* global refresh, eventSource i18n */
 
 "use strict";
 
@@ -53,13 +53,13 @@ $(document).ready(function () {
         $.post("/sse", {event: "dayPhase", property: "dayPhase"});
     };
     function dayPhase(event)
-    {/*
+    {
         var json = JSON.parse(event.data);
         var l = document.body.classList;
         l.remove("DAY");
         l.remove("NIGHT");
         l.remove("TWILIGHT");
-        l.add(json["value"]);*/
+        l.add(json["value"]);
     };
     function fired(event)
     {
@@ -67,16 +67,17 @@ $(document).ready(function () {
         g.call(event.data);
         g.activate();
     };
-    function passivate()
+    function tick()
     {
         for (var g in gauge)
         {
-            gauge[g].passivate();
+            if (gauge[g].tick)
+            {
+                gauge[g].tick();
+            }
         }
     };
-    
-    setInterval(refresh, 1000);
-    setInterval(passivate, 2000);
+    setInterval(tick, 1000);
 
 });
 

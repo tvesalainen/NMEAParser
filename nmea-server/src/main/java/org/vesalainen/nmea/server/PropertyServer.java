@@ -19,6 +19,7 @@ package org.vesalainen.nmea.server;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,7 +81,7 @@ public class PropertyServer extends AbstractPropertySetter
         });*/
     }
 
-    public void addSse(Map<String,String[]> map, SseHandler sseHandler)
+    public void addSse(Map<String,String[]> map, SseHandler sseHandler, Locale locale)
     {
         String[] arr = map.get("event");
         String event = arr[0];
@@ -96,7 +97,7 @@ public class PropertyServer extends AbstractPropertySetter
             {
                 throw new IllegalArgumentException(name+" not a property");
             }
-            Observer observer = Observer.getInstance(event, p, null, null, sseHandler);
+            Observer observer = Observer.getInstance(event, p, null, null, sseHandler, locale);
             p.attach(observer);
         }
     }

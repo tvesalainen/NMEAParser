@@ -21,12 +21,13 @@ import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
+import org.vesalainen.util.logging.AttachedLogger;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class DayPhaseProperty extends ObjectProperty
+public class DayPhaseProperty extends ObjectProperty implements AttachedLogger
 {
     private Clock clock;
     private SolarWatch solarWatch;
@@ -41,12 +42,16 @@ public class DayPhaseProperty extends ObjectProperty
     private void setDayPhase(DayPhase phase)
     {
         super.set("dayPhase", clock.millis(), phase);
+        info("new day phase %s", phase);
     }
     
     @Override
     protected void advertise(Observer observer)
     {
-        observer.accept(clock.millis(), solarWatch.getPhase().toString());
+        if (solarWatch != null)
+        {
+            observer.accept(clock.millis(), solarWatch.getPhase());
+        }
     }
     
     @Override
@@ -72,7 +77,7 @@ public class DayPhaseProperty extends ObjectProperty
         }
         if (solarWatch == null && !Double.isNaN(latitude) && !Double.isNaN(longitude))
         {
-            solarWatch = new SolarWatch(clock, executor, ()->latitude, ()->longitude, ()->12);
+            solarWatch = new SolarWatch(clock, executor, ()->latitude, ()->longitude, 12);
             solarWatch.addObserver(this::setDayPhase);
             solarWatch.start();
         }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea-server nmeaMulticastAddress="224.0.0.3" nmeaMulticastPort="10110" httpPort="8081">
+    <property name="rudderSensor"/>
     <property name="dayPhase"/>
     <property name="estimatedTimeOfArrival" source="rangeToDestination" unit="UNITLESS" history="1h"/>
     <property name="officialWindSpeed" source="windSpeedOverGround" min="0.0" max="50" unit="KNOT" decimals="1" average="10m"/>
@@ -8,14 +9,14 @@
     <property name="batteryCurrent0" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
     <property name="latitude" min="-90.0" max="90.0" unit="" decimals="3"/>
     <property name="longitude" min="-180.0" max="180.0" unit="" decimals="3"/>
-    <property name="speedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1"/>
+    <property name="speedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1" average="1s" period="1s"/>
     <property name="trackMadeGood" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
     <property name="magneticVariation" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
     <property name="trueHeading" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
     <property name="relativeWindAngle" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
     <property name="relativeWindSpeed" min="0.0" max="100.0" unit="KNOT" decimals="1"/>
     <property name="trueWindAngle" min="0.0" max="360.0" unit="DEGREE" decimals="0"/>
-    <property name="trueWindSpeed" min="0.0" max="50" unit="KNOT" decimals="1" history="2h"/>
+    <property name="trueWindSpeed" min="0.0" max="50" unit="KNOT" decimals="1" average="1s" period="1s" history="2h"/>
     <property name="depthOfWater" min="0.0" max="50" unit="METER" decimals="1" history="2h"/>
     <property name="depthBelowTransducer" min="0.0" max="100.0" unit="METER" decimals="1"/>
     <property name="depthOffsetOfWater" min="0.0" max="10.0" unit="METER" decimals="1"/>
@@ -41,4 +42,28 @@
     <property name="bearingToDestination"/>
     <property name="destinationClosingVelocity"/>
     <property name="arrivalStatus"/>
+    <property name="talkerId"/>
+    <property name="messageType"/>
+    <property name="status"/>
+    <property name="origin"/>
+    <property name="faaModeIndicator"/>
+    <property name="epochMillis"/>
+    <property name="hour"/>
+    <property name="minute"/>
+    <property name="second"/>
+    <property name="day"/>
+    <property name="month"/>
+    <property name="year"/>
+    <property name="maximumRangeScale"/>
+    <property name="trueTrackMadeGood"/>
+    <property name="magneticTrackMadeGood"/>
+    <property name="gpsQualityIndicator"/>
+    <property name="numberOfSatellitesInView"/>
+    <property name="horizontalDilutionOfPrecision"/>
+    <property name="antennaAltitude"/>
+    <property name="totalNumberOfMessages"/>
+    <property name="messageNumber"/>
+    <property name="targetName"/>
+    <property name="message"/>
+    <property name="batteryTemperature0"/>
 </nmea-server>
