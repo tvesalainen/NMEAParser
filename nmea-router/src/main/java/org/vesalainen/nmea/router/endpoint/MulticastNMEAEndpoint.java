@@ -17,10 +17,17 @@
 package org.vesalainen.nmea.router.endpoint;
 
 import java.io.IOException;
+import static java.lang.Thread.NORM_PRIORITY;
+import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.nio.channels.UnconnectedDatagramChannel;
 import org.vesalainen.nmea.jaxb.router.MulticastNMEAType;
+import org.vesalainen.nmea.router.NMEAReader;
 import org.vesalainen.nmea.router.Router;
 
 /**
@@ -52,12 +59,29 @@ public class MulticastNMEAEndpoint extends Endpoint<MulticastNMEAType,Unconnecte
         {
             try
             {
-                channel = createChannel();
+                config("Multicast in loop mode");
+                config("registerMBean %s", objectName);
+                ManagementFactory.getPlatformMBeanServer().registerMBean(this, objectName);
+                onStart();
                 Thread.sleep(Long.MAX_VALUE);
             }
-            catch (InterruptedException | IOException ex)
+            catch (Throwable ex)
             {
-                log(Level.SEVERE, "", ex);
+                warning("%s stopped because of %s", name, ex);
+                log(SEVERE, ex, "%s stopped because of %s", name, ex);
+            }
+            finally
+            {
+                try
+                {
+                    onStop();
+                    ManagementFactory.getPlatformMBeanServer().unregisterMBean(objectName);
+                    config("unregisterMBean %s", objectName);
+                }
+                catch (IOException | InstanceNotFoundException | MBeanRegistrationException ex)
+                {
+                    log(Level.SEVERE, null, ex);
+                }
             }
         }
         else
