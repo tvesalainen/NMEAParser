@@ -21,6 +21,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import org.vesalainen.nmea.util.Stoppable;
+import org.vesalainen.parsers.nmea.NMEAMessage;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.parsers.nmea.ais.AISService;
@@ -61,19 +62,26 @@ public class AISLog implements Stoppable
     
     private void newTarget(LifeCycle status, int mmsi, AISTarget target)
     {
-        if (status == OPEN)
+        try
         {
-            for (NMEASentence sentence : target.getStaticReport())
+            double cpaDistance = target.getCPADistance();
+            double cpaTime = target.getCPATime();
+            if (Double.isFinite(cpaDistance) && Double.isFinite(cpaTime))
             {
-                try
+                NMEASentence txt = NMEASentence.txt(String.format("cpaD=%.1fNM cpaT=%.1fmin", cpaDistance, cpaTime));
+                txt.writeTo(channel);
+            }
+            if (status == OPEN)
+            {
+                for (NMEASentence sentence : target.getStaticReport())
                 {
                     sentence.writeTo(channel);
                 }
-                catch (IOException ex)
-                {
-                    aisService.log(Level.SEVERE, ex, "AISLog target=%s", target);
-                }
             }
+        }
+        catch (IOException ex)
+        {
+            aisService.log(Level.SEVERE, ex, "AISLog target=%s", target);
         }
     }
 }

@@ -11,7 +11,7 @@
         </tcp-endpoint>
         <n2k-gateway bus="can1" name="N2K" enable="true">
             <route prefix="!AIVDM" target="TCP Prc Cmp Net"/>
-            <route prefix="!AIVDO" target="TCP Net"/>
+            <route prefix="!AIVDO" target="TCP Prc Net"/>
             <route prefix="$HCHDT" target="TCP Prc Net"/>
             <route prefix="$HCHDG" target="TCP Net"/>
             <route prefix="$SDDPT" target="TCP Prc Net"/>
@@ -30,7 +30,8 @@
             <source talkerId="U2" source="32"/>
         </n2k-gateway>
         <processor dataAccessPort="10111" name="Prc" enable="true">
-            <route prefix="$??TLL" target="TCP"/>
+            <route prefix="$??TLL" target="TCP Net"/>
+            <route prefix="$??TXT" target="TCP Net"/>
             <route prefix="$??MWV" target=""/>
             <true-wind-source overGround="true"/>
             <tracker directory="c:\\temp"/>

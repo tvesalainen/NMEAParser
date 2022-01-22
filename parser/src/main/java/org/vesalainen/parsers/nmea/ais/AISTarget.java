@@ -92,44 +92,52 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     }
     private void calc()
     {
-        if (updated && ownTarget != null)
+        if (ownTarget != null)
         {
-            double x0 = getLatitude()-ownTarget.getLatitude();
-            double x1 = deltaLatitude()-ownTarget.deltaLatitude();
-            double x2 = getLongitude()-ownTarget.getLongitude();
-            double x3 = deltaLongitude()-ownTarget.deltaLongitude();
-            double x4 = x0*x0;
-            double x5 = x0*x1;
-            double x6 = x1*x0;
-            double x7 = x5+x6;
-            double x8 = x1*x1;
-            double x9 = x2*x2;
-            double x10 = x2*x3;
-            double x11 = x3*x2;
-            double x12 = x10+x11;
-            double x13 = x3*x3;
-            double x14 = x4+x9;
-            double x15 = x7+x12;
-            double x16 = x8+x13;
-            double x17 = 1*x15;
-            double x18 = 2*x16;
-            // distance is sqrt((x16*t*t+x15*t+x14)
-            // derivative of distance is 2*x16+x15 (= x18*t+x17)
-            // x16 >= 0
-            // x15 < 0 when distance minimum is in future
-            distance = Math.sqrt(x14)*60.0; // t = 0
-            if (x15 < 0)
+            if (updated)
             {
-                double t = (-x17/x18);
-                cpaTime = t/60000.0;
-                cpaDistance = Math.sqrt((x16*t+x15)*t+x14)*60.0;
+                double x0 = getLatitude()-ownTarget.getLatitude();
+                double x1 = deltaLatitude()-ownTarget.deltaLatitude();
+                double x2 = getLongitude()-ownTarget.getLongitude();
+                double x3 = deltaLongitude()-ownTarget.deltaLongitude();
+                double x4 = x0*x0;
+                double x5 = x0*x1;
+                double x6 = x1*x0;
+                double x7 = x5+x6;
+                double x8 = x1*x1;
+                double x9 = x2*x2;
+                double x10 = x2*x3;
+                double x11 = x3*x2;
+                double x12 = x10+x11;
+                double x13 = x3*x3;
+                double x14 = x4+x9;
+                double x15 = x7+x12;
+                double x16 = x8+x13;
+                double x17 = 1*x15;
+                double x18 = 2*x16;
+                // distance is sqrt((x16*t*t+x15*t+x14)
+                // derivative of distance is 2*x16+x15 (= x18*t+x17)
+                // x16 >= 0
+                // x15 < 0 when distance minimum is in future
+                distance = Math.sqrt(x14)*60.0; // t = 0
+                if (x15 < 0)
+                {
+                    double t = (-x17/x18);
+                    cpaTime = t/60000.0;
+                    cpaDistance = Math.sqrt((x16*t+x15)*t+x14)*60.0;
+                }
+                else
+                {
+                    cpaTime = Double.NaN;
+                    cpaDistance = Double.NaN;
+                }
+                updated = false;
             }
-            else
-            {
-                cpaTime = Double.NaN;
-                cpaDistance = Double.NaN;
-            }
-            updated = false;
+        }
+        else
+        {
+            cpaTime = Double.NaN;
+            cpaDistance = Double.NaN;
         }
     }
 

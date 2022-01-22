@@ -46,7 +46,7 @@ public class MessageProperty extends Property
 
         public JSONMessage(NMEAMessage msg)
         {
-            this.msg = String.format("{id:%s,msg:%s", 
+            this.msg = String.format("{\"id\":%s,\"msg\":%s}", 
                     JSONObject.numberToString(msg.getTextIdentifier()), 
                     JSONObject.quote(msg.getMessage()));
         }

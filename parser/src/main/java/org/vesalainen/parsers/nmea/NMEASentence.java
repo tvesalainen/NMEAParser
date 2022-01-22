@@ -241,18 +241,18 @@ public class NMEASentence
      */
     public static NMEASentence txt(CharSequence msg)
     {
-        return txt(()->msg);
+        return txt(()->0, ()->msg);
     }
-    public static NMEASentence txt(Supplier<CharSequence> msg)
+    public static NMEASentence txt(IntSupplier id, Supplier<CharSequence> msg)
     {
-        return txt(()->U0, msg);
+        return txt(()->U0, id, msg);
     }
-    public static NMEASentence txt(Supplier<TalkerId> talkerId, Supplier<CharSequence> msg)
+    public static NMEASentence txt(Supplier<TalkerId> talkerId, IntSupplier id, Supplier<CharSequence> msg)
     {
         return builder(talkerId, TXT)
                 .add(1)
                 .add(1)
-                .add()
+                .bind(id)
                 .bindString(msg)
                 .build();
     }

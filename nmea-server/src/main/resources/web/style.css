@@ -33,24 +33,31 @@ body.DAY {
     --background: white;
 }
 
+body.TWILIGHT {
+    --background: black;
+}
+
 body.NIGHT {
     --background: black;
 }
 
 .DAY .active {
     --text: black;
-    --background: white;
 }
 
 .DAY .passive {
+    --text: lightgray;
+}
+
+.TWILIGHT .active {
+    --text: white;
+    --background: black;
+}
+
+.TWILIGHT .passive {
     --text: gray;
-    --background: lightgray;
+    --background: black;
 }
-
-.TWILIGHT {
-    
-}
-
 .NIGHT .active {
     --text: white;
     --background: black;
@@ -108,6 +115,7 @@ body.NIGHT {
 }
 .rudder-scale {
     stroke: none;
+    fill: var(--text);
     font-size: 0.5em;
 }
 .inclino {
@@ -115,10 +123,11 @@ body.NIGHT {
 }
 .inclino-scale {
     stroke: none;
+    fill: var(--text);
     font-size: 0.5em;
 }
 .inclino-ball {
-    fill: black;
+    fill: var(--text);
 }
 .inclino-port {
     stroke: red;
@@ -130,7 +139,7 @@ body.NIGHT {
     stroke: blue;
 }
 .boat-rudder {
-    stroke: red;
+    fill: var(--text);
 }
 .cog {
     stroke: red;
@@ -149,6 +158,7 @@ body.NIGHT {
 
 .compass-scale {
     stroke: none;
+    fill: var(--text);
     font-size: 0.005em;
 }
 
