@@ -26,7 +26,7 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class MessageProperty extends Property
+public class MessageProperty extends ObjectProperty
 {
     
     public MessageProperty(CachedScheduledThreadPool executor, PropertyType property)

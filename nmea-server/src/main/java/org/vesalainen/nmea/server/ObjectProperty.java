@@ -78,7 +78,7 @@ public class ObjectProperty extends Property
             List<Object> list = new ArrayList<>();
             history.forEach((t, d) ->
             {
-                list.add(String.valueOf(t));
+                list.add(t);
                 list.add(d);
             });
             observer.fireEvent(JSONBuilder.object().objectArray("historyData", list::stream));

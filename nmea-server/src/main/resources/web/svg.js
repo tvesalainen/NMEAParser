@@ -18,7 +18,7 @@
 
 /* global Svg, Title, Svg, serverMillis */
 
-var offsetMillis;
+var offsetMillis=0;
 
 function setServerTime(serverMillis)
 {

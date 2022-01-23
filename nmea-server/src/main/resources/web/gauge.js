@@ -29,10 +29,10 @@ function Gauge(element, seq)
      switch (this.property)
     {
         case "message":
-            this.svg = new Svg(-50,40,100,40);
-            this.svg.setFrame();
+            this.div.setAttribute("class", "active");
+            this.table = document.createElement("table");
+            this.div.appendChild(this.table);
             this.request = {event : this.event, property : this.property};
-            this.svg.svg.setAttributeNS(null, "class", "active");
             this.call = function(data)
             {
                 var json = JSON.parse(data);
@@ -40,8 +40,40 @@ function Gauge(element, seq)
                 var msg = json["value"];
                 if (msg)
                 {
-                    var mid = msg["id"];
-                    var msg = msg["msg"];
+                    var time = json["time"];
+                    var mid = msg.id;
+                    var msg = msg.msg;
+                    this.newMessage(time, mid, msg);
+                }
+                var history = json["historyData"];
+                if (history)
+                {
+                    for (var i=0;i<history.length;i+=2)
+                    {
+                        var t = history[i];
+                        var m = history[i+1];
+                        this.newMessage(t, m.id, m.msg);
+                    }
+                }
+            };
+            this.newMessage = function(time, id, msg)
+            {
+                var tr = document.createElement("tr");
+                var ti = document.createElement("td");
+                var date = new Date(time+zoneOffset);
+                ti.innerHTML = date.toTimeString().substring(0, 8);
+                tr.appendChild(ti);
+                var tm = document.createElement("td");
+                tm.innerHTML = msg;
+                tr.appendChild(tm);
+                var first = this.table.firstElementChild;
+                if (first)
+                {
+                    this.table.insertBefore(tr, first);
+                }
+                else
+                {
+                    this.table.appendChild(tr);
                 }
             };
             this.tick = function()
@@ -61,7 +93,7 @@ function Gauge(element, seq)
             });
             this.tick = function()
             {
-                var d = new Date(getServerTime()+zoneOffset);
+                var d = localTime();
                 var is = d.toISOString();
                 this.svg.setText1(is.substr(0, 10));
                 this.svg.setText2(is.substr(11, 8));
@@ -286,7 +318,10 @@ function Gauge(element, seq)
             th.setUnit(res);
         });
     }
-    this.div.appendChild(this.svg.svg);
+    if (this.svg)
+    {
+        this.div.appendChild(this.svg.svg);
+    }
     this.refreshTime = 0;
     this.activate = function()
     {
@@ -294,7 +329,7 @@ function Gauge(element, seq)
         this.refreshTime = now.getTime();
         if (!this.status || this.status !== "active")
         {
-            this.svg.svg.setAttributeNS(null, 'class', 'active');
+            this.div.setAttribute('class', 'active');
             this.status = "active";
         }
     };
@@ -305,7 +340,7 @@ function Gauge(element, seq)
         {
             if (!this.status || this.status === "active")
             {
-                this.svg.svg.setAttributeNS(null, 'class', 'passive');
+                this.div.setAttribute('class', 'passive');
                 this.status = "passive";
             }
         }
@@ -339,4 +374,8 @@ function changeZoneOffset(th)
     }
     zoneOffset = o;
     $.post("/prefs", {zoneOffset: o});
+}
+function localTime()
+{
+    return new Date(getServerTime()+zoneOffset);
 }

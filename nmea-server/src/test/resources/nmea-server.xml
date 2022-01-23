@@ -64,6 +64,6 @@
     <property name="totalNumberOfMessages"/>
     <property name="messageNumber"/>
     <property name="targetName"/>
-    <property name="message"/>
+    <property name="message" history="2h"/>
     <property name="batteryTemperature0"/>
 </nmea-server>
