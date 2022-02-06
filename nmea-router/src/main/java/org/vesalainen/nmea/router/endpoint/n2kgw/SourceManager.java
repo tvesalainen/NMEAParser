@@ -18,15 +18,17 @@ package org.vesalainen.nmea.router.endpoint.n2kgw;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.vesalainen.can.j1939.AddressManager.Name;
 import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.jaxb.router.SourceType;
 import org.vesalainen.parsers.nmea.TalkerId;
 import static org.vesalainen.parsers.nmea.TalkerId.*;
+import org.vesalainen.text.CamelCase;
 import org.vesalainen.util.CollectionHelp;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -37,7 +39,8 @@ import org.vesalainen.util.logging.JavaLogging;
 public class SourceManager extends JavaLogging
 {
     private Map<Byte,Source> map = new HashMap<>();
-    private Iterator<TalkerId> free;
+    private Set<TalkerId> free;
+    private List<SourceType> source;
 
     public SourceManager()
     {
@@ -47,21 +50,47 @@ public class SourceManager extends JavaLogging
     public SourceManager(N2KGatewayType type)
     {
         super(SourceManager.class);
-        Set<TalkerId> freeSet = new HashSet<>();
-        CollectionHelp.addAll(freeSet, U0, U1, U2, U3, U4, U5, U6, U7, U8);
+        free = new HashSet<>();
+        CollectionHelp.addAll(free, U0, U1, U2, U3, U4, U5, U6, U7, U8);
         if (type != null)
         {
-            for (SourceType sourceType : type.getSource())
+            this.source = type.getSource();
+        }
+    }
+    public void nameChanged(Name name)
+    {
+        SourceType res = null;
+        for (SourceType st : source)
+        {
+            if (st.getName() != null)
             {
-                TalkerId id = TalkerId.valueOf(sourceType.getTalkerId());
-                Source source = new Source(id, Primitives.getInt(sourceType.getInstanceOffset(), 0));
-                map.put((byte)sourceType.getSource(), source);
-                freeSet.remove(id);
+                if (name.getName() == st.getName())
+                {
+                    res = st;
+                    break;
+                }
+            }
+            String modelId = st.getModelId();
+            String manufacturerSModelId = name.getManufacturerSModelId();
+            if (modelId != null && manufacturerSModelId != null)
+            {
+                if (CamelCase.camelCase(modelId).equals(CamelCase.camelCase(manufacturerSModelId)))
+                {
+                    res = st;
+                    config("resolved name %s with address %d", modelId, name.getSource());
+                    break;
+                }
             }
         }
-        this.free = freeSet.iterator();
+        if (res != null)
+        {
+            Source old = map.put((byte)name.getSource(), new Source(res));
+            if (old != null)
+            {
+                free.add(old.id);
+            }
+        }
     }
-    
     public int getInstanceOffset(int canId)
     {
         int sa = PGN.sourceAddress(canId);
@@ -82,9 +111,9 @@ public class SourceManager extends JavaLogging
         }
         else
         {
-            if (free.hasNext())
+            if (!free.isEmpty())
             {
-                TalkerId next = free.next();
+                TalkerId next = free.iterator().next();
                 source = new Source(next, 0);
                 map.put((byte)sa, source);
                 return next;
@@ -102,6 +131,11 @@ public class SourceManager extends JavaLogging
             this.id = id;
             this.instanceOffset = instanceOffset;
         }
-        
+
+        public Source(SourceType type)
+        {
+            this.id = TalkerId.valueOf(type.getTalkerId());
+            this.instanceOffset = Primitives.getInt(type.getInstanceOffset(), 0);
+        }
     }
 }

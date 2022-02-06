@@ -26,9 +26,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import org.vesalainen.can.AbstractCanService;
 import org.vesalainen.can.candump.CanDumpService;
+import org.vesalainen.can.j1939.AddressManager;
 import org.vesalainen.nmea.jaxb.router.N2KGatewayType;
 import org.vesalainen.nmea.util.Stoppable;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
  *
@@ -49,17 +51,20 @@ public class N2KGateway implements Stoppable
         this.sourceManager = sourceManager;
     }
 
-    public static N2KGateway getInstance(N2KGatewayType type, WritableByteChannel out, ExecutorService executor) throws IOException
+    public static N2KGateway getInstance(N2KGatewayType type, WritableByteChannel out, CachedScheduledThreadPool executor) throws IOException
     {
         SourceManager sourceManager = new SourceManager(type);
         NMEASender nmeaSender = new NMEASender(sourceManager, out);
         AISSender aisSender = new AISSender(out);
         AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
         canService.addN2K();
+        AddressManager addressManager = new AddressManager();
+        addressManager.addNameObserver(sourceManager::nameChanged);
+        canService.addPgnHandler(addressManager);
         return new N2KGateway(canService, nmeaSender, aisSender, sourceManager);
     }
 
-    public static N2KGateway getInstance(String bus, Path in, Path out, ExecutorService executor) throws IOException
+    public static N2KGateway getInstance(String bus, Path in, Path out, CachedScheduledThreadPool executor) throws IOException
     {
         SeekableByteChannel ch = Files.newByteChannel(out, WRITE, CREATE, TRUNCATE_EXISTING);
         SourceManager sourceManager = new SourceManager();
@@ -67,6 +72,9 @@ public class N2KGateway implements Stoppable
         AISSender aisSender = new AISSender(ch);
         AbstractCanService canService = new CanDumpService(bus, in, executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
         canService.addN2K();
+        AddressManager addressManager = new AddressManager();
+        addressManager.addNameObserver(sourceManager::nameChanged);
+        canService.addPgnHandler(addressManager);
         return new N2KGateway(canService, nmeaSender, aisSender, sourceManager);
     }
 

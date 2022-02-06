@@ -129,7 +129,7 @@ public class Observer
     
     public static class DoubleObserver extends Observer
     {
-        private DoubleFunction<String> format;
+        private DoubleFunction<Object> format;
         
         public DoubleObserver(String event, Property property, String unit, String decimals, SseHandler sseHandler, Locale locale)
         {
@@ -160,15 +160,26 @@ public class Observer
                     String fmt = property.getFormat();
                     if (fmt == null)
                     {
-                        fmt = String.format("%%.%df", dec);
+                        if (dec == 0)
+                        {
+                            this.format = (v)->(int)Math.round(v);
+                        }
+                        else
+                        {
+                            double m = Math.pow(10, dec);
+                            this.format = (v)->Math.round(m*v)/m;
+                        }
                     }
-                    String fm = fmt;
-                    this.format = (v)->String.format(fm, v);
+                    else
+                    {
+                        String fm = fmt;
+                        this.format = (v)->String.format(fm, v);
+                    }
                     break;
             }
             if (from != to)
             {
-                DoubleFunction<String> f = this.format;
+                DoubleFunction<Object> f = this.format;
                 this.format = (v)->f.apply(from.convertTo(v, to));
             }
         }

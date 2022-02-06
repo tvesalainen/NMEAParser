@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -44,7 +45,7 @@ public class N2KGatewayT
     {
         Path in = Paths.get("C:\\Users\\tkv\\share", "candump.txt");
         Path out = Paths.get("C:\\Temp", "can2nmea.txt");
-        N2KGateway gw = N2KGateway.getInstance("can1", in, out, Executors.newCachedThreadPool());
+        N2KGateway gw = N2KGateway.getInstance("can1", in, out, new CachedScheduledThreadPool());
         gw.startAndWait();
     }
     

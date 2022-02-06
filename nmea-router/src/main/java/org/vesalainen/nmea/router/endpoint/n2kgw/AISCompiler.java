@@ -18,6 +18,8 @@ package org.vesalainen.nmea.router.endpoint.n2kgw;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.function.Supplier;
+import org.vesalainen.can.ArrayAction;
+import org.vesalainen.can.CanSource;
 import org.vesalainen.can.dbc.MessageClass;
 import org.vesalainen.can.dbc.SignalClass;
 import org.vesalainen.can.j1939.PGN;
@@ -141,8 +143,10 @@ public class AISCompiler extends AbstractNMEACompiler
     }
 
     @Override
-    public Runnable compileBinary(MessageClass mc, SignalClass sc, byte[] buf, int offset, int length)
+    public ArrayAction<AnnotatedPropertyStore> compileBinary(MessageClass mc, SignalClass sc)
     {
+        int length = sc.getSize();
+        int offset = sc.getStartBit();
         if (PGN.pgn(mc.getId()) == AIS_CLASS_B_CS_STATIC_REPORT_PART_B.getPGN())
         {
             if ("Serial_Number".equals(sc.getName()))
@@ -155,8 +159,9 @@ public class AISCompiler extends AbstractNMEACompiler
                 int len = length/8;
                 IntSetter unitSetter = store.getIntSetter("unitModelCode");
                 IntSetter serialSetter = store.getIntSetter("serialNumber");
-                return ()->
+                return (ctx, src)->
                 {
+                    byte[] buf = src.data();
                     try
                     {
                     /*
@@ -194,13 +199,14 @@ public class AISCompiler extends AbstractNMEACompiler
     }
 
     @Override
-    public Runnable compileRaw(MessageClass mc, Supplier<byte[]> rawSupplier)
+    public ArrayAction<AnnotatedPropertyStore> compileRaw(MessageClass mc, Supplier<CanSource> rawSupplier)
     {
         if (!needCompilation)
         {
-            return ()->
+            return (ctx, src)->
             {
-                logger.info("New AIS %s %s", mc.getName(), HexUtil.toString(rawSupplier.get()));
+                byte[] buf = src.data();
+                logger.info("New AIS %s %s", mc.getName(), HexUtil.toString(buf));
             };
         }
         return null;

@@ -162,3 +162,10 @@ body.NIGHT {
     font-size: 0.005em;
 }
 
+.extra { 
+    display: none;
+}
+
+table:hover .extra {
+    display: inline-block;
+}

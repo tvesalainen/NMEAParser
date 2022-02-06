@@ -18,6 +18,9 @@ package org.vesalainen.nmea.router.endpoint.n2kgw;
 
 import java.util.function.LongSupplier;
 import java.util.function.LongToDoubleFunction;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToLongFunction;
+import org.vesalainen.can.CanSource;
 import org.vesalainen.can.dbc.MessageClass;
 import org.vesalainen.can.dbc.SignalClass;
 import static org.vesalainen.can.dbc.ValueType.SIGNED;
@@ -71,40 +74,52 @@ public final class PlainNMEACompiler extends AbstractNMEACompiler
     }
 
     @Override
-    public LongToDoubleFunction compileDoubleBoundCheck(MessageClass mc, SignalClass sc, LongSupplier longSupplier)
+    public ToDoubleFunction<CanSource> compileDoubleBoundCheck(MessageClass mc, SignalClass sc, ToLongFunction<CanSource> toLongFunction)
     {
         // bit field max values usually mean that data is not available.
         int size = sc.getSize();
-        if (sc.getValueType() == SIGNED)
+        if (size == 1)
         {
-            long max = -1L>>>(65-size);
-            long min =-(max+1);
-            return (value)->
+            return (buf)->
             {
-                if (value == max || value == min)
-                {
-                    return Double.NaN;
-                }
-                else
-                {
-                    return value;
-                }
+                return toLongFunction.applyAsLong(buf);
             };
         }
         else
         {
-            long max = -1L>>>(64-size);
-            return (value)->
+            if (sc.getValueType() == SIGNED)
             {
-                if (value == max)
+                long max = -1L>>>(65-size);
+                long min =-(max+1);
+                return (buf)->
                 {
-                    return Double.NaN;
-                }
-                else
+                    long value = toLongFunction.applyAsLong(buf);
+                    if (value == max || value == min)
+                    {
+                        return Double.NaN;
+                    }
+                    else
+                    {
+                        return value;
+                    }
+                };
+            }
+            else
+            {
+                long max = -1L>>>(64-size);
+                return (buf)->
                 {
-                    return value;
-                }
-            };
+                    long value = toLongFunction.applyAsLong(buf);
+                    if (value == max)
+                    {
+                        return Double.NaN;
+                    }
+                    else
+                    {
+                        return value;
+                    }
+                };
+            }
         }
     }
 

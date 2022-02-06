@@ -78,6 +78,10 @@ public class DoubleProperty extends Property
                 {
                     ave.accept(v, t);
                     oldFunc.accept(t, ave.fast());
+                    if (Math.abs(ave.average()-ave.fast()) > 1e-10)
+                    {
+                        throw new IllegalArgumentException();
+                    }
                 };
             }
         }
