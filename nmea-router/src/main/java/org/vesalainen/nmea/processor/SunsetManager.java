@@ -37,7 +37,6 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 public class SunsetManager extends AbstractProcessorTask
 {
     private final CachedScheduledThreadPool executor;
-    private final int batteryNumber;
     private final String modbusHost;
     private final int unitId;
     private final int relayAddress;
@@ -45,14 +44,6 @@ public class SunsetManager extends AbstractProcessorTask
     private @Property Clock clock;
     private @Property double latitude;
     private @Property double longitude;
-    private @Property float batteryVoltage0;
-    private @Property float batteryVoltage1;
-    private @Property float batteryVoltage2;
-    private @Property float batteryVoltage3;
-    private @Property float batteryCurrent0;
-    private @Property float batteryCurrent1;
-    private @Property float batteryCurrent2;
-    private @Property float batteryCurrent3;
     
     private SolarPosition solarPosition;
     private short relay;
@@ -62,29 +53,11 @@ public class SunsetManager extends AbstractProcessorTask
     
     public SunsetManager(SunsetManagerType type, CachedScheduledThreadPool executor)
     {
-        super(MethodHandles.lookup(), 20, MINUTES, props(type.getBatteryNumber()));
+        super(MethodHandles.lookup(), 20, MINUTES);
         this.executor = executor;
-        this.batteryNumber = type.getBatteryNumber();
         this.modbusHost = type.getModbusHost();
         this.unitId = type.getUnitId();
         this.relayAddress = type.getRelayAddress();
-        switch (batteryNumber)
-        {
-            case 0:
-                voltage = ()->batteryVoltage0;
-                break;
-            case 1:
-                voltage = ()->batteryVoltage1;
-                break;
-            case 2:
-                voltage = ()->batteryVoltage2;
-                break;
-            case 3:
-                voltage = ()->batteryVoltage3;
-                break;
-            default:
-                throw new UnsupportedOperationException("battery "+batteryNumber+" not supported");
-        }
         try (ModbusTcpClient modbus = ModbusTcpClient.open(modbusHost))
         {
             relay = modbus.getShort(unitId, relayAddress);
@@ -94,15 +67,6 @@ public class SunsetManager extends AbstractProcessorTask
         {
             throw new RuntimeException(ex);
         }
-    }
-    private static String[] props(int batteryNumber)
-    {
-        return new String[]{
-            "longitude",
-            "latitude",
-            "batteryVoltage"+batteryNumber,
-            "batteryCurrent"+batteryNumber
-        };
     }
     @Override
     protected void commitTask(String reason, Collection<String> updatedProperties)

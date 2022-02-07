@@ -248,7 +248,6 @@
         <xsd:attribute name="modbusHost" type="xsd:string" use="required"/>
         <xsd:attribute name="unitId" type="xsd:unsignedShort" use="required"/>
         <xsd:attribute name="relayAddress" type="xsd:unsignedShort" use="required"/>
-        <xsd:attribute name="batteryNumber" type="xsd:unsignedShort" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="anchorManagerType">
         <xsd:attribute name="directory" type="xsd:string" use="required"/>
