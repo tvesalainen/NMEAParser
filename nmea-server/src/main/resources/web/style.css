@@ -46,7 +46,7 @@ body.NIGHT {
 }
 
 .DAY .passive {
-    --text: lightgray;
+    --text: #e6e6e6;
 }
 
 .TWILIGHT .active {
