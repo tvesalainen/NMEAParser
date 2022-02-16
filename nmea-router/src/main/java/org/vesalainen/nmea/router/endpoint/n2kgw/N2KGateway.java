@@ -23,7 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import static java.nio.file.StandardOpenOption.*;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import org.vesalainen.can.AbstractCanService;
 import org.vesalainen.can.candump.CanDumpService;
 import org.vesalainen.can.j1939.AddressManager;
@@ -56,7 +55,7 @@ public class N2KGateway implements Stoppable
         SourceManager sourceManager = new SourceManager(type);
         NMEASender nmeaSender = new NMEASender(sourceManager, out);
         AISSender aisSender = new AISSender(out);
-        AbstractCanService canService = AbstractCanService.openSocketCand(type.getBus(), executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
+        AbstractCanService canService = AbstractCanService.openCan2Udp(type.getAddress(), type.getPort(), executor, new N2KMessageFactory(nmeaSender, aisSender, sourceManager));
         canService.addN2K();
         AddressManager addressManager = new AddressManager();
         addressManager.addNameObserver(sourceManager::nameChanged);

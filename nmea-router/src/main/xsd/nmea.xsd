@@ -53,7 +53,8 @@
                 <xsd:choice minOccurs="0" maxOccurs="unbounded">
                     <xsd:element name="source" type="sourceType"/>
                 </xsd:choice>
-                <xsd:attribute name="bus" type="xsd:string" use="required"/>
+                <xsd:attribute name="address" type="addressType" use="required"/>
+                <xsd:attribute name="port" type="portType" use="required"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
