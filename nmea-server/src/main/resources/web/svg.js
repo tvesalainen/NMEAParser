@@ -124,6 +124,10 @@ function Svg(x, y, width, height)
         createTriangle(this.svg);
         this.cog =  createCOG(this.svg, size);
     };
+    this.setBoatRudder = function(r)
+    {
+        this.rudder.setAttributeNS(null, "transform", "rotate("+r+")");
+    };
     this.rudder = function(r)
     {
         this.rudderAngle = createRudderMeter(this.svg, r);

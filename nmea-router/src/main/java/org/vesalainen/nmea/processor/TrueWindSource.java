@@ -73,6 +73,7 @@ public class TrueWindSource extends AbstractProcessorTask
                 trueWindCalculator.setSpeedAngle(trueHeading);
                 mwv.writeTo(channel);
                 
+                trueWindCalculator.setZeroAngle(0);
                 trueWindCalculator.setSpeed(speedOverGround);
                 trueWindCalculator.setSpeedAngle(trackMadeGood);
                 wog.writeTo(channel);

@@ -160,18 +160,7 @@ public class Observer
                     String fmt = property.getFormat();
                     if (fmt == null)
                     {
-                        if (dec == 0)
-                        {
-                            this.format = (v)->(int)Math.round(v);
-                        }
-                        else
-                        {
-                            double m = Math.pow(10, dec);
-                            this.format = (v)->Math.round(m*v)/m;
-                        }
-                    }
-                    else
-                    {
+                        fmt = String.format("%%.%df", dec);
                         String fm = fmt;
                         this.format = (v)->String.format(fm, v);
                     }

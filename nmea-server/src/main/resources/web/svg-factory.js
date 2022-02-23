@@ -544,7 +544,7 @@ function createRudder(parent, r)
     rudder.setAttributeNS(null, "transform", "rotate(0)");
     rudder.setAttributeNS(null, "d", "M 0 -5 C -2 -5 -5 -5 -5 15 C -5 20 -3 35 0 50 C 3 35 5 20 5 15 C 5 -5 2 -5 0 -5");
     parent.appendChild(rudderGroup);
-    return rudderGroup;
+    return rudder;
 }
 function createTriangle(parent)
 {

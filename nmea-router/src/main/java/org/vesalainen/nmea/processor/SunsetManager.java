@@ -17,13 +17,12 @@
 package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
-import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import java.util.function.DoubleSupplier;
+import static java.util.logging.Level.SEVERE;
 import org.vesalainen.code.Property;
 import org.vesalainen.modbus.ModbusTcpClient;
 import org.vesalainen.navi.SolarPosition;
@@ -47,9 +46,6 @@ public class SunsetManager extends AbstractProcessorTask
     
     private SolarPosition solarPosition;
     private short relay;
-    private DoubleSupplier voltage;
-    private float switchOffVoltage = Float.MAX_VALUE;
-    private float switchOnVoltage;
     
     public SunsetManager(SunsetManagerType type, CachedScheduledThreadPool executor)
     {
@@ -75,22 +71,6 @@ public class SunsetManager extends AbstractProcessorTask
         {
             initSunset();
         }
-        /*
-        float volt = (float) voltage.getAsDouble();
-        if (volt < switchOnPower)
-        {
-            info("voltage %f < %f switching on", volt, switchOnPower);
-            switchRelay((short)1);
-        }
-        else
-        {
-            if (volt > switchOffPower)
-            {
-                info("voltage %f > %f switching off", volt, switchOnPower);
-                switchRelay((short)1);
-            }
-        }
-*/
     }
 
     @Override
@@ -131,18 +111,14 @@ public class SunsetManager extends AbstractProcessorTask
     }
     private void sunrise()
     {
-        float pow = (float) voltage.getAsDouble();
-        switchOffVoltage = max(switchOffVoltage, pow);
-        info("sunrise %fV new off=%fV", pow, switchOffVoltage);
+        info("sunrise");
         switchRelay((short)0);
         solarPosition.set(ZonedDateTime.now(clock), longitude, latitude);
         scheduleSunset();
     }    
     private void sunset()
     {
-        float pow = (float) voltage.getAsDouble();
-        switchOnVoltage = min(switchOnVoltage, pow);
-        info("sunset %fV new on=%fV", pow, switchOnVoltage);
+        info("sunset");
         switchRelay((short)1);
         solarPosition.set(ZonedDateTime.now(clock), longitude, latitude);
         scheduleSunrise();
@@ -160,7 +136,7 @@ public class SunsetManager extends AbstractProcessorTask
             }
             catch (IOException ex)
             {
-                throw new RuntimeException(ex);
+                log(SEVERE, ex, "%s", ex.getMessage());
             }
         }
         else

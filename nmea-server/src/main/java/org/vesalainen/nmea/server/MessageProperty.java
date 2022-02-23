@@ -37,7 +37,10 @@ public class MessageProperty extends ObjectProperty
     @Override
     public <T> void set(String property, long time, T value)
     {
-        super.set(property, time, new JSONMessage((NMEAMessage) value));
+        if (value != null)
+        {
+            super.set(property, time, new JSONMessage((NMEAMessage) value));
+        }
     }
     
     private static class JSONMessage implements JSONString

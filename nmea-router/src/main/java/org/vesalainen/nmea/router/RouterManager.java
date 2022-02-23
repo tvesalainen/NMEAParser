@@ -18,12 +18,11 @@ package org.vesalainen.nmea.router;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.*;
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;

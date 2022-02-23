@@ -88,7 +88,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
         }
         catch (Throwable ex)
         {
-            log(SEVERE, ex, "%s stopped because of %s", name, ex);
+            warnBrokenConnection(ex, "%s stopped because of %s", name, ex);
         }
         finally
         {
@@ -186,7 +186,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             catch (Throwable ex)
             {
                 warning("Stopping proxy %s %s", name, ex.getMessage());
-                log(FINEST, ex, "Stopping proxy %s %s", name, ex.getMessage());
+                warnBrokenConnection(ex, "Stopping proxy %s %s", name, ex.getMessage());
             }
         }
         @Override
@@ -201,8 +201,7 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
             }
             catch (Throwable ex)
             {
-                warning("Stopping %s %s", name, ex.getMessage());
-                log(FINEST, ex, "Stopping %s %s", name, ex.getMessage());
+                warnBrokenConnection(ex, "Stopping %s %s", name, ex.getMessage());
             }
             finally
             {
