@@ -165,20 +165,32 @@ public class AISCompiler extends AbstractNMEACompiler
                     byte[] buf = src.data();
                     try
                     {
+                        if (buf[off] != 0)
+                        {
                     /*
                     4 characters are coded to 6-bit ais 0183 characters. Resulting 24 bit
                     are decoded as 4 bits for unit model code and rest 20 bits for serial number.
                     */
-                        int ser = get6Bit(buf[off]);
-                        unitSetter.set(ser>>>2);
-                        ser &= 3;
-                        ser <<= 6;
-                        ser |= get6Bit(buf[off+1]);
-                        ser <<= 6;
-                        ser |= get6Bit(buf[off+2]);
-                        ser <<= 6;
-                        ser |= get6Bit(buf[off+3]);
-                        serialSetter.set(ser);
+                            int ser = get6Bit(buf[off]);
+                            unitSetter.set(ser>>>2);
+                            ser &= 3;
+                            ser <<= 6;
+                            ser |= get6Bit(buf[off+1]);
+                            ser <<= 6;
+                            ser |= get6Bit(buf[off+2]);
+                            ser <<= 6;
+                            ser |= get6Bit(buf[off+3]);
+                            serialSetter.set(ser);
+                        }
+                        else
+                        {
+                    /*
+                            unit has 4 bit in 0183 and serial 20 bit
+                            doesn't fit, but most messages are ok!
+                    */
+                            unitSetter.set(buf[off+1]);
+                            serialSetter.set(buf[off+2]|buf[off+3]<<8);
+                        }
                     }
                     catch (IllegalArgumentException ex)
                     {
