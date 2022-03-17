@@ -41,7 +41,7 @@ import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * @author Timo Vesalainen
- * @see <a href="http://catb.org/gpsd/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
+ * @see <a href="https://gpsd.gitlab.io/gpsd/AIVDM.html">AIVDM/AIVDO protocol decoding</a>
  */
 @GenClassname("org.vesalainen.parsers.nmea.ais.AISParserImpl")
 @GrammarDef(traceLevel=0)
