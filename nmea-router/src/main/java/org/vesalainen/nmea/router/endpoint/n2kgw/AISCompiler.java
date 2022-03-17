@@ -26,6 +26,7 @@ import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.setter.IntSetter;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
+import org.vesalainen.util.HexDump;
 import org.vesalainen.util.HexUtil;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -183,7 +184,7 @@ public class AISCompiler extends AbstractNMEACompiler
                     {
                         unitSetter.set(0);
                         serialSetter.set(0);
-                        warning("%s unitModel/serial cannot be decoded", new String(buf, off, len, US_ASCII));
+                        warning("%s unitModel/serial cannot be decoded\n%s", ex.getMessage(), HexDump.toHex(buf, off, len));
                     }
                 };
             }

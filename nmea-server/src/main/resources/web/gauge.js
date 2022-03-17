@@ -295,11 +295,11 @@ function Gauge(element, seq)
                             if (value > 180)
                             {
                                 var v = 360 - value;
-                                value = ">"+v;
+                                value = "<"+v;
                             }
                             else
                             {
-                                value = "<"+value;
+                                value = ">"+value;
                             }
                             this.svg.setData(json['time'], value);
                         }
