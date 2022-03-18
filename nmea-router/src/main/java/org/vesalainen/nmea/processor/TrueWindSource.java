@@ -24,6 +24,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import static java.util.logging.Level.SEVERE;
 import org.vesalainen.code.Property;
 import static org.vesalainen.math.UnitType.*;
+import org.vesalainen.navi.Navis;
 import org.vesalainen.nmea.jaxb.router.TrueWindSourceType;
 import org.vesalainen.navi.TrueWindCalculator;
 import org.vesalainen.parsers.nmea.NMEASentence;
@@ -39,7 +40,6 @@ public class TrueWindSource extends AbstractProcessorTask
     private @Property float relativeWindAngle;
     private @Property float relativeWindSpeed;
     private @Property float speedOverGround;
-    private @Property float waterSpeed;
 
     private final GatheringByteChannel channel;
     private final TrueWindCalculator trueWindCalculator;
@@ -69,7 +69,9 @@ public class TrueWindSource extends AbstractProcessorTask
                 trueWindCalculator.setRelativeWindAngle(relativeWindAngle);
                 trueWindCalculator.setRelativeWindSpeed(relativeWindSpeed);
 
-                trueWindCalculator.setSpeed(waterSpeed);
+                double driftAngle = Navis.angleDiff(trueHeading, trackMadeGood);
+                double cor = Math.cos(Math.toRadians(driftAngle));
+                trueWindCalculator.setSpeed(speedOverGround*cor);
                 trueWindCalculator.setSpeedAngle(trueHeading);
                 mwv.writeTo(channel);
                 
