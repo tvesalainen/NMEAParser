@@ -1639,8 +1639,26 @@ public abstract class NMEAParser extends NMEATalkerIds implements ParserInfo, Ch
             ) throws IOException
     {
         StringBuilder sb = new StringBuilder();
+        long start = reader.getStart();
+        if (start > 0)
+        {
+            start--;
+            int len = 0;
+            for (int ii=0;ii<80;ii++)
+            {
+                if (reader.get(start) == '\n')
+                {
+                    start++;
+                    break;
+                }
+                start--;
+                len++;
+            }
+            sb.append(reader.getString(start, len));
+        }
+        sb.append("IN=[");
         sb.append(reader.getInput());
-        sb.append('^');
+        sb.append(']');
         int cc = reader.read();
         while (cc != '\n' && cc != -1)
         {

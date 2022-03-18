@@ -603,7 +603,6 @@ protected void airtemp_U1_10(int arg, @ParserContext("aisData") AISObserver aisD
 protected void visibility_U2_6(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void weather_9(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void airdraught_U1_13(int arg, @ParserContext("aisData") AISObserver aisData){}
-protected void description_6_966(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void airdraught_13(int arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_936(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
 protected void text_968(InputReader arg, @ParserContext("aisData") AISObserver aisData){}
@@ -1628,6 +1627,10 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         aisData.setWaypointCount(count);
     }
 
+    protected void description_6_966(InputReader arg, @ParserContext("aisData") AISObserver aisData)
+    {
+        description(arg, aisData);
+    }
     protected void description(InputReader reader, @ParserContext("aisData") AISObserver aisData)
     {
         aisData.setDescription(AISUtil.makeString(reader));
