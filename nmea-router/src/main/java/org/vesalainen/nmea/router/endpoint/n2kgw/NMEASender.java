@@ -221,7 +221,10 @@ public class NMEASender extends AnnotatedPropertyStore
                     rmc.writeTo(channel);
                     break;
                 case WATER_DEPTH:
-                    dpt.writeTo(channel);
+                    if (Float.isFinite(depthOfWaterRelativeToTransducer))
+                    {
+                        dpt.writeTo(channel);
+                    }
                     break;
                 case VESSEL_HEADING:
                     hdt.writeTo(channel);
