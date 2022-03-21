@@ -77,7 +77,7 @@ public class SourceManager extends JavaLogging
                 if (CamelCase.camelCase(modelId).equals(CamelCase.camelCase(manufacturerSModelId)))
                 {
                     res = st;
-                    config("resolved name %s with address %d", modelId, name.getSource());
+                    config("resolved name %s with address %d talker id %s", modelId, name.getSource(), st.getTalkerId());
                     break;
                 }
             }

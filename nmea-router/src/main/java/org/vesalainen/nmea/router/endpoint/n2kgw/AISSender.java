@@ -340,6 +340,7 @@ public class AISSender extends AnnotatedPropertyStore
                 arr = getAidsToNavigationReport();
                 break;
             case 129797:    // Ais_Binary_Broadcast_Message
+            case 129040:    // Ais_Class_B_Extended_Position_Report
                 break;
             default:
                 warning("pgn %d not supported", pgn);
