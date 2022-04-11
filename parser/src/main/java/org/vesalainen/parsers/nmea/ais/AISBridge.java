@@ -101,6 +101,10 @@ public class AISBridge extends JavaLogging implements Transactional
                 fine("AIS rollback rest of message missing");
             }
             int messageNumber = payload.charAt(0)-'0';
+            if (messageNumber < 0 || messageNumber > 27)
+            {
+                warning("message %d unknown %s", messageNumber, payload);
+            }
             messageNumber = messageNumber < 4 ? 1 : messageNumber;
             current = getMessageHandler(messageNumber);
             current.pipe.start(ownMessage, (byte) channel);
