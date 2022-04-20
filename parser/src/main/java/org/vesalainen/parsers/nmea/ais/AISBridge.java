@@ -104,6 +104,17 @@ public class AISBridge extends JavaLogging implements Transactional
             if (messageNumber < 0 || messageNumber > 27)
             {
                 warning("message %d unknown %s", messageNumber, payload);
+                warning("!AIVD%c,%d,%d,%s,%s,%s,%d*%02X", 
+                        ownMessage ? 'O' : 'M',
+                        numberOfSentences,
+                        sentenceNumber,
+                        sequentialMessageID == 0 ? "" : String.valueOf(sequentialMessageID),
+                        channel != '-' ? String.valueOf(channel) : "",
+                        payload,
+                        padding,
+                        checksum
+                );
+                return;
             }
             messageNumber = messageNumber < 4 ? 1 : messageNumber;
             current = getMessageHandler(messageNumber);

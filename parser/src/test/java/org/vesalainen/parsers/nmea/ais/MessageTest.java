@@ -1481,6 +1481,21 @@ public class MessageTest
             fail(ex.getMessage());
         }
     }
+    @Test
+    public void err4() throws IOException
+    {
+        String nmea = 
+            "!AIVDM,1,1,,A,13HOI:0P0000VOHLCnHQKwvL05Ip,0*23\r\n"+
+            "!AIVDM,1,1,,A,pck05ITOss3@WE@i91NGPKDA@<Np3h7tR9baNJipCLEIl`B<8@WJ;:haSL8p,0*3A\r\n"+  // error
+            "!AIVDM,1,1,,A,133w;`PP00PCqghMcqNqdOvPR5Ip,9*65\r\n"+
+            "!AIVDM,1,1,,B,139eb:PP00PIHDNMdd6@0?vN2D2sä0*43\r\n"+
+            "$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69\r\n"
+            ;            
+        MapListPropertySetter ls = new MapListPropertySetter("mmsi");
+        AISDispatcher tc = AISDispatcher.newInstance();
+        tc.addObserver(ls);
+        parser.parse(nmea, null, tc);
+    }
     private List<Object> getExpected()
     {
         String[] nmeas = new String[] {
