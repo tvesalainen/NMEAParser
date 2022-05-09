@@ -16,7 +16,10 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.io.IOException;
 import java.time.Clock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
@@ -50,7 +53,14 @@ public class DayPhaseProperty extends ObjectProperty implements AttachedLogger
     {
         if (solarWatch != null)
         {
-            observer.accept(clock.millis(), solarWatch.getPhase());
+            try
+            {
+                observer.accept(clock.millis(), solarWatch.getPhase());
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(Property.class.getName()).log(Level.WARNING, "advertise %s", ex.getMessage());
+            }
         }
     }
     
@@ -75,12 +85,14 @@ public class DayPhaseProperty extends ObjectProperty implements AttachedLogger
                 super.set(property, time, value);
                 break;
         }
+        /*
         if (solarWatch == null && !Double.isNaN(latitude) && !Double.isNaN(longitude))
         {
             solarWatch = new SolarWatch(clock, executor, ()->latitude, ()->longitude, 12);
             solarWatch.addObserver(this::setDayPhase);
             solarWatch.start();
         }
+        */
     }
     
 }

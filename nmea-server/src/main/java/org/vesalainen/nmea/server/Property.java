@@ -16,10 +16,13 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -36,13 +39,14 @@ import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
+import org.vesalainen.util.logging.AttachedLogger;
 import web.I18n;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class Property extends AbstractDynamicMBean implements NotificationListener, Comparable<Property>
+public abstract class Property extends AbstractDynamicMBean implements NotificationListener, Comparable<Property>, AttachedLogger
 {
     protected final CachedScheduledThreadPool executor;
     protected final String name;
@@ -114,16 +118,23 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
     {
         String description = I18n.get(observer.getLocale()).getString(name);
         UnitType unit = getUnit();
-        observer.fireEvent(
-            JSONBuilder
-                .object()
-                .value("name", this::getName)
-                .value("title", ()->description)
-                .value("unit", unit::getUnit)
-                .number("history", this::getHistoryMillis)
-                .number("min", this::getMin)
-                .number("max", this::getMax)
-        );
+        try
+        {
+            observer.fireEvent(
+                    JSONBuilder
+                            .object()
+                            .value("name", this::getName)
+                            .value("title", ()->description)
+                            .value("unit", unit::getUnit)
+                            .number("history", this::getHistoryMillis)
+                            .number("min", this::getMin)
+                            .number("max", this::getMax)
+            );
+        }
+        catch (IOException ex)
+        {
+            Logger.getLogger(Property.class.getName()).log(Level.WARNING, "advertise %s", ex.getMessage());
+        }
     }
     public <T> void set(String property, long time, double value)
     {
@@ -131,8 +142,13 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         while (iterator.hasNext())
         {
             Observer next = iterator.next();
-            if (!next.accept(time, value))
+            try
             {
+                next.accept(time, value);
+            }
+            catch (IOException ex)
+            {
+                warning("set %s", ex.getMessage());
                 iterator.remove();
             }
         }
@@ -143,8 +159,13 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         while (iterator.hasNext())
         {
             Observer next = iterator.next();
-            if (!next.accept(time, value))
+            try
             {
+                next.accept(time, value);
+            }
+            catch (IOException ex)
+            {
+                warning("set %s", ex.getMessage());
                 iterator.remove();
             }
         }

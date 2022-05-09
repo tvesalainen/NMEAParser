@@ -16,9 +16,13 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Locale;
 import java.util.function.DoubleFunction;
+import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.json.JSONBuilder.Element;
 import org.vesalainen.json.SseWriter;
@@ -28,12 +32,13 @@ import org.vesalainen.navi.CardinalDirection;
 import org.vesalainen.navi.CoordinateFormat;
 import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.parsers.nmea.NMEAProperties;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class Observer
+public class Observer extends JavaLogging
 {
     protected final String event;
     protected final Property property;
@@ -48,6 +53,7 @@ public class Observer
 
     private Observer(String event, Property property, SseHandler sseHandler, Locale locale)
     {
+        super(Observer.class, property+":"+event);
         this.event = event;
         this.property = property;
         this.name = property.getName();
@@ -80,25 +86,21 @@ public class Observer
         return new Observer(event, property, sseHandler, locale);
     }
 
-    public boolean fireEvent(Element element)
+    public void fireEvent(Element element) throws IOException
     {
         SseHandler sse = sseHandler.get();
         if (sse != null)
         {
-            return sse.fireEvent(new SseWriter(event, element));
-        }
-        else
-        {
-            return false;
+            sse.fireEvent(new SseWriter(event, element));
         }
     }
 
-    public boolean accept(long time, double arg)
+    public void accept(long time, double arg) throws IOException
     {
         throw new UnsupportedOperationException("not supported");
     }
     
-    public boolean accept(long time, Object arg)
+    public void accept(long time, Object arg) throws IOException
     {
         SseHandler sse = sseHandler.get();
         if (sse != null)
@@ -107,18 +109,17 @@ public class Observer
             {
                 this.time = time;
                 this.value = arg;
-                boolean succeeded = sse.fireEvent(writer);
+                sse.fireEvent(writer);
                 last = arg;
-                return succeeded;
             }
             else
             {
-                return sse.fireEvent(empty);
+                sse.fireEvent(empty);
             }
         }
         else
         {
-            return false;
+            throw new IOException("no sse handler");
         }
     }
 
@@ -174,9 +175,9 @@ public class Observer
         }
 
         @Override
-        public boolean accept(long time, double arg)
+        public void accept(long time, double arg) throws IOException
         {
-            return accept(time, format.apply(arg));
+            accept(time, format.apply(arg));
         }
 
     }

@@ -166,8 +166,12 @@ public class PropertyServer extends AbstractPropertySetter
             Property p = Property.getInstance(executor, pt);
             dispatchMap.add(property, p);
             propertyMap.put(property, p);
+            return dispatchMap.get(property);
         }
-        return dispatchMap.get(property);
+        else
+        {
+            return prop;
+        }
     }
 
 }

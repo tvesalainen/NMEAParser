@@ -114,7 +114,7 @@ public class SseServlet extends HttpServlet
             asyncContext.start(this);
         }
 
-        public boolean fireEvent(SseWriter event)
+        public void fireEvent(SseWriter event) throws IOException
         {
             if (latch != null)
             {
@@ -134,12 +134,8 @@ public class SseServlet extends HttpServlet
                 {
                     log("queue is full");
                     disconnected = true;
+                    throw new IOException("queue is full");
                 }
-                return ok;
-            }
-            else
-            {
-                return false;
             }
         }
 

@@ -16,6 +16,9 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.math.UnitCategory;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingAverage;
@@ -120,7 +123,14 @@ public class DoubleProperty extends Property
         super.attach(observer);
         if (history != null)
         {
-            observer.fireEvent(JSONBuilder.object().numberArray("historyData", history::pointStream));
+            try
+            {
+                observer.fireEvent(JSONBuilder.object().numberArray("historyData", history::pointStream));
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(Property.class.getName()).log(Level.WARNING, "attach %s", ex.getMessage());
+            }
         }
     }
     

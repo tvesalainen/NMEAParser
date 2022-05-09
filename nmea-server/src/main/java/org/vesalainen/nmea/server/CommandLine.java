@@ -43,6 +43,12 @@ import org.vesalainen.util.logging.JavaLogging;
 public class CommandLine extends LoggingCommandLine
 {
 
+    static
+    {
+        JavaUtilLog log = new JavaUtilLog();
+        Log.setLog(log);    // make jetty use java.util.logger
+    }
+    
     public CommandLine()
     {
         addArgument(Path.class, "configuration file");
@@ -66,9 +72,6 @@ public class CommandLine extends LoggingCommandLine
         nmeaService.addNMEAObserver(propertyServer);
         nmeaService.start();
         config("NMEA Service started");
-        
-        JavaUtilLog log = new JavaUtilLog();
-        Log.setLog(log);    // make jetty use java.util.logger
         
         Server server = new Server(httpPort);
         HandlerList handlers = new HandlerList();

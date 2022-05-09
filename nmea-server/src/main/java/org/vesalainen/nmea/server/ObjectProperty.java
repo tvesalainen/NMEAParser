@@ -16,9 +16,12 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.util.TimeToLiveList;
@@ -81,7 +84,14 @@ public class ObjectProperty extends Property
                 list.add(t);
                 list.add(d);
             });
-            observer.fireEvent(JSONBuilder.object().objectArray("historyData", list::stream));
+            try
+            {
+                observer.fireEvent(JSONBuilder.object().objectArray("historyData", list::stream));
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(Property.class.getName()).log(Level.WARNING, "attach %s", ex.getMessage());
+            }
         }
     }
     
