@@ -22,13 +22,12 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import static java.util.logging.Level.*;
-import static java.util.logging.Level.SEVERE;
 import org.vesalainen.nio.RingByteBuffer;
 import org.vesalainen.nio.channels.ByteBufferPipe;
 import org.vesalainen.nio.channels.ByteBufferPipe.Sink;
@@ -112,9 +111,16 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
     public int write(Endpoint src, RingByteBuffer ring) throws IOException
     {
         int count = 0;
-        for (TCPEndpoint tcpEndPoint : clients)
+        Iterator<TCPEndpoint> iterator = clients.iterator();
+        while (iterator.hasNext())
         {
+            TCPEndpoint tcpEndPoint = iterator.next();
             int cnt = tcpEndPoint.write(src, ring);
+            if (cnt == 0)
+            {
+                iterator.remove();
+                warning("listener removed");
+            }
             count += cnt;
         }
         return count;
@@ -164,7 +170,8 @@ public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
                 cnt = ring.writeTo(sink);
                 if (cnt == 0)
                 {
-                    warning("%s read()=0", name);
+                    warning("%s writeTo()=0", name);
+                    proxyFuture.cancel(true);
                 }
                 finest("wrote rc=%d %s", cnt, pipe);
                 writeCount++;
