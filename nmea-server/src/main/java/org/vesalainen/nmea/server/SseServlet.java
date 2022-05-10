@@ -104,7 +104,7 @@ public class SseServlet extends HttpServlet
     public class SseHandler implements Runnable
     {
         private AsyncContext asyncContext;
-        private BlockingQueue<SseWriter> queue = new ArrayBlockingQueue<>(64);
+        private BlockingQueue<SseWriter> queue = new ArrayBlockingQueue<>(1024);
         private boolean disconnected = false;
         private CountDownLatch latch = new CountDownLatch(1);
 
@@ -147,10 +147,10 @@ public class SseServlet extends HttpServlet
                 log("Sse started");
                 latch.countDown();
                 latch = null;
+                PrintWriter writer = asyncContext.getResponse().getWriter();
                 while (true)
                 {
                     SseWriter event = queue.take();
-                    PrintWriter writer = asyncContext.getResponse().getWriter();
                     event.write(writer);
                     if (queue.isEmpty())
                     {
