@@ -31,6 +31,7 @@ import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.CardinalDirection;
 import org.vesalainen.navi.CoordinateFormat;
 import org.vesalainen.nmea.server.SseServlet.SseHandler;
+import org.vesalainen.nmea.server.SseServlet.SseReference;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -42,7 +43,7 @@ public class Observer extends JavaLogging
 {
     protected final String event;
     protected final Property property;
-    protected final WeakReference<SseHandler> sseHandler;   // weak reference to not prevent Sse from gc which can happen with not updated property
+    protected final SseReference sseReference;
     private Object last;
     private final String name;
     private final SseWriter writer;
@@ -51,13 +52,13 @@ public class Observer extends JavaLogging
     private Object value;
     private final Locale locale;
 
-    private Observer(String event, Property property, SseHandler sseHandler, Locale locale)
+    private Observer(String event, Property property, SseReference sseReference, Locale locale)
     {
         super(Observer.class, property+":"+event);
         this.event = event;
         this.property = property;
         this.name = property.getName();
-        this.sseHandler = new WeakReference<>(sseHandler);
+        this.sseReference = sseReference;
         this.locale = locale;
         this.writer = new SseWriter(event,
             JSONBuilder
@@ -68,7 +69,7 @@ public class Observer extends JavaLogging
         this.empty = new SseWriter(event, JSONBuilder.object());
     }
     
-    public static Observer getInstance(String event, Property property, String unit, String decimals, SseHandler sseHandler, Locale locale)
+    public static Observer getInstance(String event, Property property, String unit, String decimals, SseReference sseReference, Locale locale)
     {
         NMEAProperties p = NMEAProperties.getInstance();
         Class<?> type = property.getType();
@@ -80,29 +81,29 @@ public class Observer extends JavaLogging
                 case "long":
                 case "float":
                 case "double":
-                    return new DoubleObserver(event, property, unit, decimals, sseHandler, locale);
+                    return new DoubleObserver(event, property, unit, decimals, sseReference, locale);
             }
         }
-        return new Observer(event, property, sseHandler, locale);
+        return new Observer(event, property, sseReference, locale);
     }
 
     public void fireEvent(Element element) throws IOException
     {
-        SseHandler sse = sseHandler.get();
+        SseHandler sse = sseReference.getHandler();
         if (sse != null)
         {
             sse.fireEvent(new SseWriter(event, element));
         }
     }
 
-    public void accept(long time, double arg) throws IOException
+    public boolean accept(long time, double arg)
     {
         throw new UnsupportedOperationException("not supported");
     }
     
-    public void accept(long time, Object arg) throws IOException
+    public boolean accept(long time, Object arg)
     {
-        SseHandler sse = sseHandler.get();
+        SseHandler sse = sseReference.getHandler();
         if (sse != null)
         {
             if (!arg.equals(last))
@@ -116,10 +117,11 @@ public class Observer extends JavaLogging
             {
                 sse.fireEvent(empty);
             }
+            return true;
         }
         else
         {
-            throw new IOException("no sse handler");
+            return false;
         }
     }
 
@@ -132,9 +134,9 @@ public class Observer extends JavaLogging
     {
         private DoubleFunction<Object> format;
         
-        public DoubleObserver(String event, Property property, String unit, String decimals, SseHandler sseHandler, Locale locale)
+        public DoubleObserver(String event, Property property, String unit, String decimals, SseReference sseReference, Locale locale)
         {
-            super(event, property, sseHandler, locale);
+            super(event, property, sseReference, locale);
             UnitType  from = property.getUnit();
             UnitType  to = unit!=null?UnitType.valueOf(unit):property.getUnit();
             int dec = decimals!=null?Integer.parseInt(decimals):property.getDecimals();
@@ -175,9 +177,9 @@ public class Observer extends JavaLogging
         }
 
         @Override
-        public void accept(long time, double arg) throws IOException
+        public boolean accept(long time, double arg)
         {
-            accept(time, format.apply(arg));
+            return accept(time, format.apply(arg));
         }
 
     }

@@ -60,13 +60,13 @@ public class SseServlet extends HttpServlet
         {
             //log(req.toString());
             HttpSession session = req.getSession(true);
-            SseHandler sseHandler = (SseHandler) session.getAttribute(SseHandler.class.getName());
-            if (sseHandler == null)
+            SseReference sseReference = (SseReference) session.getAttribute(SseHandler.class.getName());
+            if (sseReference == null)
             {
                 throw new ServletException("SSE not started for session");
             }
             Map<String, String[]> parameterMap = req.getParameterMap();
-            propertyServer.addSse(parameterMap, sseHandler, req.getLocale());
+            propertyServer.addSse(parameterMap, sseReference, req.getLocale());
         }
         finally
         {
@@ -88,12 +88,17 @@ public class SseServlet extends HttpServlet
             log("async started");
             AsyncContext asyncContext = req.startAsync();
             asyncContext.setTimeout(-1);
-            SseHandler sseHandler = (SseHandler) session.getAttribute(SseHandler.class.getName());
-            if (sseHandler != null)
+            SseReference sseReference = (SseReference) session.getAttribute(SseHandler.class.getName());
+            if (sseReference != null)
             {
-                sseHandler.close();
+                SseHandler handler = sseReference.getHandler();
+                if (handler != null)
+                {
+                    handler.close();
+                }
             }
-            session.setAttribute(SseHandler.class.getName(), new SseHandler(asyncContext));
+            SseHandler sseHandler = new SseHandler(asyncContext);
+            session.setAttribute(SseHandler.class.getName(), sseHandler.getReference());
         }
         finally
         {
@@ -105,36 +110,30 @@ public class SseServlet extends HttpServlet
     {
         private AsyncContext asyncContext;
         private BlockingQueue<SseWriter> queue = new ArrayBlockingQueue<>(1024);
-        private boolean disconnected = false;
-        private CountDownLatch latch = new CountDownLatch(1);
+        private volatile boolean disconnected = true;
+        private SseReference reference;
 
         public SseHandler(AsyncContext asyncContext)
         {
+            this.reference = new SseReference(this);
             this.asyncContext = asyncContext;
             asyncContext.start(this);
         }
 
-        public void fireEvent(SseWriter event) throws IOException
+        public SseReference getReference()
         {
-            if (latch != null)
-            {
-                try
-                {
-                    latch.await();
-                }
-                catch (InterruptedException ex)
-                {
-                    throw new RuntimeException(ex);
-                }
-            }
+            return reference;
+        }
+
+        public void fireEvent(SseWriter event)
+        {
             if (!disconnected)
             {
                 boolean ok = queue.offer(event);
                 if (!ok)
                 {
                     log("queue is full");
-                    disconnected = true;
-                    throw new IOException("queue is full");
+                    close();
                 }
             }
         }
@@ -145,8 +144,7 @@ public class SseServlet extends HttpServlet
             try
             {
                 log("Sse started");
-                latch.countDown();
-                latch = null;
+                disconnected = false;
                 PrintWriter writer = asyncContext.getResponse().getWriter();
                 while (true)
                 {
@@ -171,9 +169,29 @@ public class SseServlet extends HttpServlet
         private void close()
         {
             log("close sse handler");
+            reference.clear();
             disconnected = true;
             asyncContext.complete();
         }
 
+    }
+    public class SseReference
+    {
+        private SseHandler handler;
+
+        public SseReference(SseHandler handler)
+        {
+            this.handler = handler;
+        }
+
+        public SseHandler getHandler()
+        {
+            return handler;
+        }
+        
+        public void clear()
+        {
+            handler = null;
+        }
     }
 }

@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.vesalainen.code.AbstractPropertySetter;
 import org.vesalainen.nmea.server.SseServlet.SseHandler;
+import org.vesalainen.nmea.server.SseServlet.SseReference;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.ConcurrentHashMapSet;
@@ -81,7 +82,7 @@ public class PropertyServer extends AbstractPropertySetter
         });*/
     }
 
-    public void addSse(Map<String,String[]> map, SseHandler sseHandler, Locale locale)
+    public void addSse(Map<String,String[]> map, SseReference sseReference, Locale locale)
     {
         String[] arr = map.get("event");
         String event = arr[0];
@@ -97,7 +98,7 @@ public class PropertyServer extends AbstractPropertySetter
             {
                 throw new IllegalArgumentException(name+" not a property");
             }
-            Observer observer = Observer.getInstance(event, p, null, null, sseHandler, locale);
+            Observer observer = Observer.getInstance(event, p, null, null, sseReference, locale);
             p.attach(observer);
         }
     }
