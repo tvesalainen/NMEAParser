@@ -22,6 +22,8 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -44,7 +46,7 @@ import org.vesalainen.parsers.nmea.ais.AISService;
  */
 public class TCPListenerEndpoint extends Endpoint<TcpEndpointType,SocketChannel>
 {
-    private List<TCPEndpoint> clients = new CopyOnWriteArrayList<>();
+    private List<TCPEndpoint> clients = Collections.synchronizedList(new ArrayList<>());
     private AtomicInteger seq = new AtomicInteger();
     
     public TCPListenerEndpoint(TcpEndpointType tcpEndpointType, Router router)
