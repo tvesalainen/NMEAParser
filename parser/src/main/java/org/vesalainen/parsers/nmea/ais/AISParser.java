@@ -790,6 +790,7 @@ protected void duration_8(int arg, @ParserContext("aisData") AISObserver aisData
         }
         reader.clear();
         String msg = "skipping: "+sb+"\nexpected:"+expected;
+        warning(msg);
         aisData.rollback(msg);
         aisBridge.rollback(msg);
     }

@@ -23,6 +23,9 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import org.vesalainen.management.AbstractDynamicMBean;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.WayPoint;
 import org.vesalainen.parsers.mmsi.MMSIType;
@@ -37,6 +40,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
 {
     private CachedScheduledThreadPool executor;
     private long maxLogSize;
+    private int mmsi;
     private Path dataPath;
     private Path dynamicPath;
     private byte[] dataDigest;
@@ -54,16 +58,19 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     private boolean updated;
     private long lastUpdate;
     private char deviceClass;
+    private AISTargetMBean mBean;
 
     public AISTarget(long maxLogSize, CachedScheduledThreadPool executor, int mmsi, Path dir, AISTargetData data, AISTargetDynamic dynamic)
     {
         this.maxLogSize = maxLogSize;
         this.executor = executor;
+        this.mmsi = mmsi;
         this.dataPath = AISService.getDataPath(dir, mmsi);
         this.dynamicPath = AISService.getDynamicPath(dir, mmsi);
         this.data = data;
         this.dynamic = dynamic;
         this.dataDigest = data.getSha1();
+        this.mBean = new AISTargetMBean(mmsi, this);
     }
     public void open() throws IOException
     {
@@ -72,6 +79,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
             logExists = Files.exists(dynamicPath);
             log = new AISLogFile(dynamicPath, maxLogSize, executor);
         }
+        mBean.register();
     }
     public void update(MessageTypes type, AISTargetData dat, AISTargetDynamic dyn, Collection<String> updatedProperties) throws IOException
     {
@@ -158,6 +166,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     
     public void close() throws IOException
     {
+        mBean.unregister();
         if (dataPath != null)
         {
             log.close();
@@ -546,5 +555,19 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         }
     }
 
-    
+    private class AISTargetMBean extends AbstractDynamicMBean
+    {
+
+        public AISTargetMBean(int mmsi, AISTarget target)
+        {
+            super(String.valueOf(mmsi), target);
+        }
+
+        @Override
+        protected ObjectName createObjectName() throws MalformedObjectNameException
+        {
+            return ObjectName.getInstance(AISTarget.class.getName(), "MMSI", description);
+        }
+        
+    }
 }
