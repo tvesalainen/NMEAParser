@@ -33,8 +33,6 @@ import org.vesalainen.parsers.nmea.NMEAPGN;
 public class AbstractNMEACompiler extends AnnotatedPropertyStoreSignalCompiler
 {
     
-    protected final ReentrantLock lock = new ReentrantLock(true);
-
     public <T extends AnnotatedPropertyStore> AbstractNMEACompiler(T store)
     {
         super(store);
@@ -52,7 +50,6 @@ public class AbstractNMEACompiler extends AnnotatedPropertyStoreSignalCompiler
         LongSetter millisSetter = store.getLongSetter("millis");
         return () ->
         {
-            lock.lock();
             store.begin(null);
             canIdSetter.set(canId);
             millisSetter.set(millisSupplier.getAsLong());
@@ -64,20 +61,13 @@ public class AbstractNMEACompiler extends AnnotatedPropertyStoreSignalCompiler
     {
         return (ex) ->
         {
-            try
+            if (ex == null)
             {
-                if (ex == null)
-                {
-                    store.commit(null);
-                }
-                else
-                {
-                    store.rollback(ex.getMessage());
-                }
+                store.commit(null);
             }
-            finally
+            else
             {
-                lock.unlock();
+                store.rollback(ex.getMessage());
             }
         };
     }
