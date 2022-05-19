@@ -25,6 +25,8 @@ import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import static org.vesalainen.math.UnitType.METERS_PER_SECOND;
+import org.vesalainen.parsers.mmsi.MMSIType;
+import static org.vesalainen.parsers.mmsi.MMSIType.CraftAssociatedWithParentShip;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.ais.AISBuilder;
 
@@ -268,7 +270,7 @@ public class AISSender extends AnnotatedPropertyStore
             .integer(4, unitModelCode)
             .integer(20, serialNumber)
             .string(42, callSign);
-        if (mothershipMMSI != 0)
+        if (MMSIType.getType(mmsi) == CraftAssociatedWithParentShip)
         {
             b24.integer(30, mothershipMMSI);
         }
