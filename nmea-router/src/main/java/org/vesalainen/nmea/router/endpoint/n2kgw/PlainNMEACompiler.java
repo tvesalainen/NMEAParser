@@ -16,8 +16,6 @@
  */
 package org.vesalainen.nmea.router.endpoint.n2kgw;
 
-import java.util.function.LongSupplier;
-import java.util.function.LongToDoubleFunction;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 import org.vesalainen.can.CanSource;

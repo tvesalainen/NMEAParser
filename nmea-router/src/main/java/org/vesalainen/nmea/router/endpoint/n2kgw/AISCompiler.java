@@ -16,7 +16,6 @@
  */
 package org.vesalainen.nmea.router.endpoint.n2kgw;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.function.Supplier;
 import org.vesalainen.can.ArrayAction;
 import org.vesalainen.can.CanSource;
