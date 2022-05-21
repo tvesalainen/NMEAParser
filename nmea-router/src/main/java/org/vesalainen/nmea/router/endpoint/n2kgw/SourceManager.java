@@ -94,28 +94,28 @@ public class SourceManager extends JavaLogging
     public int getInstanceOffset(int canId)
     {
         int sa = PGN.sourceAddress(canId);
-        Source source = map.get(sa);
-        if (source != null)
+        Source src = map.get(sa);
+        if (src != null)
         {
-            return source.instanceOffset;
+            return src.instanceOffset;
         }
         return 0;
     }
     public TalkerId getTalkerId(int canId)
     {
         int sa = PGN.sourceAddress(canId);
-        Source source = map.get((byte)sa);
-        if (source != null)
+        Source src = map.get((byte)sa);
+        if (src != null)
         {
-            return source.id;
+            return src.id;
         }
         else
         {
             if (!free.isEmpty())
             {
                 TalkerId next = free.iterator().next();
-                source = new Source(next, 0);
-                map.put((byte)sa, source);
+                src = new Source(next, 0);
+                map.put((byte)sa, src);
                 return next;
             }
         }
