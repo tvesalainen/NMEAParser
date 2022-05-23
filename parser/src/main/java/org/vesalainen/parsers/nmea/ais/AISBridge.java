@@ -20,12 +20,15 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import static java.util.logging.Level.SEVERE;
+import java.util.stream.Collectors;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -72,23 +75,24 @@ public class AISBridge extends JavaLogging implements Transactional
             long value
     ) throws IOException
     {
-        fine("!AIVD%c,%d,%d,%s,%s,%s,%d*%02X", 
-                ownMessage ? 'O' : 'M',
-                numberOfSentences,
-                sentenceNumber,
-                sequentialMessageID == 0 ? "" : String.valueOf(sequentialMessageID),
-                channel != '-' ? String.valueOf(channel) : "",
-                payload,
-                padding,
-                checksum
-        );
+        String msg = String.format("!AIVD%c,%d,%d,%s,%s,%s,%d*%02X", 
+                    ownMessage ? 'O' : 'M',
+                    numberOfSentences,
+                    sentenceNumber,
+                    sequentialMessageID == 0 ? "" : String.valueOf(sequentialMessageID),
+                    channel != '-' ? String.valueOf(channel) : "",
+                    payload,
+                    padding,
+                    checksum
+            );
+        fine(msg);
         if (checksum != value)
         {
             warning("Message parsing was terminated because of checksum fail");
             if (current != null)
             {
                 current.pipe.rollback();
-                fine("AIS rollback checksum failed");
+                warning("AIS rollback %s", current.getSentence());
             }
             current = null;
             return;
@@ -98,27 +102,19 @@ public class AISBridge extends JavaLogging implements Transactional
             if (current != null)
             {
                 current.pipe.rollback();
-                fine("AIS rollback rest of message missing");
+                warning("rest of message missing. AIS rollback %s", current.getSentence());
             }
             int messageNumber = payload.charAt(0)-'0';
             if (messageNumber < 0 || messageNumber > 27)
             {
                 warning("message %d unknown %s", messageNumber, payload);
-                warning("!AIVD%c,%d,%d,%s,%s,%s,%d*%02X", 
-                        ownMessage ? 'O' : 'M',
-                        numberOfSentences,
-                        sentenceNumber,
-                        sequentialMessageID == 0 ? "" : String.valueOf(sequentialMessageID),
-                        channel != '-' ? String.valueOf(channel) : "",
-                        payload,
-                        padding,
-                        checksum
-                );
+                warning(msg);
                 return;
             }
             messageNumber = messageNumber < 4 ? 1 : messageNumber;
             current = getMessageHandler(messageNumber);
             current.pipe.start(ownMessage, (byte) channel);
+            current.sentence.clear();
             fine("AIS sent start");
             setExpected(ownMessage, numberOfSentences, sequentialMessageID, channel);
         }
@@ -129,7 +125,7 @@ public class AISBridge extends JavaLogging implements Transactional
                 if (!expected(ownMessage, numberOfSentences, sentenceNumber, sequentialMessageID, channel))
                 {
                     current.pipe.rollback();
-                    fine("AIS rollback sequence error");
+                    warning("sequence error. AIS rollback %s", current.getSentence());
                     current = null;
                     return;
                 }
@@ -137,6 +133,16 @@ public class AISBridge extends JavaLogging implements Transactional
         }
         if (current != null)
         {
+            current.sentence.add(String.format("!AIVD%c,%d,%d,%s,%s,%s,%d*%02X", 
+                    ownMessage ? 'O' : 'M',
+                    numberOfSentences,
+                    sentenceNumber,
+                    sequentialMessageID == 0 ? "" : String.valueOf(sequentialMessageID),
+                    channel != '-' ? String.valueOf(channel) : "",
+                    payload,
+                    padding,
+                    checksum
+            ));
             current.pipe.add(payload, padding);
             fine("AIS sent payload");
             if (sentenceNumber == numberOfSentences)    // last
@@ -245,11 +251,12 @@ public class AISBridge extends JavaLogging implements Transactional
         this.sequentialMessageID = sequentialMessageID;
         this.channel = channel;
     }
-    private class MessageHandler implements Runnable
+    public class MessageHandler implements Runnable
     {
         private int message;
         private AISPipe pipe;
         private final Future<?> future;
+        private List<String> sentence = new ArrayList<>();
 
         public MessageHandler(int message) throws IOException
         {
@@ -269,14 +276,14 @@ public class AISBridge extends JavaLogging implements Transactional
                     case 1:
                     case 2:
                     case 3:
-                        parser.parse123Messages(pipe, aisData, AISBridge.this);
+                        parser.parse123Messages(pipe, aisData, this, AISBridge.this);
                         break;
                     default:
                         String methodName = "parse"+message+"Messages";
                         try
                         {
-                            Method parseMethod = parser.getClass().getMethod(methodName, ReadableByteChannel.class, AISObserver.class, AISBridge.class);
-                            parseMethod.invoke(parser, pipe, aisData, AISBridge.this);
+                            Method parseMethod = parser.getClass().getMethod(methodName, ReadableByteChannel.class, AISObserver.class, MessageHandler.class, AISBridge.class);
+                            parseMethod.invoke(parser, pipe, aisData, this, AISBridge.this);
                         }
                         catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
                         {
@@ -290,5 +297,11 @@ public class AISBridge extends JavaLogging implements Transactional
                 log(SEVERE, ex, "AIS exit %d", message);
             }
         }
+
+        public String getSentence()
+        {
+            return sentence.stream().collect(Collectors.joining("\r\n"));
+        }
+        
     }
 }
