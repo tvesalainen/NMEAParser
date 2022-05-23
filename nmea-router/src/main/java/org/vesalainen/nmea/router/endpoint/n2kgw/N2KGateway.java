@@ -64,7 +64,7 @@ public class N2KGateway implements Stoppable
         info.setManufacturerSModelId("NMEA Router N2K Gateway");
         info.setManufacturerSModelSerialCode(Version.getVersion());
         addressManager.addNameObserver(sourceManager::nameChanged);
-        canService.addPgnHandler(addressManager);
+        canService.setAddressManager(addressManager);
         return new N2KGateway(canService, nmeaSender, aisSender, sourceManager);
     }
 
@@ -78,7 +78,7 @@ public class N2KGateway implements Stoppable
         canService.addN2K();
         AddressManager addressManager = new AddressManager();
         addressManager.addNameObserver(sourceManager::nameChanged);
-        canService.addPgnHandler(addressManager);
+        canService.setAddressManager(addressManager);
         return new N2KGateway(canService, nmeaSender, aisSender, sourceManager);
     }
 
