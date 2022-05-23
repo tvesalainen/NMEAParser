@@ -193,7 +193,9 @@ public class MessageTest
                 "!AIVDM,2,1,8,A,53Q6SR02=21U`@H?800l4E9<f1HTLt000000001?BhL<@4q30Glm841E,0*7C\r\n"+
                     "!AIVDM,2,2,8,A,1DThUDQh0000000,2*4D\r\n",
                 "!AIVDM,2,1,7,A,569D;:P000030000000P4V1PTpN3K7H00000000N3hA353<eaN4j0CQj0B@0,0*03\r\n"+
-                    "!AIVDM,2,2,7,A,000000000080,0*19\r\n"
+                    "!AIVDM,2,2,7,A,000000000080,0*19\r\n",
+                "!AIVDM,2,1,,A,53P>=;02DHjc8UTSD0098U@U<R0<4@E@0000000TBHTG91IlNECV`0S5,0*48\r\n"+
+                    "!AIVDM,2,2,,A,OSV`5lQ@0000000,2*76\r\n"
             };
             for (String nmea : nmeas)
             {

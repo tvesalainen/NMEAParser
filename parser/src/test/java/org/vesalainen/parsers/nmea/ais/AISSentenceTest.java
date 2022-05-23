@@ -17,16 +17,13 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
-import java.time.LocalTime;
 import static java.time.ZoneOffset.UTC;
 import java.time.ZonedDateTime;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
-import org.vesalainen.parsers.mmsi.MMSIParser;
 import org.vesalainen.parsers.nmea.NMEAParser;
 import org.vesalainen.parsers.nmea.NMEASentence;
-import org.vesalainen.parsers.nmea.ais.areanotice.CircleArea;
 
 /**
  *
