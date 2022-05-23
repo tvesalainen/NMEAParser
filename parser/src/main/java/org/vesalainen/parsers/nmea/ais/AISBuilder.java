@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parsers.nmea.ais;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import org.vesalainen.math.Circle;
 import org.vesalainen.math.Polygon;
 import org.vesalainen.math.Sector;
@@ -38,6 +39,7 @@ import org.vesalainen.parsers.nmea.ais.areanotice.SectorArea;
 public final class AISBuilder
 {
     public static final NMEASentence[] EMPTY = new NMEASentence[]{};
+    private static final AtomicInteger MESSAGE_ID = new AtomicInteger();
     
     private PayloadBuilder pb = new PayloadBuilder();
     private String transceiver = "A"; // 'A', 'B' or ''
@@ -60,6 +62,7 @@ public final class AISBuilder
     
     public NMEASentence[] build()
     {
+        int sequentalMessageId = 0;
         int length = pb.length();
         while ((length % 8) != 0)
         {
@@ -71,12 +74,23 @@ public final class AISBuilder
         String payload = pb.build();
         int fragmentCount = payload.length()/56+1;
         NMEASentence[] sentences = new NMEASentence[fragmentCount];
+        if (fragmentCount > 1)
+        {
+            sequentalMessageId = MESSAGE_ID.getAndIncrement() % 10;
+        }
         for (int fragment=1;fragment<=fragmentCount;fragment++)
         {
             NMEASentence.Builder builder = NMEASentence.builder(TalkerId.AI, messageType);
             builder.add(fragmentCount);
             builder.add(fragment);
-            builder.add();
+            if (sequentalMessageId == 0)
+            {
+                builder.add();
+            }
+            else
+            {
+                builder.add(sequentalMessageId);
+            }
             builder.add(transceiver);
             int beg = (fragment-1)*56;
             int end = Math.min(fragment*56, payload.length());
