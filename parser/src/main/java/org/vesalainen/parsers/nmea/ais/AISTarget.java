@@ -199,9 +199,9 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
      * Returns MMSI type of target
      * @return 
      */
-    public MMSIType getMMSIType()
+    public String getMMSIType()
     {
-        return data.getMMSIType();
+        return data.getMMSIType().toString();
     }
     /**
      * Returns country of target
@@ -372,9 +372,9 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         return data.getImoNumber();
     }
 
-    public CodesForShipType getShipType()
+    public String getShipType()
     {
-        return data.getShipType();
+        return data.getShipType().toString();
     }
 
     public float getDraught()
@@ -417,9 +417,9 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         return data.getVendorId();
     }
 
-    public MessageTypes getMessageType()
+    public String getMessageType()
     {
-        return dynamic.getMessageType();
+        return dynamic.getMessageType().toString();
     }
 
     public Instant getTimestamp()
@@ -449,14 +449,14 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         return dynamic.getRateOfTurn();
     }
 
-    public NavigationStatus getNavigationStatus()
+    public String getNavigationStatus()
     {
-        return dynamic.getNavigationStatus();
+        return dynamic.getNavigationStatus().toString();
     }
 
-    public ManeuverIndicator getManeuver()
+    public String getManeuver()
     {
-        return dynamic.getManeuver();
+        return dynamic.getManeuver().toString();
     }
 
     public char getChannel()
@@ -499,9 +499,9 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         return dynamic.getRadioStatus();
     }
 
-    public EPFDFixTypes getEpfd()
+    public String getEpfd()
     {
-        return data.getEpfd();
+        return data.getEpfd().toString();
     }
 
     public int getEtaMonth()
