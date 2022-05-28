@@ -50,6 +50,13 @@ public class PayloadBuilder
             }
         }
     }
+    public void add(byte[] data, int offset, int length)
+    {
+        for (int ii=0;ii<length;ii++)
+        {
+            add(8, data[ii+offset]&0xff);
+        }
+    }
     public int length()
     {
         return 6*sb.length()+remBits;

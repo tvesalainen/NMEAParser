@@ -58,7 +58,7 @@ public class AisContentHelperTest
     @Test
     public void test0()
     {
-        String aisBinary = AISContentHelper.getAisBinary("pck05ITOss3@WE@i91NGPKDA@<Np3h7tR9baNJipCLEIl`B<8@WJ;:haSL8p");
+        String aisBinary = AISContentHelper.getAisBinary("839`>FP0G@:?>G1?6600");
         System.err.println(aisBinary);
     }
     /**

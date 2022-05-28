@@ -27,7 +27,7 @@ public abstract class AbstractChainedState<T,U>
 {
 
     protected enum Action {NEUTRAL, FORWARD, FAIL};
-    private AbstractChainedState nextState;
+    private AbstractChainedState<T,U> nextState;
     protected U reason;
 
     public void input(T input)

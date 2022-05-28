@@ -24,6 +24,7 @@ import org.vesalainen.can.dbc.SignalClass;
 import org.vesalainen.can.j1939.PGN;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.setter.IntSetter;
+import org.vesalainen.code.setter.Setter;
 import static org.vesalainen.parsers.nmea.NMEAPGN.*;
 import org.vesalainen.util.HexDump;
 import org.vesalainen.util.HexUtil;
@@ -140,6 +141,12 @@ public class AISCompiler extends AbstractNMEACompiler
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_B, "Position_Reference_Point_Aft_Of_Ship_S_Bow", "positionReferencePointAftOfShipSBow");
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_B, "Mother_Ship_Mmsi", "mothershipMMSI");
         addPgnSetter(AIS_CLASS_B_CS_STATIC_REPORT_PART_B, "Ais_Transceiver_Information", "transceiverInformation");
+
+        addPgnSetter(AIS_BINARY_BROADCAST_MESSAGE, "Message_Id", "message");
+        addPgnSetter(AIS_BINARY_BROADCAST_MESSAGE, "Repeat_Indicator", "repeat");
+        addPgnSetter(AIS_BINARY_BROADCAST_MESSAGE, "Source_Id", "sourceMmsi");
+        addPgnSetter(AIS_BINARY_BROADCAST_MESSAGE, "Ais_Transceiver_Information", "transceiverInformation");
+        addPgnSetter(AIS_BINARY_BROADCAST_MESSAGE, "Number_Of_Bits_In_Binary_Data_Field", "dataBits");
     }
 
     @Override
@@ -199,6 +206,14 @@ public class AISCompiler extends AbstractNMEACompiler
                     }
                 };
             }
+        }
+        if ("Binary_Data".equals(sc.getName()))
+        {
+            Setter dataSetter = store.getSetter("data", byte[].class);
+            return (ctx, src)->
+            {
+                dataSetter.setObject(src.data());
+            };
         }
         return null;
     }

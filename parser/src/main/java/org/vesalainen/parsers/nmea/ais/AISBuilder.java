@@ -222,6 +222,11 @@ public final class AISBuilder
         pb.add(bits, value);
         return this;
     }
+    public AISBuilder binary(byte[] data, int offset, int length)
+    {
+        pb.add(data, offset, length);
+        return this;
+    }
     public AISBuilder polygon(Polygon polygon)
     {
         PolygonBuilder bldr = new PolygonBuilder();

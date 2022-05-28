@@ -82,6 +82,9 @@ public class AISSender extends AnnotatedPropertyStore
     private @Property int offPosition;
     private @Property int regional;
     private @Property int virtualAid;
+    private @Property byte[] data;
+    private @Property int sourceMmsi;
+    private @Property int dataBits;
     
     private final WritableByteChannel channel;
     private int ownMmsi;
@@ -284,6 +287,23 @@ public class AISSender extends AnnotatedPropertyStore
         }
         return b24.build();
     }
+    private NMEASentence[] getAisBinaryBroadcastMessage()
+    {
+        if (message != 8)
+        {
+            throw new IllegalArgumentException(message+" not ok");
+        }
+        if (dataBits % 8 != 0)
+        {
+            throw new IllegalArgumentException(dataBits+" dataBits not ok");
+        }
+        return new AISBuilder(message, repeat, sourceMmsi)
+            .transceiver(getTransceiver())
+            .ownMessage(isOwnMessage())
+            .integer(2, 0)
+            .binary(data, 8, dataBits/8)
+            .build();
+    }
     private int dimensionToBow()
     {
         if (shipLength > 511)
@@ -342,6 +362,8 @@ public class AISSender extends AnnotatedPropertyStore
                 arr = getAidsToNavigationReport();
                 break;
             case 129797:    // Ais_Binary_Broadcast_Message
+                arr = getAisBinaryBroadcastMessage();
+                break;
             case 129040:    // Ais_Class_B_Extended_Position_Report
                 break;
             default:

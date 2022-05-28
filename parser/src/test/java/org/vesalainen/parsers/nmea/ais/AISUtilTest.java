@@ -53,5 +53,6 @@ public class AISUtilTest
         byte[] arr = HexUtil.fromString("44482452");
         byte[] arr6 = AISUtil.makeArray(arr);
         System.err.println(HexUtil.toString(arr6));
+        String makeString = AISUtil.makeString("001111001110010111000001001111000110000110000000000000");
     }    
 }
