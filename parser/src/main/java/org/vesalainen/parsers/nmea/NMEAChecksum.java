@@ -38,7 +38,7 @@ public class NMEAChecksum implements Checksum, CharSequence
     }
     private void doUpdate(int b)
     {
-        trace[traceIndex++%80] = (char) b;
+        trace[Math.floorMod(traceIndex++, 80)] = (char) b;
         switch (b)
         {
             case '*':
@@ -156,14 +156,14 @@ public class NMEAChecksum implements Checksum, CharSequence
     @Override
     public int length()
     {
-        return traceIndex >= 80 ? 80 : traceIndex;
+        return traceIndex >= 0 && traceIndex <= 80 ? traceIndex : 80;
     }
 
     @Override
     public char charAt(int index)
     {
         int length = length();
-        return trace[(traceIndex-length+index) % 80];
+        return trace[Math.floorMod(traceIndex-length+index, 80)];
     }
 
     @Override
