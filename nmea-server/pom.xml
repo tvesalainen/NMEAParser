@@ -73,6 +73,8 @@
         <dependency>
             <groupId>org.vesalainen.nmea</groupId>
             <artifactId>parser</artifactId>
+            <version>1.8.3</version>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>org.vesalainen</groupId>

@@ -31,6 +31,7 @@ public class CommandLineT
     
     public CommandLineT()
     {
+        JavaLogging.setConsoleHandler("", Level.CONFIG);
         SimpleJMX.start();
     }
 
