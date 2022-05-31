@@ -19,18 +19,15 @@ package org.vesalainen.parsers.nmea;
 
 import java.nio.ByteBuffer;
 import java.util.zip.Checksum;
-import org.vesalainen.parser.util.InputReader;
 
 /**
  * @author Timo Vesalainen
  */
-public class NMEAChecksum implements Checksum, CharSequence
+public class NMEAChecksum implements Checksum
 {
     private boolean on;
     private int value;
     private int lastInputEnd;
-    private char[] trace = new char[80];
-    private int traceIndex;
     @Override
     public void update(int b)
     {
@@ -38,7 +35,6 @@ public class NMEAChecksum implements Checksum, CharSequence
     }
     private void doUpdate(int b)
     {
-        trace[Math.floorMod(traceIndex++, 80)] = (char) b;
         switch (b)
         {
             case '*':
@@ -153,29 +149,4 @@ public class NMEAChecksum implements Checksum, CharSequence
         }
     }
 
-    @Override
-    public int length()
-    {
-        return traceIndex >= 0 && traceIndex <= 80 ? traceIndex : 80;
-    }
-
-    @Override
-    public char charAt(int index)
-    {
-        int length = length();
-        return trace[Math.floorMod(traceIndex-length+index, 80)];
-    }
-
-    @Override
-    public CharSequence subSequence(int start, int end)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String toString()
-    {
-        return "NMEAChecksum{" + new StringBuilder(this) + '}';
-    }
-    
 }
