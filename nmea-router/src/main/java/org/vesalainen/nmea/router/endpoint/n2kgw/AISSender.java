@@ -368,6 +368,7 @@ public class AISSender extends AnnotatedPropertyStore
                 break;
             default:
                 warning("pgn %d not supported", pgn);
+                break;
         }
         if (arr != null)
         {
