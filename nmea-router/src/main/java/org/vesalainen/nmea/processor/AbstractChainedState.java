@@ -18,17 +18,34 @@ package org.vesalainen.nmea.processor;
 
 import java.util.Collection;
 import java.util.function.Supplier;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import org.vesalainen.management.AbstractDynamicMBean;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class AbstractChainedState<T,U>
+public abstract class AbstractChainedState<T,U> extends AbstractDynamicMBean
 {
-
     protected enum Action {NEUTRAL, FORWARD, FAIL};
     private AbstractChainedState<T,U> nextState;
     protected U reason;
+    protected String description;
+
+    protected AbstractChainedState(String description)
+    {
+        super(description);
+        this.description = description;
+        addAttributes(this);
+        register();
+    }
+
+    @Override
+    protected ObjectName createObjectName() throws MalformedObjectNameException
+    {
+        return new ObjectName(getClass().getName(), "Type", description);
+    }
 
     public void input(T input)
     {
@@ -59,7 +76,7 @@ public abstract class AbstractChainedState<T,U>
     protected abstract Action test(T input);
     protected void failed(U reason)
     {
-        
+        unregister();
     }
     private void fail(U reason)
     {

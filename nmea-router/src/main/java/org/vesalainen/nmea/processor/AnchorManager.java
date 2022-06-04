@@ -32,7 +32,6 @@ import java.util.function.IntPredicate;
 import java.util.function.LongToDoubleFunction;
 import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import org.vesalainen.code.Property;
 import org.vesalainen.io.IO;
 import org.vesalainen.lang.Primitives;
@@ -167,8 +166,13 @@ public class AnchorManager extends AbstractProcessorTask
         depthFilter.input(updatedProperties);
     }
 
-    private class DepthFilter extends AbstractChainedState<Collection<String>,String>
+    public class DepthFilter extends AbstractChainedState<Collection<String>,String>
     {
+
+        public DepthFilter()
+        {
+            super("DepthFilter");
+        }
 
         @Override
         protected Action test(Collection<String> updatedProperties)
@@ -203,8 +207,13 @@ public class AnchorManager extends AbstractProcessorTask
         }
         
     }
-    private class SpeedFilter extends AbstractChainedState<Collection<String>,String>
+    public class SpeedFilter extends AbstractChainedState<Collection<String>,String>
     {
+
+        public SpeedFilter()
+        {
+            super("SpeedFilter");
+        }
 
         @Override
         protected Action test(Collection<String> updatedProperties)
@@ -237,7 +246,7 @@ public class AnchorManager extends AbstractProcessorTask
         }
         
     }
-    private class MoveFilter extends AbstractChainedState<Collection<String>,String>
+    public class MoveFilter extends AbstractChainedState<Collection<String>,String>
     {
 
         private final double lat;
@@ -245,6 +254,7 @@ public class AnchorManager extends AbstractProcessorTask
 
         public MoveFilter()
         {
+            super("MoveFilter");
             this.lat = latitude;
             this.lon = longitude;
         }
@@ -280,7 +290,7 @@ public class AnchorManager extends AbstractProcessorTask
         }
         
     }
-    private class WindManager extends AbstractChainedState<Collection<String>,String>
+    public class WindManager extends AbstractChainedState<Collection<String>,String>
     {
         private float previous = 180;
         private DoubleMatrix data = new DoubleMatrix(0, 7);
@@ -301,6 +311,7 @@ public class AnchorManager extends AbstractProcessorTask
 
         public WindManager()
         {
+            super("SeabedSurveyor");
             this.bowLatitude = gpsPosition.latitudeAtOperator(bowPosition);
             this.bowLongitude = gpsPosition.longitudeAtOperator(bowPosition, latitude);
             this.seabedSurveyor = new SeabedSurveyor(clock, latitude, 3, METER, gpsPosition, depthSounderPosition);
@@ -450,8 +461,53 @@ public class AnchorManager extends AbstractProcessorTask
             }
             catch (IOException ex)
             {
-                log(Level.SEVERE, "%s", ex);
+                log(Level.SEVERE, ex, "%s", ex.getMessage());
             }
+        }
+
+        public double getMeanDepth()
+        {
+            return seabedSurveyor.getMeanDepth();
+        }
+
+        public double getCoefficient()
+        {
+            return seabedSurveyor.getCoefficient();
+        }
+
+        public double getPhase()
+        {
+            return seabedSurveyor.getPhase();
+        }
+
+        public int getSquareCount()
+        {
+            return seabedSurveyor.getSquareCount();
+        }
+
+        public int getPointCount()
+        {
+            return seabedSurveyor.getPointCount();
+        }
+
+        public double getFinalCost()
+        {
+            return seabedSurveyor.getFinalCost();
+        }
+
+        public double getTide()
+        {
+            return seabedSurveyor.getTide();
+        }
+
+        public double getDerivative()
+        {
+            return seabedSurveyor.getDerivative();
+        }
+
+        public boolean isValid()
+        {
+            return seabedSurveyor.isValid();
         }
         
     }

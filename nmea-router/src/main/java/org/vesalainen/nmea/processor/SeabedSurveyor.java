@@ -36,7 +36,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class SeabedSurveyor extends JavaLogging
 {
-    private final CoordinateMap<Square> map;
+    private final CoordinateMap<Square> squareMap;
     private final DoubleBinaryOperator lonPos;
     private final DoubleBinaryOperator latPos;
     private final TideFitter tideFitter;
@@ -50,7 +50,7 @@ public class SeabedSurveyor extends JavaLogging
         super(SeabedSurveyor.class);
         this.clock = clock;
         this.boxSize = unit.convertTo(boxSize, NAUTICAL_DEGREE);
-        this.map = new CoordinateMap(latitude, boxSize, unit, Square::new);
+        this.squareMap = new CoordinateMap(latitude, boxSize, unit, Square::new);
         this.lonPos = gpsPosition.longitudeAtOperator(depthSounderPosition, latitude);
         this.latPos = gpsPosition.latitudeAtOperator(depthSounderPosition);
         this.tideFitter = new TideFitter(clock::millis);
@@ -58,7 +58,7 @@ public class SeabedSurveyor extends JavaLogging
     
     public void update(double longitude, double latitude, double depth, double heading)
     {
-        Square square = map.getOrCreate(lonPos.applyAsDouble(longitude, heading), latPos.applyAsDouble(latitude, heading));
+        Square square = squareMap.getOrCreate(lonPos.applyAsDouble(longitude, heading), latPos.applyAsDouble(latitude, heading));
         square.setAndDerivate(depth);
         depthSum += depth;
         depthCount++;
@@ -70,7 +70,7 @@ public class SeabedSurveyor extends JavaLogging
     }
     public LongToDoubleFunction getDepthAt(double longitude, double latitude)
     {
-        Square square = map.nearest(longitude, latitude);
+        Square square = squareMap.nearest(longitude, latitude);
         if (square != null)
         {
             double stdDepth = square.getStandardDepth();
@@ -85,18 +85,58 @@ public class SeabedSurveyor extends JavaLogging
         }
         return null;
     }
+    public int getSquareCount()
+    {
+        return squareMap.size();
+    }
+    public double getTide()
+    {
+        return tideFitter.getTide();
+    }
+
+    public double getDerivative()
+    {
+        return tideFitter.getDerivative();
+    }
+    
     private double tide(long time)
     {
         if (tideFitter.isValid())
         {
             return tideFitter.getTide(time);
         }
-        return 0;
+        return Double.NaN;
     }
+
+    public double getCoefficient()
+    {
+        return tideFitter.getCoefficient();
+    }
+
+    public double getPhase()
+    {
+        return tideFitter.getPhase();
+    }
+
+    public int getPointCount()
+    {
+        return tideFitter.getPointCount();
+    }
+
+    public double getFinalCost()
+    {
+        return tideFitter.getFinalCost();
+    }
+
+    public boolean isValid()
+    {
+        return tideFitter.isValid();
+    }
+    
     public void draw(ChartPlotter p)
     {
-        info("tide a=%f b=%f cnt=%d cost=%f", tideFitter.getParamA(), tideFitter.getParamB(), tideFitter.getPointCount(), tideFitter.getFinalCost());
-        map.forEachCoordinate((double lon, double lat, Square square)->
+        info("tide a=%f b=%f cnt=%d cost=%f", tideFitter.getCoefficient(), tideFitter.getPhase(), tideFitter.getPointCount(), tideFitter.getFinalCost());
+        squareMap.forEachCoordinate((double lon, double lat, Square square)->
         {
             double dpt = square.getStandardDepth();
             p.setColor(Color.getHSBColor((float) (dpt/25), 1F, 1F));
