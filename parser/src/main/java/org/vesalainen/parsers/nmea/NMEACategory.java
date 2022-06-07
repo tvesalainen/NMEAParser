@@ -34,6 +34,7 @@ public enum NMEACategory
     TURN,
     RPM,
     ATTITUDE,
+    PHASE,
     ACCELERATION,
     TIME,
     VOLTAGE,

@@ -345,6 +345,13 @@ public class NMEASentence
                 .bindXdrGroup('S', speed, 'N', "WOG", null)
                 .build();
     }
+    public static NMEASentence tide(Supplier<TalkerId> talkerId, DoubleSupplier range, DoubleSupplier phase)
+    {
+        return builder(talkerId, XDR)
+                .bindXdrGroup('R', range, 'M', "TIDE", null)
+                .bindXdrGroup('P', phase, 'D', "TIDE", null)
+                .build();
+    }
     /**
      * Returns byte buffer containing the sentence. Changes to returned buffer
      * will not affect this sentence.

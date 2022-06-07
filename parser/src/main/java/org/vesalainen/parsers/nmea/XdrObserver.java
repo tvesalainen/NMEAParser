@@ -111,4 +111,12 @@ public interface XdrObserver
     @NMEACat(TEMPERATURE)
     @Unit(value=CELSIUS, min=0, max=100)
     void setBatteryTemperature3(float c);
+    @NMEA0183({XDR})
+    @NMEACat(DISTANCE)
+    @Unit(value=METER, min=0, max=16)
+    void setTideRange(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PHASE)
+    @Unit(value=DEGREE, min=0, max=360)
+    void setTidePhase(float c);
 }

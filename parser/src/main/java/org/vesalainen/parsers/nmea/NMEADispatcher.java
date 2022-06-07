@@ -123,6 +123,17 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                         break;
                 }
                 break;
+            case "TIDE":
+                switch (type)
+                {
+                    case 'R':
+                        setTideRange(value);
+                        break;
+                    case 'P':
+                        setTidePhase(value);
+                        break;
+                }
+                break;
             default: 
                 warning("xdr %s not supported", name);
         }
