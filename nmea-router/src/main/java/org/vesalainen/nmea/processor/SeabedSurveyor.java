@@ -18,6 +18,7 @@ package org.vesalainen.nmea.processor;
 
 import java.awt.Color;
 import java.io.IOException;
+import static java.lang.Math.abs;
 import java.nio.channels.GatheringByteChannel;
 import java.time.Clock;
 import java.util.function.DoubleBinaryOperator;
@@ -64,7 +65,7 @@ public class SeabedSurveyor extends JavaLogging
         this.lonPos = gpsPosition.longitudeAtOperator(depthSounderPosition, latitude);
         this.latPos = gpsPosition.latitudeAtOperator(depthSounderPosition);
         this.tideFitter = new TideFitter(clock::millis);
-        this.xdr = NMEASentence.tide(()->YL, ()->tideFitter.getCoefficient()*2, ()->tideFitter.getPhaseInDegrees());
+        this.xdr = NMEASentence.tide(()->YL, ()->abs(tideFitter.getCoefficient()*2), ()->tideFitter.getPhaseInDegrees());
     }
     
     public void update(double longitude, double latitude, double depth, double heading)
