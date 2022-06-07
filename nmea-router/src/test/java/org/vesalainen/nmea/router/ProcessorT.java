@@ -16,11 +16,8 @@
  */
 package org.vesalainen.nmea.router;
 
-import java.net.URL;
-import java.util.logging.Level;
 import org.junit.Test;
 import org.vesalainen.jmx.SimpleJMX;
-import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *

@@ -17,9 +17,14 @@
 package org.vesalainen.nmea.processor;
 
 import java.awt.Color;
+import java.io.IOException;
+import java.nio.channels.GatheringByteChannel;
 import java.time.Clock;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.LongToDoubleFunction;
+import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
@@ -27,6 +32,8 @@ import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.CoordinateMap;
 import org.vesalainen.navi.Tide;
 import org.vesalainen.navi.TideFitter;
+import org.vesalainen.parsers.nmea.NMEASentence;
+import static org.vesalainen.parsers.nmea.TalkerId.YL;
 import org.vesalainen.ui.ChartPlotter;
 import org.vesalainen.util.logging.JavaLogging;
 
@@ -36,6 +43,7 @@ import org.vesalainen.util.logging.JavaLogging;
  */
 public class SeabedSurveyor extends JavaLogging
 {
+    private final GatheringByteChannel channel;
     private final CoordinateMap<Square> squareMap;
     private final DoubleBinaryOperator lonPos;
     private final DoubleBinaryOperator latPos;
@@ -44,16 +52,19 @@ public class SeabedSurveyor extends JavaLogging
     private final double boxSize;
     private double depthSum;
     private long depthCount;
+    private final NMEASentence xdr;
 
-    public SeabedSurveyor(Clock clock, double latitude, double boxSize, UnitType unit, BoatPosition gpsPosition, BoatPosition depthSounderPosition)
+    public SeabedSurveyor(GatheringByteChannel channel, Clock clock, double latitude, double boxSize, UnitType unit, BoatPosition gpsPosition, BoatPosition depthSounderPosition)
     {
         super(SeabedSurveyor.class);
+        this.channel = channel;
         this.clock = clock;
         this.boxSize = unit.convertTo(boxSize, NAUTICAL_DEGREE);
         this.squareMap = new CoordinateMap(latitude, boxSize, unit, Square::new);
         this.lonPos = gpsPosition.longitudeAtOperator(depthSounderPosition, latitude);
         this.latPos = gpsPosition.latitudeAtOperator(depthSounderPosition);
         this.tideFitter = new TideFitter(clock::millis);
+        this.xdr = NMEASentence.tide(()->YL, ()->tideFitter.getCoefficient()*2, ()->tideFitter.getPhaseInDegrees());
     }
     
     public void update(double longitude, double latitude, double depth, double heading)
@@ -62,6 +73,17 @@ public class SeabedSurveyor extends JavaLogging
         square.setAndDerivate(depth);
         depthSum += depth;
         depthCount++;
+        if (tideFitter.isValid())
+        {
+            try
+            {
+                xdr.writeTo(channel);
+            }
+            catch (IOException ex)
+            {
+                log(SEVERE, "send xdr %s", ex.getMessage());
+            }
+        }
     }
 
     public double getMeanDepth()
@@ -133,6 +155,16 @@ public class SeabedSurveyor extends JavaLogging
         return tideFitter.isValid();
     }
     
+    public String getSquares()
+    {
+        return squareMap.toString();
+    }
+
+    public double getPhaseInDegrees()
+    {
+        return tideFitter.getPhaseInDegrees();
+    }
+    
     public void draw(ChartPlotter p)
     {
         info("tide a=%f b=%f cnt=%d cost=%f", tideFitter.getCoefficient(), tideFitter.getPhase(), tideFitter.getPointCount(), tideFitter.getFinalCost());
@@ -176,5 +208,12 @@ public class SeabedSurveyor extends JavaLogging
         {
             return depth-tide(time);
         }
+
+        @Override
+        public String toString()
+        {
+            return String.format("%.1fm", depth);
+        }
+        
     }
 }

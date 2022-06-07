@@ -314,7 +314,7 @@ public class AnchorManager extends AbstractProcessorTask
             super("SeabedSurveyor");
             this.bowLatitude = gpsPosition.latitudeAtOperator(bowPosition);
             this.bowLongitude = gpsPosition.longitudeAtOperator(bowPosition, latitude);
-            this.seabedSurveyor = new SeabedSurveyor(clock, latitude, 10, METER, gpsPosition, depthSounderPosition);
+            this.seabedSurveyor = new SeabedSurveyor(channel, clock, latitude, 10, METER, gpsPosition, depthSounderPosition);
             if (false)
             {
                 ZonedDateTime zdt = ZonedDateTime.now(clock);
@@ -513,6 +513,11 @@ public class AnchorManager extends AbstractProcessorTask
         public String getSquares()
         {
             return seabedSurveyor.getSquares();
+        }
+
+        public double getPhaseInDegrees()
+        {
+            return seabedSurveyor.getPhaseInDegrees();
         }
         
     }

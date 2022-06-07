@@ -30,6 +30,7 @@
             <source talkerId="U2" modelId="BAROPLUGV2"/>
         </n2k-gateway>
         <processor dataAccessPort="10111" name="Prc" enable="true">
+            <route prefix="$??XDR" target="TCP Net"/>
             <route prefix="$??TLL" target="TCP Net"/>
             <route prefix="$??TXT" target="TCP Net"/>
             <route prefix="$??MWV" target=""/>
