@@ -124,6 +124,17 @@ function Svg(x, y, width, height)
         createTriangle(this.svg);
         this.cog =  createCOG(this.svg, size);
     };
+    this.tide = function(r)
+    {
+        var size = 1.25*r;
+        this.tide = createTide(this.svg, size*0.8);
+
+    };
+    this.setTidePhase = function(r)
+    {
+        var t = (270 - r)/3.6;
+        this.tide.setAttributeNS(null, "transform", "translate("+t+", 0)");
+    };
     this.setBoatRudder = function(r)
     {
         this.rudder.setAttributeNS(null, "transform", "rotate("+r+")");

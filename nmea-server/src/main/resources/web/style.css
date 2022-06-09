@@ -118,6 +118,9 @@ body.NIGHT {
     fill: var(--text);
     font-size: 0.5em;
 }
+.tide {
+    stroke: var(--text);
+}
 .inclino {
     stroke: var(--text);
 }

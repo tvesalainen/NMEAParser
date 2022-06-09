@@ -235,6 +235,38 @@ function Gauge(element, seq)
                 this.passivate();
             };
             break;
+        case "tide":
+            this.svg = new Svg(0,0,100,40);
+            this.svg.setFrame();
+            this.svg.tide(45);
+            this.request = {event : this.event, property : ["tideRange", "tidePhase"]};
+            this.call = function(data)
+            {
+                var json = JSON.parse(data);
+                var name = json["name"];
+                var value = json["value"];
+                if (value)
+                {
+                    switch (name)
+                    {
+                        case "tideRange":
+                            this.svg.setTideRange(value);
+                            break;
+                        case "tidePhase":
+                            this.svg.setTidePhase(value);
+                            break;
+                    }
+                }
+                if (json['title'])
+                {
+                    this.svg.setTitle("Tide", "m");
+                }
+            };
+            this.tick = function()
+            {
+                this.passivate();
+            };
+            break;
         case "estimatedTimeOfArrival":
             this.svg = new Svg(0,0,100,40);
             this.svg.setFrame();

@@ -248,6 +248,23 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     return [history, polyline];
 };
 
+function createTide(parent, r)
+{
+    var g = document.createElementNS(SVG_NS, 'g');
+    g.setAttributeNS(null, "class", "tide");
+    parent.appendChild(g);
+    
+    var path = document.createElementNS(SVG_NS, 'path');
+    g.appendChild(path);
+    //g.setAttributeNS(null, "fill", "currentColor");
+    //parent.setAttributeNS(null, "stroke", "red");
+    //g.setAttributeNS(null, "stroke-width", "1");
+    path.setAttributeNS(null, "d", "M -100.0 19.999999999999996C -91.84670516288578 9.754267534868148 -84.08450569081046 0.0 -75.0 0.0C -65.91549430918953 0.0 -58.153294837114224 9.754267534868148 -50.0 20.0C -41.846705162885776 30.24573246513185 -34.08450569081047 40.0 -25.0 40.0C -15.915494309189533 40.0 -8.15329483711422 30.24573246513185 0.0 20.0C 8.15329483711422 9.754267534868148 15.915494309189533 0.0 25.0 0.0C 34.08450569081047 0.0 41.846705162885776 9.754267534868148 50.0 20.0C 58.153294837114224 30.24573246513185 65.91549430918953 40.0 75.0 40.0C 84.08450569081046 40.0 91.84670516288578 30.24573246513185 100.0 20.0");
+    var grid = document.createElementNS(SVG_NS, 'path');
+    g.appendChild(grid);
+    grid.setAttributeNS(null, "d", "M 0 20 L 100 20 M 50 0 L 50 40");
+    return path;
+}
 function createRudderMeter(parent, r)
 {
     var size = 1.5*r;
