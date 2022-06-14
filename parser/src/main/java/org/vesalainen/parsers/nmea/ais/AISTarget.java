@@ -18,19 +18,25 @@
 package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.vesalainen.management.AbstractDynamicMBean;
+import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.BoatPosition;
+import org.vesalainen.navi.CoordinateFormat;
 import org.vesalainen.navi.WayPoint;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.navi.cpa.Course;
+import org.vesalainen.net.Nets;
 import org.vesalainen.parsers.nmea.NMEASentence;
 
 /**
@@ -41,7 +47,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     private CachedScheduledThreadPool executor;
     private long maxLogSize;
     private int mmsi;
-    private Path dataPath;
+    private URL dataPath;
     private Path dynamicPath;
     private byte[] dataDigest;
     private AISLogFile log;
@@ -60,7 +66,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     private char deviceClass;
     private AISTargetMBean mBean;
 
-    public AISTarget(long maxLogSize, CachedScheduledThreadPool executor, int mmsi, Path dir, AISTargetData data, AISTargetDynamic dynamic)
+    public AISTarget(long maxLogSize, CachedScheduledThreadPool executor, int mmsi, URI dir, AISTargetData data, AISTargetDynamic dynamic)
     {
         this.maxLogSize = maxLogSize;
         this.executor = executor;
@@ -74,7 +80,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     }
     public void open() throws IOException
     {
-        if (dataPath != null)
+        if (dataPath != null && dynamicPath != null)
         {
             logExists = Files.exists(dynamicPath);
             log = new AISLogFile(dynamicPath, maxLogSize, executor);
@@ -87,7 +93,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         data.copyFrom(dat, updatedProperties, false);
         dynamic.copyFrom(dyn, updatedProperties, false);
         dynamic.setTimestamp(dyn.getTimestamp());
-        if (dataPath != null && dynamic.getChannel() != '-')    // radio messages has channel A/B
+        if (dataPath != null && dynamic.getChannel() != '-' && log != null)    // radio messages has channel A/B
         {
             dynamic.print(log, logExists);
             logExists = true;
@@ -167,7 +173,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     public void close() throws IOException
     {
         mBean.unregister();
-        if (dataPath != null)
+        if (dataPath != null && Nets.isWritable(dataPath))
         {
             log.close();
             byte[] sha1 = data.getSha1();
@@ -310,6 +316,14 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     {
         return data.getDimensionToStern();
     }
+    public String getLatitudeString()
+    {
+        return CoordinateFormat.format(Locale.US, getLatitude(), COORDINATE_DEGREES_AND_MINUTES_LATITUDE);
+    }
+    public String getLongitudeString()
+    {
+        return CoordinateFormat.format(Locale.US, getLongitude(), COORDINATE_DEGREES_AND_MINUTES_LONGITUDE);
+    }
     /**
      * Returns center latitude corrected with dimensions
      * @return 
@@ -332,7 +346,14 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     @Override
     public long getTime()
     {
-        return dynamic.getTimestamp().toEpochMilli();
+        try
+        {
+            return dynamic.getTimestamp().toEpochMilli();
+        }
+        catch (Exception ex)
+        {
+            return -1;
+        }
     }
 
     /**

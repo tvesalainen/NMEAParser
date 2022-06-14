@@ -72,7 +72,7 @@ public class AISServiceT
         CachedScheduledThreadPool executor = new CachedScheduledThreadPool();
         NMEAService nmeaService = new NMEAService("224.0.0.3", 10110, executor);
         Path dir = Paths.get("c:\\temp");
-        AISService aisService = AISService.getInstance(nmeaService, dir, 10, 1024*1024, executor);
+        AISService aisService = AISService.getInstance(nmeaService, dir.toUri(), 10, 1024*1024, executor);
         nmeaService.start();
         while (true)
         {

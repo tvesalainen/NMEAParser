@@ -37,7 +37,7 @@ public class AISTargetDataTest
     public void testLoad() throws IOException
     {
         Path path = Paths.get("src\\test\\resources\\230123250.dat");
-        AISTargetData data = new AISTargetData(path, false);
+        AISTargetData data = new AISTargetData(path.toUri().toURL(), false);
     }
     
 }

@@ -18,7 +18,7 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.nio.file.Path;
+import java.net.URL;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
 import org.vesalainen.parsers.mmsi.MMSIEntry;
@@ -27,8 +27,6 @@ import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import static org.vesalainen.parsers.nmea.ais.CodesForShipType.NotAvailableDefault;
 import static org.vesalainen.parsers.nmea.ais.EPFDFixTypes.UndefinedDefault;
-import static org.vesalainen.parsers.nmea.ais.MessageTypes.StaticAndVoyageRelatedData;
-import static org.vesalainen.parsers.nmea.ais.MessageTypes.StaticDataReport;
 
 /**
  *
@@ -71,14 +69,14 @@ public class AISTargetData extends AnnotatedPropertyStore
         super(aps);
     }
 
-    public AISTargetData(Path path) throws IOException
+    public AISTargetData(URL url) throws IOException
     {
-        super(MethodHandles.lookup(), path);
+        super(MethodHandles.lookup(), url);
     }
 
-    public AISTargetData(Path path, boolean reportMissingProperties) throws IOException
+    public AISTargetData(URL url, boolean reportMissingProperties) throws IOException
     {
-        super(MethodHandles.lookup(), path, reportMissingProperties);
+        super(MethodHandles.lookup(), url, reportMissingProperties);
     }
     /**
      * Returns true if received all static data from msg 5 (Class A) or from
@@ -101,10 +99,17 @@ public class AISTargetData extends AnnotatedPropertyStore
      * Returns MMSI type of target
      * @return 
      */
-    public MMSIType getMMSIType()
+    public String getMMSIType()
     {
         ensureMMSIParsed();
-        return mmsiEntry.getType();
+        if (mmsiEntry != null)
+        {
+            return mmsiEntry.getType().toString();
+        }
+        else
+        {
+            return "???";
+        }
     }
     /**
      * Returns country of target
@@ -113,13 +118,26 @@ public class AISTargetData extends AnnotatedPropertyStore
     public String getCountry()
     {
         ensureMMSIParsed();
-        return mmsiEntry.getMid().getCountry();
+        if (mmsiEntry != null)
+        {
+            return mmsiEntry.getMid().getCountry();
+        }
+        else
+        {
+            return "???";
+        }
     }
     private void ensureMMSIParsed()
     {
         if (mmsiEntry == null)
         {
-            mmsiEntry = MMSIParser.PARSER.parse(mmsi);
+            try
+            {
+                mmsiEntry = MMSIParser.PARSER.parse(mmsi);
+            }
+            catch (Exception ex)
+            {
+            }
         }
     }
 

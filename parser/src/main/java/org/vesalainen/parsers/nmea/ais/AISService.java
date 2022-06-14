@@ -18,11 +18,17 @@ package org.vesalainen.parsers.nmea.ais;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import static java.nio.file.StandardOpenOption.READ;
 import java.time.Clock;
 import java.time.Instant;
@@ -37,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import org.vesalainen.net.Nets;
 import org.vesalainen.nio.channels.GZIPChannel;
 import org.vesalainen.nmea.util.Stoppable;
 import org.vesalainen.parsers.nmea.NMEAClock;
@@ -56,12 +63,13 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
 {
     private static AISService SINGLETON;
     private NMEAService nmeaService;
+
     @FunctionalInterface
     public interface AISTargetObserver
     {
         void observe(LifeCycle status, int mmsi, AISTarget target);
     }
-    private final Path dir;
+    private final URI dir;
     private final AISTargetData data = new AISTargetData();
     private final AISTargetDynamic dynamic = new AISTargetDynamic();
     private TimeToLiveMap<Integer,AISTarget> map;
@@ -76,7 +84,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
     @Property private int mmsi;
     @Property private boolean ownMessage;
     
-    private AISService(Path dir, long ttlMinutes, long maxLogSize, CachedScheduledThreadPool executor)
+    private AISService(URI dir, long ttlMinutes, long maxLogSize, CachedScheduledThreadPool executor)
     {
         super(MethodHandles.lookup());
         this.dir = dir;
@@ -94,7 +102,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
      * @param executor
      * @return 
      */
-    public static AISService getInstance(NMEAService nmeaService, Path dir, long ttlMinutes, long maxLogSize, CachedScheduledThreadPool executor)
+    public static AISService getInstance(NMEAService nmeaService, URI dir, long ttlMinutes, long maxLogSize, CachedScheduledThreadPool executor)
     {
         if (SINGLETON != null)
         {
@@ -222,7 +230,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         {
             throw new IllegalArgumentException("AIS directory not set");
         }
-        Path path = getDynamicPath(dir, mmsi);
+        Path path = getDynamicPath(dir, mmsi); 
         AISLogFile log = new AISLogFile(path, maxLogSize, executor);
         List<Path> paths = log.getPaths();
         paths.forEach((p)->
@@ -314,8 +322,8 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         {
             AISTargetData dat;
             AISTargetDynamic dyn = new AISTargetDynamic();
-            Path dataPath = getDataPath(dir, mmsi);
-            if (dataPath != null && Files.exists(dataPath))
+            URL dataPath = getDataPath(dir, mmsi);
+            if (dataPath != null && exists(dataPath))
             {
                 dat = new AISTargetData(dataPath, false);
                 fine("loaded from %s", dataPath);
@@ -334,22 +342,37 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         return target;
     }
     
-    protected static Path getDataPath(Path dir, int mmsi)
+    protected static URL getDataPath(URI dir, int mmsi)
     {
         if (dir != null)
         {
-            return dir.resolve(mmsi+".dat");
+            try
+            {
+                return dir.resolve(mmsi+".dat").toURL();
+            }
+            catch (MalformedURLException ex)
+            {
+                throw new RuntimeException(ex);
+            }
         }
         else
         {
             return null;
         }
     }
-    protected static Path getDynamicPath(Path dir, int mmsi)
+    protected static Path getDynamicPath(URI uri, int mmsi)
     {
-        if (dir != null)
+        if (uri != null && Nets.isWritable(uri))
         {
-            return dir.resolve(mmsi+".log");
+            try
+            {
+                Path dir = Paths.get(uri);
+                return dir.resolve(mmsi+".log");
+            }
+            catch (FileSystemNotFoundException | IllegalArgumentException ex)
+            {
+                return null;
+            }
         }
         else
         {
@@ -374,5 +397,18 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
             throw new IllegalArgumentException(ex);
         }
         
+    }
+    private boolean exists(URL url)
+    {
+        try
+        {
+            URLConnection connection = url.openConnection();
+            connection.connect();
+            return true;
+        }
+        catch (IOException ex)
+        {
+            return false;
+        }
     }
 }
