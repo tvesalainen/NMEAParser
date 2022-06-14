@@ -84,14 +84,7 @@ public class ObjectProperty extends Property
                 list.add(t);
                 list.add(d);
             });
-            try
-            {
-                observer.fireEvent(JSONBuilder.object().objectArray("historyData", list::stream));
-            }
-            catch (IOException ex)
-            {
-                Logger.getLogger(Property.class.getName()).log(Level.WARNING, "attach %s", ex.getMessage());
-            }
+            observer.fireEvent(JSONBuilder.object().objectArray("historyData", list::stream));
         }
     }
     

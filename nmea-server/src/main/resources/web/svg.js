@@ -16,7 +16,7 @@
  */
 "use strict";
 
-/* global Svg, Title, Svg, serverMillis */
+/* global Svg, Title, Svg, serverMillis, zoneOffset */
 
 var offsetMillis=0;
 
@@ -130,9 +130,21 @@ function Svg(x, y, width, height)
         this.tide = createTide(this.svg, size*0.8);
 
     };
+    this.setTide = function(r)
+    {
+        var high = r<90?90-r:360-r+90;
+        var low = r<270?270-r:360-r+270;
+        var st = localTime().getTime();
+        var highTime = new Date(st+44700000*high/360);
+        var is = highTime.toISOString();
+        this.setText1(is.substr(11, 8));
+        var lowTime = new Date(st+44700000*low/360);
+        is = lowTime.toISOString();
+        this.setText2(is.substr(11, 8));
+    };
     this.setTidePhase = function(r)
     {
-        var t = (270 - r)/3.6;
+        var t = (180 - r)/3.6;
         this.tide.setAttributeNS(null, "transform", "translate("+t+", 0)");
     };
     this.setBoatRudder = function(r)

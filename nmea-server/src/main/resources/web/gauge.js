@@ -16,7 +16,7 @@
  */
 "use strict";
 
-/* global Gauge zoneOffset */
+/* global Gauge zoneOffset localTime */
 
 var zoneOffset=0;
 
@@ -26,7 +26,14 @@ function Gauge(element, seq)
     this.property = element.getAttribute("data-property");
     this.div = document.createElement("div");
     element.appendChild(this.div);
-     switch (this.property)
+    prefs("zoneOffset", this.svg, function(th, res)
+    {
+        if (res)
+        {
+            zoneOffset=parseInt(res);
+        }
+    });
+    switch (this.property)
     {
         case "message":
             this.div.setAttribute("class", "active");
@@ -84,13 +91,6 @@ function Gauge(element, seq)
             this.svg = new Svg(-50,40,100,40);
             this.svg.setFrame();
             this.svg.svg.setAttributeNS(null, "class", "active");
-            prefs("zoneOffset", this.svg, function(th, res)
-            {
-                if (res)
-                {
-                    zoneOffset=parseInt(res);
-                }
-            });
             this.tick = function()
             {
                 var d = localTime();
@@ -236,10 +236,11 @@ function Gauge(element, seq)
             };
             break;
         case "tide":
-            this.svg = new Svg(0,0,100,40);
+            this.svg = new Svg(-50,40,100,40);
             this.svg.setFrame();
+            this.svg.svg.setAttributeNS(null, "class", "active");
             this.svg.tide(45);
-            this.request = {event : this.event, property : ["tideRange", "tidePhase"]};
+            this.request = {event : this.event, property : ["tidePhase"]};
             this.call = function(data)
             {
                 var json = JSON.parse(data);
@@ -249,9 +250,35 @@ function Gauge(element, seq)
                 {
                     switch (name)
                     {
-                        case "tideRange":
-                            this.svg.setTideRange(value);
+                        case "tidePhase":
+                            this.svg.setTide(value);
                             break;
+                    }
+                }
+                if (json['title'])
+                {
+                    this.svg.setTitle("Tides", "");
+                }
+            };
+            this.tick = function()
+            {
+                this.passivate();
+            };
+            break;
+        case "tidePhase":
+            this.svg = new Svg(0,0,100,40);
+            this.svg.setFrame();
+            this.svg.tide(45);
+            this.request = {event : this.event, property : ["tidePhase"]};
+            this.call = function(data)
+            {
+                var json = JSON.parse(data);
+                var name = json["name"];
+                var value = json["value"];
+                if (value)
+                {
+                    switch (name)
+                    {
                         case "tidePhase":
                             this.svg.setTidePhase(value);
                             break;
@@ -259,7 +286,7 @@ function Gauge(element, seq)
                 }
                 if (json['title'])
                 {
-                    this.svg.setTitle("Tide", "m");
+                    this.svg.setTitle(json['title'], json['unit']);
                 }
             };
             this.tick = function()

@@ -43,7 +43,7 @@ public class CreateSine
         sb.append(fx.apply(startX));
         sb.append(" ");
         sb.append(fy.apply(sin(startX)));
-        for (double x0=startX;x0<2*PI;x0+=2*PI)
+        for (double x0=startX;x0<6*PI;x0+=2*PI)
         {
             double x1 = x0+PI/2;
             double x2 = x1+PI/2;

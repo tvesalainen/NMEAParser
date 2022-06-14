@@ -24,11 +24,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.vesalainen.code.AbstractPropertySetter;
-import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.nmea.server.SseServlet.SseReference;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.parsers.nmea.NMEAProperties;
+import org.vesalainen.parsers.nmea.ais.AISService;
+import org.vesalainen.parsers.nmea.ais.AISService.AISTargetObserver;
+import org.vesalainen.parsers.nmea.ais.AISTarget;
 import org.vesalainen.util.ConcurrentHashMapSet;
+import org.vesalainen.util.LifeCycle;
 import org.vesalainen.util.MapSet;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -36,7 +39,7 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class PropertyServer extends AbstractPropertySetter
+public final class PropertyServer extends AbstractPropertySetter implements AISTargetObserver
 {
     private final Clock clock;
     private final MapSet<String,Property> dispatchMap = new ConcurrentHashMapSet<>();
@@ -44,7 +47,7 @@ public class PropertyServer extends AbstractPropertySetter
     private final Config config;
     private final CachedScheduledThreadPool executor;
     
-    public PropertyServer(Clock clock, Config config, CachedScheduledThreadPool executor)
+    public PropertyServer(Clock clock, Config config, CachedScheduledThreadPool executor, AISService aisService)
     {
         super(allNMEAProperties());
         this.clock = clock;
@@ -70,6 +73,10 @@ public class PropertyServer extends AbstractPropertySetter
                 dispatchMap.add(name, property);
             }
         });
+        if (propertyMap.containsKey("ais"))
+        {
+            aisService.addObserver(this);
+        }
         /*
         sources.forEach((source)->
         {
@@ -80,6 +87,21 @@ public class PropertyServer extends AbstractPropertySetter
                 propertyMap.put(source, sourceProperty);
             }
         });*/
+    }
+
+    @Override
+    public void observe(LifeCycle status, int mmsi, AISTarget target)
+    {
+        switch (status)
+        {
+            case OPEN:
+            case UPDATE:
+                set("ais", target);
+                break;
+            case CLOSE:
+                AISProperty.remove(target);
+                break;
+        }
     }
 
     public void addSse(Map<String,String[]> map, SseReference sseReference, Locale locale)

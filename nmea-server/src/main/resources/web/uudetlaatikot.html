@@ -32,20 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </head>
     <body class="DAY">
         <div  class="w3-row">
-            <div class="w3-col m12">
-                <div class="w3-col s6">
-                    <div class="w3-col s12 gauge" data-property="message">
-                    </div>
-                    <div class="w3-col s12 gauge" data-property="localDateTime" data-title="time" data-unit="local" onclick="changeZoneOffset(this)">
-                    </div>
-                    <div class="w3-col s6 gauge" data-property="rudder">
-                    </div>
-                    <div class="w3-col s6 gauge" data-property="trueWindAngle" data-type="semicircle">
-                    </div>
-                </div>
-                <div class="w3-col s6 gauge" data-property="tide">
-                </div>
-            </div>
+                <div class="w3-col s6 gauge" data-property="ais"/>
+                <div class="w3-col s6 gauge" data-property="tidePhase"/>
         </div>
 
         <div> 
@@ -57,10 +45,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 3</td></tr>
                 <tr><td>4</td></tr>
                 <tr><td>5</td></tr>   
-                </table></span> 
-                
-            </table>
-        
+                </table></span>                 
+            </table>        
         </div>
         
         <div class="w3-row">

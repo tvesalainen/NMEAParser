@@ -17,6 +17,7 @@
 package org.vesalainen.nmea.server;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +26,7 @@ import javax.servlet.ServletContext;
 import javax.xml.bind.JAXBException;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.session.DefaultSessionIdManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -32,6 +34,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.JavaUtilLog;
 import org.eclipse.jetty.util.log.Log;
 import org.vesalainen.parsers.nmea.NMEAService;
+import org.vesalainen.parsers.nmea.ais.AISService;
 import org.vesalainen.util.LoggingCommandLine;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 import org.vesalainen.util.logging.JavaLogging;
@@ -62,13 +65,20 @@ public class CommandLine extends LoggingCommandLine
         String address = config.getNmeaMulticastAddress();
         int nmeaPort = config.getNmeaMulticastPort();
         int httpPort = config.getHttpPort();
+        URI aisDirectory = config.getAisDirectory();
+        long aisMaxLogSize = config.getAisMaxLogSize();
+        long aisTtl = config.getAisTtl();
         config("NMEA Multicast Address=%s", address);
         config("NMEA Multicast Port=%s", nmeaPort);
         config("HTTP Port=%s", httpPort);
+        config("AIS Directory =%s", aisDirectory);
+        config("AIS Max Log Size =%d", aisMaxLogSize);
+        config("AIS TTL =%d ms", aisTtl);
         CachedScheduledThreadPool executor = new CachedScheduledThreadPool(64);
         config("ThreadPool started %s", executor);
         NMEAService nmeaService = new NMEAService(address, nmeaPort, executor);
-        PropertyServer propertyServer = new PropertyServer(Clock.systemDefaultZone(), config, executor);
+        AISService aisService = AISService.getInstance(nmeaService, aisDirectory, aisTtl, aisMaxLogSize, executor);
+        PropertyServer propertyServer = new PropertyServer(Clock.systemDefaultZone(), config, executor, aisService);
         nmeaService.addNMEAObserver(propertyServer);
         nmeaService.start();
         config("NMEA Service started");
@@ -87,6 +97,12 @@ public class CommandLine extends LoggingCommandLine
         context.addServlet(ResourceServlet.class, "*.ico");
         context.addServlet(PrefsServlet.class, "/prefs");
         context.addServlet(I18nServlet.class, "/i18n");
+        
+        ResourceHandler resourceHandler = new ResourceHandler();
+        resourceHandler.setDirAllowed(true);
+        resourceHandler.setResourceBase("c:\\temp");
+        handlers.addHandler(resourceHandler);
+        
         SessionHandler sessionHandler = new SessionHandler();
         context.setSessionHandler(sessionHandler);
         handlers.addHandler(context);

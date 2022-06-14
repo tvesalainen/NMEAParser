@@ -16,10 +16,7 @@
  */
 package org.vesalainen.nmea.server;
 
-import java.io.IOException;
 import java.time.Clock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.navi.SolarWatch;
 import org.vesalainen.navi.SolarWatch.DayPhase;
 import org.vesalainen.nmea.server.jaxb.PropertyType;

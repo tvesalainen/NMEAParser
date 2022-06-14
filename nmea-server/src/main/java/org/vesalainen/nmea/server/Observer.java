@@ -16,13 +16,8 @@
  */
 package org.vesalainen.nmea.server;
 
-import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.Locale;
 import java.util.function.DoubleFunction;
-import java.util.logging.Level;
-import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.json.JSONBuilder.Element;
 import org.vesalainen.json.SseWriter;
@@ -32,27 +27,26 @@ import org.vesalainen.navi.CardinalDirection;
 import org.vesalainen.navi.CoordinateFormat;
 import org.vesalainen.nmea.server.SseServlet.SseHandler;
 import org.vesalainen.nmea.server.SseServlet.SseReference;
-import org.vesalainen.parsers.nmea.NMEAProperties;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class Observer extends JavaLogging
+public class Observer<T> extends JavaLogging
 {
     protected final String event;
     protected final Property property;
     protected final SseReference sseReference;
-    private Object last;
-    private final String name;
+    private T last;
+    protected final String name;
     private final SseWriter writer;
     private final SseWriter empty;
-    private long time;
-    private Object value;
+    protected long time;
+    protected T value;
     private final Locale locale;
 
-    private Observer(String event, Property property, SseReference sseReference, Locale locale)
+    protected Observer(String event, Property property, SseReference sseReference, Locale locale)
     {
         super(Observer.class, property+":"+event);
         this.event = event;
@@ -60,18 +54,25 @@ public class Observer extends JavaLogging
         this.name = property.getName();
         this.sseReference = sseReference;
         this.locale = locale;
-        this.writer = new SseWriter(event,
+        this.writer = createSseWriter();
+        this.empty = new SseWriter(event, JSONBuilder.object());
+    }
+    
+    protected SseWriter createSseWriter()
+    {
+        return new SseWriter(event,
             JSONBuilder
                 .object()
                 .value("name", ()->name)
                 .number("time", ()->time)
                 .value("value", ()->value));
-        this.empty = new SseWriter(event, JSONBuilder.object());
     }
-    
     public static Observer getInstance(String event, Property property, String unit, String decimals, SseReference sseReference, Locale locale)
     {
-        NMEAProperties p = NMEAProperties.getInstance();
+        if ("ais".equals(property.getName()))
+        {
+            return new AISObserver(event, property, sseReference, locale);
+        }
         Class<?> type = property.getType();
         if (type != null)
         {
@@ -87,7 +88,7 @@ public class Observer extends JavaLogging
         return new Observer(event, property, sseReference, locale);
     }
 
-    public void fireEvent(Element element) throws IOException
+    public void fireEvent(Element element)
     {
         SseHandler sse = sseReference.getHandler();
         if (sse != null)
@@ -101,7 +102,7 @@ public class Observer extends JavaLogging
         throw new UnsupportedOperationException("not supported");
     }
     
-    public boolean accept(long time, Object arg)
+    public boolean accept(long time, T arg)
     {
         SseHandler sse = sseReference.getHandler();
         if (sse != null)

@@ -26,6 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <xsd:attribute name="nmeaMulticastAddress" type="xsd:string"></xsd:attribute>
         <xsd:attribute name="nmeaMulticastPort" type="xsd:unsignedShort"></xsd:attribute>
         <xsd:attribute name="httpPort" type="xsd:unsignedShort"></xsd:attribute>
+        <xsd:attribute name="aisDirectory" type="xsd:anyURI"/>
+        <xsd:attribute name="aisMaxLogSize" type="xsd:string"/>
+        <xsd:attribute name="aisTtl" type="xsd:string"/>
     </xsd:complexType>
     <xsd:complexType name="propertyType">
         <xsd:attribute name="name" type="xsd:string" use="required"/>

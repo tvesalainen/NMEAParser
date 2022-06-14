@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<nmea-server nmeaMulticastAddress="224.0.0.3" nmeaMulticastPort="10110" httpPort="8081">
+<nmea-server 
+    nmeaMulticastAddress="224.0.0.3" 
+    nmeaMulticastPort="10110" 
+    httpPort="8081"
+    aisDirectory="file:/c:/temp"
+    aisMaxLogSize="1M"
+    aisTtl="1d"
+>
+    <property name="ais"/>
     <property name="tideRange" decimals="1"/>
     <property name="tidePhase" decimals="0"/>
     <property name="rudderSensor"/>

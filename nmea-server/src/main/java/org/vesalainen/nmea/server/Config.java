@@ -20,6 +20,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,7 +30,9 @@ import java.nio.file.attribute.FileTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import static java.util.logging.Level.*;
+import java.util.logging.Logger;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.xml.bind.JAXBContext;
@@ -39,6 +43,7 @@ import static javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
+import org.vesalainen.lang.Primitives;
 import org.vesalainen.management.AbstractDynamicMBean;
 import org.vesalainen.math.UnitCategory;
 import static org.vesalainen.math.UnitCategory.*;
@@ -168,14 +173,60 @@ public class Config extends JavaLogging
         return server.getNmeaMulticastAddress();
     }
 
-    public Integer getNmeaMulticastPort()
+    public int getNmeaMulticastPort()
     {
-        return server.getNmeaMulticastPort();
+        return Primitives.getInt(server.getNmeaMulticastPort());
     }
 
-    public Integer getHttpPort()
+    public int getHttpPort()
     {
-        return server.getHttpPort();
+        return Primitives.getInt(server.getHttpPort());
+    }
+
+    public URI getAisDirectory()
+    {
+        String aisDirectory = server.getAisDirectory();
+        if (aisDirectory != null)
+        {
+            try
+            {
+                return new URI(aisDirectory);
+            }
+            catch (URISyntaxException ex)
+            {
+                throw new IllegalArgumentException(ex);
+            }
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public long getAisMaxLogSize()
+    {
+        String aisMaxLogSize = server.getAisMaxLogSize();
+        if (aisMaxLogSize != null)
+        {
+            return (long) UnitType.MULTIPLIER_2_ONE.parse(aisMaxLogSize);
+        }
+        else
+        {
+            return Long.MAX_VALUE;
+        }
+    }
+
+    public long getAisTtl()
+    {
+        String aisTtl = server.getAisTtl();
+        if (aisTtl != null)
+        {
+            return (long) UnitType.DURATION_MILLI_SECONDS.parse(aisTtl);
+        }
+        else
+        {
+            return Long.MAX_VALUE;
+        }
     }
 
     private void init()
