@@ -23,9 +23,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.time.Clock;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.LongToDoubleFunction;
-import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import org.vesalainen.math.UnitType;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
@@ -71,7 +69,15 @@ public class SeabedSurveyor extends JavaLogging
     public void update(double longitude, double latitude, double depth, double heading)
     {
         Square square = squareMap.getOrCreate(lonPos.applyAsDouble(longitude, heading), latPos.applyAsDouble(latitude, heading));
-        square.setAndDerivate(depth);
+        if (square.setAndDerivate(depth))
+        {
+            info("coef=%f phase=%f pts=%d cost=%f", 
+                    tideFitter.getCoefficient(),
+                    tideFitter.getPhaseInDegrees(),
+                    tideFitter.getPointCount(),
+                    tideFitter.getFinalCost()
+            );
+        }
         depthSum += depth;
         depthCount++;
         if (tideFitter.isValid())
@@ -182,8 +188,9 @@ public class SeabedSurveyor extends JavaLogging
         private double depth;
         private DoubleTimeoutSlidingSlope sloper = new DoubleTimeoutSlidingSlope(clock::millis, 1000, Tide.PERIOD/18, Tide.TIME_TO_RAD);
 
-        public void setAndDerivate(double depth)
+        public boolean setAndDerivate(double depth)
         {
+            boolean fit = false;
             sloper.accept(depth);
             if (sloper.fullness() > 99)
             {
@@ -191,9 +198,11 @@ public class SeabedSurveyor extends JavaLogging
                 tideFitter.add(sloper.meanTime(), slope);
                 tideFitter.fit();
                 sloper.clear();
+                fit = true;
             }
             this.time = clock.millis();
             this.depth = depth;
+            return fit;
         }
         public long getTime()
         {

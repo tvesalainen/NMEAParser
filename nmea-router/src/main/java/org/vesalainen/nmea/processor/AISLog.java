@@ -17,11 +17,11 @@
 package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import org.vesalainen.nmea.util.Stoppable;
-import org.vesalainen.parsers.nmea.NMEAMessage;
 import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.parsers.nmea.ais.AISService;
@@ -45,7 +45,7 @@ public class AISLog implements Stoppable
         this.channel = channel;
     }
     
-    public static AISLog getInstance(NMEAService nmeaService, Path dir, long ttlMinutes, long maxLogSize, CachedScheduledThreadPool executor, GatheringByteChannel out)
+    public static AISLog getInstance(NMEAService nmeaService, URI dir, long ttlMinutes, long maxLogSize, CachedScheduledThreadPool executor, GatheringByteChannel out)
     {
         AISService aisService = AISService.getInstance(nmeaService, dir, ttlMinutes, maxLogSize, executor);
         AISLog aisLog = new AISLog(aisService, out);

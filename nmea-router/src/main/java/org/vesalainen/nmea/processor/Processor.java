@@ -19,6 +19,8 @@ package org.vesalainen.nmea.processor;
 import org.vesalainen.nmea.util.AbstractSampleConsumer;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
@@ -27,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.net.ObjectServer;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
@@ -97,12 +101,12 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                 {
                     info("starting AIS Log");
                     AisLogType type = (AisLogType) ob;
-                    String directory = type.getDirectory();
+                    String uri = type.getUri();
                     Long ttlMinutes = type.getTtlMinutes();
                     BigInteger maxLogSize = type.getMaxLogSize();
                     AISLog aisLog = AISLog.getInstance(
                             this, 
-                            Paths.get(directory), 
+                            new URI(uri), 
                             ttlMinutes != null ? ttlMinutes : 10, 
                             maxLogSize != null ? maxLogSize.longValue() : 1024*1024, 
                             executor,
@@ -181,7 +185,7 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                 processes.add(process);
             }
         }
-        catch (IOException | InterruptedException ex)
+        catch (IOException | InterruptedException | URISyntaxException ex)
         {
             throw new IllegalArgumentException(ex);
         }

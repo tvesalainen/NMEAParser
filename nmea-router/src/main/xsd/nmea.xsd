@@ -208,7 +208,7 @@
         <xsd:attribute name="updateSeconds" type="xsd:unsignedInt"/>
     </xsd:complexType>
     <xsd:complexType name="aisLogType">
-        <xsd:attribute name="directory" type="xsd:string" use="required"/>
+        <xsd:attribute name="uri" type="xsd:anyURI" use="required"/>
         <xsd:attribute name="maxLogSize" type="xsd:unsignedLong"/>
         <xsd:attribute name="ttlMinutes" type="xsd:unsignedInt"/>
     </xsd:complexType>

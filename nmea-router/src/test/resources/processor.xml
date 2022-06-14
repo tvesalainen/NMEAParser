@@ -37,7 +37,7 @@
             <true-wind-source overGround="true"/>
             <tracker directory="c:\\temp"/>
             <compressed-log directory="c:\\temp" properties="latitude longitude"/>
-            <ais-log directory="c:\\temp" maxLogSize="4096"/>
+            <ais-log uri="http://localhost:8080/" maxLogSize="4096"/>
             <compass-corrector configFile="c:\\temp\\deviation.txt"/>
             <sntp-server rootDelay="1600" server="pi3media"/>
             <anchor-manager directory="c:\\temp"/>
