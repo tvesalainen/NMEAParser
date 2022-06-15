@@ -73,7 +73,7 @@ public class SeabedSurveyor extends JavaLogging
         {
             info("coef=%f phase=%f pts=%d cost=%f", 
                     tideFitter.getCoefficient(),
-                    tideFitter.getPhaseInDegrees(),
+                    tideFitter.getPhase(),
                     tideFitter.getPointCount(),
                     tideFitter.getFinalCost()
             );
