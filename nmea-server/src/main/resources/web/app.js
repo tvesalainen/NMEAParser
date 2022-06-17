@@ -14,9 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* global refresh, eventSource i18n */
+/* global refresh, eventSource zoneOffset i18n */
 
 "use strict";
+
+var zoneOffset=0;
 
 var gauge = {};
 
@@ -35,7 +37,13 @@ $(document).ready(function () {
     };
     eventSource.onopen = function()
     {
-        
+        prefs("zoneOffset", this.svg, function(th, res)
+        {
+            if (res)
+            {
+                zoneOffset=parseInt(res);
+            }
+        });
         var targets = document.getElementsByClassName('gauge');
         for (var i=0;i<targets.length;i++)
         {

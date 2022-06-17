@@ -16,9 +16,7 @@
  */
 "use strict";
 
-/* global Gauge zoneOffset localTime */
-
-var zoneOffset=0;
+/* global Gauge zoneOffset localTime AisList*/
 
 function Gauge(element, seq)
 {
@@ -26,15 +24,21 @@ function Gauge(element, seq)
     this.property = element.getAttribute("data-property");
     this.div = document.createElement("div");
     element.appendChild(this.div);
-    prefs("zoneOffset", this.svg, function(th, res)
-    {
-        if (res)
-        {
-            zoneOffset=parseInt(res);
-        }
-    });
     switch (this.property)
     {
+        case "ais":
+            this.ais = new AisList();
+            this.div.appendChild(this.ais.table);
+            this.request = {event : this.event, property : this.property};
+            this.call = function(data)
+            {
+                var json = JSON.parse(data);[]
+                this.ais.set(json["value"]);
+            };
+            this.tick = function()
+            {
+            };
+            break;
         case "message":
             this.div.setAttribute("class", "active");
             this.table = document.createElement("table");

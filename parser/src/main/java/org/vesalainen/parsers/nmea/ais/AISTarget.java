@@ -32,6 +32,7 @@ import org.vesalainen.management.AbstractDynamicMBean;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.CoordinateFormat;
+import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.WayPoint;
 import org.vesalainen.parsers.mmsi.MMSIType;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
@@ -159,6 +160,21 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     {
         calc();
         return cpaDistance;
+    }
+    /**
+     * Returns bearing from own ship to this
+     * @return 
+     */
+    public double getBearing()
+    {
+        if (ownTarget != null)
+        {
+            return Navis.bearing(ownTarget.getLatitude(), ownTarget.getLongitude(), getLatitude(), getLongitude());
+        }
+        else
+        {
+            return Double.NaN;
+        }
     }
     /**
      * Returns time to collision in minutes

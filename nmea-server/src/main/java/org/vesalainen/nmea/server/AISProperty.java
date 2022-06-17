@@ -53,7 +53,11 @@ public class AISProperty extends ObjectProperty
     {
         AISService aisService = AISService.getInstance();
         Collection<AISTarget> liveSet = aisService.getLiveSet();
-        liveSet.forEach((t)->observer.fireEvent(getObj(t)));
+        liveSet.forEach((t)->observer.fireEvent(
+                                JSONBuilder
+                                    .object()
+                                    .value("name", this::getName)
+                                    .object("value", getObj(t))));
     }
     
     public static void remove(AISTarget target)
@@ -81,9 +85,9 @@ public class AISProperty extends ObjectProperty
                         .value("call", target::getCallSign)
                         .number("imo", target::getImoNumber)
                         .value("country", target::getCountry)
-                        .number("length", target::getLength)
-                        .number("beam", target::getBeam)
-                        .number("draught", target::getDraught)
+                        .format("length", "%.0f", target::getLength)
+                        .format("beam", "%.0f", target::getBeam)
+                        .format("draught", "%.1f", target::getDraught)
                         .bool("classA", target::isClassA)
                         .value("vendor", target::getVendorId)
                         .number("serial", target::getSerialNumber)
@@ -91,18 +95,18 @@ public class AISProperty extends ObjectProperty
                         .value("shipType", target::getShipType)
                         .value("maneuver", target::getManeuver)
                         .value("status", target::getNavigationStatus)
-                        .number("cpaDistance", target::getCPADistance)
-                        .number("cpaMinutes", target::getCPATime)
+                        .format("cpaDistance", "%.1f", target::getCPADistance)
+                        .format("cpaMinutes", "%.0f", target::getCPATime)
                         .value("lat", target::getLatitudeString)
                         .value("lon", target::getLongitudeString)
-                        .number("alt", target::getAltitude)
-                        .number("speed", target::getSpeed)
-                        .number("cog", target::getCourse)
-                        .number("hdg", target::getHeading)
-                        .number("rot", target::getRateOfTurn)
+                        .format("alt", "%.0f", target::getAltitude)
+                        .format("speed", "%.1f", target::getSpeed)
+                        .format("cog", "%.0f", target::getCourse)
+                        .format("hdg", "%.0f", target::getHeading)
+                        .format("rot", "%.0f", target::getRateOfTurn)
                         .number("time", target::getTime)
                         .value("destination", target::getDestination)
-                        .number("distance", target::getDistance)
+                        .format("distance", "%.1f", target::getDistance)
         ;
     }
     

@@ -18,6 +18,7 @@ package org.vesalainen.nmea.server;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -109,11 +110,13 @@ public class SseServlet extends HttpServlet
         private BlockingQueue<SseWriter> queue = new ArrayBlockingQueue<>(1024);
         private volatile boolean disconnected = true;
         private SseReference reference;
+        private final Locale locale;
 
         public SseHandler(AsyncContext asyncContext)
         {
             this.reference = new SseReference(this);
             this.asyncContext = asyncContext;
+            this.locale = asyncContext.getRequest().getLocale();
             asyncContext.start(this);
         }
 
@@ -146,7 +149,7 @@ public class SseServlet extends HttpServlet
                 while (true)
                 {
                     SseWriter event = queue.take();
-                    event.write(writer);
+                    event.write(locale, writer);
                     if (queue.isEmpty())
                     {
                         writer.flush();

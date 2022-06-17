@@ -16,14 +16,10 @@
  */
 package org.vesalainen.nmea.server;
 
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import org.vesalainen.json.JSONBuilder;
-import org.vesalainen.json.JSONBuilder.Element;
 import org.vesalainen.json.JSONBuilder.Obj;
 import org.vesalainen.json.SseWriter;
-import org.vesalainen.parsers.nmea.ais.AISTarget;
 
 /**
  *

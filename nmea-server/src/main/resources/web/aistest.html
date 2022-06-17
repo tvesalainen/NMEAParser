@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<title>AISsi</title>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<body>
+
+<div class="w3-container">
+
+
+  <table class="w3-table">
+    <tr>
+      <th>MMSI</th>
+      <th>Name</th>
+      <th>Time</th>
+    </tr>
+    <tr onclick="document.getElementById('id01').style.display='block'">
+      <td>123456789</td>
+      <td>Trallalaa</td>
+      <td>5m 37s</td>
+    </tr>
+  </table>
+</div>
+
+<div id="id01" class="w3-modal">
+ <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+  <header class="w3-container w3-blue"> 
+   <span onclick="document.getElementById('id01').style.display='none'" 
+   class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
+   <h2>Vessel name (lippu)</h2>
+  </header>
+
+  <div class="w3-bar w3-border-bottom">
+   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'Basic')">Basic</button>
+   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'More')">More</button>
+   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'Extra')">Extra</button>
+  </div>
+
+  <div id="Basic" class="w3-container tab">
+   <p>MMSI</p>
+   <p>Country</p>
+   <p>CallSign</p>
+   <p>Lenght</p>
+   <p>Beam</p>
+   <p>Draught (A)</p>
+   <p>ClassA (A)</p>
+   <p>ShipType</p>
+ 
+   <p>CPADistance</p>
+   <p>CPATime</p>
+   <p>Speed</p>
+   <p>*Bearing*</p>
+   <p>Course</p>
+   <p>Heading</p>
+   <p>RateOfTurn</p>
+   <p>Time</p>
+   <p>Distance</p>
+   <p></p>
+   <p></p>
+  </div>
+
+  <div id="More" class="w3-container tab">
+   <p>MMSIType</p>
+   <p>Maneuver</p>
+   <p>NavigationStatus</p>  
+   <p>Latitude</p>
+   <p>Longitude</p>
+   <p>Altitude</p>
+   <p>Destination</p>
+  </div>
+
+  <div id="Extra" class="w3-container tab">
+   <p>Imonumber (A)</p>
+   <p>VendorId (B)</p>
+   <p>SerialNumber (B)</p>
+   <p></p>
+   <p></p>   
+  </div>
+
+  <div class="w3-container w3-light-grey w3-padding">
+   <button class="w3-button w3-right w3-white w3-border" 
+   onclick="document.getElementById('id01').style.display='none'">Close</button>
+  </div>
+ </div>
+</div>
+
+</div>
+
+<script>
+document.getElementsByClassName("tablink")[0].click();
+
+function openTab(evt, tabName) {
+  var i, x, tablinks;
+  x = document.getElementsByClassName("tab");
+  for (i = 0; i < x.length; i++) {
+    x[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablink");
+  for (i = 0; i < x.length; i++) {
+    tablinks[i].classList.remove("w3-light-grey");
+  }
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.classList.add("w3-light-grey");
+}
+
+// Get the modal
+var modal = document.getElementById('id01');
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+
+</script>
+ 
+
+</body>
+</html>

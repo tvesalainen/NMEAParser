@@ -269,7 +269,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
         {
             if (mmsi != 0)
             {
-                dynamic.setTimestamp((((Clock)clock).instant()));
+                dynamic.setTimestamp(((Clock)clock).instant());
                 if (ownMessage)
                 {
                     if (ownTarget == null)
