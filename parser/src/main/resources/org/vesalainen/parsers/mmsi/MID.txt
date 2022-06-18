@@ -39,7 +39,7 @@ Georgia
 GE
 214
 Moldova
-
+MD
 215
 Malta
 MT
@@ -75,7 +75,7 @@ Finland
 FI
 231
 Faroe Islands
-
+FO
 232
 United Kingdom
 GB
@@ -180,7 +180,7 @@ Sweden
 SE
 267
 Slovak Republic
-
+SK
 268
 San Marino
 SM
@@ -231,22 +231,22 @@ Antigua and Barbuda
 AG
 306
 Netherlands Antilles
-
+AN
 307
 Aruba
 AW
 308
 Bahamas
-
+BS
 309
 Bahamas
-
+BS
 310
 Bermuda
 BM
 311
 Bahamas
-
+BS
 312
 Belize
 BZ
@@ -258,7 +258,7 @@ Canada
 CA
 319
 Cayman Islands
-
+KY
 321
 Costa Rica
 CR
@@ -348,7 +348,7 @@ Trinidad and Tobago
 TT
 364
 Turks and Caicos Islands
-
+TC
 366
 United States of America
 US
@@ -381,13 +381,13 @@ Saint Vincent and the Grenadines
 VC
 378
 British Virgin Islands
-
+VG
 379
 United States Virgin Islands
-
+VI
 401
 Afghanistan
-
+AF
 403
 Saudi Arabia
 SA
@@ -407,17 +407,17 @@ CN
 China
 CN
 416
-Taiwan (Province of China)
+Taiwan
 TW
 417
-Sri Lanka (Democratic Socialist Republic of)
+Sri Lanka
 LK
 419
 India
 IN
 422
 Iran
-
+IR
 423
 Azerbaijani Republic
 AZ
@@ -446,17 +446,17 @@ UZ
 Jordan (Hashemite Kingdom of)
 JO
 440
-Korea
-
+South Korea
+KR
 441
-Korea
-
+South Korea
+KR
 443
-Palestine (In accordance with Resolution 99 Rev. Antalya, 2006)
-
+Palestine
+PS
 445
-Democratic People's Republic of Korea
-
+North Korea
+KP
 447
 Kuwait
 KW
@@ -465,9 +465,9 @@ Lebanon
 LB
 451
 Kyrgyz Republic
-
+KG
 453
-Macao (Special Administrative Region of China)
+Macao
 MO
 455
 Maldives
@@ -489,10 +489,10 @@ Qatar
 QA
 468
 Syrian Arab Republic
-
+SY
 470
 United Arab Emirates
-
+AE
 473
 Yemen
 YE
@@ -500,26 +500,26 @@ YE
 Yemen
 YE
 477
-Hong Kong (Special Administrative Region of China)
+Hong Kong
 HK
 478
 Bosnia and Herzegovina
 BA
 501
 Adelie Land
-
+TF
 503
 Australia
 AU
 506
-Myanmar (Union of)
+Myanmar
 MM
 508
 Brunei Darussalam
 BN
 510
-Micronesia (Federated States of)
-
+Micronesia
+FM
 511
 Palau
 PW
@@ -533,17 +533,17 @@ KH
 Cambodia
 KH
 516
-Christmas Island (Indian Ocean)
+Christmas Island
 CX
 518
 Cook Islands
-
+CK
 520
 Fiji
 FJ
 523
 Cocos (Keeling) Islands
-
+CC
 525
 Indonesia
 ID
@@ -551,17 +551,17 @@ ID
 Kiribati
 KI
 531
-Lao People's Democratic Republic
-
+Laos
+LA
 533
 Malaysia
 MY
 536
 Northern Mariana Islands
-
+MP
 538
 Marshall Islands
-
+MH
 540
 New Caledonia
 NC
@@ -576,7 +576,7 @@ French Polynesia
 PF
 548
 Philippines
-
+PH
 553
 Papua New Guinea
 PG
@@ -585,7 +585,7 @@ Pitcairn Island
 PN
 557
 Solomon Islands
-
+SB
 559
 American Samoa
 AS
@@ -633,7 +633,7 @@ Saint Paul and Amsterdam Islands
 
 608
 Ascension Island
-
+AC
 609
 Burundi
 BI
@@ -645,7 +645,7 @@ Botswana
 BW
 612
 Central African Republic
-
+CF
 613
 Cameroon
 CM
@@ -657,7 +657,7 @@ Comoros
 KM
 617
 Cape Verde
-
+CV
 618
 Crozet Archipelago
 
@@ -684,7 +684,7 @@ Ghana
 GH
 629
 Gambia
-
+GM
 630
 Guinea-Bissau
 GW
@@ -710,8 +710,8 @@ LR
 Liberia
 LR
 642
-Socialist People's Libyan Arab Jamahiriya
-
+Libya
+LY
 644
 Lesotho
 LS
@@ -735,7 +735,7 @@ Malawi
 MW
 656
 Niger
-
+NE
 657
 Nigeria
 NG
@@ -744,13 +744,13 @@ Namibia
 NA
 660
 Reunion
-
+RE
 661
 Rwanda
 RW
 662
 Sudan
-
+SD
 663
 Senegal
 SN
@@ -759,10 +759,10 @@ Seychelles
 SC
 665
 Saint Helena
-
+SH
 666
 Somali Democratic Republic
-
+SO
 667
 Sierra Leone
 SL
@@ -783,16 +783,16 @@ Tunisia
 TN
 674
 Tanzania
-
+TZ
 675
 Uganda
 UG
 676
 Democratic Republic of the Congo
-
+CD
 677
 Tanzania
-
+TZ
 678
 Zambia
 ZM
@@ -801,13 +801,13 @@ Zimbabwe
 ZW
 701
 Argentine Republic
-
+AR
 710
 Brazil
 BR
 720
 Bolivia
-
+BO
 725
 Chile
 CL
@@ -819,7 +819,7 @@ Ecuador
 EC
 740
 Falkland Islands
-
+FK
 745
 Guiana
 
@@ -840,4 +840,4 @@ Uruguay
 UY
 775
 Venezuela
-
+VE
