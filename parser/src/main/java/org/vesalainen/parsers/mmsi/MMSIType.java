@@ -26,47 +26,60 @@ public enum MMSIType
     /**
      * The 9-digit code constituting a ship station identity
      */
-    ShipStation,
+    ShipStation("Ship station"),
     /**
      * Group ship station call identities for calling simultaneously more than one ship
      */
-    GroupShipStation,
+    GroupShipStation("Group ship station"),
     /**
      * Coast station identity
      */
-    CoastStation,
+    CoastStation("Coast station"),
     /**
      * SAR aircraft
      */
-    SarAircraft,
+    SarAircraft("SAR aircraft"),
     /**
      * Handheld VHF transceiver with DSC and GNSS
      */
-    HandheldVHF,
+    HandheldVHF("Handheld VHF"),
     /**
      * Search and Rescue Transponder
      */
-    SearchAndRescueTransponder, // S.A.R.T, ...
+    SearchAndRescueTransponder("Search and rescue transponder"), // S.A.R.T, ...
     /**
      * Man overboard DSC and/or AIS device
      */
-    MobDevice,
+    MobDevice("MOB devide"),
     /**
      * 406 MHz EPIRBs fitted with an AIS transmitter
      */
-    EPIRB,
+    EPIRB("EPIRB"),
     /**
      * Craft associated with a parent ship
      */
-    CraftAssociatedWithParentShip,  // life-rafts,...
+    CraftAssociatedWithParentShip("Craft associated with parent ship"),  // life-rafts,...
     /**
      * Navigational aid
      */
-    NavigationalAid,
+    NavigationalAid("Navigational aid"),
     /**
      * Unknown type
      */
-    Unknown;
+    Unknown("Unknown");
+    
+    private String description;
+    
+    private MMSIType(String description)
+    {
+        this.description = description;
+    }
+
+    public String getDescription()
+    {
+        return description;
+    }
+    
     /**
      * Returns MMSI type. This is fast method not fully parsing MMSI.
      * @param mmsi

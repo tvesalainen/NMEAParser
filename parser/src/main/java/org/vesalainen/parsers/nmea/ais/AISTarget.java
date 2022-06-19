@@ -223,8 +223,14 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
      */
     public String getMMSIType()
     {
-        return data.getMMSIType().toString();
+        return data.getMMSIType();
     }
+
+    public String getAlpha2Code()
+    {
+        return data.getAlpha2Code();
+    }
+    
     /**
      * Returns country of target
      * @return 
@@ -411,7 +417,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
 
     public String getShipType()
     {
-        return data.getShipType().toString();
+        return data.getShipType().getDescription();
     }
 
     public float getDraught()
@@ -488,12 +494,12 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
 
     public String getNavigationStatus()
     {
-        return dynamic.getNavigationStatus().toString();
+        return dynamic.getNavigationStatus().getDescription();
     }
 
     public String getManeuver()
     {
-        return dynamic.getManeuver().toString();
+        return dynamic.getManeuver().getDescription();
     }
 
     public char getChannel()

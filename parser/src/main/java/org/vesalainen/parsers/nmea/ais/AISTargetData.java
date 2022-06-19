@@ -104,11 +104,27 @@ public class AISTargetData extends AnnotatedPropertyStore
         ensureMMSIParsed();
         if (mmsiEntry != null)
         {
-            return mmsiEntry.getType().toString();
+            return mmsiEntry.getType().getDescription();
         }
         else
         {
             return "???";
+        }
+    }
+    /**
+     * Returns ISO 3166-1-alpha-2 code
+     * @return 
+     */
+    public String getAlpha2Code()
+    {
+        ensureMMSIParsed();
+        try
+        {
+            return mmsiEntry.getMid().getIso3166Entry().getAlpha2Code();
+        }
+        catch (NullPointerException ex)
+        {
+            return "";
         }
     }
     /**
