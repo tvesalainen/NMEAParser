@@ -22,21 +22,24 @@ function Gauge(element, seq)
 {
     this.event = seq;
     this.property = element.getAttribute("data-property");
-    this.div = document.createElement("div");
-    element.appendChild(this.div);
+    if (this.property !== "ais")
+    {
+        this.div = document.createElement("div");
+        element.appendChild(this.div);
+    }
     switch (this.property)
     {
         case "ais":
-            this.ais = new AisList();
-            this.div.appendChild(this.ais.table);
+            this.ais = new AisList(element);
             this.request = {event : this.event, property : this.property};
             this.call = function(data)
             {
-                var json = JSON.parse(data);[]
+                var json = JSON.parse(data);
                 this.ais.set(json["value"]);
             };
             this.tick = function()
             {
+                this.ais.tick();
             };
             break;
         case "message":

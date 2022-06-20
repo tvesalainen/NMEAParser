@@ -162,6 +162,22 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         return cpaDistance;
     }
     /**
+     * Returns distance to ownTarget in NM
+     * @return 
+     */
+    public double getDistance()
+    {
+        if (ownTarget != null)
+        {
+            return Navis.distance(ownTarget.getLatitude(), ownTarget.getLongitude(), getLatitude(), getLongitude());
+        }
+        else
+        {
+            return Double.NaN;
+        }
+    }
+    
+    /**
      * Returns bearing from own ship to this
      * @return 
      */
@@ -292,16 +308,6 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
             return AISBuilder.EMPTY;
         }
     }    
-    /**
-     * Returns distance to ownTarget in NM
-     * @return 
-     */
-    public double getDistance()
-    {
-        calc();
-        return distance;
-    }
-    
     /**
      * Returns AIS antenna distance to starboard side.
      * @return 
@@ -453,6 +459,11 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
     public int getSerialNumber()
     {
         return data.getSerialNumber();
+    }
+
+    public String getVendor()
+    {
+        return AISVendors.getVendor(data.getVendorId());
     }
 
     public String getVendorId()

@@ -169,6 +169,18 @@ body.NIGHT {
     display: none;
 }
 
-table:hover .extra {
+xxtable:hover .extra {
     display: inline-block;
+}
+
+.ais-table {
+    
+}
+
+.ais-data-header {
+    
+}
+
+.detail-flag {
+    height: 30px;
 }

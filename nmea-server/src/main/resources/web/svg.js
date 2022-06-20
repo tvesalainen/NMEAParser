@@ -16,7 +16,7 @@
  */
 "use strict";
 
-/* global Svg, Title, Svg, serverMillis, zoneOffset */
+/* global Svg, Title, Svg, serverMillis, zoneOffset setServerTime getServerTime */
 
 var offsetMillis=0;
 

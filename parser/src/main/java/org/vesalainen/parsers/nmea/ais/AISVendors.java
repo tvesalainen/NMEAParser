@@ -70,7 +70,7 @@ public class AISVendors
         }
         else
         {
-            return "???";
+            return code;
         }
     }
 }

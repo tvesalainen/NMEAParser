@@ -16,66 +16,162 @@
  */
 "use strict";
 
-/* global serverMillis, zoneOffset AisList */
+/* global getServerTime, zoneOffset AisList populate */
 
-function AisList()
+var properties = [];
+var data = {};
+
+function AisList(tbody)
 {
-    this.table = document.createElement('table');
-    this.table.appendChild(createHeader());
+    this.table = tbody;
+    var header = document.getElementById("header");
+    var ths = header.getElementsByTagName("th");
+    for (let i=0;i<ths.length;i++)
+    {
+        var th = ths[i];
+        var property = th.getAttribute("data-property");
+        properties.push(property);
+    }
 
     this.set = function(json)
     {
         var mmsi = json["mmsi"];
         if (mmsi)
         {
-            var id = "row-"+mmsi;
-            var row = document.getElementById(id);
+            data[mmsi] = json;
+            var row = document.getElementById(mmsi);
             if (!row)
             {
-                row = createRow(mmsi);
+                row = createRow(mmsi, json["alpha2"]);
                 this.table.appendChild(row);
             }
             var cols = row.getElementsByTagName("td");
             for (let i=0;i<cols.length;i++)
             {
                 var col = cols[i];
-                var name = col.getAttribute("data-name");
+                var name = col.className;
                 var value = json[name];
                 if (value)
                 {
-                    col.innerHTML = value;
+                    switch (name)
+                    {
+                        case "time":
+                            col.innerHTML = getAge(value);
+                            break;
+                        default:
+                            col.innerHTML = value;
+                            break;
+                    }
                 }
             }
         }
     };
+    this.tick = function()
+    {
+        for (let mmsi in data)
+        {
+            var vessel = data[mmsi];
+            var time = vessel["time"];
+            var row = document.getElementById(mmsi);
+            if (row)
+            {
+                var t = row.getElementsByClassName("time");
+                t[0].innerHTML = getAge(time);
+            }
+        }
+    };
 }
-
-function createRow(mmsi)
+function populate(event)
+{
+    var path = event.path;
+    var mmsi;
+    for (let i=0;i<path.length;i++)
+    {
+        var e = path[i];
+        if (e.localName === 'tr')
+        {
+            mmsi = e.id;
+            break;
+        }
+    }
+    var d = data[mmsi];
+    var elems = document.getElementsByClassName("property");
+    for (let i=0;i<elems.length;i++)
+    {
+        var elem = elems[i];
+        var property = elem.getAttribute("data-property");
+        if (property)
+        {
+            switch (property)
+            {
+                case "flag":
+                    var code = d["alpha2"].toLowerCase();
+                    elem.innerHTML = '<img class="detail-flag" src="flag-icons-main/flags/4x3/'+code+'.svg"></img>';
+                    break;
+                default:
+                    elem.innerHTML = d[property];
+                    break;
+            }
+        }
+    }
+}
+function createRow(mmsi, alpha2)
 {
     var row = document.createElement('tr');
-    row.id = "row-"+mmsi;
-    addColumn(row, "mmsi");
-    addColumn(row, "name");
-    addColumn(row, "country");
+    row.id = mmsi;
+    row.className = "item";
+    for (let i=0;i<properties.length;i++)
+    {
+        var name = properties[i];
+        switch (name)
+        {
+            case "flag":
+                addFlag(row, alpha2, name);
+                break;
+            default:
+                addColumn(row, name);
+                break;
+        }
+    }
     return row;
-}
-function createHeader()
-{
-    var hdr = document.createElement('tr');
-    addHeader(hdr, "MMSI");
-    addHeader(hdr, "Name");
-    addHeader(hdr, "Country");
-    return hdr;
 }
 function addColumn(row, name)
 {
     var td = document.createElement('td');
-    td.setAttribute("data-name", name);
+    td.className = name;
     row.appendChild(td);
 }
-function addHeader(hdr, title)
+function addFlag(row, alpha2, name)
 {
-    var th = document.createElement('th');
-    hdr.appendChild(th);
-    th.innerHTML = title;
+    var code = alpha2.toLowerCase();
+    var td = document.createElement('td');
+    td.className = name;
+    row.appendChild(td);
+    var img = document.createElement('img');
+    td.appendChild(img);
+    img.className = "row-flag";
+    img.setAttribute("src", "flag-icons-main/flags/4x3/"+code+".svg");
+}
+function getAge(time)
+{
+    var s = Math.floor((getServerTime() - time)/1000);
+    if (s < 60)
+    {
+        return s+"s";
+    }
+    else
+    {
+        var m = Math.floor(s / 60);
+        s = s % 60;
+        if (m < 60)
+        {
+            return m+"m "+s+"s";
+        }
+        else
+        {
+            var h = Math.floor(m / 60);
+            m = m % 60;
+            return h+"h "+m+"m "+s+"s";
+        }
+    }
 }

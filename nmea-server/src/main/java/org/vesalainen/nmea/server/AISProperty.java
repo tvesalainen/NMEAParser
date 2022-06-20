@@ -89,7 +89,7 @@ public class AISProperty extends ObjectProperty
                         .format("beam", "%.0f", target::getBeam)
                         .format("draught", "%.1f", target::getDraught)
                         .bool("classA", target::isClassA)
-                        .value("vendor", target::getVendorId)
+                        .value("vendor", target::getVendor)
                         .number("serial", target::getSerialNumber)
                         .value("mmsiType", target::getMMSIType)
                         .value("shipType", target::getShipType)
@@ -103,10 +103,12 @@ public class AISProperty extends ObjectProperty
                         .format("speed", "%.1f", target::getSpeed)
                         .format("cog", "%.0f", target::getCourse)
                         .format("hdg", "%.0f", target::getHeading)
+                        .format("bearing", "%.0f", target::getBearing)
                         .format("rot", "%.0f", target::getRateOfTurn)
                         .number("time", target::getTime)
                         .value("destination", target::getDestination)
                         .format("distance", "%.1f", target::getDistance)
+                        .value("alpha2", target::getAlpha2Code)
         ;
     }
     
