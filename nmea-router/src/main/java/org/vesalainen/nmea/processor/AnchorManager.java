@@ -564,9 +564,15 @@ public class AnchorManager extends AbstractProcessorTask
                 scope.reshape(data.rows(), 1);
             }
             computeScopeCoef(coefParam, wind, scope);
-            if (circleSolver.optimize(centerParam, internPoints, scope))
+            try
             {
-                centerParam.set(circleSolver.getParameters());
+                if (circleSolver.optimize(centerParam, internPoints, scope))
+                {
+                    centerParam.set(circleSolver.getParameters());
+                }
+            }
+            catch (ArithmeticException ex)
+            {
             }
         }
 
@@ -586,7 +592,7 @@ public class AnchorManager extends AbstractProcessorTask
                 }
                 else
                 {
-                    throw new IllegalArgumentException("nan");
+                    throw new ArithmeticException("nan");
                 }
             }
         }
