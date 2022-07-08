@@ -16,13 +16,10 @@
  */
 package org.vesalainen.nmea.server;
 
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;

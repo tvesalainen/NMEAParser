@@ -40,5 +40,6 @@ public enum NMEACategory
     VOLTAGE,
     ELECTRIC_CURRENT,
     PRESSURE,
+    PERCENT,
     MISCELLENEOUS
 }

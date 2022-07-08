@@ -331,6 +331,7 @@ function Gauge(element, seq)
                     if (json['title'] && name === "estimatedTimeOfArrival")
                     {
                         this.svg.setTitle(json['title'], json['unit']);
+                        this.svg.setEtaHistory(json['history']);
                     }
                 }
             };

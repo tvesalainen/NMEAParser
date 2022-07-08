@@ -119,4 +119,36 @@ public interface XdrObserver
     @NMEACat(PHASE)
     @Unit(value=DEGREE, min=0, max=360)
     void setTidePhase(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PERCENT)
+    @Unit(value=UNITLESS, min=0, max=100)
+    void setStateOfCharge0(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PERCENT)
+    @Unit(value=UNITLESS, min=0, max=100)
+    void setStateOfCharge1(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PERCENT)
+    @Unit(value=UNITLESS, min=0, max=100)
+    void setStateOfCharge2(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PERCENT)
+    @Unit(value=UNITLESS, min=0, max=100)
+    void setStateOfCharge3(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PERCENT)
+    @Unit(value=UNITLESS, min=0, max=100)
+    void setStateOfHealth0(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PERCENT)
+    @Unit(value=UNITLESS, min=0, max=100)
+    void setStateOfHealth1(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PERCENT)
+    @Unit(value=UNITLESS, min=0, max=100)
+    void setStateOfHealth2(float c);
+    @NMEA0183({XDR})
+    @NMEACat(PERCENT)
+    @Unit(value=UNITLESS, min=0, max=100)
+    void setStateOfHealth3(float c);
 }

@@ -322,8 +322,15 @@ public class NMEASentence
     {
         return builder(talkerId, XDR)
                 .bindXdrGroup('V', voltage, 'V', "BAT", instance) 
-                .bindXdrGroup('C', amp, 'A', "BAT", instance)
+                .bindXdrGroup('I', amp, 'A', "BAT", instance)
                 .bindXdrGroup('T', temp, 'C', "BAT", instance)
+                .build();
+    }
+    public static NMEASentence dcDetailedStatus(Supplier<TalkerId> talkerId, IntSupplier instance, IntSupplier soc, IntSupplier soh)
+    {
+        return builder(talkerId, XDR)
+                .bindXdrGroup('C', soc, '%', "BAT", instance) 
+                .bindXdrGroup('H', soh, '%', "BAT", instance)
                 .build();
     }
     public static NMEASentence environmental(Supplier<TalkerId> talkerId, DoubleSupplier outTemp, DoubleSupplier waterTemp, DoubleSupplier pressure)
@@ -865,6 +872,24 @@ public class NMEASentence
                         {
                             p.print(instance.getAsInt());
                         }
+                    }
+                });
+                return this;
+        }
+        private Builder bindXdrGroup(char type, IntSupplier supplier, char unit, String name, IntSupplier instance)
+        {
+                bind((p)->
+                {
+                    int v = supplier.getAsInt();
+                    p.print(',');
+                    p.print(type);
+                    p.format(Locale.US, ",%d,", v);
+                    p.print(unit);
+                    p.print(',');
+                    p.print(name);
+                    if (instance != null)
+                    {
+                        p.print(instance.getAsInt());
                     }
                 });
                 return this;

@@ -62,6 +62,8 @@ public class NMEASender extends AnnotatedPropertyStore
     private @Property float temperature;
     private @Property float outsideTemperature;
     private @Property float atmosphericPressure;
+    private @Property int stateOfCharge;
+    private @Property int stateOfHealth;
     
     private Clock frameClock;
     private N2KClock positionClock;
@@ -80,6 +82,7 @@ public class NMEASender extends AnnotatedPropertyStore
     private final NMEASentence attitude;
     private final NMEASentence battery;
     private final NMEASentence environmental;
+    private final NMEASentence dcDetailedStatus;
     
     public NMEASender(SourceManager sourceManager, WritableByteChannel channel)
     {
@@ -154,6 +157,11 @@ public class NMEASender extends AnnotatedPropertyStore
                 ()->outsideTemperature,
                 ()->waterTemperature,
                 ()->atmosphericPressure/1000F);
+        this.dcDetailedStatus = NMEASentence.dcDetailedStatus(
+                ()->sourceManager.getTalkerId(canId),
+                ()->batteryInstance+sourceManager.getInstanceOffset(canId),
+                ()->stateOfCharge,
+                ()->stateOfHealth);
         
     }
     private double magneticVariation(Clock clock)
@@ -248,6 +256,9 @@ public class NMEASender extends AnnotatedPropertyStore
                     {
                         battery.writeTo(channel);
                     }
+                    break;
+                case DC_DETAILED_STATUS:
+                    dcDetailedStatus.writeTo(channel);
                     break;
             }
         }

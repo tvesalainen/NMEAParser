@@ -16,7 +16,7 @@
  */
 "use strict";
 
-/* global Svg, Title, Svg, serverMillis, zoneOffset setServerTime getServerTime */
+/* global Svg, Title, Svg, serverMillis, zoneOffset setServerTime getServerTime, zoneOffset */
 
 var offsetMillis=0;
 
@@ -172,6 +172,10 @@ function Svg(x, y, width, height)
     {
         this.data = [];
     };
+    this.setEtaHistory = function(history)
+    {
+        this.historyMillis = history;
+    };
     this.resetEta = function(time, value)
     {
         if (this.toWaypoint)
@@ -186,7 +190,7 @@ function Svg(x, y, width, height)
     this.setEta = function(time, value)
     {
         setServerTime(time);
-        while (this.data.length > 0 && (time - this.data[0]) > 86400000)
+        while (this.data.length > 0 && (time - this.data[0]) > this.historyMillis)
         {
             this.data.shift();
             this.data.shift();
@@ -199,18 +203,18 @@ function Svg(x, y, width, height)
         var duration = time - firstTime;
         var range = firstRange - value;
         var left = value*duration/range;
-        var eta = new Date(time+left);
+        var eta = new Date(time+zoneOffset+left);
         var min = eta.getMinutes();
         if (min.length === 1)
         {
             min = "0"+min;
         }
         this.setText1(`${eta.getDate()}.${eta.getMonth()+1}. ${eta.getHours()}:${min}`);
-        left /= 60000;
+        left = (left / 60000).toFixed(0);
         var m = (left % 60).toFixed(0);
-        left /= 60;
+        left = (left / 60).toFixed(0);
         var h = (left % 60).toFixed(0);
-        left /= 24;
+        left = (left / 24).toFixed(0);
         var d = left.toFixed(0);
         this.setText2(`${d}d${h}h${m}m`);
     };

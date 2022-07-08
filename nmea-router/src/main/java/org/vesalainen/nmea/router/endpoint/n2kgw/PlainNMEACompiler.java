@@ -69,6 +69,9 @@ public final class PlainNMEACompiler extends AbstractNMEACompiler
         addPgnSetter(BATTERY_STATUS, "Battery_Voltage", "voltage");
         addPgnSetter(BATTERY_STATUS, "Battery_Current", "current");
         addPgnSetter(BATTERY_STATUS, "Battery_Case_Temperature", "temperature");
+        
+        addPgnSetter(DC_DETAILED_STATUS, "State_Of_Charge", "stateOfCharge");
+        addPgnSetter(DC_DETAILED_STATUS, "State_Of_Health", "stateOfHealth");
     }
 
     @Override
