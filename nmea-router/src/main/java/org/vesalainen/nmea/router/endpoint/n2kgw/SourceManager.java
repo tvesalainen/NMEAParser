@@ -94,7 +94,7 @@ public class SourceManager extends JavaLogging
     public int getInstanceOffset(int canId)
     {
         int sa = PGN.sourceAddress(canId);
-        Source src = map.get(sa);
+        Source src = map.get((byte)sa);
         if (src != null)
         {
             return src.instanceOffset;
