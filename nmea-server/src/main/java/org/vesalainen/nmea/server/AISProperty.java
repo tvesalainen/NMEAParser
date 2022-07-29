@@ -109,6 +109,7 @@ public class AISProperty extends ObjectProperty
                         .value("destination", target::getDestination)
                         .format("distance", "%.1f", target::getDistance)
                         .value("alpha2", target::getAlpha2Code)
+                        .value("cat", target::getCategory)
         ;
     }
     

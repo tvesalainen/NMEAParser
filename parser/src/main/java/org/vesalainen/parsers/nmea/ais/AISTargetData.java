@@ -99,7 +99,23 @@ public class AISTargetData extends AnnotatedPropertyStore
      * Returns MMSI type of target
      * @return 
      */
-    public String getMMSIType()
+    public MMSIType getMMSIType()
+    {
+        ensureMMSIParsed();
+        if (mmsiEntry != null)
+        {
+            return mmsiEntry.getType();
+        }
+        else
+        {
+            return MMSIType.Unknown;
+        }
+    }
+    /**
+     * Returns MMSI type of target
+     * @return 
+     */
+    public String getMMSITypeDescription()
     {
         ensureMMSIParsed();
         if (mmsiEntry != null)

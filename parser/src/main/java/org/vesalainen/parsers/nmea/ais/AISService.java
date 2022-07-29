@@ -323,7 +323,7 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
             AISTargetData dat;
             AISTargetDynamic dyn = new AISTargetDynamic();
             URL dataPath = getDataPath(dir, mmsi);
-            if (dataPath != null && exists(dataPath))
+            if (dataPath != null && Nets.exists(dataPath))
             {
                 dat = new AISTargetData(dataPath, false);
                 fine("loaded from %s", dataPath);
@@ -397,18 +397,5 @@ public class AISService extends AnnotatedPropertyStore implements Transactional,
             throw new IllegalArgumentException(ex);
         }
         
-    }
-    private boolean exists(URL url)
-    {
-        try
-        {
-            URLConnection connection = url.openConnection();
-            connection.connect();
-            return true;
-        }
-        catch (IOException ex)
-        {
-            return false;
-        }
     }
 }

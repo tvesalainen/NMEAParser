@@ -239,7 +239,7 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
      */
     public String getMMSIType()
     {
-        return data.getMMSIType();
+        return data.getMMSITypeDescription();
     }
 
     public String getAlpha2Code()
@@ -471,6 +471,21 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         return data.getVendorId();
     }
 
+    public String getCategory()
+    {
+        switch (data.getMMSIType())
+        {
+            case CoastStation:
+                return "BASE";
+            case SarAircraft:
+                return "SAR";
+            case NavigationalAid:
+                return "ATON";
+            default:
+                return isClassA() ? "A" : "B";
+        }
+    }
+    
     public String getMessageType()
     {
         return dynamic.getMessageType().toString();

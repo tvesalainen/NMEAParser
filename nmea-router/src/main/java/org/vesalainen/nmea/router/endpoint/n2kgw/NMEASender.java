@@ -258,7 +258,10 @@ public class NMEASender extends AnnotatedPropertyStore
                     }
                     break;
                 case DC_DETAILED_STATUS:
-                    dcDetailedStatus.writeTo(channel);
+                    if (stateOfCharge != 255 || stateOfHealth != 255)
+                    {
+                        dcDetailedStatus.writeTo(channel);
+                    }
                     break;
             }
         }

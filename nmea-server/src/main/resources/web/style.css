@@ -184,3 +184,7 @@ xxtable:hover .extra {
 .detail-flag {
     height: 30px;
 }
+
+.ais-datawindow-header {
+    font-size: 70%;
+}

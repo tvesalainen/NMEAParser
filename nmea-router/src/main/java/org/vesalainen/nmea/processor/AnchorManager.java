@@ -445,7 +445,7 @@ public class AnchorManager extends AbstractProcessorTask
         @Override
         protected void failed(String reason)
         {
-            fine("anchoring stopped because %s", reason);
+            info("anchoring stopped because %s", reason);
             nmeaManager.stop();
             if (estimator != null)
             {
@@ -631,16 +631,23 @@ public class AnchorManager extends AbstractProcessorTask
 
         private void finalizeEstimate(Plot p)
         {
-            finalCalc();
-            fine("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
-            double meanDepth = seabedSurveyor.getMeanDepth();
-            if (p != null)
+            try
             {
-                drawPoints(p);
-                p.setColor(BLACK);
-                p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
-                p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
-                p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), meanDepth, circleSolver.getFinalCost()));
+                finalCalc();
+                fine("AnchorEstimate(%f, %f, %f, %f)=%f", params.get(0, 0), params.get(1, 0), params.get(2, 0), params.get(3, 0), circleSolver.getFinalCost());
+                double meanDepth = seabedSurveyor.getMeanDepth();
+                if (p != null)
+                {
+                    drawPoints(p);
+                    p.setColor(BLACK);
+                    p.drawCross(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0));
+                    p.drawCircle(localLongitude.getExternal(centerParam.get(0, 0)), centerParam.get(1, 0), METER.convertTo(horizontalScope, NAUTICAL_DEGREE));
+                    p.drawTitle(Direction.TOP, String.format("coef=%f.1, s=%f.1, d=%f.1 cost=%f.1", params.get(2, 0), params.get(3, 0), meanDepth, circleSolver.getFinalCost()));
+                }
+            }
+            catch (ArithmeticException ex)
+            {
+                
             }
         }
 

@@ -16,10 +16,12 @@
  */
 "use strict";
 
-/* global getServerTime, zoneOffset AisList populate */
+/* global getServerTime, zoneOffset AisList populate cat getCat openTab */
 
 var properties = [];
 var data = {};
+var cat;
+var currentMMSI;
 
 function AisList(tbody)
 {
@@ -79,6 +81,7 @@ function AisList(tbody)
                 t[0].innerHTML = getAge(time);
             }
         }
+        updateMMSI(currentMMSI);
     };
 }
 function populate(event)
@@ -94,27 +97,96 @@ function populate(event)
             break;
         }
     }
+    currentMMSI = Number(mmsi);
+    updateMMSI(mmsi);
+    var d = data[mmsi];
+    cat = d["cat"];
+    return cat;
+}
+function updateMMSI(mmsi)
+{
     var d = data[mmsi];
     var elems = document.getElementsByClassName("property");
     for (let i=0;i<elems.length;i++)
     {
         var elem = elems[i];
         var property = elem.getAttribute("data-property");
+        var value = d[property];
+        var num = Number(value);
+        if (Number.isFinite(num))
+        {
+            value = num;
+        }
         if (property)
         {
             switch (property)
             {
+                case "cpaDistance":
+                case "distance":
+                    if (typeof value === "number")
+                    {
+                        elem.innerHTML = value+" NM";
+                        elem.removeAttribute("style");
+                    }
+                    else
+                    {
+                        elem.setAttribute("style", "display: none");
+                    }
+                    break;
+                case "cpaMinutes":
+                    if (typeof value === "number")
+                    {
+                        elem.innerHTML = value+" min";
+                        elem.removeAttribute("style");
+                    }
+                    else
+                    {
+                        elem.setAttribute("style", "display: none");
+                    }
+                    break;
+                case "cog":
+                case "hdg":
+                case "bearing":
+                    if (value <= 360)
+                    {
+                        elem.innerHTML = value+" °";
+                        elem.removeAttribute("style");
+                    }
+                    else
+                    {
+                        elem.setAttribute("style", "display: none");
+                    }
+                    break;
+                case "rot":
+                    if (typeof value === "number")
+                    {
+                        elem.innerHTML = value+" °/min";
+                        elem.removeAttribute("style");
+                    }
+                    else
+                    {
+                        elem.setAttribute("style", "display: none");
+                    }
+                    break;
+                case "time":
+                    elem.innerHTML = getAge(value);
+                    break;
                 case "flag":
                     var code = d["alpha2"].toLowerCase();
                     elem.innerHTML = '<img class="detail-flag" src="flag-icons-main/flags/4x3/'+code+'.svg"></img>';
                     break;
                 default:
-                    elem.innerHTML = d[property];
+                    elem.innerHTML = value;
                     break;
             }
         }
     }
 }
+function getCat()
+{
+    return cat;
+}
+
 function createRow(mmsi, alpha2)
 {
     var row = document.createElement('tr');

@@ -106,7 +106,7 @@ public enum CodesForShipType
     /**
      * Wing in ground (WIG), all ships of this type
      */
-    WingInGroundWIGAllShipsOfThisType("Wing in ground (WIG), all ships of this type"),
+    WingInGroundWIGAllShipsOfThisType("Wing in ground (WIG)"),
     /**
      * Wing in ground (WIG), Hazardous category A
      */
@@ -154,7 +154,7 @@ public enum CodesForShipType
     /**
      * Towing: length exceeds 200m or breadth exceeds 25m
      */
-    TowingLengthExceeds200mOrBreadthExceeds25m("Towing: length exceeds 200m or breadth exceeds 25m"),
+    TowingLengthExceeds200mOrBreadthExceeds25m("Towing: l>200m or b>25m"),
     /**
      * Dredging or underwater ops
      */
@@ -186,7 +186,7 @@ public enum CodesForShipType
     /**
      * High speed craft (HSC), all ships of this type
      */
-    HighSpeedCraftHSCAllShipsOfThisType("High speed craft (HSC), all ships of this type"),
+    HighSpeedCraftHSCAllShipsOfThisType("High speed craft (HSC)"),
     /**
      * High speed craft (HSC), Hazardous category A
      */
@@ -266,7 +266,7 @@ public enum CodesForShipType
     /**
      * Passenger, all ships of this type
      */
-    PassengerAllShipsOfThisType("Passenger, all ships of this type"),
+    PassengerAllShipsOfThisType("Passenger"),
     /**
      * Passenger, Hazardous category A
      */
@@ -306,7 +306,7 @@ public enum CodesForShipType
     /**
      * Cargo, all ships of this type
      */
-    CargoAllShipsOfThisType("Cargo, all ships of this type"),
+    CargoAllShipsOfThisType("Cargo"),
     /**
      * Cargo, Hazardous category A
      */
@@ -346,7 +346,7 @@ public enum CodesForShipType
     /**
      * Tanker, all ships of this type
      */
-    TankerAllShipsOfThisType("Tanker, all ships of this type"),
+    TankerAllShipsOfThisType("Tanker"),
     /**
      * Tanker, Hazardous category A
      */
@@ -386,7 +386,7 @@ public enum CodesForShipType
     /**
      * Other Type, all ships of this type
      */
-    OtherTypeAllShipsOfThisType("Other Type, all ships of this type"),
+    OtherTypeAllShipsOfThisType("Other"),
     /**
      * Other Type, Hazardous category A
      */

@@ -86,7 +86,7 @@ public enum NavigationStatus
     /**
      * Not defined (default)
      */
-    NotDefinedDefault("Not defined (default)");
+    NotDefinedDefault("Not defined");
     private String description;
 
     NavigationStatus(String description)

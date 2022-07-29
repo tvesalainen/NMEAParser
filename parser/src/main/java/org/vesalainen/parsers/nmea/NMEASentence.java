@@ -329,8 +329,8 @@ public class NMEASentence
     public static NMEASentence dcDetailedStatus(Supplier<TalkerId> talkerId, IntSupplier instance, IntSupplier soc, IntSupplier soh)
     {
         return builder(talkerId, XDR)
-                .bindXdrGroup('C', soc, '%', "BAT", instance) 
-                .bindXdrGroup('H', soh, '%', "BAT", instance)
+                .bindXdrGroup('C', soc, 'P', "BAT", instance) 
+                .bindXdrGroup('H', soh, 'P', "BAT", instance)
                 .build();
     }
     public static NMEASentence environmental(Supplier<TalkerId> talkerId, DoubleSupplier outTemp, DoubleSupplier waterTemp, DoubleSupplier pressure)

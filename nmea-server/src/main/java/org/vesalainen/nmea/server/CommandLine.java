@@ -29,6 +29,7 @@ import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.session.DefaultSessionIdManager;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.JavaUtilLog;
@@ -86,10 +87,17 @@ public class CommandLine extends LoggingCommandLine
         Server server = new Server(httpPort);
         HandlerList handlers = new HandlerList();
         ServletContextHandler context = new ServletContextHandler();
+
+        ServletHolder defautlHolder = new ServletHolder(DefaultServlet.class);
+        defautlHolder.setInitParameter("resourceBase", aisDirectory.toString());
+        context.addServlet(defautlHolder, "*.dat");
+
+        ServletHolder sseHolder = new ServletHolder(SseServlet.class);
+        sseHolder.setAsyncSupported(true);
+        
+        context.addServlet(sseHolder, "/sse");
         context.addServlet(ResourceServlet.class, "/");
-        ServletHolder holder = new ServletHolder(SseServlet.class);
-        holder.setAsyncSupported(true);
-        context.addServlet(holder, "/sse");
+        context.addServlet(ResourceServlet.class, "*.html");
         context.addServlet(ResourceServlet.class, "*.js");
         context.addServlet(ResourceServlet.class, "*.css");
         context.addServlet(ResourceServlet.class, "*.gif");
@@ -97,11 +105,6 @@ public class CommandLine extends LoggingCommandLine
         context.addServlet(ResourceServlet.class, "*.ico");
         context.addServlet(PrefsServlet.class, "/prefs");
         context.addServlet(I18nServlet.class, "/i18n");
-        
-        ResourceHandler resourceHandler = new ResourceHandler();
-        resourceHandler.setDirAllowed(true);
-        resourceHandler.setResourceBase("c:\\temp");
-        handlers.addHandler(resourceHandler);
         
         SessionHandler sessionHandler = new SessionHandler();
         context.setSessionHandler(sessionHandler);

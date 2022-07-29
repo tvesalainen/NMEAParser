@@ -26,7 +26,7 @@ public enum ManeuverIndicator
     /**
      * Not available (default)
      */
-        NotAvailableDefault("Not available (default)"),
+    NotAvailableDefault(""),
     /**
      * No special maneuver
      */

@@ -7,6 +7,8 @@
     aisMaxLogSize="1M"
     aisTtl="1d"
 >
+    <property name="stateOfCharge2"/>
+    <property name="stateOfHealth2"/>
     <property name="ais"/>
     <property name="tideRange" decimals="1"/>
     <property name="tidePhase" decimals="0"/>

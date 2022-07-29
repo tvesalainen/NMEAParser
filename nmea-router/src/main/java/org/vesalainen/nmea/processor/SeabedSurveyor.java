@@ -71,11 +71,12 @@ public class SeabedSurveyor extends JavaLogging
         Square square = squareMap.getOrCreate(lonPos.applyAsDouble(longitude, heading), latPos.applyAsDouble(latitude, heading));
         if (square.setAndDerivate(depth))
         {
-            info("coef=%f phase=%f pts=%d cost=%f", 
+            info("coef=%f phase=%f pts=%d cost=%f\n%s", 
                     tideFitter.getCoefficient(),
                     tideFitter.getPhase(),
                     tideFitter.getPointCount(),
-                    tideFitter.getFinalCost()
+                    tideFitter.getFinalCost(),
+                    tideFitter.getPoints()
             );
         }
         depthSum += depth;
