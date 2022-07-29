@@ -16,7 +16,7 @@
  */
 "use strict";
 
-/* global getServerTime, zoneOffset AisList populate cat getCat openTab */
+/* global getServerTime, zoneOffset AisList populate cat getCat openTab clearOlds */
 
 var properties = [];
 var data = {};
@@ -112,10 +112,13 @@ function updateMMSI(mmsi)
         var elem = elems[i];
         var property = elem.getAttribute("data-property");
         var value = d[property];
-        var num = Number(value);
-        if (Number.isFinite(num))
+        if (value.length > 0)
         {
-            value = num;
+            var num = Number(value);
+            if (Number.isFinite(num))
+            {
+                value = num;
+            }
         }
         if (property)
         {
@@ -245,5 +248,25 @@ function getAge(time)
             m = m % 60;
             return h+"h "+m+"m "+s+"s";
         }
+    }
+}
+function clearOlds()
+{
+    var olds = [];
+    for (let m in data)
+    {
+        var d = data[m];
+        var time = d["time"];
+        if (getServerTime() - time > 86400000)
+        {
+            olds.push(m);
+        }
+    }
+    for (let i=0;i<olds.length;i++)
+    {
+        var mmsi = olds[i];
+        var el = document.getElementById(mmsi);
+        el.remove();
+        delete data[mmsi];
     }
 }

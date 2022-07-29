@@ -26,7 +26,7 @@ public enum CodesForShipType
     /**
      * Not available (default)
      */
-    NotAvailableDefault("Not available (default)"),
+    NotAvailableDefault("Not available"),
     /**
      * Reserved for future use
      */
@@ -110,19 +110,19 @@ public enum CodesForShipType
     /**
      * Wing in ground (WIG), Hazardous category A
      */
-    WingInGroundWIGHazardousCategoryA("Wing in ground (WIG), Hazardous category A"),
+    WingInGroundWIGHazardousCategoryA("Wing in ground (WIG), Haz cat A"),
     /**
      * Wing in ground (WIG), Hazardous category B
      */
-    WingInGroundWIGHazardousCategoryB("Wing in ground (WIG), Hazardous category B"),
+    WingInGroundWIGHazardousCategoryB("Wing in ground (WIG), Haz cat B"),
     /**
      * Wing in ground (WIG), Hazardous category C
      */
-    WingInGroundWIGHazardousCategoryC("Wing in ground (WIG), Hazardous category C"),
+    WingInGroundWIGHazardousCategoryC("Wing in ground (WIG), Haz cat C"),
     /**
      * Wing in ground (WIG), Hazardous category D
      */
-    WingInGroundWIGHazardousCategoryD("Wing in ground (WIG), Hazardous category D"),
+    WingInGroundWIGHazardousCategoryD("Wing in ground (WIG), Haz cat D"),
     /**
      * Wing in ground (WIG), Reserved for future use
      */
@@ -270,19 +270,19 @@ public enum CodesForShipType
     /**
      * Passenger, Hazardous category A
      */
-    PassengerHazardousCategoryA("Passenger, Hazardous category A"),
+    PassengerHazardousCategoryA("Passenger, Haz cat A"),
     /**
      * Passenger, Hazardous category B
      */
-    PassengerHazardousCategoryB("Passenger, Hazardous category B"),
+    PassengerHazardousCategoryB("Passenger, Haz cat B"),
     /**
      * Passenger, Hazardous category C
      */
-    PassengerHazardousCategoryC("Passenger, Hazardous category C"),
+    PassengerHazardousCategoryC("Passenger, Haz cat C"),
     /**
      * Passenger, Hazardous category D
      */
-    PassengerHazardousCategoryD("Passenger, Hazardous category D"),
+    PassengerHazardousCategoryD("Passenger, Haz cat D"),
     /**
      * Passenger, Reserved for future use
      */
@@ -310,19 +310,19 @@ public enum CodesForShipType
     /**
      * Cargo, Hazardous category A
      */
-    CargoHazardousCategoryA("Cargo, Hazardous category A"),
+    CargoHazardousCategoryA("Cargo, Haz cat A"),
     /**
      * Cargo, Hazardous category B
      */
-    CargoHazardousCategoryB("Cargo, Hazardous category B"),
+    CargoHazardousCategoryB("Cargo, Haz cat B"),
     /**
      * Cargo, Hazardous category C
      */
-    CargoHazardousCategoryC("Cargo, Hazardous category C"),
+    CargoHazardousCategoryC("Cargo, Haz cat C"),
     /**
      * Cargo, Hazardous category D
      */
-    CargoHazardousCategoryD("Cargo, Hazardous category D"),
+    CargoHazardousCategoryD("Cargo, Haz cat D"),
     /**
      * Cargo, Reserved for future use
      */
@@ -350,19 +350,19 @@ public enum CodesForShipType
     /**
      * Tanker, Hazardous category A
      */
-    TankerHazardousCategoryA("Tanker, Hazardous category A"),
+    TankerHazardousCategoryA("Tanker, Haz cat A"),
     /**
      * Tanker, Hazardous category B
      */
-    TankerHazardousCategoryB("Tanker, Hazardous category B"),
+    TankerHazardousCategoryB("Tanker, Haz cat B"),
     /**
      * Tanker, Hazardous category C
      */
-    TankerHazardousCategoryC("Tanker, Hazardous category C"),
+    TankerHazardousCategoryC("Tanker, Haz cat C"),
     /**
      * Tanker, Hazardous category D
      */
-    TankerHazardousCategoryD("Tanker, Hazardous category D"),
+    TankerHazardousCategoryD("Tanker, Haz cat D"),
     /**
      * Tanker, Reserved for future use
      */
@@ -390,19 +390,19 @@ public enum CodesForShipType
     /**
      * Other Type, Hazardous category A
      */
-    OtherTypeHazardousCategoryA("Other Type, Hazardous category A"),
+    OtherTypeHazardousCategoryA("Other Type, Haz cat A"),
     /**
      * Other Type, Hazardous category B
      */
-    OtherTypeHazardousCategoryB("Other Type, Hazardous category B"),
+    OtherTypeHazardousCategoryB("Other Type, Haz cat B"),
     /**
      * Other Type, Hazardous category C
      */
-    OtherTypeHazardousCategoryC("Other Type, Hazardous category C"),
+    OtherTypeHazardousCategoryC("Other Type, Haz cat C"),
     /**
      * Other Type, Hazardous category D
      */
-    OtherTypeHazardousCategoryD("Other Type, Hazardous category D"),
+    OtherTypeHazardousCategoryD("Other Type, Haz cat D"),
     /**
      * Other Type, Reserved for future use
      */
