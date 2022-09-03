@@ -20,9 +20,8 @@
 <body class="DAY">
 
 <div class="w3-container">
-    <table id="aisTable"
-        class="w3-striped  ais-table" 
-         >
+    <div><button onclick="location.reload();">All</button><button onclick="clearOlds(1440);">Last 24h</button><button onclick="clearOlds(60);">Last 1h</button></div>
+    <table id="aisTable" class="w3-striped  ais-table" >
         <thead>
             <tr id="header">
                 <th data-property="mmsi" onclick="w3.sortHTML('#aisTable','.item', 'td:nth-child(1)')">MMSI</th>
@@ -31,25 +30,20 @@
                 <th data-property="time" onclick="w3.sortHTML('#aisTable','.item', 'td:nth-child(4)')">Time</th>
             </tr>
         </thead>
-        <tbody 
-            class="gauge" data-property="ais"
-            onclick="var cat = populate(event);document.getElementById(cat).style.display='block';"
-            >
+        <tbody class="gauge" data-property="ais" onclick="var cat = populate(event);document.getElementById(cat).style.display='block';">
         </tbody>
     </table>
+    <div><button onclick="location.reload();">All</button><button onclick="clearOlds(1440);">Last 24h</button><button onclick="clearOlds(60);">Last 1h</button></div>
 </div>
 
+    
 <div id="A" class="w3-modal">
  <div class="w3-modal-content w3-card-4 w3-animate-zoom">
   <header class="w3-container w3-blue"> 
    <span onclick="document.getElementById('A').style.display='none'" 
    class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
-   <h2>
-       <span class="property" data-property="name"></span>
-       <span class="property" data-property="flag"></span>
-   </h2>
+   <h2><span class="property" data-property="name"></span><span class="property" data-property="flag"></span></h2>
   </header>
-  
     <div class="w3-container">
         <div class="w3-row">
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI</span><BR> <span class="property" data-property="mmsi"></span><span> A</span></div>
@@ -73,24 +67,21 @@
         </div>  
         <div class="w3-row">
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Report time</span><BR> <span class="property" data-property="time"></span></div>
-            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Destination</span><BR><span class="property" data-property="destination"></span> </div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Destination</span><BR><span class="property" data-property="destination"></span><br> <span class="property" data-property="eta"></span></div>
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI Type</span><BR><span class="property" data-property="mmsiType"></span></div>
         </div>        
   </div>
-
   <div class="w3-container w3-light-grey w3-padding"><button class="w3-button w3-right w3-white w3-border" onclick="document.getElementById('A').style.display='none'">Close</button></div>
  </div>
 </div>    
+  
     
 <div id="B" class="w3-modal">
  <div class="w3-modal-content w3-card-4 w3-animate-zoom">
   <header class="w3-container w3-blue"> 
    <span onclick="document.getElementById('B').style.display='none'" 
    class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
-   <h2>
-       <span class="property" data-property="name"></span>
-       <span class="property" data-property="flag"></span>
-   </h2>
+   <h2><span class="property" data-property="name"></span><span class="property" data-property="flag"></span></h2>
   </header>
     <div class="w3-container">
         <div class="w3-row">
@@ -122,24 +113,15 @@
  </div>
 </div>
 
+    
 <div id="BASE" class="w3-modal">
  <div class="w3-modal-content w3-card-4 w3-animate-zoom">
   <header class="w3-container w3-blue"> 
    <span onclick="document.getElementById('BASE').style.display='none'" 
    class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
-   <h2>
-       <span class="property" data-property="name"></span>
-       <span class="property" data-property="flag"></span>
-       <span> BASE</span>
-   </h2>
+   <h2><span class="property" data-property="name"></span><span class="property" data-property="flag"></span></h2>
   </header>
-  <div class="w3-bar w3-border-bottom">
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'BasicB', 'BASE')">Basic</button>
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'MoreB', 'BASE')">More</button>
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'ExtraB', 'BASE')">Extra</button>
-  </div>
-
-  <div id="BasicBASE" class="w3-container tab" style='display:block'>
+  <div class="w3-container">
     <div>
         <div class="w3-row">
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI</span><BR> <span class="property" data-property="mmsi"></span><span> BASE</span></div>
@@ -148,105 +130,56 @@
         </div>
         <div class="w3-row">    
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Vessel Type</span><BR><span class="property" data-property="shipType"></span></div>
-            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Size</span><BR>
-            <span class="property" data-property="length"> 
-            </span> x
-            <span class="property" data-property="beam"> 
-            </span> 
-            </div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Time</span><BR><span class="property" data-property="time"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">mmsiType</span><BR><span class="property" data-property="mmsiType"></span></div>
         </div>
+        <div class="w3-row">
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Position</span><BR> <span class="property" data-property="lat"></span><BR><span class="property" data-property="lon"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">CPA</span><BR> <span class="property" data-property="cpaDistance"></span><BR><span class="property" data-property="cpaMinutes"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Bearing / Distance</span><BR> <span class="property" data-property="bearing"></span><BR><span class="property" data-property="distance"></span></div>
+        </div>  
     </div>
- 
-    <p class="property" data-property="classA"></p>
-    <p class="property" data-property="cpaDistance"></p>
-    <p class="property" data-property="cpaMinutes"></p>
-    <p class="property" data-property="speed"></p>
-    <p class="property" data-property="cog"></p>
-    <p class="property" data-property="hdg"></p>
-    <p class="property" data-property="bearing"></p>
-    <p class="property" data-property="rot"></p> <! --- A --->
-    <p class="property" data-property="time"></p>
-    <p class="property" data-property="distance"></p>
-  </div>
-  <div id="MoreBASE" class="w3-container tab"  style='display:none'>
-      <p class="property" data-property="mmsiType"></p>
-      <p class="property" data-property="shipType"></p>
-      <p class="property" data-property="maneuver"></p> <! --- A --->
-      <p class="property" data-property="status"></p> <! --- A  --->
-      <p class="property" data-property="lat"></p>
-      <p class="property" data-property="lon"></p>
-      <p class="property" data-property="alt"></p> <! --- SAR --->
-      <p class="property" data-property="destination"></p> <! --- A  --->
-  </div>
-  <div id="ExtraBASE" class="w3-container tab"  style='display:none'>
-      <p class="property" data-property="vendor"></p> <! --- B --->
-      <p class="property" data-property="serial"></p> <! ---B  --->
-      <p class="property" data-property="imo"></p> <! --- A  --->
-      <p class="property" data-property="alpha2"></p>
-   <p></p>
-   <p></p>   
-  </div>
-  <div class="w3-container w3-light-grey w3-padding">
-   <button class="w3-button w3-right w3-white w3-border" 
-   onclick="document.getElementById('BASE').style.display='none'">Close</button>
-  </div>
+   </div>
+  <div class="w3-container w3-light-grey w3-padding"><button class="w3-button w3-right w3-white w3-border" onclick="document.getElementById('BASE').style.display='none'">Close</button></div>
  </div>
 </div>
+   
     
 <div id="ATON" class="w3-modal">
  <div class="w3-modal-content w3-card-4 w3-animate-zoom">
   <header class="w3-container w3-blue"> 
    <span onclick="document.getElementById('ATON').style.display='none'" 
    class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
-   <h2>
-       <span class="property" data-property="name"></span>
-       <span class="property" data-property="flag"></span>
-   </h2>
+   <h2><span class="property" data-property="name"></span><span class="property" data-property="flag"></span></h2>
   </header>
-  <div class="w3-bar w3-border-bottom">
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'BasicATON', 'ATON')">Basic</button>
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'MoreATON', 'ATON')">More</button>
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'ExtraATON', 'ATON')">Extra</button>
-  </div>
-
-  <div id="BasicATON" class="w3-container tab" style='display:block'>
-    <div>
+  <div class="w3-container">
         <div class="w3-row">
-            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI</span><BR> <span class="property" data-property="mmsi"></span><span> ATON</span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI</span><BR> <span class="property" data-property="mmsi"></span><span> A</span></div>
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Country</span><BR><span class="property" data-property="country"></span> </div>
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Call Sign</span><BR><span class="property" data-property="call"></span></div>
         </div>
         <div class="w3-row">    
-            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Vessel Type</span><BR><span class="property" data-property="shipType"></span></div>
-            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Size</span><BR>
-            <span class="property" data-property="length"> 
-            </span> x
-            <span class="property" data-property="beam"> 
-            </span> 
-            </div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Vessel Type</span><BR><span class="property" data-property="shipType"></span><br><span class="property" data-property="status"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Size</span><BR><span class="property" data-property="length"></span> x <span class="property" data-property="beam"></span> x <span class="property" data-property="draught"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">IMO</span><BR><span class="property" data-property="imo"></span></div>
         </div>
-    </div>
- 
-    <p class="property" data-property="cpaDistance"></p>
-    <p class="property" data-property="cpaMinutes"></p>
-    <p class="property" data-property="speed"></p>
-    <p class="property" data-property="cog"></p>
-    <p class="property" data-property="hdg"></p>
-    <p class="property" data-property="bearing"></p>
-    <p class="property" data-property="time"></p>
-    <p class="property" data-property="distance"></p>
+        <div class="w3-row">
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Position</span><BR> <span class="property" data-property="lat"></span><BR><span class="property" data-property="lon"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">CPA</span><BR> <span class="property" data-property="cpaDistance"></span><BR><span class="property" data-property="cpaMinutes"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Bearing / Distance</span><BR> <span class="property" data-property="bearing"></span><BR><span class="property" data-property="distance"></span></div>
+        </div>   
+        <div class="w3-row">
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Speed</span><BR> <span class="property" data-property="speed"></span><span>kn</span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">COG / Heading</span><BR> <span class="property" data-property="cog"></span> / <span class="property" data-property="hdg"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Rate of turn</span><BR> <span class="property" data-property="rot"></span></div>
+        </div>  
+        <div class="w3-row">
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Report time</span><BR> <span class="property" data-property="time"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Destination</span><BR><span class="property" data-property="destination"></span> </div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI Type</span><BR><span class="property" data-property="mmsiType"></span></div>
+        </div> 
   </div>
-  <div id="MoreATON" class="w3-container tab"  style='display:none'>
-      <p class="property" data-property="mmsiType"></p>
-      <p class="property" data-property="shipType"></p>
-      <p class="property" data-property="lat"></p>
-      <p class="property" data-property="lon"></p>
-  </div>
-  <div id="ExtraATON" class="w3-container tab"  style='display:none'></div>
-  <div class="w3-container w3-light-grey w3-padding">
-   <button class="w3-button w3-right w3-white w3-border" 
-   onclick="document.getElementById('ATON').style.display='none'">Close</button>
-  </div>
+  <div class="w3-container w3-light-grey w3-padding"><button class="w3-button w3-right w3-white w3-border"  onclick="document.getElementById('ATON').style.display='none'">Close</button></div>
  </div>
 </div>
 
@@ -256,81 +189,46 @@
   <header class="w3-container w3-blue"> 
    <span onclick="document.getElementById('SAR').style.display='none'" 
    class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
-   <h2>
-       <span class="property" data-property="name"></span>
-       <span class="property" data-property="flag"></span>
-   </h2>
+   <h2><span class="property" data-property="name"></span><span class="property" data-property="flag"></span></h2>
   </header>
-  <div class="w3-bar w3-border-bottom">
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'BasicSAR', 'SAR')">Basic</button>
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'MoreSAR', 'SAR')">More</button>
-   <button class="tablink w3-bar-item w3-button" onclick="openTab(event, 'ExtraSAR', 'SAR')">Extra</button>
-  </div>
-
-  <div id="BasicSAR" class="w3-container tab" style='display:block'>
-    <div>
+  <div class="w3-container">
         <div class="w3-row">
-            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI</span><BR> <span class="property" data-property="mmsi"></span><span> SAR</span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI</span><BR> <span class="property" data-property="mmsi"></span><span> A</span></div>
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Country</span><BR><span class="property" data-property="country"></span> </div>
             <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Call Sign</span><BR><span class="property" data-property="call"></span></div>
         </div>
         <div class="w3-row">    
-            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Vessel Type</span><BR><span class="property" data-property="shipType"></span></div>
-            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Size</span><BR>
-            <span class="property" data-property="length"> 
-            </span> x
-            <span class="property" data-property="beam"> 
-            </span> 
-            </div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Vessel Type</span><BR><span class="property" data-property="shipType"></span><br><span class="property" data-property="status"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Size</span><BR><span class="property" data-property="length"></span> x <span class="property" data-property="beam"></span> x <span class="property" data-property="draught"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">IMO</span><BR><span class="property" data-property="imo"></span></div>
         </div>
-    </div>
- 
-    <p class="property" data-property="cpaDistance"></p>
-    <p class="property" data-property="cpaMinutes"></p>
-    <p class="property" data-property="speed"></p>
-    <p class="property" data-property="cog"></p>
-    <p class="property" data-property="hdg"></p>
-    <p class="property" data-property="bearing"></p>
-    <p class="property" data-property="time"></p>
-    <p class="property" data-property="distance"></p>
+        <div class="w3-row">
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Position</span><BR> <span class="property" data-property="lat"></span><BR><span class="property" data-property="lon"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">CPA</span><BR> <span class="property" data-property="cpaDistance"></span><BR><span class="property" data-property="cpaMinutes"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Bearing / Distance</span><BR> <span class="property" data-property="bearing"></span><BR><span class="property" data-property="distance"></span></div>
+        </div>   
+        <div class="w3-row">
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Speed</span><BR> <span class="property" data-property="speed"></span><span>kn</span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">COG / Heading</span><BR> <span class="property" data-property="cog"></span> / <span class="property" data-property="hdg"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Rate of turn</span><BR> <span class="property" data-property="rot"></span></div>
+        </div>  
+        <div class="w3-row">
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Report time</span><BR> <span class="property" data-property="time"></span></div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Destination</span><BR><span class="property" data-property="destination"></span> </div>
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">MMSI Type</span><BR><span class="property" data-property="mmsiType"></span></div>
+        </div> 
+        <div class="w3-row">
+            <div class="w3-col s4 m4 l4"><span class="ais-datawindow-header">Altitude</span><BR> <span class="property" data-property="alt"></span></div>
+        </div> 
   </div>
-  <div id="MoreSAR" class="w3-container tab"  style='display:none'>
-      <p class="property" data-property="mmsiType"></p>
-      <p class="property" data-property="shipType"></p>
-      <p class="property" data-property="lat"></p>
-      <p class="property" data-property="lon"></p>
-      <p class="property" data-property="alt"></p> <! --- SAR --->
-  </div>
-  <div id="ExtraSAR" class="w3-container tab"  style='display:none'></div>
-  <div class="w3-container w3-light-grey w3-padding">
-   <button class="w3-button w3-right w3-white w3-border" 
-   onclick="document.getElementById('SAR').style.display='none'">Close</button>
-  </div>
+  <div class="w3-container w3-light-grey w3-padding"><button class="w3-button w3-right w3-white w3-border" onclick="document.getElementById('SAR').style.display='none'">Close</button></div>
  </div>
 </div>
-    <div>
-        <button onclick="clearOlds();">clear</button>
-    </div>
+    
+
 
     
 <script>
-//document.getElementsByClassName("tablink")[0].click();
-
-// Get the modal
-function openTab(evt, tabName, cat) {
-  var i, x;
-  var el = document.getElementById(cat);
-  x = el.getElementsByClassName('tab');
-  for (i = 0; i < x.length; i++) {
-    x[i].style.display = "none";
-  }
-  x = el.getElementsByClassName('tabLink');
-  for (i = 0; i < x.length; i++) {
-    x[i].classList.remove("w3-light-grey");
-  }
-  document.getElementById(tabName).style.display = "block";
-  evt.currentTarget.classList.add("w3-light-grey");
-}
 
 
 // When the user clicks anywhere outside of the modal, close it

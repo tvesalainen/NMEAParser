@@ -112,7 +112,7 @@ function updateMMSI(mmsi)
         var elem = elems[i];
         var property = elem.getAttribute("data-property");
         var value = d[property];
-        if (value.length > 0)
+        if (value !== "")
         {
             var num = Number(value);
             if (Number.isFinite(num))
@@ -250,14 +250,15 @@ function getAge(time)
         }
     }
 }
-function clearOlds()
+function clearOlds(minutes)
 {
+    var millis = minutes*60000;
     var olds = [];
     for (let m in data)
     {
         var d = data[m];
         var time = d["time"];
-        if (getServerTime() - time > 86400000)
+        if (getServerTime() - time > millis)
         {
             olds.push(m);
         }
