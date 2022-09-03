@@ -7,6 +7,8 @@
     aisMaxLogSize="1M"
     aisTtl="1d"
 >
+    <property name="driftAngleOverGround" min="0.0" max="359.0" unit="DEGREE" decimals="0" average="5s"/>
+    <property name="driftSpeedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1" average="5s"/>
     <property name="stateOfCharge2"/>
     <property name="stateOfHealth2"/>
     <property name="ais"/>
