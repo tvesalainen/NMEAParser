@@ -30,6 +30,14 @@ public interface XdrObserver
     @NMEA0183({XDR})
     @NMEACat(SPEED)
     @Unit(value=KNOT, min=0, max=50)
+    void setDriftSpeedOverGround(float value);
+    @NMEA0183({XDR})
+    @NMEACat(WIND)
+    @Unit(value=DEGREE, min=0, max=360)
+    void setDriftAngleOverGround(float value);
+    @NMEA0183({XDR})
+    @NMEACat(SPEED)
+    @Unit(value=KNOT, min=0, max=50)
     void setWindSpeedOverGround(float value);
     @NMEA0183({XDR})
     @NMEACat(WIND)

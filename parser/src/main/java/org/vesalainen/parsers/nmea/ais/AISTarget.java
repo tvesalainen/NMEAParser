@@ -111,9 +111,10 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         {
             if (updated)
             {
+                double longitude = Navis.safeAntimeridianLongitude(getLongitude(), ownTarget.getLongitude());
                 double x0 = getLatitude()-ownTarget.getLatitude();
                 double x1 = deltaLatitude()-ownTarget.deltaLatitude();
-                double x2 = getLongitude()-ownTarget.getLongitude();
+                double x2 = longitude-ownTarget.getLongitude();
                 double x3 = deltaLongitude()-ownTarget.deltaLongitude();
                 double x4 = x0*x0;
                 double x5 = x0*x1;
@@ -573,6 +574,11 @@ public class AISTarget implements BoatPosition, WayPoint, Course, Comparable<AIS
         return data.getEpfd().toString();
     }
 
+    public String getEtaString()
+    {
+        return String.format("%d.%d. %02d:%02d", getEtaDay(), getEtaMonth(), getEtaHour(), getEtaMinute());
+    }
+    
     public int getEtaMonth()
     {
         return data.getEtaMonth();

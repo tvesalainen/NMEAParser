@@ -147,6 +147,17 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                         break;
                 }
                 break;
+            case "DRIFT":
+                switch (type)
+                {
+                    case 'S':
+                        setDriftSpeedOverGround(value);
+                        break;
+                    case 'A':
+                        setDriftAngleOverGround(value);
+                        break;
+                }
+                break;
             case "TIDE":
                 switch (type)
                 {

@@ -352,6 +352,13 @@ public class NMEASentence
                 .bindXdrGroup('S', speed, 'N', "WOG", null)
                 .build();
     }
+    public static NMEASentence drift(DoubleSupplier angle, DoubleSupplier speed)
+    {
+        return builder(()->UP, XDR)
+                .bindXdrGroup('A', angle, 'D', "DRIFT", null)
+                .bindXdrGroup('S', speed, 'N', "DRIFT", null)
+                .build();
+    }
     public static NMEASentence tide(Supplier<TalkerId> talkerId, DoubleSupplier range, DoubleSupplier phase)
     {
         return builder(talkerId, XDR)
