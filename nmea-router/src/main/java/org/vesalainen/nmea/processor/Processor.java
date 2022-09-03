@@ -24,19 +24,17 @@ import java.net.URISyntaxException;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.net.ObjectServer;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
 import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import org.vesalainen.nmea.jaxb.router.BoatDataType;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
+import org.vesalainen.nmea.jaxb.router.DriftCalculatorType;
 import org.vesalainen.nmea.jaxb.router.ProcessorType;
 import org.vesalainen.nmea.jaxb.router.SntpServerType;
 import org.vesalainen.nmea.jaxb.router.SunsetManagerType;
@@ -142,6 +140,16 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                     TrueWindSourceType vst = (TrueWindSourceType) ob;
                     info("starting TrueWindSource");
                     TrueWindSource server = new TrueWindSource(channel, vst, (ScheduledExecutorService) executor);
+                    processes.add(server);
+                    addNMEAObserver(server);
+                    server.start("");
+                    continue;
+                }
+                if (ob instanceof DriftCalculatorType)
+                {
+                    DriftCalculatorType cct = (DriftCalculatorType) ob;
+                    info("starting Drift Calculator");
+                    DriftCalculator server = new DriftCalculator(channel, cct);
                     processes.add(server);
                     addNMEAObserver(server);
                     server.start("");

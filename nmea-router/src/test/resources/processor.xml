@@ -42,6 +42,7 @@
             <sntp-server rootDelay="1600" server="pi3media"/>
             <anchor-manager directory="c:\\temp"/>
             <sunset-manager modbusHost="192.168.214.222" unitId="100" relayAddress="807"/>
+            <drift-calculator/>
         </processor>
         <multicast-nmea-0183 address="224.0.0.3" loop="false" name="Net" enable="true">
             <route prefix="$GPRMC" target="TCP"/>

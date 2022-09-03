@@ -94,6 +94,7 @@
                     <xsd:element name="compass-corrector" type="compassCorrectorType"/>
                     <xsd:element name="anchor-manager" type="anchorManagerType"/>
                     <xsd:element name="sunset-manager" type="sunsetManagerType"/>
+                    <xsd:element name="drift-calculator" type="driftCalculatorType"/>
                 </xsd:choice>
                 <xsd:attribute name="dataAccessPort" type="portType"/>
             </xsd:extension>
@@ -261,6 +262,8 @@
     </xsd:complexType>
     <xsd:complexType name="true-wind-sourceType">
         <xsd:attribute name="overGround" type="xsd:boolean"/>
+    </xsd:complexType>
+    <xsd:complexType name="driftCalculatorType">
     </xsd:complexType>
     <xsd:simpleType name="priorityType">
         <xsd:restriction base="xsd:integer">
