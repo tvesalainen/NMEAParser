@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <html>
     <head>
-        <title>Boat data page 3 (kännykkä)</title>
+        <title>Boat data history</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel='prev' href='page2.html'>
-        <link rel='next' href='history.html'>
+        <link rel='prev' href='page3.html'>
+        <link rel='next' href='ais.html'>
         <link rel="stylesheet" href="w3.css">
         <link rel="stylesheet" href="style.css">        
         <script src="jquery-3.6.0.js"></script>
@@ -33,25 +33,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <script src="app.js"></script>
     </head>
     <body class="DAY">
-        <div   class="w3-row">
-            <div class="w3-col m12">
-                <div class="w3-col s12 m6">
-                    <div class="w3-col s12 m12 gauge" data-property="waterSpeed">
-                    </div>
-                    <div class="w3-col s12 m12 gauge" data-property="depthOfWater">
-                    </div>
-                    <div class="w3-col s12 m6 gauge" data-property="trueHeading">
-                    </div>
-                    <div class="w3-col s12 m6 gauge" data-property="speedOverGround">
-                    </div>
-                </div>
-                <div class="w3-col s12 m6 gauge" data-property="tacktical">
-                </div>
-            </div>
+        <div class="w3-row">
+            <div class="w3-col s12 m12 l6 gauge" data-property="stateOfCharge2" data-type="history"></div>       
+            <div class="w3-col s12 m12 l6 gauge" data-property="batteryCurrent2" data-type="history"></div>        
+            <div class="w3-col s12 m12 l6 gauge" data-property="batteryCurrent0" data-type="history"></div>       
+            <div class="w3-col s12 m12 l6 gauge" data-property="officialWindSpeed" data-type="history"></div>        
         </div>
-
-
- 
     </body>
 </html>
 

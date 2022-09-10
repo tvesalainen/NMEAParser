@@ -28,29 +28,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <script src="svg-factory.js"></script>
         <script src="svg.js"></script>
         <script src="gauge.js"></script>
+        <script src="ais.js"></script>
         <script src="app.js"></script>
     </head>
     <body class="DAY">
-        <div  class="w3-row">
-                <div class="w3-col s6 gauge" data-property="ais"/>
-                <div class="w3-col s6 gauge" data-property="tidePhase"/>
-        </div>
-
-        <div> 
-            <table>
-                <tr><td>1</td></tr>
-                <tr><td>2</td></tr>
-                <tr class="extra"><td>
-                <span class="extra"><table>
-                3</td></tr>
-                <tr><td>4</td></tr>
-                <tr><td>5</td></tr>   
-                </table></span>                 
-            </table>        
+        <div class="w3-row">
+            <div class="w3-col s12 m12 l6 gauge" data-property="officialWindSpeed" data-type="history">
+            </div>
+            <div class="w3-col s12 m12 l6 gauge" data-property="trueWindAngle">
+            </div>
+            <div class="w3-col s12 m12 l6 gauge" data-property="speedOverGround">
+            </div>
         </div>
         
         <div class="w3-row">
-            <div class="w3-col s4 m4 l4 gauge" data-property="trueWindSpeed">
+            <div class="w3-col s4 m4 l4 gauge" data-property="trueWindSpeed" data-type="history">
             </div>
             <div class="w3-col s4 m4 l4 gauge" data-property="trueWindAngle">
             </div>

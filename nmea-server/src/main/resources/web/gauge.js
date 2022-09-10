@@ -344,64 +344,84 @@ function Gauge(element, seq)
             var type = element.getAttribute("data-type");
             this.svg = new Svg(0,0,100,40);
             this.svg.setFrame();
-            this.request = {event : this.event, property : this.property};
-            if (type === "semicircle")
+            this.request = {event : this.event, property : this.property, type : type};
+            switch (type)
             {
-                this.call = function(data)
-                {
-                    var json = JSON.parse(data);
-                    if (json['historyData'])
+                case "history":
+                    this.call = function(data)
                     {
-                        this.svg.setHistoryData(json['historyData']);
-                    }
-                    else
-                    {
-                        if (json['time'] && json['value'])
+                        var json = JSON.parse(data);
+                        if (json['historyData'])
                         {
-                            var value = Number(json['value']);
-                            if (value > 180)
+                            this.svg.setHistoryData(json['historyData']);
+                        }
+                        else
+                        {
+                            if (json['time'] && json['value'])
                             {
-                                var v = 360 - value;
-                                value = "<"+v;
+                                this.svg.setData(json['time'], json['value']);
                             }
-                            else
+                            if (json['title'])
                             {
-                                value = ">"+value;
+                                this.svg.setTitle(json['title']);
+                                this.svg.setUnit(json['unit']);
+                                this.svg.setHistory(json['history'], json['min'], json['max']);
                             }
-                            this.svg.setData(json['time'], value);
                         }
-                        if (json['title'])
-                        {
-                            this.svg.setTitle(json['title']);
-                            this.svg.setUnit(json['unit']);
-                            this.svg.setHistory(json['history'], json['min'], json['max']);
-                        }
-                    }
-                };
-            }
-            else
-            {
-                this.call = function(data)
-                {
-                    var json = JSON.parse(data);
-                    if (json['historyData'])
+                    };
+                    break;
+                case "semicircle":
+                    this.call = function(data)
                     {
-                        this.svg.setHistoryData(json['historyData']);
-                    }
-                    else
+                        var json = JSON.parse(data);
+                        if (json['historyData'])
+                        {
+                        }
+                        else
+                        {
+                            if (json['time'] && json['value'])
+                            {
+                                var value = Number(json['value']);
+                                if (value > 180)
+                                {
+                                    var v = 360 - value;
+                                    value = "<"+v;
+                                }
+                                else
+                                {
+                                    value = ">"+value;
+                                }
+                                this.svg.setData(json['time'], value);
+                            }
+                            if (json['title'])
+                            {
+                                this.svg.setTitle(json['title']);
+                                this.svg.setUnit(json['unit']);
+                            }
+                        }
+                    };
+                    break;
+                default:
+                    this.call = function(data)
                     {
-                        if (json['time'] && json['value'])
+                        var json = JSON.parse(data);
+                        if (json['historyData'])
                         {
-                            this.svg.setData(json['time'], json['value']);
                         }
-                        if (json['title'])
+                        else
                         {
-                            this.svg.setTitle(json['title']);
-                            this.svg.setUnit(json['unit']);
-                            this.svg.setHistory(json['history'], json['min'], json['max']);
+                            if (json['time'] && json['value'])
+                            {
+                                this.svg.setData(json['time'], json['value']);
+                            }
+                            if (json['title'])
+                            {
+                                this.svg.setTitle(json['title']);
+                                this.svg.setUnit(json['unit']);
+                            }
                         }
-                    }
-                };
+                    };
+                    break;
             }
             this.tick = function()
             {
@@ -444,7 +464,7 @@ function Gauge(element, seq)
     this.passivate = function()
     {
         var now = new Date();
-        if (now.getTime()-this.refreshTime > 2000)
+        if (now.getTime()-this.refreshTime > 5000)
         {
             if (!this.status || this.status === "active")
             {

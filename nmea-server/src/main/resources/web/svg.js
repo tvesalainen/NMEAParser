@@ -101,8 +101,147 @@ function Svg(x, y, width, height)
             var arr = createHistory(this.svg, history, min, max, this.width, this.height, this.unit.innerHTML);
             this.history = arr[0];
             this.polyline = arr[1];
+            this.grid = arr[2];
+            this.minText = arr[3];
+            this.maxText = arr[4];
             this.data = [];
         }
+    };
+    this.setGrid = function()
+    {
+        // x-scale
+        var div = 1;
+        var un;
+        var x = this.historyMillis;
+        var anc = new Date();
+        while (x / div > 10)
+        {
+            switch (div)
+            {
+                case 1:
+                    div *= 1000;
+                    un = 'sec';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), anc.getMinutes(), anc.getSeconds(), 0);
+                    break;
+                case 1000:
+                    div *= 60;
+                    un = 'min';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), 0, 0, 0);
+                    break;
+                case 60000:
+                    div *= 10;
+                    un = '10min';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), 0, 0, 0);
+                    break;
+                case 600000:
+                    div *= 2;
+                    un = '20min';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), 0, 0, 0);
+                    break;
+                case 1200000:
+                    div *= 1.5;
+                    un = '30min';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), 0, 0, 0);
+                    break;
+                case 1800000:
+                    div *= 2;
+                    un = 'hour';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
+                    break;
+                case 3600000:
+                    div *= 2;
+                    un = '2hour';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
+                    break;
+                case 7200000:
+                    div *= 1.5;
+                    un = '3hour';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
+                    break;
+                case 10800000:
+                    div *= 2;
+                    un = '6hour';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
+                    break;
+                case 28800000:
+                    div *= 2;
+                    un = '12hour';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
+                    break;
+                case 57600000:
+                    div *= 2;
+                    un = 'day';
+                    anc = new Date(anc.getFullYear(), anc.getMonth(), 0, 0, 0, 0, 0);
+                    break;
+                default:
+                    un = undefined;
+                    break;
+            }
+        }
+        var time = getServerTime();
+        var d = time - anc.getTime();
+        var mod = time % div;
+        x -= mod;
+        var d = "";
+        while (x > 0)
+        {
+
+            d += "M "+x/this.ratioX+" 0 V"+height;
+            x -= div;
+        }
+        div = 0.1;
+        while (this.gap / div > 5)
+        {
+            switch (div)
+            {
+                case 0.1:
+                    div = 0.5;
+                    break;
+                case 0.5:
+                    div = 1;
+                    break;
+                case 1:
+                    div = 5;
+                    break;
+                case 5:
+                    div = 10;
+                    break;
+                case 10:
+                    div = 50;
+                    break;
+                case 50:
+                    div = 100;
+                    break;
+                case 100:
+                    div = 200;
+                    break;
+                case 200:
+                    div = 500;
+                    break;
+                default:
+                    div *= 10;
+                    break;
+            }
+        }
+        var mod;
+        if (this.min > 0)
+        {
+            mod = (div -(this.min % div));
+        }
+        else
+        {
+            mod = -this.min % div;
+        }
+        x = this.gap-mod;
+        while (x > 0)
+        {
+
+            d += "M 0 "+x/this.ratioY+" H"+width;
+            x -= div;
+        }
+        this.grid.setAttributeNS(null, "d", d);
+        this.minText.innerHTML = this.min;
+        this.maxText.innerHTML = this.max;
     };
     this.tacktical = function(r)
     {
@@ -277,8 +416,7 @@ function Svg(x, y, width, height)
     this.setData = function(time, value)
     {
         setServerTime(time);
-        this.setText(value);
-        if (this.history)
+        if (this.historyMillis)
         {
             while (this.data.length > 0 && (time - this.data[0]) > this.historyMillis)
             {
@@ -287,6 +425,10 @@ function Svg(x, y, width, height)
             }
             this.data.push(time);
             this.data.push(value);
+        }
+        else
+        {
+            this.setText(value);
         }
     };
     this.setHistoryData = function(array)
@@ -301,7 +443,24 @@ function Svg(x, y, width, height)
             var time = getServerTime();
             if (time)
             {
+                while (this.data.length > 0 && (time - this.data[0]) > this.historyMillis)
+                {
+                    this.data.shift();
+                    this.data.shift();
+                }
+                this.min = Number.MAX_VALUE;
+                this.max = Number.MIN_VALUE;
                 var len = this.data.length/2;
+                for (var i=0;i<len;i++)
+                {
+                    var v = this.data[2*i+1];
+                    this.min = Math.min(this.min, v);
+                    this.max = Math.max(this.max, v);
+                }
+                this.gap = this.max - this.min;
+                this.ratioX = this.historyMillis/this.width;
+                this.ratioY = this.gap/this.height;
+                this.setGrid();
                 for (var i=0;i<len;i++)
                 {
                     var t = this.data[2*i];

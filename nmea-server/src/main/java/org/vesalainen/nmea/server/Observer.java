@@ -133,7 +133,7 @@ public class Observer<T> extends JavaLogging
     
     public static class DoubleObserver extends Observer
     {
-        private DoubleFunction<Object> format;
+        private DoubleFunction<String> format;
         
         public DoubleObserver(String event, Property property, String unit, String decimals, SseReference sseReference, Locale locale)
         {
@@ -172,7 +172,7 @@ public class Observer<T> extends JavaLogging
             }
             if (from != to)
             {
-                DoubleFunction<Object> f = this.format;
+                DoubleFunction<String> f = this.format;
                 this.format = (v)->f.apply(from.convertTo(v, to));
             }
         }
@@ -181,6 +181,11 @@ public class Observer<T> extends JavaLogging
         public boolean accept(long time, double arg)
         {
             return accept(time, format.apply(arg));
+        }
+
+        public DoubleFunction<String> getFormat()
+        {
+            return format;
         }
 
     }

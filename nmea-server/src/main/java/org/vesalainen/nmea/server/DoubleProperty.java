@@ -16,12 +16,14 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.util.function.DoubleFunction;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.math.UnitCategory;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingAverage;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSeries;
 import org.vesalainen.math.sliding.TimeValueConsumer;
 import org.vesalainen.math.sliding.TimeoutSlidingAngleAverage;
+import org.vesalainen.nmea.server.Observer.DoubleObserver;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -120,8 +122,27 @@ public class DoubleProperty extends Property
         super.attach(observer);
         if (history != null)
         {
-            observer.fireEvent(JSONBuilder.object().numberArray("historyData", history::pointStream));
+            DoubleObserver dob = (DoubleObserver) observer;
+            DoubleFunction<String> format = dob.getFormat();
+            JSONBuilder.Obj<?> obj = JSONBuilder.object();
+            JSONBuilder.Array<JSONBuilder.Obj> array = obj.array("historyData");
+            Ref prev = new Ref();
+            history.forEach((long t,double v)->
+            {
+                String value = format.apply(v);
+                if (!value.equals(prev.ref))
+                {
+                    array.number(()->t);
+                    array.number(()->Double.valueOf(value));
+                    prev.ref = value;
+                }
+            });
+            observer.fireEvent(obj);
         }
     }
     
+    private class Ref
+    {
+        String ref;
+    }
 }

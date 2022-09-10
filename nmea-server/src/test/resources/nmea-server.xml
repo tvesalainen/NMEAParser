@@ -1,15 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<nmea-server 
-    nmeaMulticastAddress="224.0.0.3" 
-    nmeaMulticastPort="10110" 
-    httpPort="8081"
-    aisDirectory="file:/c:/temp"
-    aisMaxLogSize="1M"
-    aisTtl="1d"
->
+<nmea-server nmeaMulticastAddress="224.0.0.3" nmeaMulticastPort="10110" httpPort="8081" aisDirectory="file:/c:/temp" aisMaxLogSize="1M" aisTtl="1d">
     <property name="driftAngleOverGround" min="0.0" max="359.0" unit="DEGREE" decimals="0" average="5s"/>
     <property name="driftSpeedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1" average="5s"/>
-    <property name="stateOfCharge2"/>
+    <property name="stateOfCharge2" decimals="1" history="1d"/>
     <property name="stateOfHealth2"/>
     <property name="ais"/>
     <property name="tideRange" decimals="1"/>
@@ -17,10 +10,10 @@
     <property name="rudderSensor"/>
     <property name="dayPhase"/>
     <property name="estimatedTimeOfArrival" source="rangeToDestination" unit="UNITLESS" history="1h"/>
-    <property name="officialWindSpeed" source="windSpeedOverGround" min="0.0" max="50" unit="KNOT" decimals="1" average="10m"/>
+    <property name="officialWindSpeed" source="windSpeedOverGround" min="0.0" max="50" unit="KNOT" decimals="1" average="10m" history="1d"/>
     <property name="officialWindAngle" source="windAngleOverGround" unit="SECONDARY_INTERCARDINAL_DIRECTION" average="10m"/>
     <property name="batteryVoltage0" min="0.0" max="100.0" unit="VOLT" decimals="1"/>
-    <property name="batteryCurrent0" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
+    <property name="batteryCurrent0" min="0.0" max="100.0" unit="AMPERE" decimals="1" average="5s" history="1d"/>
     <property name="latitude" min="-90.0" max="90.0" unit="" decimals="3"/>
     <property name="longitude" min="-180.0" max="180.0" unit="" decimals="3"/>
     <property name="speedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1" average="1s" period="1s"/>
@@ -80,4 +73,8 @@
     <property name="targetName"/>
     <property name="message" history="2h"/>
     <property name="batteryTemperature0"/>
+    <property name="starboardRudderSensor"/>
+    <property name="batteryVoltage2"/>
+    <property name="batteryCurrent2" decimals="1" average="5s" history="1d"/>
+    <property name="batteryTemperature2"/>
 </nmea-server>

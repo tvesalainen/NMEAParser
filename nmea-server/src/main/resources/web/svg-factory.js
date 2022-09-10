@@ -107,145 +107,40 @@ function createText2(parent, x, y, width, height, padding)
 
 function createHistory(parent, historyMillis, min, max, width, height, unitString)
 {
-    var gap = max - min;
-    var ratioX = historyMillis/width;
-    var ratioY = gap/height;
     var history = document.createElementNS(SVG_NS, 'g');
     parent.appendChild(history);
     history.setAttributeNS(null, "class", "history");
     history.setAttributeNS(null, "stroke-opacity", "0.5");
-    // x-scale
-    var div = 1;
-    var un;
-    while (historyMillis / div > 10)
-    {
-        switch (div)
-        {
-            case 1:
-                div *= 1000;
-                un = 'sec';
-                break;
-            case 1000:
-                div *= 60;
-                un = 'min';
-                break;
-            case 60000:
-                div *= 10;
-                un = '10min';
-                break;
-            case 600000:
-                div *= 2;
-                un = '20min';
-                break;
-            case 1200000:
-                div *= 1.5;
-                un = '30min';
-                break;
-            case 1800000:
-                div *= 2;
-                un = 'hour';
-                break;
-            case 3600000:
-                div *= 2;
-                un = '2hour';
-                break;
-            case 7200000:
-                div *= 1.5;
-                un = '3hour';
-                break;
-            case 10800000:
-                div *= 2;
-                un = '6hour';
-                break;
-            case 28800000:
-                div *= 2;
-                un = '12hour';
-                break;
-            case 57600000:
-                div *= 2;
-                un = 'day';
-                break;
-            default:
-                un = undefined;
-                break;
-        }
-    }
     var grid = document.createElementNS(SVG_NS, 'path');
     grid.setAttributeNS(null, "stroke-width", "0.2");
     history.appendChild(grid);
-    var d = "";
-    var x = historyMillis;
-    while (x > 0)
-    {
-
-        d += "M "+x/ratioX+" 0 V"+height;
-        x -= div;
-    }
-    div = 1;
-    while (gap / div > 5)
-    {
-        switch (div)
-        {
-            case 1:
-                div = 5;
-                break;
-            case 5:
-                div = 10;
-                break;
-            case 10:
-                div = 50;
-                break;
-            case 50:
-                div = 100;
-                break;
-            case 100:
-                div = 200;
-                break;
-            case 200:
-                div = 500;
-                break;
-            default:
-                div *= 10;
-                break;
-        }
-    }
-    x = gap;
-    while (x > 0)
-    {
-
-        d += "M 0 "+x/ratioY+" H"+width;
-        x -= div;
-    }
-    grid.setAttributeNS(null, "d", d);
     var g = document.createElementNS(SVG_NS, 'g');
     history.appendChild(g);
     g.setAttributeNS(null, "text-anchor", "middle");
     g.setAttributeNS(null, "stroke", "none");
     g.setAttributeNS(null, "fill", "currentColor");
-    var unitX = document.createElementNS(SVG_NS, 'text');
-    g.appendChild(unitX);
-    var xx = 3;
-    var yy = height/2;
-    unitX.setAttributeNS(null, "x", 0);
-    unitX.setAttributeNS(null, "y", 0);
-    unitX.setAttributeNS(null, "transform", "translate("+xx+", "+yy+") rotate(-90) ");
-    var unitTextX = document.createTextNode(div+" "+unitString);
-    unitX.appendChild(unitTextX);
-    var unitY = document.createElementNS(SVG_NS, 'text');
-    g.appendChild(unitY);
+    
+    var minText = document.createElementNS(SVG_NS, 'text');
+    g.appendChild(minText);
+    var xx = width/2;
+    var yy = height-1;
+    minText.setAttributeNS(null, "x", xx);
+    minText.setAttributeNS(null, "y", yy);
+    
+    var maxText = document.createElementNS(SVG_NS, 'text');
+    g.appendChild(maxText);
     xx = width/2;
-    yy = height-1;
-    unitY.setAttributeNS(null, "x", xx);
-    unitY.setAttributeNS(null, "y", yy);
-    var unitTextY = document.createTextNode(un);
-    unitY.appendChild(unitTextY);
+    yy = height/20;
+    maxText.setAttributeNS(null, "x", xx);
+    maxText.setAttributeNS(null, "y", yy);
+    
     var polyline = document.createElementNS(SVG_NS, 'polyline');
     history.appendChild(polyline);
     polyline.setAttributeNS(null, "class", "history-graph");
     polyline.setAttributeNS(null, "fill", "none");
     polyline.setAttributeNS(null, "stroke", "currentColor");
     polyline.setAttributeNS(null, "stroke-width", "0.1em");
-    return [history, polyline];
+    return [history, polyline, grid, minText, maxText];
 };
 
 function createTide(parent, r)
