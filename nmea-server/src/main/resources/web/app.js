@@ -14,11 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* global refresh, eventSource zoneOffset i18n */
+/* global refresh, eventSource zoneOffset timeOffset i18n */
 
 "use strict";
 
 var zoneOffset=0;
+var timeOffset=0;
 
 var gauge = {};
 
@@ -44,6 +45,7 @@ $(document).ready(function () {
                 zoneOffset=parseInt(res);
             }
         });
+        eventSource.addEventListener("timeOffset", setTimeOffset, false);
         var targets = document.getElementsByClassName('gauge');
         for (var i=0;i<targets.length;i++)
         {
@@ -85,7 +87,13 @@ $(document).ready(function () {
             }
         }
     };
+    
     setInterval(tick, 1000);
+    
+    function setTimeOffset(event)
+    {
+        timeOffset = Number(event.data);
+    };
 
 });
 

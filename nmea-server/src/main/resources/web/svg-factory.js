@@ -107,12 +107,15 @@ function createText2(parent, x, y, width, height, padding)
 
 function createHistory(parent, historyMillis, min, max, width, height, unitString)
 {
-    var history = document.createElementNS(SVG_NS, 'g');
+    var history = document.createElementNS(SVG_NS, 'svg');
     parent.appendChild(history);
     history.setAttributeNS(null, "class", "history");
-    history.setAttributeNS(null, "stroke-opacity", "0.5");
+    //history.setAttributeNS(null, "transform", "translate(-0.5, 0)");
     var grid = document.createElementNS(SVG_NS, 'path');
-    grid.setAttributeNS(null, "stroke-width", "0.2");
+    grid.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
+    grid.setAttributeNS(null, "stroke", "blue");
+    grid.setAttributeNS(null, "fill", "red");
+    grid.setAttributeNS(null, "stroke-width", "1");
     history.appendChild(grid);
     var g = document.createElementNS(SVG_NS, 'g');
     history.appendChild(g);
@@ -139,7 +142,8 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     polyline.setAttributeNS(null, "class", "history-graph");
     polyline.setAttributeNS(null, "fill", "none");
     polyline.setAttributeNS(null, "stroke", "currentColor");
-    polyline.setAttributeNS(null, "stroke-width", "0.1em");
+    polyline.setAttributeNS(null, "stroke-width", "1");
+    polyline.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
     return [history, polyline, grid, minText, maxText];
 };
 

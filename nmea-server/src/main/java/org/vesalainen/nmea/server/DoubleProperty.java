@@ -92,7 +92,8 @@ public class DoubleProperty extends Property
         long historyMillis = getHistoryMillis();
         if (historyMillis > 0)
         {
-            this.history = new DoubleTimeoutSlidingSeries(256, historyMillis);
+            double delta = 1.0/Math.pow(10, getDecimals());
+            this.history = new DoubleTimeoutSlidingSeries(System::currentTimeMillis, 256, historyMillis, (l)->l, (v1,v2)->Math.abs(v1-v2)<delta);
         }
         else
         {
@@ -127,12 +128,13 @@ public class DoubleProperty extends Property
             JSONBuilder.Obj<?> obj = JSONBuilder.object();
             JSONBuilder.Array<JSONBuilder.Obj> array = obj.array("historyData");
             Ref prev = new Ref();
+            long timeOffset = observer.getTimeOffset();
             history.forEach((long t,double v)->
             {
                 String value = format.apply(v);
                 if (!value.equals(prev.ref))
                 {
-                    array.number(()->t);
+                    array.number(()->t-timeOffset);
                     array.number(()->Double.valueOf(value));
                     prev.ref = value;
                 }

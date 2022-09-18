@@ -109,7 +109,7 @@ public class Observer<T> extends JavaLogging
         {
             if (!arg.equals(last))
             {
-                this.time = time;
+                this.time = time - sse.getTimeOffset();
                 this.value = arg;
                 sse.fireEvent(writer);
                 last = arg;
@@ -131,6 +131,15 @@ public class Observer<T> extends JavaLogging
         return locale;
     }
     
+    public long getTimeOffset()
+    {
+        SseHandler sse = sseReference.getHandler();
+        if (sse != null)
+        {
+            return sse.getTimeOffset();
+        }
+        throw new UnsupportedOperationException("no sse");
+    }
     public static class DoubleObserver extends Observer
     {
         private DoubleFunction<String> format;

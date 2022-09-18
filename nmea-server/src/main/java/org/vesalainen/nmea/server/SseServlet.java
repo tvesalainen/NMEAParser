@@ -111,6 +111,7 @@ public class SseServlet extends HttpServlet
         private volatile boolean disconnected = true;
         private SseReference reference;
         private final Locale locale;
+        private final long timeOffset = System.currentTimeMillis();
 
         public SseHandler(AsyncContext asyncContext)
         {
@@ -123,6 +124,11 @@ public class SseServlet extends HttpServlet
         public SseReference getReference()
         {
             return reference;
+        }
+
+        public long getTimeOffset()
+        {
+            return timeOffset;
         }
 
         public void fireEvent(SseWriter event)
@@ -146,6 +152,9 @@ public class SseServlet extends HttpServlet
                 log("Sse started");
                 disconnected = false;
                 PrintWriter writer = asyncContext.getResponse().getWriter();
+                writer.append("event:timeOffset\ndata:");
+                writer.append(Long.toString(timeOffset));
+                writer.append("\n\n");
                 while (true)
                 {
                     SseWriter event = queue.take();

@@ -23,12 +23,17 @@ var offsetMillis=0;
 function setServerTime(serverMillis)
 {
     var now = new Date();
-    offsetMillis = now.getTime() - serverMillis;
+    offsetMillis = now.getTime() - (serverMillis + timeOffset);
 }
 function getServerTime()
 {
     var now = new Date();
     return now.getTime() - offsetMillis;
+}
+function getShortTime()
+{
+    var now = new Date();
+    return (now.getTime() - offsetMillis) - timeOffset;
 }
 function Svg(x, y, width, height)
 {
@@ -107,6 +112,17 @@ function Svg(x, y, width, height)
             this.data = [];
         }
     };
+    this.updateHistoryView = function()
+    {
+        var time = getShortTime();
+        var x = time - this.historyMillis;
+        var width = this.historyMillis;
+        var y = this.min;
+        var height = this.max - this.min;
+        var viewBox = x+" "+y+" "+width+" "+height;
+        this.history.setAttributeNS(null, 'viewBox', viewBox);
+        this.history.setAttributeNS(null, 'preserveAspectRatio', 'none');
+    };
     this.setGrid = function()
     {
         // x-scale
@@ -178,15 +194,16 @@ function Svg(x, y, width, height)
                     break;
             }
         }
-        var time = getServerTime();
+        var time = getShortTime();
         var d = time - anc.getTime();
         var mod = time % div;
-        x -= mod;
+        x = time - mod;
+        var gap = this.max - this.min;
         var d = "";
-        while (x > 0)
+        for (let i=0;i<10;i++)
         {
 
-            d += "M "+x/this.ratioX+" 0 V"+height;
+            d += "M "+x+" "+this.min+" V"+gap;
             x -= div;
         }
         div = 0.1;
@@ -236,7 +253,7 @@ function Svg(x, y, width, height)
         while (x > 0)
         {
 
-            d += "M 0 "+x/this.ratioY+" H"+width;
+            //d += "M 0 "+x/this.ratioY+" H"+width;
             x -= div;
         }
         this.grid.setAttributeNS(null, "d", d);
@@ -440,7 +457,7 @@ function Svg(x, y, width, height)
         if (this.data)
         {
             var arr = [];
-            var time = getServerTime();
+            var time = getShortTime();
             if (time)
             {
                 while (this.data.length > 0 && (time - this.data[0]) > this.historyMillis)
@@ -460,6 +477,7 @@ function Svg(x, y, width, height)
                 this.gap = this.max - this.min;
                 this.ratioX = this.historyMillis/this.width;
                 this.ratioY = this.gap/this.height;
+                this.updateHistoryView();
                 this.setGrid();
                 for (var i=0;i<len;i++)
                 {
@@ -471,7 +489,7 @@ function Svg(x, y, width, height)
                 var v = this.data[2*(len-1)+1];
                 arr.push(this.historyMillis/this.ratioX);
                 arr.push((this.max - v)/this.ratioY);
-                this.polyline.setAttributeNS(null, "points", arr.join(' '));
+                this.polyline.setAttributeNS(null, "points", this.data.join(' '));
             }
         }
     };
