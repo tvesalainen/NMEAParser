@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import org.vesalainen.code.AnnotatedPropertyStore;
 import org.vesalainen.code.Property;
+import org.vesalainen.parsers.mmsi.MIDEntry;
 import org.vesalainen.parsers.mmsi.MMSIEntry;
 import org.vesalainen.parsers.mmsi.MMSIParser;
 import org.vesalainen.parsers.mmsi.MMSIType;
@@ -152,12 +153,13 @@ public class AISTargetData extends AnnotatedPropertyStore
         ensureMMSIParsed();
         if (mmsiEntry != null)
         {
-            return mmsiEntry.getMid().getCountry();
+            MIDEntry mid = mmsiEntry.getMid();
+            if (mid != null)
+            {
+                return mmsiEntry.getMid().getCountry();
+            }
         }
-        else
-        {
-            return "???";
-        }
+        return "???";
     }
     private void ensureMMSIParsed()
     {
