@@ -16,24 +16,27 @@
  */
 "use strict";
 
-/* global Svg, Title, Svg, serverMillis, zoneOffset setServerTime getServerTime, zoneOffset */
+/* global Svg, Title, Svg, serverMillis, zoneOffset setServerTime getServerTime, zoneOffset, timeOffset */
 
 var offsetMillis=0;
 
-function setServerTime(serverMillis)
+function setServerTime(serverSeconds)
 {
     var now = new Date();
-    offsetMillis = now.getTime() - (serverMillis + timeOffset);
+    offsetMillis = now.getTime() - (serverSeconds*1000 + timeOffset);
 }
 function getServerTime()
 {
     var now = new Date();
     return now.getTime() - offsetMillis;
 }
+function toShortTime(serverTime)
+{
+    return (serverTime - timeOffset)/1000;
+}
 function getShortTime()
 {
-    var now = new Date();
-    return (now.getTime() - offsetMillis) - timeOffset;
+    return toShortTime(getServerTime());
 }
 function Svg(x, y, width, height)
 {
@@ -97,116 +100,117 @@ function Svg(x, y, width, height)
     {
         if (history > 0)
         {
-            this.historyMillis = history;
+            this.historySeconds = (history/1000);
             this.min = min;
             this.max = max;
             this.gap = max - min;
-            this.ratioX = this.historyMillis/this.width;
-            this.ratioY = this.gap/this.height;
             var arr = createHistory(this.svg, history, min, max, this.width, this.height, this.unit.innerHTML);
             this.history = arr[0];
             this.polyline = arr[1];
-            this.grid = arr[2];
-            this.minText = arr[3];
-            this.maxText = arr[4];
+            this.gridX = arr[2];
+            this.gridY = arr[3];
+            this.minText = arr[4];
+            this.maxText = arr[5];
+            this.graph = arr[6];
+            this.cursor = arr[7];
             this.data = [];
         }
     };
     this.updateHistoryView = function()
     {
         var time = getShortTime();
-        var x = time - this.historyMillis;
-        var width = this.historyMillis;
+        var x = time - this.historySeconds;
+        var width = this.historySeconds;
         var y = this.min;
         var height = this.max - this.min;
+        var coefX = 1.007;
+        //x *= coefX;
+        width *= coefX;
         var viewBox = x+" "+y+" "+width+" "+height;
         this.history.setAttributeNS(null, 'viewBox', viewBox);
+        var ty = this.max + this.min;
+        this.graph.setAttributeNS(null, 'transform', 'matrix(1 0 0 -1 0 '+ty+')');
         this.history.setAttributeNS(null, 'preserveAspectRatio', 'none');
     };
-    this.setGrid = function()
+    this.setGridX = function()
     {
         // x-scale
-        var div = 1;
-        var un;
-        var x = this.historyMillis;
-        var anc = new Date();
-        while (x / div > 10)
+        var shortTime = getShortTime();
+        if (!(this.nextXGrid > shortTime))
         {
-            switch (div)
+            var div = 1;
+            var un;
+            var x = this.historySeconds;
+            var anc = new Date();
+            anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDate(), 0, 0, 0, 0);
+            while (x / div > 10)
             {
-                case 1:
-                    div *= 1000;
-                    un = 'sec';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), anc.getMinutes(), anc.getSeconds(), 0);
-                    break;
-                case 1000:
-                    div *= 60;
-                    un = 'min';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), 0, 0, 0);
-                    break;
-                case 60000:
-                    div *= 10;
-                    un = '10min';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), 0, 0, 0);
-                    break;
-                case 600000:
-                    div *= 2;
-                    un = '20min';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), 0, 0, 0);
-                    break;
-                case 1200000:
-                    div *= 1.5;
-                    un = '30min';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), anc.getHours(), 0, 0, 0);
-                    break;
-                case 1800000:
-                    div *= 2;
-                    un = 'hour';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
-                    break;
-                case 3600000:
-                    div *= 2;
-                    un = '2hour';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
-                    break;
-                case 7200000:
-                    div *= 1.5;
-                    un = '3hour';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
-                    break;
-                case 10800000:
-                    div *= 2;
-                    un = '6hour';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
-                    break;
-                case 28800000:
-                    div *= 2;
-                    un = '12hour';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDay(), 0, 0, 0, 0);
-                    break;
-                case 57600000:
-                    div *= 2;
-                    un = 'day';
-                    anc = new Date(anc.getFullYear(), anc.getMonth(), 0, 0, 0, 0, 0);
-                    break;
-                default:
-                    un = undefined;
-                    break;
+                switch (div)
+                {
+                    case 1:
+                        div *= 60;
+                        un = 'min';
+                        break;
+                    case 60:
+                        div *= 10;
+                        un = '10min';
+                        break;
+                    case 600:
+                        div *= 2;
+                        un = '20min';
+                        break;
+                    case 1200:
+                        div *= 1.5;
+                        un = '30min';
+                        break;
+                    case 1800:
+                        div *= 2;
+                        un = 'hour';
+                        break;
+                    case 3600:
+                        div *= 2;
+                        un = '2hour';
+                        break;
+                    case 7200:
+                        div *= 1.5;
+                        un = '3hour';
+                        break;
+                    case 10800:
+                        div *= 2;
+                        un = '6hour';
+                        break;
+                    case 28800:
+                        div *= 2;
+                        un = '12hour';
+                        break;
+                    case 57600:
+                        div *= 2;
+                        un = 'day';
+                        break;
+                    default:
+                        un = undefined;
+                        break;
+                }
             }
+            var ny = toShortTime(anc.getTime());
+            var rem = (shortTime-ny)%div;
+            var x = shortTime-rem;
+            this.nextXGrid = shortTime+(div-rem);
+            var gap = this.max;
+            var d = "";
+            for (let i=0;i<10;i++)
+            {
+                d += "M "+x+" "+this.min+" V"+gap;
+                x -= div;
+            }
+            this.gridX.setAttributeNS(null, "d", d);
         }
-        var time = getShortTime();
-        var d = time - anc.getTime();
-        var mod = time % div;
-        x = time - mod;
-        var gap = this.max - this.min;
+    };        
+    this.setGridY = function()
+    {
+        var shortTime = getShortTime();
         var d = "";
-        for (let i=0;i<10;i++)
-        {
-
-            d += "M "+x+" "+this.min+" V"+gap;
-            x -= div;
-        }
-        div = 0.1;
+        var div = 0.1;
         while (this.gap / div > 5)
         {
             switch (div)
@@ -240,23 +244,17 @@ function Svg(x, y, width, height)
                     break;
             }
         }
-        var mod;
-        if (this.min > 0)
-        {
-            mod = (div -(this.min % div));
-        }
-        else
-        {
-            mod = -this.min % div;
-        }
-        x = this.gap-mod;
-        while (x > 0)
+        var rem;
+        rem = this.max % div;
+        x = this.max-rem;
+        var xx = shortTime-this.historySeconds;
+        while (x > this.min)
         {
 
-            //d += "M 0 "+x/this.ratioY+" H"+width;
+            d += "M "+xx+" "+x+" H"+this.historySeconds;
             x -= div;
         }
-        this.grid.setAttributeNS(null, "d", d);
+        this.gridY.setAttributeNS(null, "d", d);
         this.minText.innerHTML = this.min;
         this.maxText.innerHTML = this.max;
     };
@@ -330,7 +328,7 @@ function Svg(x, y, width, height)
     };
     this.setEtaHistory = function(history)
     {
-        this.historyMillis = history;
+        this.historySeconds = history;
     };
     this.resetEta = function(time, value)
     {
@@ -346,7 +344,7 @@ function Svg(x, y, width, height)
     this.setEta = function(time, value)
     {
         setServerTime(time);
-        while (this.data.length > 0 && (time - this.data[0]) > this.historyMillis)
+        while (this.data.length > 0 && (time - this.data[0]) > this.historySeconds)
         {
             this.data.shift();
             this.data.shift();
@@ -433,64 +431,83 @@ function Svg(x, y, width, height)
     this.setData = function(time, value)
     {
         setServerTime(time);
-        if (this.historyMillis)
+        if (this.historySeconds)
         {
-            while (this.data.length > 0 && (time - this.data[0]) > this.historyMillis)
+            while (this.data.length > 0 && (time - this.data[0]) > this.historySeconds)
             {
                 this.data.shift();
                 this.data.shift();
             }
             this.data.push(time);
             this.data.push(value);
+            this.updateHistory();
         }
         else
         {
             this.setText(value);
         }
     };
-    this.setHistoryData = function(array)
+    this.setMin = function(min)
     {
-        this.data = array;
-    };
-    this.tick = function()
-    {
-        if (this.data)
+        if (this.historySeconds)
         {
-            var arr = [];
-            var time = getShortTime();
-            if (time)
+            this.min = Number(min);
+            this.gap = this.max - this.min;
+            this.setGridY();
+            this.nextXGrid = 0;
+            this.hasBounds = true;
+        }
+    };
+    this.setMax = function(max)
+    {
+        if (this.historySeconds)
+        {
+            this.max = Number(max);
+            this.gap = this.max - this.min;
+            this.setGridY();
+            this.nextXGrid = 0;
+            this.hasBounds = true;
+        }
+    };
+    this.updateHistory = function()
+    {
+        var time = getShortTime();
+        if (time)
+        {
+            if (!this.hasBounds)
             {
-                while (this.data.length > 0 && (time - this.data[0]) > this.historyMillis)
-                {
-                    this.data.shift();
-                    this.data.shift();
-                }
+                var min = this.min;
+                var max = this.max;
                 this.min = Number.MAX_VALUE;
                 this.max = Number.MIN_VALUE;
                 var len = this.data.length/2;
+                var v;
                 for (var i=0;i<len;i++)
                 {
-                    var v = this.data[2*i+1];
+                    v = this.data[2*i+1];
                     this.min = Math.min(this.min, v);
                     this.max = Math.max(this.max, v);
                 }
-                this.gap = this.max - this.min;
-                this.ratioX = this.historyMillis/this.width;
-                this.ratioY = this.gap/this.height;
-                this.updateHistoryView();
-                this.setGrid();
-                for (var i=0;i<len;i++)
+                if (min !== this.min || max !== this.max)
                 {
-                    var t = this.data[2*i];
-                    var v = this.data[2*i+1];
-                    arr.push((this.historyMillis-(time-t))/this.ratioX);
-                    arr.push((this.max - v)/this.ratioY); // (max-min)-(v-min)
+                    this.setGridY();
+                    this.nextXGrid = 0;
                 }
-                var v = this.data[2*(len-1)+1];
-                arr.push(this.historyMillis/this.ratioX);
-                arr.push((this.max - v)/this.ratioY);
-                this.polyline.setAttributeNS(null, "points", this.data.join(' '));
             }
+            this.gap = this.max - this.min;
+            this.setGridX();
+            this.polyline.setAttributeNS(null, "points", this.data.join(' '));
+            var slice = this.data.slice(this.data.length-4);
+            this.cursor.setAttributeNS(null, "points", slice.join(' '));
         }
+    };
+    this.setHistoryData = function(array)
+    {
+        this.data = array;
+        this.updateHistory();
+    };
+    this.tick = function()
+    {
+        this.updateHistoryView();
     };
 }

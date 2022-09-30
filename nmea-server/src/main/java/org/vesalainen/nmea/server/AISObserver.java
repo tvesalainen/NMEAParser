@@ -33,7 +33,7 @@ public class AISObserver extends Observer<Obj>
     }
 
     @Override
-    public boolean accept(long time, Obj arg)
+    public boolean accept(String property, long time, Obj arg)
     {
         SseServlet.SseHandler sse = sseReference.getHandler();
         if (sse != null)
@@ -41,7 +41,7 @@ public class AISObserver extends Observer<Obj>
             sse.fireEvent(new SseWriter(event,
                 JSONBuilder
                     .object()
-                    .value("name", ()->name)
+                    .value("name", ()->property)
                     .number("time", ()->time)
                     .object("value", arg)));
             return true;

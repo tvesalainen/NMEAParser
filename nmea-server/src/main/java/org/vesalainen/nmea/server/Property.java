@@ -134,7 +134,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         while (iterator.hasNext())
         {
             Observer next = iterator.next();
-            if (!next.accept(time, value))
+            if (!next.accept(property, time, value))
             {
                 iterator.remove();
             }
@@ -146,7 +146,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         while (iterator.hasNext())
         {
             Observer next = iterator.next();
-            if (!next.accept(time, value))
+            if (!next.accept(property, time, value))
             {
                 iterator.remove();
             }

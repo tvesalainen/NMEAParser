@@ -111,40 +111,52 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     parent.appendChild(history);
     history.setAttributeNS(null, "class", "history");
     //history.setAttributeNS(null, "transform", "translate(-0.5, 0)");
-    var grid = document.createElementNS(SVG_NS, 'path');
-    grid.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
-    grid.setAttributeNS(null, "stroke", "blue");
-    grid.setAttributeNS(null, "fill", "red");
-    grid.setAttributeNS(null, "stroke-width", "1");
-    history.appendChild(grid);
-    var g = document.createElementNS(SVG_NS, 'g');
-    history.appendChild(g);
-    g.setAttributeNS(null, "text-anchor", "middle");
-    g.setAttributeNS(null, "stroke", "none");
-    g.setAttributeNS(null, "fill", "currentColor");
+    var graph = document.createElementNS(SVG_NS, 'g');
+    history.appendChild(graph);
+    var gridX = document.createElementNS(SVG_NS, 'path');
+    gridX.setAttributeNS(null, "stroke", "currentColor");
+    gridX.setAttributeNS(null, "stroke-width", "1");
+    gridX.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
+    graph.appendChild(gridX);
+    
+    var gridY = document.createElementNS(SVG_NS, 'path');
+    gridY.setAttributeNS(null, "stroke", "currentColor");
+    gridY.setAttributeNS(null, "stroke-width", "1");
+    gridY.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
+    graph.appendChild(gridY);
     
     var minText = document.createElementNS(SVG_NS, 'text');
-    g.appendChild(minText);
+    parent.appendChild(minText);
     var xx = width/2;
     var yy = height-1;
     minText.setAttributeNS(null, "x", xx);
     minText.setAttributeNS(null, "y", yy);
+    minText.setAttributeNS(null, "font-size", '3');
     
     var maxText = document.createElementNS(SVG_NS, 'text');
-    g.appendChild(maxText);
+    parent.appendChild(maxText);
     xx = width/2;
-    yy = height/20;
+    yy = height/10;
     maxText.setAttributeNS(null, "x", xx);
     maxText.setAttributeNS(null, "y", yy);
+    maxText.setAttributeNS(null, "font-size", '3');
     
     var polyline = document.createElementNS(SVG_NS, 'polyline');
-    history.appendChild(polyline);
+    graph.appendChild(polyline);
     polyline.setAttributeNS(null, "class", "history-graph");
     polyline.setAttributeNS(null, "fill", "none");
     polyline.setAttributeNS(null, "stroke", "currentColor");
-    polyline.setAttributeNS(null, "stroke-width", "1");
     polyline.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
-    return [history, polyline, grid, minText, maxText];
+    polyline.setAttributeNS(null, "stroke-width", "1");
+
+    var cursor = document.createElementNS(SVG_NS, 'polyline');
+    cursor.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
+    cursor.setAttributeNS(null, "stroke-linecap", "round");
+    cursor.setAttributeNS(null, "stroke-width", "1");
+    cursor.setAttributeNS(null, "stroke", "red");
+    graph.appendChild(cursor);
+
+    return [history, polyline, gridX, gridY, minText, maxText, graph, cursor];
 };
 
 function createTide(parent, r)

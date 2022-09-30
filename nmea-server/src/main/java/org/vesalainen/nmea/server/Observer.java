@@ -16,7 +16,9 @@
  */
 package org.vesalainen.nmea.server;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.DoubleFunction;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.json.JSONBuilder.Element;
@@ -38,13 +40,10 @@ public class Observer<T> extends JavaLogging
     protected final String event;
     protected final Property property;
     protected final SseReference sseReference;
-    private T last;
-    protected final String name;
-    private final SseWriter writer;
+    private Map<String,T> last = new HashMap<>();
     private final SseWriter empty;
-    protected long time;
-    protected T value;
     private final Locale locale;
+    private final String name;
 
     protected Observer(String event, Property property, SseReference sseReference, Locale locale)
     {
@@ -54,19 +53,9 @@ public class Observer<T> extends JavaLogging
         this.name = property.getName();
         this.sseReference = sseReference;
         this.locale = locale;
-        this.writer = createSseWriter();
         this.empty = new SseWriter(event, JSONBuilder.object());
     }
     
-    protected SseWriter createSseWriter()
-    {
-        return new SseWriter(event,
-            JSONBuilder
-                .object()
-                .value("name", ()->name)
-                .number("time", ()->time)
-                .value("value", ()->value));
-    }
     public static Observer getInstance(String event, Property property, String unit, String decimals, SseReference sseReference, Locale locale)
     {
         if ("ais".equals(property.getName()))
@@ -97,26 +86,38 @@ public class Observer<T> extends JavaLogging
         }
     }
 
-    public boolean accept(long time, double arg)
+    public boolean accept(String property, long time, double arg)
     {
         throw new UnsupportedOperationException("not supported");
     }
     
-    public boolean accept(long time, T arg)
+    public boolean accept(String property, long time, T arg)
     {
         SseHandler sse = sseReference.getHandler();
         if (sse != null)
         {
-            if (!arg.equals(last))
+            if (!arg.equals(last.get(property)))
             {
-                this.time = time - sse.getTimeOffset();
-                this.value = arg;
-                sse.fireEvent(writer);
-                last = arg;
+                long t = (time - sse.getTimeOffset())/1000;
+                sse.fireEvent(new SseWriter(event,
+                    JSONBuilder
+                    .object()
+                    .value("name", ()->property)
+                    .number("time", ()->t)
+                    .value("value", ()->arg)));
+                last.put(property, arg);
             }
             else
             {
-                sse.fireEvent(empty);
+                switch (property)
+                {
+                    case "min":
+                    case "max":
+                        break;
+                    default:
+                        sse.fireEvent(empty);
+                        break;
+                }
             }
             return true;
         }
@@ -187,9 +188,9 @@ public class Observer<T> extends JavaLogging
         }
 
         @Override
-        public boolean accept(long time, double arg)
+        public boolean accept(String property, long time, double arg)
         {
-            return accept(time, format.apply(arg));
+            return accept(property, time, format.apply(arg));
         }
 
         public DoubleFunction<String> getFormat()

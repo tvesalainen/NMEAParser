@@ -22,25 +22,25 @@ import org.vesalainen.math.sliding.TimeValueConsumer;
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-class Delay implements TimeValueConsumer
+class Delay implements TimePropertyConsumer
 {
     
     private final long delay;
     private long last;
-    private TimeValueConsumer next;
+    private TimePropertyConsumer next;
 
-    public Delay(long delay, TimeValueConsumer next)
+    public Delay(long delay, TimePropertyConsumer next)
     {
         this.delay = delay;
         this.next = next;
     }
 
     @Override
-    public void accept(long t, double v)
+    public void accept(String p, long t, double v)
     {
         if (t - last >= delay)
         {
-            next.accept(t, v);
+            next.accept(p, t, v);
             last = t;
         }
     }

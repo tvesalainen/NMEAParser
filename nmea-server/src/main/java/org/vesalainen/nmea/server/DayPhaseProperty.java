@@ -50,7 +50,7 @@ public class DayPhaseProperty extends ObjectProperty implements AttachedLogger
     {
         if (solarWatch != null)
         {
-            observer.accept(clock.millis(), solarWatch.getPhase());
+            observer.accept("dayPhase", clock.millis(), solarWatch.getPhase());
         }
     }
     

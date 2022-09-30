@@ -20,8 +20,9 @@ import java.util.function.DoubleFunction;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.math.UnitCategory;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingAverage;
+import org.vesalainen.math.sliding.DoubleTimeoutSlidingMax;
+import org.vesalainen.math.sliding.DoubleTimeoutSlidingMin;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSeries;
-import org.vesalainen.math.sliding.TimeValueConsumer;
 import org.vesalainen.math.sliding.TimeoutSlidingAngleAverage;
 import org.vesalainen.nmea.server.Observer.DoubleObserver;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
@@ -35,7 +36,10 @@ public class DoubleProperty extends Property
 {
     
     protected DoubleTimeoutSlidingSeries history;
-    protected TimeValueConsumer func;
+    protected TimePropertyConsumer func;
+    private DoubleTimeoutSlidingAverage ave;
+    private DoubleTimeoutSlidingMin min;
+    private DoubleTimeoutSlidingMax max;
 
     public DoubleProperty(CachedScheduledThreadPool executor, PropertyType property)
     {
@@ -52,7 +56,7 @@ public class DoubleProperty extends Property
     @Override
     protected final void init()
     {
-        TimeValueConsumer f = (t, v) -> accept(null, t, v);
+        TimePropertyConsumer f = (p, t, v) -> super.set(p, t, v);
         long periodMillis = getPeriodMillis();
         if (periodMillis > 0)
         {
@@ -62,30 +66,24 @@ public class DoubleProperty extends Property
         long averageMillis = getAverageMillis();
         if (averageMillis > 0)
         {
-            TimeValueConsumer oldFunc = f;
+            TimePropertyConsumer oldFunc = f;
             UnitCategory category = getUnit().getCategory();
             if (UnitCategory.PLANE_ANGLE == category)
             {
                 TimeoutSlidingAngleAverage ave = new TimeoutSlidingAngleAverage(8, averageMillis);
-                f = (t, v) ->
+                f = (p, t, v) ->
                 {
                     ave.accept(v);
-                    oldFunc.accept(t, ave.fast());
+                    oldFunc.accept(p, t, ave.fast());
                 };
             }
             else
             {
-                DoubleTimeoutSlidingAverage ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
-                f = (t, v) ->
+                ave = new DoubleTimeoutSlidingAverage(8, averageMillis);
+                f = (p, t, v) ->
                 {
                     ave.accept(v, t);
-                    oldFunc.accept(t, ave.fast());
-                    if (Math.abs(ave.average()-ave.fast()) > 1e-10)
-                    {
-                        double average = ave.average();
-                        double fast = ave.fast();
-                        throw new IllegalArgumentException(average+" ave != fast "+fast);
-                    }
+                    oldFunc.accept(p, t, ave.fast());
                 };
             }
         }
@@ -94,6 +92,18 @@ public class DoubleProperty extends Property
         {
             double delta = 1.0/Math.pow(10, getDecimals());
             this.history = new DoubleTimeoutSlidingSeries(System::currentTimeMillis, 256, historyMillis, (l)->l, (v1,v2)->Math.abs(v1-v2)<delta);
+            this.min = new DoubleTimeoutSlidingMin(8, historyMillis);
+            this.max = new DoubleTimeoutSlidingMax(8, historyMillis);
+            TimePropertyConsumer oldFunc = f;
+            f = (p, t, v) ->
+            {
+                oldFunc.accept(p, t, v);
+                history.accept(v, t);
+                min.accept(v, t);
+                max.accept(v, t);
+                super.set("min", t, min.getMin());
+                super.set("max", t, max.getMax());
+            };
         }
         else
         {
@@ -105,16 +115,7 @@ public class DoubleProperty extends Property
     @Override
     public void set(String property, long time, double arg)
     {
-        func.accept(time, arg);
-    }
-
-    private void accept(String property, long time, double arg)
-    {
-        super.set(property, time, arg);
-        if (history != null)
-        {
-            history.accept(arg, time);
-        }
+        func.accept(property, time, arg);
     }
 
     @Override
@@ -134,7 +135,7 @@ public class DoubleProperty extends Property
                 String value = format.apply(v);
                 if (!value.equals(prev.ref))
                 {
-                    array.number(()->t-timeOffset);
+                    array.number(()->(t-timeOffset)/1000);
                     array.number(()->Double.valueOf(value));
                     prev.ref = value;
                 }

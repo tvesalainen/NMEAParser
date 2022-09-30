@@ -90,6 +90,7 @@ public class AISProperty extends ObjectProperty
                         .format("draught", "%.1f", target::getDraught)
                         .bool("classA", target::isClassA)
                         .value("vendor", target::getVendor)
+                        .value("model", target::getUnitModelCode)
                         .number("serial", target::getSerialNumber)
                         .value("mmsiType", target::getMMSIType)
                         .value("shipType", target::getShipType)

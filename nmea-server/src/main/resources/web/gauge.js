@@ -357,15 +357,26 @@ function Gauge(element, seq)
                         }
                         else
                         {
-                            if (json['time'] && json['value'])
+                            switch (json['name'])
                             {
-                                this.svg.setData(json['time'], json['value']);
-                            }
-                            if (json['title'])
-                            {
-                                this.svg.setTitle(json['title']);
-                                this.svg.setUnit(json['unit']);
-                                this.svg.setHistory(json['history'], json['min'], json['max']);
+                                case 'min':
+                                    this.svg.setMin(json['value']);
+                                    break;
+                                case 'max':
+                                    this.svg.setMax(json['value']);
+                                    break;
+                                default:
+                                    if (json['time'] && json['value'])
+                                    {
+                                        this.svg.setData(json['time'], json['value']);
+                                    }
+                                    if (json['title'])
+                                    {
+                                        this.svg.setTitle(json['title']);
+                                        this.svg.setUnit(json['unit']);
+                                        this.svg.setHistory(json['history'], json['min'], json['max']);
+                                    }
+                                    break;
                             }
                         }
                     };
