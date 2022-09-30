@@ -57,6 +57,18 @@ public class DoubleProperty extends Property
     protected final void init()
     {
         TimePropertyConsumer f = (p, t, v) -> super.set(p, t, v);
+        long historyMillis = getHistoryMillis();
+        if (historyMillis > 0)
+        {
+            double delta = 1.0/Math.pow(10, getDecimals());
+            this.history = new DoubleTimeoutSlidingSeries(System::currentTimeMillis, 256, historyMillis, (l)->l, (v1,v2)->Math.abs(v1-v2)<delta);
+            TimePropertyConsumer oldFunc = f;
+            f = (p, t, v) ->
+            {
+                oldFunc.accept(p, t, v);
+                history.accept(v, t);
+            };
+        }
         long periodMillis = getPeriodMillis();
         if (periodMillis > 0)
         {
@@ -90,15 +102,12 @@ public class DoubleProperty extends Property
         long historyMillis = getHistoryMillis();
         if (historyMillis > 0)
         {
-            double delta = 1.0/Math.pow(10, getDecimals());
-            this.history = new DoubleTimeoutSlidingSeries(System::currentTimeMillis, 256, historyMillis, (l)->l, (v1,v2)->Math.abs(v1-v2)<delta);
             this.min = new DoubleTimeoutSlidingMin(8, historyMillis);
             this.max = new DoubleTimeoutSlidingMax(8, historyMillis);
             TimePropertyConsumer oldFunc = f;
             f = (p, t, v) ->
             {
                 oldFunc.accept(p, t, v);
-                history.accept(v, t);
                 min.accept(v, t);
                 max.accept(v, t);
                 super.set("min", t, min.getMin());
