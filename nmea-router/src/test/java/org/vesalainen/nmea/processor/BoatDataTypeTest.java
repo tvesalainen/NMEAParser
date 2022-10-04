@@ -18,32 +18,25 @@ package org.vesalainen.nmea.processor;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import static java.time.ZoneOffset.UTC;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 import org.junit.Test;
 import org.vesalainen.io.CompressedInput;
-import org.vesalainen.nio.channels.NullChannel;
-import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import org.vesalainen.nmea.jaxb.router.BoatDataType;
-import org.vesalainen.nmea.jaxb.router.BoatPositionType;
 import org.vesalainen.nmea.jaxb.router.DepthSounderPositionType;
 import org.vesalainen.nmea.jaxb.router.GpsPositionType;
-import org.vesalainen.util.logging.JavaLogging;
 
 /**
  *
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class AnchorManagerT
+public class BoatDataTypeTest
 {
     
-    public AnchorManagerT()
+    public BoatDataTypeTest()
     {
     }
 
@@ -68,19 +61,6 @@ public class AnchorManagerT
         dpt.setToBow(BigDecimal.valueOf(7));
         boat.getGpsPositionOrDepthSounderPosition().add(dpt);
 
-        AnchorManagerType type = new AnchorManagerType();
-        Processor proc = new Processor(boat, null, null, null);
-        AnchorManager man = new AnchorManager(proc, new NullChannel(), boat, type, null);
-        Clk clock = new Clk();
-        JavaLogging.setClockSupplier(()->clock);
-        JavaLogging.setConsoleHandler("org.vesalainen", Level.ALL);
-        man.begin(null);
-        man.set("clock", clock);
-        man.commit(null, "clock");
-        Path path = Paths.get("C:\\Users\\tkv\\share", "20211105031240.mea");
-        CompressedInput cio = new CompressedInput(path);
-        cio.setPreProcessor(clock);
-        cio.readTransactional(man);
     }
     
     private class Clk extends Clock implements Consumer<CompressedInput>

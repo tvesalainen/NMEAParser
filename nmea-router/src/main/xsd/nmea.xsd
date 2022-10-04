@@ -92,7 +92,6 @@
                     <xsd:element name="ais-log" type="aisLogType"/>
                     <xsd:element name="sntp-server" type="sntp-serverType"/>
                     <xsd:element name="compass-corrector" type="compassCorrectorType"/>
-                    <xsd:element name="anchor-manager" type="anchorManagerType"/>
                     <xsd:element name="sunset-manager" type="sunsetManagerType"/>
                     <xsd:element name="drift-calculator" type="driftCalculatorType"/>
                 </xsd:choice>
@@ -250,9 +249,6 @@
         <xsd:attribute name="modbusHost" type="xsd:string" use="required"/>
         <xsd:attribute name="unitId" type="xsd:unsignedShort" use="required"/>
         <xsd:attribute name="relayAddress" type="xsd:unsignedShort" use="required"/>
-    </xsd:complexType>
-    <xsd:complexType name="anchorManagerType">
-        <xsd:attribute name="directory" type="xsd:string" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="compassCorrectorType">
         <xsd:attribute name="configFile" type="xsd:string" use="required"/>

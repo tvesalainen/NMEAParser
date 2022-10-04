@@ -30,7 +30,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.vesalainen.net.ObjectServer;
 import org.vesalainen.nmea.jaxb.router.AisLogType;
-import org.vesalainen.nmea.jaxb.router.AnchorManagerType;
 import org.vesalainen.nmea.jaxb.router.BoatDataType;
 import org.vesalainen.nmea.jaxb.router.CompassCorrectorType;
 import org.vesalainen.nmea.jaxb.router.CompressedLogType;
@@ -163,16 +162,6 @@ public class Processor<T extends ByteChannel & ScatteringByteChannel & Gathering
                     processes.add(server);
                     addNMEAObserver(server);
                     server.start("");
-                    continue;
-                }
-                if (ob instanceof AnchorManagerType)
-                {
-                    info("starting AnchorManager");
-                    AnchorManagerType anchorManagerType = (AnchorManagerType) ob;
-                    AnchorManager anchorManager = new AnchorManager(this, channel, boatType, anchorManagerType, executor);
-                    processes.add(anchorManager);
-                    addNMEAObserver(anchorManager);
-                    anchorManager.start("");
                     continue;
                 }
                 if (ob instanceof SunsetManagerType)
