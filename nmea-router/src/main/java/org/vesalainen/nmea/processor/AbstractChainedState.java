@@ -16,8 +16,6 @@
  */
 package org.vesalainen.nmea.processor;
 
-import java.util.Collection;
-import java.util.function.Supplier;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.vesalainen.management.AbstractDynamicMBean;
