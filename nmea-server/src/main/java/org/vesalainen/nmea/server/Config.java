@@ -46,6 +46,7 @@ import org.vesalainen.management.AbstractDynamicMBean;
 import org.vesalainen.math.UnitCategory;
 import static org.vesalainen.math.UnitCategory.*;
 import org.vesalainen.math.UnitType;
+import org.vesalainen.nmea.server.jaxb.BoatDataType;
 import org.vesalainen.nmea.server.jaxb.NmeaServerType;
 import org.vesalainen.nmea.server.jaxb.ObjectFactory;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
@@ -111,6 +112,11 @@ public class Config extends JavaLogging
         mBean.register();
     }
 
+    public BoatDataType getBoat()
+    {
+        return server.getBoat();
+    }
+    
     public List<PropertyType> getProperties()
     {
         return server.getProperty();

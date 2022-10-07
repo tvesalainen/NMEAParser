@@ -99,7 +99,6 @@ public class DoubleProperty extends Property
                 };
             }
         }
-        long historyMillis = getHistoryMillis();
         if (historyMillis > 0)
         {
             this.min = new DoubleTimeoutSlidingMin(8, historyMillis);

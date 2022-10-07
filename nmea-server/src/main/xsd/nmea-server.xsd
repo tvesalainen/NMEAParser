@@ -20,9 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
            elementFormDefault="qualified" attributeFormDefault="unqualified">
     <xsd:element name="nmea-server" type="nmeaServerType"/>
     <xsd:complexType name="nmeaServerType">
-        <xsd:choice minOccurs="0" maxOccurs="unbounded">
-            <xsd:element name="property" type="propertyType"/>
-        </xsd:choice>
+        <xsd:sequence>
+            <xsd:element name="boat" type="boatDataType"/>
+            <xsd:element name="property" type="propertyType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
         <xsd:attribute name="nmeaMulticastAddress" type="xsd:string"></xsd:attribute>
         <xsd:attribute name="nmeaMulticastPort" type="xsd:unsignedShort"></xsd:attribute>
         <xsd:attribute name="httpPort" type="xsd:unsignedShort"></xsd:attribute>
@@ -41,5 +42,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <xsd:attribute name="average" type="xsd:string"></xsd:attribute>
         <xsd:attribute name="period" type="xsd:string"></xsd:attribute>
         <xsd:attribute name="history" type="xsd:string"></xsd:attribute>
+    </xsd:complexType>
+    <xsd:complexType name="boatDataType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="gps-position" type="gpsPositionType"/>
+            <xsd:element name="depthSounder-position" type="depthSounderPositionType"/>
+        </xsd:choice>
+        <xsd:attribute name="length" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="beam" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="draft" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="anchorWeight" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="chainDiameter" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="maxChainLength" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="crossSectionCoefficient" type="xsd:decimal"/>
+    </xsd:complexType>
+    <xsd:complexType name="gpsPositionType">
+        <xsd:complexContent>
+            <xsd:extension base="boatPositionType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="depthSounderPositionType">
+        <xsd:complexContent>
+            <xsd:extension base="boatPositionType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:complexType name="boatPositionType">
+        <xsd:attribute name="toSb" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="toPort" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="toBow" type="xsd:decimal" use="required"/>
+        <xsd:attribute name="toStern" type="xsd:decimal" use="required"/>
     </xsd:complexType>
 </xsd:schema>

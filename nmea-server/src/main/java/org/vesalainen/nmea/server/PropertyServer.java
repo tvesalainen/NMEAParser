@@ -47,7 +47,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
     private final Config config;
     private final CachedScheduledThreadPool executor;
     
-    public PropertyServer(Clock clock, Config config, CachedScheduledThreadPool executor, AISService aisService)
+    public PropertyServer(Clock clock, Config config, CachedScheduledThreadPool executor)
     {
         super(allNMEAProperties());
         this.clock = clock;
@@ -56,7 +56,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
         List<String> sources = new ArrayList<>();
         config.getProperties().forEach((p)->
         {
-            Property property = Property.getInstance(executor, p);
+            Property property = Property.getInstance(executor, p, null);
             String name = p.getName();
             propertyMap.put(name, property);
             String[] srcs = property.getSources();
@@ -73,20 +73,6 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
                 dispatchMap.add(name, property);
             }
         });
-        if (propertyMap.containsKey("ais"))
-        {
-            aisService.addObserver(this);
-        }
-        /*
-        sources.forEach((source)->
-        {
-            if (!propertyMap.containsKey(source))
-            {
-                Property sourceProperty = Property.getInstance(config.getProperty(source));
-                dispatchMap.add(source, sourceProperty);
-                propertyMap.put(source, sourceProperty);
-            }
-        });*/
     }
 
     @Override
@@ -127,7 +113,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
     @Override
     public <T> void set(String property, T arg)
     {
-        Set<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property, arg.getClass());
         long millis = clock.millis();
         p.forEach((pr)->pr.set(property, millis, arg));
     }
@@ -135,7 +121,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
     @Override
     public void set(String property, double arg)
     {
-        Set<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property, double.class);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(property, millis, arg));
     }
@@ -143,7 +129,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
     @Override
     public void set(String property, float arg)
     {
-        Set<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property, float.class);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(property, millis, arg));
     }
@@ -151,7 +137,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
     @Override
     public void set(String property, int arg)
     {
-        Set<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property, int.class);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(property, millis, arg));
     }
@@ -159,7 +145,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
     @Override
     public void set(String property, long arg)
     {
-        Set<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property, long.class);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(property, millis, arg));
     }
@@ -167,7 +153,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
     @Override
     public void set(String property, char arg)
     {
-        Set<Property> p = getProperty(property);
+        Set<Property> p = getProperty(property, char.class);
         long millis = clock.millis();
         p.forEach((pr)->pr.set(property, millis, arg+""));
     }
@@ -180,13 +166,13 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
         return allProperties.toArray(new String[allProperties.size()]);
     }
     
-    private Set<Property> getProperty(String property)
+    private Set<Property> getProperty(String property, Class<?> type)
     {
         Set<Property> prop = dispatchMap.get(property);
         if (prop == null || prop.isEmpty())
         {
             PropertyType pt = config.getProperty(property);
-            Property p = Property.getInstance(executor, pt);
+            Property p = Property.getInstance(executor, pt, type);
             dispatchMap.add(property, p);
             propertyMap.put(property, p);
             return dispatchMap.get(property);

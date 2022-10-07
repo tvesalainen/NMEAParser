@@ -26,7 +26,6 @@ import javax.servlet.ServletContext;
 import javax.xml.bind.JAXBException;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.session.DefaultSessionIdManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -34,6 +33,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.JavaUtilLog;
 import org.eclipse.jetty.util.log.Log;
+import org.vesalainen.nmea.server.anchor.AnchorManager;
 import org.vesalainen.parsers.nmea.NMEAService;
 import org.vesalainen.parsers.nmea.ais.AISService;
 import org.vesalainen.util.LoggingCommandLine;
@@ -79,8 +79,11 @@ public class CommandLine extends LoggingCommandLine
         config("ThreadPool started %s", executor);
         NMEAService nmeaService = new NMEAService(address, nmeaPort, executor);
         AISService aisService = AISService.getInstance(nmeaService, aisDirectory, aisTtl, aisMaxLogSize, executor);
-        PropertyServer propertyServer = new PropertyServer(Clock.systemDefaultZone(), config, executor, aisService);
+        PropertyServer propertyServer = new PropertyServer(Clock.systemDefaultZone(), config, executor);
+        aisService.addObserver(propertyServer);
         nmeaService.addNMEAObserver(propertyServer);
+        AnchorManager anchorManager = new AnchorManager(propertyServer, config.getBoat(), executor);
+        nmeaService.addNMEAObserver(anchorManager);
         nmeaService.start();
         config("NMEA Service started");
         

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nmea-server nmeaMulticastAddress="224.0.0.3" nmeaMulticastPort="10110" httpPort="8081" aisDirectory="file:/c:/temp" aisMaxLogSize="1M" aisTtl="1d">
+    <boat length="11.9" beam="3.55" draft="1.7" anchorWeight="20" chainDiameter="10" maxChainLength="80" crossSectionCoefficient="0.5">
+        <gps-position toSb="1" toStern="0"/>
+        <depthSounder-position toSb="1.775" toStern="7"/>
+    </boat>
     <property name="driftAngleOverGround" min="0.0" max="359.0" unit="DEGREE" decimals="0" average="5s"/>
     <property name="driftSpeedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1" average="5s"/>
     <property name="stateOfCharge2" decimals="1" history="1d"/>

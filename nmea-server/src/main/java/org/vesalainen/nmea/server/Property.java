@@ -80,7 +80,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
         }
     }
 
-    public static Property getInstance(CachedScheduledThreadPool executor, PropertyType property)
+    public static Property getInstance(CachedScheduledThreadPool executor, PropertyType property, Class<?> defType)
     {
         switch (property.getName())
         {
@@ -94,15 +94,31 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
                 return new DayPhaseProperty(executor, property);
             default:
                 Class<?> type = getType(property);
-                switch (type.getSimpleName())
+                if (type != null)
                 {
-                    case "int":
-                    case "long":
-                    case "float":
-                    case "double":
-                        return new DoubleProperty(executor, property);
-                    default:
-                        return new ObjectProperty(executor, property);
+                    switch (type.getSimpleName())
+                    {
+                        case "int":
+                        case "long":
+                        case "float":
+                        case "double":
+                            return new DoubleProperty(executor, property);
+                        default:
+                            return new ObjectProperty(executor, property);
+                    }
+                }
+                else
+                {
+                    switch (defType.getSimpleName())
+                    {
+                        case "int":
+                        case "long":
+                        case "float":
+                        case "double":
+                            return new DoubleProperty(executor, property);
+                        default:
+                            return new ObjectProperty(executor, property);
+                    }
                 }
         }
     }
