@@ -84,6 +84,8 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
     {
         switch (property.getName())
         {
+            case "seabedSquare":
+                return new SeabedSquareProperty(executor, property);
             case "ais":
                 return new AISProperty(executor, property);
             case "message":

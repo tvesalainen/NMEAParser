@@ -82,7 +82,7 @@ public class CommandLine extends LoggingCommandLine
         PropertyServer propertyServer = new PropertyServer(Clock.systemDefaultZone(), config, executor);
         aisService.addObserver(propertyServer);
         nmeaService.addNMEAObserver(propertyServer);
-        AnchorManager anchorManager = new AnchorManager(propertyServer, config.getBoat(), executor);
+        AnchorManager anchorManager = AnchorManager.getInstance(propertyServer, config.getBoat(), executor);
         nmeaService.addNMEAObserver(anchorManager);
         nmeaService.start();
         config("NMEA Service started");

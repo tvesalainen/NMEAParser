@@ -19,12 +19,12 @@ package org.vesalainen.nmea.server.anchor;
 import java.io.IOException;
 import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
-import java.nio.channels.GatheringByteChannel;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntPredicate;
 import java.util.function.LongToDoubleFunction;
@@ -51,7 +51,6 @@ import org.vesalainen.nmea.server.jaxb.BoatPositionType;
 import org.vesalainen.nmea.server.jaxb.DepthSounderPositionType;
 import org.vesalainen.nmea.server.jaxb.GpsPositionType;
 import org.vesalainen.nmea.util.Stoppable;
-import org.vesalainen.parsers.nmea.NMEASentence;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -61,6 +60,7 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  */
 public class AnchorManager extends AnnotatedPropertyStore implements Transactional, Stoppable
 {
+    private static AnchorManager SINGLETON;
     private static final String ANCHOR_WATCH_NAME = "anchorWatch";
     private static final String ANCHOR_WATCH_FILENAME = ANCHOR_WATCH_NAME+".ser";
     private static final double DEFAULT_MAX_FAIRLEAD_TENSION = 2000;    // N
@@ -98,11 +98,12 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
     private Path path;
     private final double maxDepth;
     private final DepthFilter depthFilter;
+    private SeabedSurveyor seabedSurveyor;
     private final double boatLength;
     private final double boatBeam;
     private final double coef;
     
-    public AnchorManager(PropertySetter out, BoatDataType boat, CachedScheduledThreadPool executor) throws IOException
+    private AnchorManager(PropertySetter out, BoatDataType boat, CachedScheduledThreadPool executor) throws IOException
     {
         super(MethodHandles.lookup());
         Objects.requireNonNull(boat, "boat data missing in config");
@@ -131,6 +132,23 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
         this.depthFilter = new DepthFilter();
     }
 
+    public static AnchorManager getInstance(PropertySetter out, BoatDataType boat, CachedScheduledThreadPool executor) throws IOException
+    {
+        if (SINGLETON != null)
+        {
+            throw new IllegalStateException("already initialised");
+        }
+        SINGLETON = new AnchorManager(out, boat, executor);
+        return SINGLETON;
+    }
+    public static AnchorManager getInstance()
+    {
+        if (SINGLETON == null)
+        {
+            throw new IllegalStateException("not initialised");
+        }
+        return SINGLETON;
+    }
     @Override
     public void stop()
     {
@@ -160,6 +178,14 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
     public void commit(String reason, Collection<String> updatedProperties)
     {
         depthFilter.input(updatedProperties);
+    }
+
+    public void forEachSquare(Consumer<SeabedSurveyor.Square> act)
+    {
+        if (seabedSurveyor != null)
+        {
+            seabedSurveyor.forEachSquare((s)->act.accept(s));
+        }
     }
 
     public class DepthFilter extends AbstractChainedState<Collection<String>,String>
@@ -298,7 +324,6 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
         private AnchorEstimator estimator;
         private final DoubleBinaryOperator bowLatitude;
         private final DoubleBinaryOperator bowLongitude;
-        private SeabedSurveyor seabedSurveyor;
         private final LocationCenter center = new LocationCenter();
         private double bowLat;
         private double bowLon;
@@ -308,7 +333,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
             super("SeabedSurveyor");
             this.bowLatitude = gpsPosition.latitudeAtOperator(bowPosition);
             this.bowLongitude = gpsPosition.longitudeAtOperator(bowPosition, latitude);
-            this.seabedSurveyor = new SeabedSurveyor(out, clock, latitude, 10, METER, gpsPosition, depthSounderPosition);
+            seabedSurveyor = new SeabedSurveyor(out, clock, latitude, 10, METER, gpsPosition, depthSounderPosition);
             if (false)
             {
                 ZonedDateTime zdt = ZonedDateTime.now(clock);
@@ -434,6 +459,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
         protected void failed(String reason)
         {
             info("anchoring stopped because %s", reason);
+            seabedSurveyor = null;
         }
 
         public double getMeanDepth()

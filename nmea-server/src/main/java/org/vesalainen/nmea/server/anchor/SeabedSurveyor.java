@@ -16,9 +16,9 @@
  */
 package org.vesalainen.nmea.server.anchor;
 
-import java.awt.Color;
 import static java.lang.Math.abs;
 import java.time.Clock;
+import java.util.function.Consumer;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.LongToDoubleFunction;
 import org.vesalainen.code.PropertySetter;
@@ -27,9 +27,9 @@ import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.CoordinateMap;
+import org.vesalainen.navi.LocationCenter;
 import org.vesalainen.navi.Tide;
 import org.vesalainen.navi.TideFitter;
-import org.vesalainen.ui.ChartPlotter;
 import org.vesalainen.util.logging.JavaLogging;
 
 /**
@@ -47,6 +47,8 @@ public class SeabedSurveyor extends JavaLogging
     private final double boxSize;
     private double depthSum;
     private long depthCount;
+    private final LocationCenter center;
+    private int squareSeq;
 
     public SeabedSurveyor(PropertySetter out, Clock clock, double latitude, double boxSize, UnitType unit, BoatPosition gpsPosition, BoatPosition depthSounderPosition)
     {
@@ -58,6 +60,7 @@ public class SeabedSurveyor extends JavaLogging
         this.lonPos = gpsPosition.longitudeAtOperator(depthSounderPosition, latitude);
         this.latPos = gpsPosition.latitudeAtOperator(depthSounderPosition);
         this.tideFitter = new TideFitter(clock::millis);
+        this.center = new LocationCenter();
     }
     
     public void update(double longitude, double latitude, double depth, double heading)
@@ -80,8 +83,16 @@ public class SeabedSurveyor extends JavaLogging
             out.set("tide", abs(tideFitter.getCoefficient()*2));
             out.set("tidePhase", tideFitter.getPhaseInDegrees());
         }
+        center.add(longitude, latitude);
+        out.set("centerLongitude", center.longitude());
+        out.set("centerLatitude", center.latitude());
     }
 
+    public void forEachSquare(Consumer<Square> act)
+    {
+        squareMap.forEachCoordinate((x,y,s)->act.accept(s));
+    }
+    
     public double getMeanDepth()
     {
         return depthSum/depthCount;
@@ -161,8 +172,9 @@ public class SeabedSurveyor extends JavaLogging
         return tideFitter.getPhaseInDegrees();
     }
     
-    private class Square
+    public class Square
     {
+        private final int id;
         private final double longitude;
         private final double latitude;
         private long time;
@@ -171,6 +183,7 @@ public class SeabedSurveyor extends JavaLogging
 
         public Square(double longitude, double latitude)
         {
+            this.id = squareSeq++;
             this.longitude = longitude;
             this.latitude = latitude;
         }
@@ -189,8 +202,13 @@ public class SeabedSurveyor extends JavaLogging
             }
             this.time = clock.millis();
             this.depth = depth;
-            out.set("square", this);
+            out.set("seabedSquare", this);
             return fit;
+        }
+
+        public int getId()
+        {
+            return id;
         }
 
         public double getLongitude()
@@ -218,6 +236,11 @@ public class SeabedSurveyor extends JavaLogging
             return depth-tide(time);
         }
 
+        public double getBoxSize()
+        {
+            return boxSize;
+        }
+        
         @Override
         public String toString()
         {
