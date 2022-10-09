@@ -58,6 +58,10 @@ public class Observer<T> extends JavaLogging
     
     public static Observer getInstance(String event, Property property, String unit, String decimals, SseReference sseReference, Locale locale)
     {
+        if ("seabedSquare".equals(property.getName()))
+        {
+            return new SeabedSquareObserver(event, property, sseReference, locale);
+        }
         if ("ais".equals(property.getName()))
         {
             return new AISObserver(event, property, sseReference, locale);

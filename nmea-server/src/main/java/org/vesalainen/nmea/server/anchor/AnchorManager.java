@@ -188,6 +188,36 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
         }
     }
 
+    public long getAnchorWeight()
+    {
+        return anchorWeight;
+    }
+
+    public long getChainDiameter()
+    {
+        return chainDiameter;
+    }
+
+    public double getMaxFairleadTension()
+    {
+        return maxFairleadTension;
+    }
+
+    public long getMaxChainLength()
+    {
+        return maxChainLength;
+    }
+
+    public double getBoatLength()
+    {
+        return boatLength;
+    }
+
+    public double getBoatBeam()
+    {
+        return boatBeam;
+    }
+
     public class DepthFilter extends AbstractChainedState<Collection<String>,String>
     {
 

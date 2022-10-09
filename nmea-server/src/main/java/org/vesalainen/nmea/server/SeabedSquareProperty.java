@@ -55,11 +55,22 @@ public class SeabedSquareProperty extends ObjectProperty
     @Override
     protected void advertise(Observer observer)
     {
-        anchorManager.forEachSquare((t)->observer.fireEvent(
+        observer.fireEvent(
+            JSONBuilder
+                .object()
+                .value("name", ()->"anchorManager")
+                .number("chainDiameter", anchorManager::getChainDiameter)
+                .number("anchorWeight", anchorManager::getAnchorWeight)
+                .number("maxChainLength", anchorManager::getMaxChainLength)
+                .number("maxFairleadTension", anchorManager::getMaxFairleadTension)
+                .number("boatLength", anchorManager::getBoatLength)
+                .number("boatBeam", anchorManager::getBoatBeam)
+            );
+        anchorManager.forEachSquare((s)->observer.fireEvent(
                                 JSONBuilder
                                     .object()
                                     .value("name", this::getName)
-                                    .object("value", getObj(t))));
+                                    .object("value", getObj(s))));
     }
     
     private static JSONBuilder.Obj getObj(Square square)
