@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.server.anchor;
 
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
@@ -51,6 +52,7 @@ import org.vesalainen.nmea.server.jaxb.BoatPositionType;
 import org.vesalainen.nmea.server.jaxb.DepthSounderPositionType;
 import org.vesalainen.nmea.server.jaxb.GpsPositionType;
 import org.vesalainen.nmea.util.Stoppable;
+import org.vesalainen.ui.DoubleBounds;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -302,9 +304,9 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
     }
     public class MoveFilter extends AbstractChainedState<Collection<String>,String>
     {
-
         private final double lat;
         private final double lon;
+        private final DoubleBounds bounds = new DoubleBounds();
 
         public MoveFilter()
         {
@@ -320,6 +322,11 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
             {
                 if (Navis.distance(latitude, longitude, lat, lon) < METER.convertTo(2*horizontalScope, NAUTICAL_MILE) )
                 {
+                    bounds.add(longitude, latitude);
+                    out.set("lonMin", bounds.getMinX());
+                    out.set("latMin", bounds.getMinY());
+                    out.set("lonWidth", bounds.getWidth());
+                    out.set("latHeight", bounds.getHeight());
                     return FORWARD;
                 }
                 else

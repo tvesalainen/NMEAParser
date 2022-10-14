@@ -47,7 +47,6 @@ public class SeabedSurveyor extends JavaLogging
     private final double boxSize;
     private double depthSum;
     private long depthCount;
-    private final LocationCenter center;
     private int squareSeq;
 
     public SeabedSurveyor(PropertySetter out, Clock clock, double latitude, double boxSize, UnitType unit, BoatPosition gpsPosition, BoatPosition depthSounderPosition)
@@ -60,7 +59,6 @@ public class SeabedSurveyor extends JavaLogging
         this.lonPos = gpsPosition.longitudeAtOperator(depthSounderPosition, latitude);
         this.latPos = gpsPosition.latitudeAtOperator(depthSounderPosition);
         this.tideFitter = new TideFitter(clock::millis);
-        this.center = new LocationCenter();
     }
     
     public void update(double longitude, double latitude, double depth, double heading)
@@ -83,9 +81,6 @@ public class SeabedSurveyor extends JavaLogging
             out.set("tide", abs(tideFitter.getCoefficient()*2));
             out.set("tidePhase", tideFitter.getPhaseInDegrees());
         }
-        center.add(longitude, latitude);
-        out.set("centerLongitude", center.longitude());
-        out.set("centerLatitude", center.latitude());
     }
 
     public void forEachSquare(Consumer<Square> act)
@@ -233,14 +228,16 @@ public class SeabedSurveyor extends JavaLogging
 
         public double getStandardDepth()
         {
-            return depth-tide(time);
+            if (tideFitter.isValid())
+            {
+                return depth-tide(time);
+            }
+            else
+            {
+                return depth;
+            }
         }
 
-        public double getBoxSize()
-        {
-            return boxSize;
-        }
-        
         @Override
         public String toString()
         {

@@ -32,7 +32,7 @@ public class MessageProperty extends ObjectProperty
     
     public MessageProperty(CachedScheduledThreadPool executor, PropertyType property)
     {
-        super(executor, property, "message");
+        super(executor, property, NMEAMessage.class, "message");
     }
 
     @Override

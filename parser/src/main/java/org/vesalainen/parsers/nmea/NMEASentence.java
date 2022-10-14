@@ -323,6 +323,7 @@ public class NMEASentence
         return builder(talkerId, XDR)
                 .bindXdrGroup('V', voltage, 'V', "BAT", instance) 
                 .bindXdrGroup('I', amp, 'A', "BAT", instance)
+                .bindXdrGroup('P', ()->amp.getAsDouble()*voltage.getAsDouble(), 'W', "BAT", instance)
                 .bindXdrGroup('T', temp, 'C', "BAT", instance)
                 .build();
     }

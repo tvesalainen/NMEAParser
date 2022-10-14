@@ -43,13 +43,13 @@ public class DoubleProperty extends Property
 
     public DoubleProperty(CachedScheduledThreadPool executor, PropertyType property)
     {
-        super(executor, property);
+        super(executor, property, double.class);
         init();
     }
 
     public DoubleProperty(CachedScheduledThreadPool executor, PropertyType property, String... sources)
     {
-        super(executor, property, sources);
+        super(executor, property, double.class, sources);
         init();
     }
 

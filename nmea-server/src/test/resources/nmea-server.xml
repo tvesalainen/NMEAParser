@@ -4,6 +4,10 @@
         <gps-position toSb="1" toStern="0"/>
         <depthSounder-position toSb="1.775" toStern="7"/>
     </boat>
+    <property name="lonMin" unit="DEGREE" decimals="10"/>
+    <property name="latMin" unit="DEGREE" decimals="10"/>
+    <property name="lonWidth" unit="DEGREE" decimals="10"/>
+    <property name="latHeight" unit="DEGREE" decimals="10"/>
     <property name="driftAngleOverGround" min="0.0" max="359.0" unit="DEGREE" decimals="0" average="5s"/>
     <property name="driftSpeedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1" average="5s"/>
     <property name="stateOfCharge2" decimals="1" history="1d"/>
@@ -17,7 +21,8 @@
     <property name="officialWindSpeed" source="windSpeedOverGround" min="0.0" max="50" unit="KNOT" decimals="1" average="10m" history="1d"/>
     <property name="officialWindAngle" source="windAngleOverGround" unit="SECONDARY_INTERCARDINAL_DIRECTION" average="10m"/>
     <property name="batteryVoltage0" min="0.0" max="100.0" unit="VOLT" decimals="1"/>
-    <property name="batteryCurrent0" min="0.0" max="100.0" unit="AMPERE" decimals="1" average="10m" history="1d"/>
+    <property name="batteryCurrent0" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
+    <property name="batteryPower0" min="0.0" max="100.0" unit="WATT" decimals="1" average="10m" history="1d"/>
     <property name="latitude" min="-90.0" max="90.0" unit="" decimals="3"/>
     <property name="longitude" min="-180.0" max="180.0" unit="" decimals="3"/>
     <property name="speedOverGround" min="0.0" max="50.0" unit="KNOT" decimals="1" average="1s" period="1s"/>
@@ -39,6 +44,7 @@
     <property name="waterSpeed" min="0.0" max="50.0" unit="KNOT" decimals="1"/>
     <property name="batteryVoltage1" min="0.0" max="100.0" unit="VOLT" decimals="1"/>
     <property name="batteryCurrent1" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
+    <property name="batteryPower1" min="0.0" max="100.0" unit="AMPERE" decimals="1"/>
     <property name="windSpeedOverGround"/>
     <property name="windAngleOverGround"/>
     <property name="pitch"/>
@@ -79,6 +85,7 @@
     <property name="batteryTemperature0"/>
     <property name="starboardRudderSensor"/>
     <property name="batteryVoltage2"/>
-    <property name="batteryCurrent2" decimals="1" average="10m" history="1d"/>
+    <property name="batteryCurrent2" decimals="1"/>
+    <property name="batteryPower2" decimals="1" average="10m" history="1d"/>
     <property name="batteryTemperature2"/>
 </nmea-server>

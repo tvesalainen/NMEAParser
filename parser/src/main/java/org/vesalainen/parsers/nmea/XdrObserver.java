@@ -103,6 +103,21 @@ public interface XdrObserver
     @NMEACat(ELECTRIC_CURRENT)
     @Unit(value=AMPERE, min=0, max=100)
     void setBatteryCurrent3(float a);
+    @NMEACat(POWER)
+    @Unit(value=WATT, min=0, max=10000)
+    void setBatteryPower0(float a);
+    @NMEA0183({XDR})
+    @NMEACat(POWER)
+    @Unit(value=WATT, min=0, max=10000)
+    void setBatteryPower1(float a);
+    @NMEA0183({XDR})
+    @NMEACat(POWER)
+    @Unit(value=WATT, min=0, max=10000)
+    void setBatteryPower2(float a);
+    @NMEA0183({XDR})
+    @NMEACat(POWER)
+    @Unit(value=WATT, min=0, max=10000)
+    void setBatteryPower3(float a);
     @NMEA0183({XDR})
     @NMEACat(TEMPERATURE)
     @Unit(value=CELSIUS, min=0, max=100)

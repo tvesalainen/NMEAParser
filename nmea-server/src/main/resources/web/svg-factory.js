@@ -17,7 +17,7 @@
 
 "use strict";
 
-/* global createSvg createFrame createTitle createUnit createText createHistory createCompass createBoat createWindIndicator createRudder createInclinoMeter */
+/* global SVG_NS, XLINK_NS, createSvg, createFrame, createTitle, createUnit, createText, createHistory, createCompass, createBoat, createWindIndicator, createRudder, createInclinoMeter */
 
 var SVG_NS = 'http://www.w3.org/2000/svg';
 var XLINK_NS = 'http://www.w3.org/1999/xlink';

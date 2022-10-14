@@ -16,12 +16,9 @@
  */
 package org.vesalainen.nmea.server;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.json.JSONBuilder;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
 import org.vesalainen.util.TimeToLiveList;
@@ -36,15 +33,15 @@ public class ObjectProperty extends Property
     
     protected TimeToLiveList<Object> history;
 
-    public ObjectProperty(CachedScheduledThreadPool executor, PropertyType property)
+    public ObjectProperty(CachedScheduledThreadPool executor, PropertyType property, Class<?> defType)
     {
-        super(executor, property);
+        super(executor, property, defType);
         init();
     }
 
-    public ObjectProperty(CachedScheduledThreadPool executor, PropertyType property, String... sources)
+    public ObjectProperty(CachedScheduledThreadPool executor, PropertyType property, Class<?> defType, String... sources)
     {
-        super(executor, property, sources);
+        super(executor, property, defType, sources);
         init();
     }
 

@@ -22,13 +22,31 @@ function Gauge(element, seq)
 {
     this.event = seq;
     this.property = element.getAttribute("data-property");
-    if (this.property !== "ais")
+    switch (this.property)
     {
-        this.div = document.createElement("div");
-        element.appendChild(this.div);
+        case "ais":
+        case "anchoring":
+                break;
+        default:
+            this.div = document.createElement("div");
+            element.appendChild(this.div);
+            break;
     }
     switch (this.property)
     {
+        case "anchoring":
+            this.anchoring = new Anchoring(element);
+            this.div = element;
+            this.request = {event : this.event, property : ["seabedSquare", "lonMin", "latMin", "lonWidth", "latHeight", "trueHeading", "longitude", "latitude"]};
+            this.call = function(data)
+            {
+                this.anchoring.call(data);
+            };
+            this.tick = function()
+            {
+                this.anchoring.tick();
+            };
+            break;
         case "ais":
             this.ais = new AisList(element);
             this.request = {event : this.event, property : this.property};

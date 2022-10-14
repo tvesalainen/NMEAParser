@@ -35,7 +35,7 @@ public class AISProperty extends ObjectProperty
     
     public AISProperty(CachedScheduledThreadPool executor, PropertyType property)
     {
-        super(executor, property);
+        super(executor, property, AISTarget.class);
     }
 
     @Override

@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.server;
 
+import org.vesalainen.nmea.server.anchor.SeabedSquareProperty;
 import java.lang.management.ManagementFactory;
 import java.util.Deque;
 import java.util.Iterator;
@@ -50,18 +51,20 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
     protected final PropertyType property;
     protected Deque<Observer> observers = new ConcurrentLinkedDeque<>();
     private final String[] sources;
+    private final Class<?> defType;
 
-    protected Property(CachedScheduledThreadPool executor, PropertyType property)
+    protected Property(CachedScheduledThreadPool executor, PropertyType property, Class<?> defType)
     {
-        this(executor, property, property.getSource()!=null?new String[]{property.getSource()}:new String[]{});
+        this(executor, property, defType, property.getSource()!=null?new String[]{property.getSource()}:new String[]{});
     }
-    protected Property(CachedScheduledThreadPool executor, PropertyType property, String... sources)
+    protected Property(CachedScheduledThreadPool executor, PropertyType property, Class<?> defType, String... sources)
     {
         super(property.getName(), property);
         this.executor = executor;
         this.property = property;
         this.name = property.getName();
         this.sources = sources;
+        this.defType = defType;
         register();
     }
 
@@ -106,7 +109,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
                         case "double":
                             return new DoubleProperty(executor, property);
                         default:
-                            return new ObjectProperty(executor, property);
+                            return new ObjectProperty(executor, property, defType);
                     }
                 }
                 else
@@ -119,7 +122,7 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
                         case "double":
                             return new DoubleProperty(executor, property);
                         default:
-                            return new ObjectProperty(executor, property);
+                            return new ObjectProperty(executor, property, defType);
                     }
                 }
         }
@@ -224,7 +227,8 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
                 throw new IllegalArgumentException(unit+" illegal");
             }
         }
-        return NMEAProperties.getInstance().getUnit(getProperty());
+        UnitType u = NMEAProperties.getInstance().getUnit(getProperty());
+        return u!=null?u:UNITLESS;
     }
 
     public int getDecimals()
@@ -242,21 +246,36 @@ public abstract class Property extends AbstractDynamicMBean implements Notificat
                 return 0;
             default:
                 Class<?> type = getType();
-                switch (type.getSimpleName())
+                if (type != null)
                 {
-                    case "float":
-                        return 1;
-                    case "double":
-                        return 3;
-                    default:
-                        return 0;
+                    switch (type.getSimpleName())
+                    {
+                        case "float":
+                            return 1;
+                        case "double":
+                            return 3;
+                        default:
+                            return 0;
+                    }
+                }
+                else
+                {
+                    return 1;
                 }
         }
     }
 
     public Class<?> getType()
     {
-        return getType(property);
+        Class<?> type = getType(property);
+        if (type != null)
+        {
+            return type;
+        }
+        else
+        {
+            return defType;
+        }
     }
     public static Class<?> getType(PropertyType property)
     {

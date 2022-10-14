@@ -36,7 +36,7 @@ public class DayPhaseProperty extends ObjectProperty implements AttachedLogger
     
     public DayPhaseProperty(CachedScheduledThreadPool executor, PropertyType property)
     {
-        super(executor, property, "clock", "latitude", "longitude");
+        super(executor, property, DayPhase.class, "clock", "latitude", "longitude");
     }
 
     private void setDayPhase(DayPhase phase)

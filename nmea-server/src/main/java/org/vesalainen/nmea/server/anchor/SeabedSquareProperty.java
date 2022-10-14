@@ -14,17 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.vesalainen.nmea.server;
+package org.vesalainen.nmea.server.anchor;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.vesalainen.json.JSONBuilder;
+import org.vesalainen.nmea.server.ObjectProperty;
+import org.vesalainen.nmea.server.Observer;
 import org.vesalainen.nmea.server.anchor.AnchorManager;
 import org.vesalainen.nmea.server.anchor.SeabedSurveyor.Square;
 import org.vesalainen.nmea.server.jaxb.PropertyType;
-import org.vesalainen.parsers.nmea.ais.AISService;
-import org.vesalainen.parsers.nmea.ais.AISTarget;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
 /**
@@ -38,7 +37,7 @@ public class SeabedSquareProperty extends ObjectProperty
     
     public SeabedSquareProperty(CachedScheduledThreadPool executor, PropertyType property)
     {
-        super(executor, property);
+        super(executor, property, Square.class);
         this.anchorManager = AnchorManager.getInstance();
     }
 
@@ -48,7 +47,7 @@ public class SeabedSquareProperty extends ObjectProperty
         if (arg instanceof Square)
         {
             Square square = (Square) arg;
-            super.set(property, time, getObj(square));
+            super.set(property, time, square);
         }
     }
 
@@ -73,7 +72,7 @@ public class SeabedSquareProperty extends ObjectProperty
                                     .object("value", getObj(s))));
     }
     
-    private static JSONBuilder.Obj getObj(Square square)
+    static JSONBuilder.Obj getObj(Square square)
     {
         JSONBuilder.Obj obj = squareMap.get(square);
         if (obj == null)

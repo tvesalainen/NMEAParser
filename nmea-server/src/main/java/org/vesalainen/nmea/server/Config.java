@@ -123,7 +123,7 @@ public class Config extends JavaLogging
     }
 
     
-    public PropertyType getProperty(String property)
+    public PropertyType getProperty(String property, Class<?> defType)
     {
         PropertyType pt = map.get(property);
         if (pt == null)

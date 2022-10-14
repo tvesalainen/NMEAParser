@@ -56,7 +56,7 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
         List<String> sources = new ArrayList<>();
         config.getProperties().forEach((p)->
         {
-            Property property = Property.getInstance(executor, p, null);
+            Property property = Property.getInstance(executor, p, double.class);
             String name = p.getName();
             propertyMap.put(name, property);
             String[] srcs = property.getSources();
@@ -166,13 +166,13 @@ public final class PropertyServer extends AbstractPropertySetter implements AIST
         return allProperties.toArray(new String[allProperties.size()]);
     }
     
-    private Set<Property> getProperty(String property, Class<?> type)
+    private Set<Property> getProperty(String property, Class<?> defType)
     {
         Set<Property> prop = dispatchMap.get(property);
         if (prop == null || prop.isEmpty())
         {
-            PropertyType pt = config.getProperty(property);
-            Property p = Property.getInstance(executor, pt, type);
+            PropertyType pt = config.getProperty(property, defType);
+            Property p = Property.getInstance(executor, pt, defType);
             dispatchMap.add(property, p);
             propertyMap.put(property, p);
             return dispatchMap.get(property);

@@ -16,6 +16,7 @@
  */
 package org.vesalainen.nmea.server;
 
+import org.vesalainen.nmea.server.anchor.SeabedSquareObserver;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -76,9 +77,11 @@ public class Observer<T> extends JavaLogging
                 case "float":
                 case "double":
                     return new DoubleObserver(event, property, unit, decimals, sseReference, locale);
+                default:
+                    return new Observer(event, property, sseReference, locale);
             }
         }
-        return new Observer(event, property, sseReference, locale);
+        return new DoubleObserver(event, property, unit, decimals, sseReference, locale);
     }
 
     public void fireEvent(Element element)

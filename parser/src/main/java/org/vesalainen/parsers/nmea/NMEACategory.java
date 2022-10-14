@@ -39,6 +39,7 @@ public enum NMEACategory
     TIME,
     VOLTAGE,
     ELECTRIC_CURRENT,
+    POWER,
     PRESSURE,
     PERCENT,
     MISCELLENEOUS

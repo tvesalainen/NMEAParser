@@ -65,6 +65,9 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                     case 'I':
                         setBatteryCurrent0(value);
                         break;
+                    case 'P':
+                        setBatteryPower0(value);
+                        break;
                     case 'T':
                         setBatteryTemperature0(value);
                         break;
@@ -84,6 +87,9 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                         break;
                     case 'I':
                         setBatteryCurrent1(value);
+                        break;
+                    case 'P':
+                        setBatteryPower1(value);
                         break;
                     case 'T':
                         setBatteryTemperature1(value);
@@ -105,6 +111,9 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                     case 'I':
                         setBatteryCurrent2(value);
                         break;
+                    case 'P':
+                        setBatteryPower2(value);
+                        break;
                     case 'T':
                         setBatteryTemperature2(value);
                         break;
@@ -124,6 +133,9 @@ public abstract class NMEADispatcher extends InterfaceDispatcher implements NMEA
                         break;
                     case 'I':
                         setBatteryCurrent3(value);
+                        break;
+                    case 'P':
+                        setBatteryPower3(value);
                         break;
                     case 'T':
                         setBatteryTemperature3(value);
