@@ -22,7 +22,9 @@ function Anchoring(parent)
 {
     this.svg = document.createElementNS(SVG_NS, 'svg');
     parent.appendChild(this.svg);
-    this.map = new Map(this.svg);
+    this.svg.setAttributeNS(null, "style", "display:none");
+    this.map = new Map(parent);
+    createBoat(this.svg);
     
     this.call = function(data)
     {
@@ -42,10 +44,10 @@ function Anchoring(parent)
                 case 'trueHeading':
                     this.boat.setHeading(value);
                     break;
-                case 'longitude':
+                case 'lon':
                     this.boat.setLongitude(value);
                     break;
-                case 'latitude':
+                case 'lat':
                     this.boat.setLatitude(value);
                     break;
                 default:

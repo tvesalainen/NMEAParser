@@ -37,7 +37,7 @@ function Gauge(element, seq)
         case "anchoring":
             this.anchoring = new Anchoring(element);
             this.div = element;
-            this.request = {event : this.event, property : ["seabedSquare", "lonMin", "latMin", "lonWidth", "latHeight", "trueHeading", "longitude", "latitude"]};
+            this.request = {event : this.event, property : ["seabedSquare", "lonMin", "latMin", "lonWidth", "latHeight", "trueHeading", "lon", "lat"]};
             this.call = function(data)
             {
                 this.anchoring.call(data);

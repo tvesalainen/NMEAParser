@@ -16,7 +16,6 @@
  */
 package org.vesalainen.nmea.server.anchor;
 
-import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import static java.lang.Math.*;
 import java.lang.invoke.MethodHandles;
@@ -25,6 +24,7 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Objects;
+import static java.util.concurrent.TimeUnit.HOURS;
 import java.util.function.Consumer;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntPredicate;
@@ -39,6 +39,8 @@ import org.vesalainen.math.LevenbergMarquardt;
 import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.matrix.DoubleMatrix;
 import org.vesalainen.math.matrix.ReadableDoubleMatrix;
+import org.vesalainen.math.sliding.DoubleTimeoutSlidingAverage;
+import org.vesalainen.math.sliding.TimeoutSlidingAngleAverage;
 import org.vesalainen.navi.AnchorWatch;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.Chain;
@@ -46,13 +48,13 @@ import org.vesalainen.navi.LocalLongitude;
 import org.vesalainen.navi.LocationCenter;
 import org.vesalainen.navi.Navis;
 import org.vesalainen.navi.SimpleBoatPosition;
+import org.vesalainen.navi.TimeoutLocationBounds;
 import static org.vesalainen.nmea.server.anchor.AbstractChainedState.Action.*;
 import org.vesalainen.nmea.server.jaxb.BoatDataType;
 import org.vesalainen.nmea.server.jaxb.BoatPositionType;
 import org.vesalainen.nmea.server.jaxb.DepthSounderPositionType;
 import org.vesalainen.nmea.server.jaxb.GpsPositionType;
 import org.vesalainen.nmea.util.Stoppable;
-import org.vesalainen.ui.DoubleBounds;
 import org.vesalainen.util.Transactional;
 import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
 
@@ -74,14 +76,17 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
     private static final int POINTS_SIZE = 1024;
     private static final long REFRESH_PERIOD = 60000;
     private @Property Clock clock;
-    private @Property double latitude;
-    private @Property double longitude;
     private @Property float speedOverGround;
     private @Property float trueHeading;
     private @Property float trackMadeGood;
     private @Property float relativeWindAngle;
     private @Property float relativeWindSpeed;
     private @Property float depthOfWater;
+
+    private double latitude;
+    private double longitude;
+    private final DoubleTimeoutSlidingAverage latitudeAve;
+    private final DoubleTimeoutSlidingAverage longitudeAve;
 
     private final PropertySetter out;
     private final double maxFairleadTension;
@@ -132,6 +137,8 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
         }
         this.bowPosition = new SimpleBoatPosition(boatBeam/2, boatBeam/2, 0, boatLength);
         this.depthFilter = new DepthFilter();
+        this.longitudeAve = new DoubleTimeoutSlidingAverage(8, 3000);
+        this.latitudeAve = new DoubleTimeoutSlidingAverage(8, 3000);
     }
 
     public static AnchorManager getInstance(PropertySetter out, BoatDataType boat, CachedScheduledThreadPool executor) throws IOException
@@ -188,6 +195,18 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
         {
             seabedSurveyor.forEachSquare((s)->act.accept(s));
         }
+    }
+
+    @Property public void setLatitude(double latitude)
+    {
+        latitudeAve.accept(latitude);
+        this.latitude = latitudeAve.fast();
+    }
+
+    @Property public void setLongitude(double longitude)
+    {
+        longitudeAve.accept(longitude);
+        this.longitude = longitudeAve.fast();
     }
 
     public long getAnchorWeight()
@@ -306,7 +325,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
     {
         private final double lat;
         private final double lon;
-        private final DoubleBounds bounds = new DoubleBounds();
+        private final TimeoutLocationBounds bounds = new TimeoutLocationBounds(METER.convertTo(100, NAUTICAL_DEGREE), 1, HOURS);
 
         public MoveFilter()
         {
@@ -322,11 +341,14 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
             {
                 if (Navis.distance(latitude, longitude, lat, lon) < METER.convertTo(2*horizontalScope, NAUTICAL_MILE) )
                 {
-                    bounds.add(longitude, latitude);
-                    out.set("lonMin", bounds.getMinX());
-                    out.set("latMin", bounds.getMinY());
-                    out.set("lonWidth", bounds.getWidth());
-                    out.set("latHeight", bounds.getHeight());
+                    out.set("lon", longitude);
+                    out.set("lat", latitude);
+                    bounds.addLongitude(longitude);
+                    bounds.addLatitude(latitude);
+                    out.set("lonMin", bounds.getMinLongitude());
+                    out.set("latMin", bounds.getMinLatitude());
+                    out.set("lonWidth", bounds.getLongitudeRange());
+                    out.set("latHeight", bounds.getLatitudeRange());
                     return FORWARD;
                 }
                 else

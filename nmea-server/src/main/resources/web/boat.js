@@ -16,29 +16,61 @@
  */
 "use strict";
 
-/* global SVG_NS */
+/* global SVG_NS, XLINK_NS */
 
 function Boat(parent, length, beam)
 {
-    this.boat = document.createElementNS(SVG_NS, 'g');
-    parent.appendChild(this.boat);
-    this.boat.setAttributeNS(null, "d", 
-            "M -20 40 l 40 0 "+
-            "C 23 10 20 -15 0 -40"+
-            "M -20 40 "+
-            "C -23 10 -20 -15 0 -40"
-    );
+    this.g = document.createElementNS(SVG_NS, 'g');
+    parent.appendChild(this.g);
+    this.boat = document.createElementNS(SVG_NS, 'use');
+    this.g.appendChild(this.boat);
+    this.boat.setAttributeNS(null, "href", "#boat");
+    //this.boat.setAttributeNS(null, "width", m2d(beam));
+    //this.boat.setAttributeNS(null, "height", m2d(length));
+    this.beam = m2d(beam);
+    this.length = m2d(length);
     
     this.setHeading = function(hdg)
     {
-        
+        this.hdg = hdg;
+        //this.boat.setAttributeNS(null, "transform", "rotate(-"+hdg+")");
     };
     this.setLongitude = function(lon)
     {
-        
+        this.lon = lon;
+        this.transform();
     };
     this.setLatitude = function(lat)
     {
-        
+        this.lat = lat;
+        this.dep = Math.cos(lat*Math.PI/180);
+        this.transform();
     };
+    this.transform = function()
+    {
+        if (this.lon && this.lat && this.hdg)
+        {
+            this.g.setAttributeNS(null, "transform", "translate("+this.lon+","+this.lat+")rotate(-"+this.hdg+")scale("+this.beam+","+this.length+")");
+        }
+    };
+}
+function createBoat(parent)
+{
+    var boat = document.createElementNS(SVG_NS, 'symbol');
+    parent.appendChild(boat);
+    boat.setAttributeNS(null, "id", "boat");
+    boat.setAttributeNS(null, "viewBox", "-20 -40 40 80");
+    boat.setAttributeNS(null, "preserveAspectRatio", "none");
+    boat.setAttributeNS(null, "width", "1");
+    boat.setAttributeNS(null, "height", "1");
+    boat.setAttributeNS(null, "refX", "50%");
+    boat.setAttributeNS(null, "refY", "50%");
+    var path = document.createElementNS(SVG_NS, 'path');
+    boat.appendChild(path);
+    path.setAttributeNS(null, "d", 
+            "M -20 -40 l 40 0 "+
+            "C 23 -10 20 15 0 40"+
+            "M -20 -40 "+
+            "C -23 -10 -20 15 0 40"
+    );
 }

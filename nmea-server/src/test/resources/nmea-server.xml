@@ -4,6 +4,8 @@
         <gps-position toSb="1" toStern="0"/>
         <depthSounder-position toSb="1.775" toStern="7"/>
     </boat>
+    <property name="lon" unit="DEGREE" decimals="10"/>
+    <property name="lat" unit="DEGREE" decimals="10"/>
     <property name="lonMin" unit="DEGREE" decimals="10"/>
     <property name="latMin" unit="DEGREE" decimals="10"/>
     <property name="lonWidth" unit="DEGREE" decimals="10"/>
