@@ -27,7 +27,6 @@ import static org.vesalainen.math.UnitType.*;
 import org.vesalainen.math.sliding.DoubleTimeoutSlidingSlope;
 import org.vesalainen.navi.BoatPosition;
 import org.vesalainen.navi.CoordinateMap;
-import org.vesalainen.navi.LocationCenter;
 import org.vesalainen.navi.Tide;
 import org.vesalainen.navi.TideFitter;
 import org.vesalainen.util.logging.JavaLogging;
@@ -78,11 +77,23 @@ public class SeabedSurveyor extends JavaLogging
         depthCount++;
         if (tideFitter.isValid())
         {
-            out.set("tide", abs(tideFitter.getCoefficient()*2));
+            out.set("tideRange", abs(tideFitter.getCoefficient()*2));
             out.set("tidePhase", tideFitter.getPhaseInDegrees());
+            out.set("tideCertainty", tideCertainty());
         }
     }
-
+    private double tideCertainty()
+    {
+        double finalCost = tideFitter.getFinalCost();
+        if (finalCost > 10)
+        {
+            return 0;
+        }
+        else
+        {
+            return 1.0-Math.log10(finalCost+1);
+        }
+    }
     public void forEachSquare(Consumer<Square> act)
     {
         squareMap.forEachCoordinate((x,y,s)->act.accept(s));

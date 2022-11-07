@@ -138,125 +138,20 @@ function Svg(x, y, width, height)
         var shortTime = getShortTime();
         if (!(this.nextXGrid > shortTime))
         {
-            var div = 1;
-            var un;
-            var x = this.historySeconds;
             var anc = new Date();
             anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDate(), 0, 0, 0, 0);
-            while (x / div > 10)
-            {
-                switch (div)
-                {
-                    case 1:
-                        div *= 60;
-                        un = 'min';
-                        break;
-                    case 60:
-                        div *= 10;
-                        un = '10min';
-                        break;
-                    case 600:
-                        div *= 2;
-                        un = '20min';
-                        break;
-                    case 1200:
-                        div *= 1.5;
-                        un = '30min';
-                        break;
-                    case 1800:
-                        div *= 2;
-                        un = 'hour';
-                        break;
-                    case 3600:
-                        div *= 2;
-                        un = '2hour';
-                        break;
-                    case 7200:
-                        div *= 1.5;
-                        un = '3hour';
-                        break;
-                    case 10800:
-                        div *= 2;
-                        un = '6hour';
-                        break;
-                    case 28800:
-                        div *= 2;
-                        un = '12hour';
-                        break;
-                    case 57600:
-                        div *= 2;
-                        un = 'day';
-                        break;
-                    default:
-                        un = undefined;
-                        break;
-                }
-            }
             var ny = toShortTime(anc.getTime());
-            var rem = (shortTime-ny)%div;
-            var x = shortTime-rem;
-            this.nextXGrid = shortTime+(div-rem);
-            var gap = this.max;
-            var d = "";
-            for (let i=0;i<10;i++)
-            {
-                d += "M "+x+" "+this.min+" V"+gap;
-                x -= div;
-            }
-            this.gridX.setAttributeNS(null, "d", d);
+            this.nextXGrid = shortTime+10000;
+            this.gridX.setAttributeNS(null, "transform", "translate("+ny+")");
         }
     };        
     this.setGridY = function()
     {
         var shortTime = getShortTime();
-        var d = "";
-        var div = 0.1;
-        while (this.gap / div > 5)
-        {
-            switch (div)
-            {
-                case 0.1:
-                    div = 0.5;
-                    break;
-                case 0.5:
-                    div = 1;
-                    break;
-                case 1:
-                    div = 5;
-                    break;
-                case 5:
-                    div = 10;
-                    break;
-                case 10:
-                    div = 50;
-                    break;
-                case 50:
-                    div = 100;
-                    break;
-                case 100:
-                    div = 200;
-                    break;
-                case 200:
-                    div = 500;
-                    break;
-                default:
-                    div *= 10;
-                    break;
-            }
-        }
-        var rem;
-        rem = this.max % div;
-        x = this.max-rem;
         var xx = shortTime-this.historySeconds;
-        while (x > this.min)
-        {
-
-            d += "M "+xx+" "+x+" H"+this.historySeconds;
-            x -= div;
-        }
-        this.gridY.setAttributeNS(null, "d", d);
-        this.minText.innerHTML = this.min;
-        this.maxText.innerHTML = this.max;
+        this.gridY.setAttributeNS(null, "transform", "translate("+xx+")");
+        this.minText.innerHTML = "Min "+this.min;
+        this.maxText.innerHTML = "Max "+this.max;
     };
     this.tacktical = function(r)
     {

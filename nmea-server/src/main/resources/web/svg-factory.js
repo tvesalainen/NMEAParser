@@ -107,22 +107,19 @@ function createText2(parent, x, y, width, height, padding)
 
 function createHistory(parent, historyMillis, min, max, width, height, unitString)
 {
+    min = min>-10000?min:-10000;
+    max = max<10000?max:10000;
     var history = document.createElementNS(SVG_NS, 'svg');
     parent.appendChild(history);
     history.setAttributeNS(null, "class", "history");
     //history.setAttributeNS(null, "transform", "translate(-0.5, 0)");
     var graph = document.createElementNS(SVG_NS, 'g');
     history.appendChild(graph);
-    var gridX = document.createElementNS(SVG_NS, 'path');
-    gridX.setAttributeNS(null, "stroke", "currentColor");
-    gridX.setAttributeNS(null, "stroke-width", "1");
-    gridX.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
+    var sec = historyMillis/1000;
+    var gridX = createTimeGrid(-sec, sec, min, max);
     graph.appendChild(gridX);
     
-    var gridY = document.createElementNS(SVG_NS, 'path');
-    gridY.setAttributeNS(null, "stroke", "currentColor");
-    gridY.setAttributeNS(null, "stroke-width", "1");
-    gridY.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
+    var gridY = createValueGrid(-sec, sec, min, max);
     graph.appendChild(gridY);
     
     var minText = document.createElementNS(SVG_NS, 'text');
@@ -159,6 +156,174 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     return [history, polyline, gridX, gridY, minText, maxText, graph, cursor];
 };
 
+function createTimeGrid(from, to, minY, maxY)
+{
+    var gridX = document.createElementNS(SVG_NS, 'g');
+    var coef = 0.01;
+    var gap = 1;    // sec))
+    createGridX(gridX, from, to, gap, minY, maxY, coef*gap, "grid-second");
+    gap *= 60;  // min 
+    createGridX(gridX, from, to, gap, minY, maxY, coef*gap, "grid-minute");
+    gap *= 60;  // hour
+    createGridX(gridX, from, to, gap, minY, maxY, coef*gap, "grid-hour");
+    gap *= 3;  // 3hour
+    createGridX(gridX, from, to, gap, minY, maxY, coef*gap, "grid-3hour");
+    gap *= 2;  // 6hour
+    createGridX(gridX, from, to, gap, minY, maxY, coef*gap, "grid-6hour");
+    gap *= 4;  // day
+    createGridX(gridX, from, to, gap, minY, maxY, coef*gap, "grid-day");
+    return gridX;
+};
+function createGridX(parent, from, to, gap, minY, maxY, strokeWidth, cls)
+{
+    if ((to-from)/gap < 100)
+    {
+        var path = document.createElementNS(SVG_NS, 'path');
+        parent.appendChild(path);
+        path.setAttributeNS(null, "class", cls);
+        path.setAttributeNS(null, "stroke-width", strokeWidth);
+        var d = "";
+        var range = maxY-minY;
+        for (let x=from;x<to;x+=gap)
+        {
+            switch (gap)
+            {
+                case 1:
+                case 60:
+                    if (x%3600===0)
+                    {
+                        break;
+                    }
+                case 3600:
+                    if (x%10800===0)
+                    {
+                        break;
+                    }
+                case 10800:
+                    if (x%21600===0)
+                    {
+                        break;
+                    }
+                case 21600:
+                    if (x%86400===0)
+                    {
+                        break;
+                    }
+                default:
+                d += "M"+x+" "+minY+"V"+range;
+            }
+        }
+        path.setAttributeNS(null, "d", d);
+    }
+};
+function createValueGrid(from, to, minY, maxY)
+{
+    var gridY = document.createElementNS(SVG_NS, 'g');
+    var coef = 0.000001;
+    createGridY0(gridY, from, to, coef*1000, "grid-0");
+    var gap = 0.5;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 1;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 5;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 10;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 50;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 100;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 500;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 1000;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 5000;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 10000;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 500000;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    var gap = 1000000;
+    createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+    return gridY;
+};
+function createGridY(parent, from, to, gap, minY, maxY, strokeWidth, cls)
+{
+    if ((maxY-minY)/gap < 100)
+    {
+        var path = document.createElementNS(SVG_NS, 'path');
+        parent.appendChild(path);
+        path.setAttributeNS(null, "class", cls);
+        path.setAttributeNS(null, "stroke-width", strokeWidth);
+        var d = "";
+        var range = to-from;
+        for (let y=minY;y<maxY;y+=gap)
+        {
+            switch (gap)
+            {
+                case 0.5:
+                case 1:
+                    if (y%5===0)
+                    {
+                        break;
+                    }
+                case 5:
+                    if (y%10===0)
+                    {
+                        break;
+                    }
+                case 10:
+                    if (y%50===0)
+                    {
+                        break;
+                    }
+                case 50:
+                    if (y%100===0)
+                    {
+                        break;
+                    }
+                case 100:
+                    if (y%500===0)
+                    {
+                        break;
+                    }
+                case 500:
+                    if (y%1000===0)
+                    {
+                        break;
+                    }
+                case 1000:
+                    if (y%5000===0)
+                    {
+                        break;
+                    }
+                case 5000:
+                    if (y%10000===0)
+                    {
+                        break;
+                    }
+                case 10000:
+                    if (y%50000===0)
+                    {
+                        break;
+                    }
+                default:
+                d += "M"+from+" "+y+"H"+range;
+            }
+        }
+        path.setAttributeNS(null, "d", d);
+    }
+};
+function createGridY0(parent, from, to, strokeWidth, cls)
+{
+    var path = document.createElementNS(SVG_NS, 'path');
+    parent.appendChild(path);
+    path.setAttributeNS(null, "class", cls);
+    path.setAttributeNS(null, "stroke-width", strokeWidth);
+    var range = to-from;
+    var d = "M"+from+" 0H"+range;
+    path.setAttributeNS(null, "d", d);
+};
 function createTide(parent, r)
 {
     var g = document.createElementNS(SVG_NS, 'g');

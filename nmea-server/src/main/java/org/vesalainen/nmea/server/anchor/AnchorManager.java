@@ -109,6 +109,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
     private final double boatLength;
     private final double boatBeam;
     private final double coef;
+    private final SimpleBoatPosition centerPosition;
     
     private AnchorManager(PropertySetter out, BoatDataType boat, CachedScheduledThreadPool executor) throws IOException
     {
@@ -136,6 +137,7 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
             }
         }
         this.bowPosition = new SimpleBoatPosition(boatBeam/2, boatBeam/2, 0, boatLength);
+        this.centerPosition = new SimpleBoatPosition(boatBeam/2, boatBeam/2, boatLength/2, boatLength/2);
         this.depthFilter = new DepthFilter();
         this.longitudeAve = new DoubleTimeoutSlidingAverage(8, 3000);
         this.latitudeAve = new DoubleTimeoutSlidingAverage(8, 3000);
@@ -326,12 +328,16 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
         private final double lat;
         private final double lon;
         private final TimeoutLocationBounds bounds = new TimeoutLocationBounds(METER.convertTo(100, NAUTICAL_DEGREE), 1, HOURS);
+        private final DoubleBinaryOperator centerLatitude;
+        private final DoubleBinaryOperator centerLongitude;
 
         public MoveFilter()
         {
             super("MoveFilter");
             this.lat = latitude;
             this.lon = longitude;
+            this.centerLatitude = gpsPosition.latitudeAtOperator(centerPosition);
+            this.centerLongitude = gpsPosition.longitudeAtOperator(centerPosition, latitude);
         }
 
         @Override
@@ -341,8 +347,10 @@ public class AnchorManager extends AnnotatedPropertyStore implements Transaction
             {
                 if (Navis.distance(latitude, longitude, lat, lon) < METER.convertTo(2*horizontalScope, NAUTICAL_MILE) )
                 {
-                    out.set("lon", longitude);
-                    out.set("lat", latitude);
+                    double centerLat = centerLatitude.applyAsDouble(latitude, trueHeading);
+                    double centerLon = centerLongitude.applyAsDouble(longitude, trueHeading);
+                    out.set("lon", centerLon);
+                    out.set("lat", centerLat);
                     bounds.addLongitude(longitude);
                     bounds.addLatitude(latitude);
                     out.set("lonMin", bounds.getMinLongitude());

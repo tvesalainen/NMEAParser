@@ -17,6 +17,7 @@
     <property name="ais"/>
     <property name="tideRange" decimals="1"/>
     <property name="tidePhase" decimals="0"/>
+    <property name="tideCertainty" decimals="2"/>
     <property name="rudderSensor"/>
     <property name="dayPhase"/>
     <property name="estimatedTimeOfArrival" source="rangeToDestination" unit="UNITLESS" history="1h"/>
