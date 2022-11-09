@@ -104,35 +104,35 @@ public interface XdrObserver
     @Unit(value=AMPERE, min=0, max=100)
     void setBatteryCurrent3(float a);
     @NMEACat(POWER)
-    @Unit(value=WATT, min=0, max=10000)
+    @Unit(value=WATT, min=-10000, max=10000)
     void setBatteryPower0(float a);
     @NMEA0183({XDR})
     @NMEACat(POWER)
-    @Unit(value=WATT, min=0, max=10000)
+    @Unit(value=WATT, min=-10000, max=10000)
     void setBatteryPower1(float a);
     @NMEA0183({XDR})
     @NMEACat(POWER)
-    @Unit(value=WATT, min=0, max=10000)
+    @Unit(value=WATT, min=-10000, max=10000)
     void setBatteryPower2(float a);
     @NMEA0183({XDR})
     @NMEACat(POWER)
-    @Unit(value=WATT, min=0, max=10000)
+    @Unit(value=WATT, min=-10000, max=10000)
     void setBatteryPower3(float a);
     @NMEA0183({XDR})
     @NMEACat(TEMPERATURE)
-    @Unit(value=CELSIUS, min=0, max=100)
+    @Unit(value=CELSIUS, min=-30, max=50)
     void setBatteryTemperature0(float c);
     @NMEA0183({XDR})
     @NMEACat(TEMPERATURE)
-    @Unit(value=CELSIUS, min=0, max=100)
+    @Unit(value=CELSIUS, min=-30, max=50)
     void setBatteryTemperature1(float c);
     @NMEA0183({XDR})
     @NMEACat(TEMPERATURE)
-    @Unit(value=CELSIUS, min=0, max=100)
+    @Unit(value=CELSIUS, min=-30, max=50)
     void setBatteryTemperature2(float c);
     @NMEA0183({XDR})
     @NMEACat(TEMPERATURE)
-    @Unit(value=CELSIUS, min=0, max=100)
+    @Unit(value=CELSIUS, min=-30, max=50)
     void setBatteryTemperature3(float c);
     @NMEA0183({XDR})
     @NMEACat(DISTANCE)

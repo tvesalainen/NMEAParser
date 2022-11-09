@@ -118,19 +118,22 @@ function Svg(x, y, width, height)
     };
     this.updateHistoryView = function()
     {
-        var time = getShortTime();
-        var x = time - this.historySeconds;
-        var width = this.historySeconds;
-        var y = this.min;
-        var height = this.max - this.min;
-        var coefX = 1.007;
-        //x *= coefX;
-        width *= coefX;
-        var viewBox = x+" "+y+" "+width+" "+height;
-        this.history.setAttributeNS(null, 'viewBox', viewBox);
-        var ty = this.max + this.min;
-        this.graph.setAttributeNS(null, 'transform', 'matrix(1 0 0 -1 0 '+ty+')');
-        this.history.setAttributeNS(null, 'preserveAspectRatio', 'none');
+        if (this.historySeconds)
+        {
+            var time = getShortTime();
+            var x = time - this.historySeconds;
+            var width = this.historySeconds;
+            var y = this.min;
+            var height = this.max - this.min;
+            var coefX = 1.007;
+            //x *= coefX;
+            width *= coefX;
+            var viewBox = x+" "+y+" "+width+" "+height;
+            this.history.setAttributeNS(null, 'viewBox', viewBox);
+            var ty = this.max + this.min;
+            this.graph.setAttributeNS(null, 'transform', 'matrix(1 0 0 -1 0 '+ty+')');
+            this.history.setAttributeNS(null, 'preserveAspectRatio', 'none');
+        }
     };
     this.setGridX = function()
     {

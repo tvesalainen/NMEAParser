@@ -439,7 +439,7 @@ function Gauge(element, seq)
                         }
                         else
                         {
-                            if (json['time'] && json['value'])
+                            if (typeof(json['time']) !== 'undefined' && typeof(json['value']) !== 'undefined')
                             {
                                 this.svg.setData(json['time'], json['value']);
                             }
