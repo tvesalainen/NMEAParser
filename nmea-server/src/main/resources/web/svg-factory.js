@@ -117,11 +117,11 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     history.appendChild(graph);
     var sec = historyMillis/1000;
     
-    var gridX = createDayGrid(sec, min, max);
-    graph.appendChild(gridX);
+    var grid = document.createElementNS(SVG_NS, 'g');
+    graph.appendChild(grid);
+    createDayGrid(grid, sec, min, max);
     
-    var gridY = createValueGrid(sec, min, max);
-    graph.appendChild(gridY);
+    createValueGrid(grid, sec, min, max);
     
     var minText = document.createElementNS(SVG_NS, 'text');
     parent.appendChild(minText);
@@ -154,23 +154,21 @@ function createHistory(parent, historyMillis, min, max, width, height, unitStrin
     cursor.setAttributeNS(null, "stroke", "red");
     graph.appendChild(cursor);
 
-    return [history, polyline, gridX, gridY, minText, maxText, graph, cursor];
+    return [history, polyline, grid, minText, maxText, graph, cursor];
 };
 
-function createDayGrid(sec, minY, maxY)
+function createDayGrid(parent, sec, minY, maxY)
 {
     var from = -86400;
     var to = 86400;
-    var gridX = document.createElementNS(SVG_NS, 'g');
     var coef = 0.01;
     for (let gap of [1, 60, 3600, 10800, 21600, 86400])
     {
         if (gap <= sec)
         {
-            createGridX(gridX, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
+            createGridX(parent, from, to, gap, minY, maxY, coef*gap, "grid-"+gap);
         }
     }
-    return gridX;
 };
 function createGridX(parent, from, to, gap, minY, maxY, strokeWidth, cls)
 {
@@ -214,19 +212,18 @@ function createGridX(parent, from, to, gap, minY, maxY, strokeWidth, cls)
         path.setAttributeNS(null, "d", d);
     }
 };
-function createValueGrid(sec, minY, maxY)
+function createValueGrid(parent, sec, minY, maxY)
 {
     var from = -86400;
     var to = 86400;
-    var gridY = document.createElementNS(SVG_NS, 'g');
     var coef = 0.01;
-    createGridY0(gridY, from, to, coef, "grid-0");
+    createGridY0(parent, from, to, coef, "grid-0");
     var used = [0];
     for (let gap of [1000000, 50000, 10000, 5000, 1000, 500, 100, 50, 10, 5, 1, 0.5])
     {
-        createGridY(gridY, from, to, gap, minY, maxY, coef*gap, "grid-"+gap, used);
+        createGridY(parent, from, to, gap, minY, maxY, coef*gap, "grid-"+gap, used);
     }
-    return gridY;
+    return parent;
 };
 function createGridY(parent, from, to, gap, minY, maxY, strokeWidth, cls, used)
 {

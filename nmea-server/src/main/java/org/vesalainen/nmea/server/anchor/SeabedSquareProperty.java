@@ -32,13 +32,11 @@ import org.vesalainen.util.concurrent.CachedScheduledThreadPool;
  */
 public class SeabedSquareProperty extends ObjectProperty
 {
-    private final AnchorManager anchorManager;
     private static Map<Square,JSONBuilder.Obj> squareMap = new HashMap<>();
     
     public SeabedSquareProperty(CachedScheduledThreadPool executor, PropertyType property)
     {
         super(executor, property, Square.class);
-        this.anchorManager = AnchorManager.getInstance();
     }
 
     @Override
@@ -54,6 +52,7 @@ public class SeabedSquareProperty extends ObjectProperty
     @Override
     protected void advertise(Observer observer)
     {
+        AnchorManager anchorManager = AnchorManager.getInstance();
         observer.fireEvent(
             JSONBuilder
                 .object()

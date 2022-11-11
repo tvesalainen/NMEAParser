@@ -44,23 +44,23 @@ $(document).ready(function () {
             {
                 zoneOffset=parseInt(res);
             }
-        });
-        eventSource.addEventListener("timeOffset", setTimeOffset, false);
-        var targets = document.getElementsByClassName('gauge');
-        for (var i=0;i<targets.length;i++)
-        {
-            var target = targets[i];
-            var g = new Gauge(target, i);
-            var event = g.event;
-            gauge[event] = g;
-            if (g.request)
+            eventSource.addEventListener("timeOffset", setTimeOffset, false);
+            var targets = document.getElementsByClassName('gauge');
+            for (var i=0;i<targets.length;i++)
             {
-                eventSource.addEventListener(event, fired, false);
-                $.post("/sse", g.request);
+                var target = targets[i];
+                var g = new Gauge(target, i);
+                var event = g.event;
+                gauge[event] = g;
+                if (g.request)
+                {
+                    eventSource.addEventListener(event, fired, false);
+                    $.post("/sse", g.request);
+                }
             }
-        }
-        eventSource.addEventListener("dayPhase", dayPhase, false);
-        $.post("/sse", {event: "dayPhase", property: "dayPhase"});
+            eventSource.addEventListener("dayPhase", dayPhase, false);
+            $.post("/sse", {event: "dayPhase", property: "dayPhase"});
+        });
     };
     function dayPhase(event)
     {

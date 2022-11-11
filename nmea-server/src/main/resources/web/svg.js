@@ -16,7 +16,7 @@
  */
 "use strict";
 
-/* global Svg, Title, Svg, serverMillis, zoneOffset setServerTime getServerTime, zoneOffset, timeOffset */
+/* global Svg, Title, Svg, serverMillis, zoneOffset setServerTime getServerTime, zoneOffset, timeOffset, localTime */
 
 var offsetMillis=0;
 
@@ -107,12 +107,11 @@ function Svg(x, y, width, height)
             var arr = createHistory(this.svg, history, min, max, this.width, this.height, this.unit.innerHTML);
             this.history = arr[0];
             this.polyline = arr[1];
-            this.gridX = arr[2];
-            this.gridY = arr[3];
-            this.minText = arr[4];
-            this.maxText = arr[5];
-            this.graph = arr[6];
-            this.cursor = arr[7];
+            this.grid = arr[2];
+            this.minText = arr[3];
+            this.maxText = arr[4];
+            this.graph = arr[5];
+            this.cursor = arr[6];
             this.data = [];
         }
     };
@@ -141,18 +140,17 @@ function Svg(x, y, width, height)
         var shortTime = getShortTime();
         if (!(this.nextXGrid > shortTime))
         {
-            var anc = new Date();
+            var anc = new Date(getServerTime());
             anc = new Date(anc.getFullYear(), anc.getMonth(), anc.getDate(), 0, 0, 0, 0);
-            var ny = toShortTime(anc.getTime());
+            var t = anc.getTime();
+            var z = anc.getTimezoneOffset()*60000;
+            var ny = toShortTime(t-z-zoneOffset);
             this.nextXGrid = shortTime+10000;
-            this.gridX.setAttributeNS(null, "transform", "translate("+ny+")");
+            this.grid.setAttributeNS(null, "transform", "translate("+ny+")");
         }
     };        
     this.setGridY = function()
     {
-        var shortTime = getShortTime();
-        var xx = shortTime-this.historySeconds;
-        this.gridY.setAttributeNS(null, "transform", "translate("+xx+")");
         this.minText.innerHTML = "Min "+this.min;
         this.maxText.innerHTML = "Max "+this.max;
     };
