@@ -45,6 +45,8 @@ public class Converter
     {
         switch (unit)
         {
+            case M:
+                return UnitType.METERS_PER_SECOND;
             case KTS:
                 return KNOT;
             case KMH:
